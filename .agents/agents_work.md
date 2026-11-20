@@ -28,11 +28,11 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 ## 🔴 Em andamento
 
 ### cline/de6b0 — Kentron: acesso remoto, host de build e alvo web
-- **Início**: 2026-11-20 17:35 (UTC) · **Última atualização**: 2026-11-20 18:24 (UTC)
-- **Repositório**: `kentron-music` · **Branches**: `feature/alvo-web` (= `main` `b40752c`, integrada) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
+- **Início**: 2026-11-20 17:35 (UTC) · **Última atualização**: 2026-11-20 18:55 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/alvo-web` (= `main` `b7a229f`, integrada) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
 - **Demanda**: destravar o acesso remoto aos alvos, preparar o host de build e provar o app com o núcleo real.
 - **Paths sob edição**: `~/.ssh/config` (fora do repo), `apps/kentron_app/{web,lib/main.dart,test}/**`, `scripts/servir-web.py`, `docs/**`, `CHANGELOG.md`.
-- **Status**: alvo web e tela ligada à ponte entregues; falta **olhar no navegador**; fila de instalações em aberto (Android local, Xcode).
+- **Status**: alvo web **provado no navegador**, toolchain Android completa (AVD `kentron`); falta a integração Android no app e o Xcode (dono).
 - **PRs**: nenhum (integração por merge `--ff-only`).
 
 **Feito:**
@@ -43,9 +43,16 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - **Tela ligada à ponte:** `HomeScreen` chama `parseSong` e mostra título/tom/seções/acordes + `núcleo: kentron_ffi …`; o carregador é injetável, então os testes de widget seguem herméticos. Prova com o **cdylib real** em `bridge_test.dart`: `flutter test` 8/8, `analyze` limpo, `ci-local.sh` EXIT=0.
 - **Achados:** `pumpAndSettle` estoura com a ponte real (o indicador anima sempre e a resposta chega por porta do FFI, fora do relógio falso) → espera em tempo real com `runAsync`; e o parser extrai acordes de linhas só com acordes.
 - **Lição de processo:** o commit do quadro vai na `main` **depois** do merge da branch — antes disso a branch diverge e exige rebase a cada push (aconteceu três vezes hoje).
+- **Prova no navegador (feita pelo dono):** a tela web mostrou os dados do núcleo — `Exemplo`, `Kentron · tom C · 2 seção(ões)`, acordes `C G Am F` e `núcleo: kentron_ffi 0.0.0`. Cadeia Rust → wasm → Flutter web → tela provada.
+- **Toolchain Android medida e funcional:** SDK 36 completo em `~/Library/Android/sdk` (build-tools 36.0.0, emulator 37.3.10, **NDK 28.2.13676358**, platforms 36, imagem arm64-v8a), Java Temurin 27, AVD **`kentron`** criado, `flutter doctor` ✓. Versões tiradas do próprio SDK (não de memória).
+- **Armadilha do `avdmanager`:** o do cask resolve o SDK root para o cask (sem system-images) → `Package path is not valid ... null`; e symlink não engana essa detecção. O SDK root só fica íntegro com **cópia real** de `cmdline-tools` dentro dele — o que também o deixa imune a `brew upgrade`.
+- **Duas falhas minhas, registradas:** (1) paralelizei a cópia do `cmdline-tools` com o `avdmanager` que dependia dela e li a falha como bug da ferramenta; (2) **culpei o Flutter do brew** pela reprovação do gate sem provar — a reprodução isolada deu 5/5 e o teste completo 8/8. A causa era **contenção**: rodei a bateria enquanto baixava vários GB do SDK. A mesma revisão passou com a máquina livre.
 
 **Ficou aberto:**
-- **Ver no navegador** (servidor no ar em `127.0.0.1:8080`): é a única prova que falta do app com o núcleo real — o caminho Dart já está provado com o cdylib.
+- **Integração Android no app:** `flutter create --platforms=android` + `flutter_rust_bridge_codegen integrate --rust-crate-name kentron_ffi --platforms android --no-write-lib --no-integration-test` (o `--no-write-lib` protege o `main.dart`; o `integrate` por padrão escreve código de exemplo em `lib/`) e então `flutter build apk --debug` + `emulator -avd kentron`. É o que faz o Rust entrar no APK.
+- **Higiene de duplicatas:** dois Flutter (`~/development/flutter` — usado pelo pipeline e pinado — e o cask) e dois `adb`/platform-tools. Ambos os Flutter funcionam (medido); a duplicata é organização, não defeito. Sugestão: manter o clone pinado e remover os casks `flutter` e `android-platform-tools`.
+- **Xcode** (iOS): só o dono, via App Store/developer.apple.com; `xcode-select --switch` falha enquanto o `Xcode.app` não existir.
+- **Ver no navegador:** ✅ feito (registrado acima).
 - Instalações: NDK + Flutter pinado na `lab` (build Android por Docker), SDK/JDK/NDK no Mac (emulador) e Xcode (iOS — só o dono, via App Store). Matriz de versões medida na fonte: compileSdk/targetSdk **36**, minSdk **24**, **NDK 28.2.13676358**, Gradle **9.5.0**, AGP **9.3.1**, KGP **2.4.20**, **JDK ≥ 17**.
 
 
