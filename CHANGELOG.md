@@ -15,6 +15,7 @@ Todos os eventos notáveis do projeto Kentron Music Hub.
 - Exclusão dos scripts vendorizados do Impeccable da análise Semgrep.
 - App migrado para `material_ui` 1.11.1 e token explícito "Sovereign Emerald".
 - CI do GitHub verde no run `44665120771` (Rust, licenças, i18n e Flutter).
+- Validação local com Flutter 3.50.1: `flutter analyze` sem achados, `flutter test` passando e `flutter gen-l10n` de `core_l10n` sem erro.
 
 ## [R0] Fundação e Identidade (2026-11-19)
 ### Adicionado

@@ -27,7 +27,7 @@ Concluído e publicado na `main`:
 
 Ressalvas abertas:
 
-- Flutter não está instalado neste ambiente; `flutter analyze` e `flutter test` ainda não rodaram localmente.
+- Flutter 3.50.1 instalado em `~/development/flutter`; `flutter analyze`, `flutter test` e `flutter gen-l10n` rodaram localmente com sucesso.
 - `core_l10n` ainda não está integrado ao app; o pacote não possui `lib/core_l10n.dart`.
 - A ponte `flutter_rust_bridge` é apenas um placeholder; não há chamada real Rust ↔ Flutter.
 - CI do GitHub verde no run `44665120771`; a validação local de Flutter segue pendente.

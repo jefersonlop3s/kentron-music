@@ -4,7 +4,7 @@ App livre e descentralizado para bandas e equipes de louvor: cifras, tablaturas 
 setlists, agenda e escalas, regência ao vivo e ponte para projeção (Holyrics/OpenLyrics) e OBS.
 Multilíngue desde o início (pt-BR, es-419, en-US primeiro).
 
-**Estado: R0 publicado na `main`; R1 em andamento em `feature/R1-cifra-projecao`.** O CI do GitHub está verde (run `44665120771`), incluindo `flutter analyze` e `flutter test`; a validação local de Flutter segue pendente porque o ambiente não tem o SDK instalado. O app usa `material_ui` 1.11.1. O nome definitivo é **Kentron**.
+**Estado: R0 publicado na `main`; R1 em andamento em `feature/R1-cifra-projecao`.** O CI do GitHub está verde (run `44665120771`), incluindo `flutter analyze` e `flutter test`. A validação local também foi executada com Flutter 3.50.1: `flutter analyze` sem achados e teste de fumaça passando. O app usa `material_ui` 1.11.1. O nome definitivo é **Kentron**.
 
 Repositório: `https://github.com/jefersonlop3s/kentron-music`.
 
@@ -50,6 +50,14 @@ python3 tools/check_arb.py
 
 ```bash
 cargo deny check
+```
+
+```bash
+cd apps/kentron_app && flutter pub get && flutter analyze && flutter test
+```
+
+```bash
+cd packages/core_l10n && flutter pub get && flutter gen-l10n
 ```
 
 ## Licença

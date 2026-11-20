@@ -1,7 +1,7 @@
 # Pendências · Kentron Music Hub
 
 ## 🚩 R0 (publicado, com ressalvas)
-- [ ] Instalar Flutter 3.50.x localmente (SDK ausente neste ambiente) e rodar `flutter analyze` e `flutter test`.
+- [ ] Rodar `flutter analyze` e `flutter gen-l10n` de `packages/core_l10n` no CI (hoje o job cobre apenas `apps/kentron_app`).
 - [ ] Integrar `core_l10n` ao app e criar `lib/core_l10n.dart`.
 - [ ] Substituir o placeholder da ponte Rust ↔ Flutter por chamada real.
 - [ ] Configurar proteção da branch `main` no GitHub.

@@ -15,7 +15,7 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 - [x] Impeccable UI: `DESIGN.md` e vocabulário visual definidos.
 - [x] Infra: Cargo Workspace, Melos, scaffold Flutter e CI com ações fixadas por SHA.
 - [x] Core: `notation_bundle` (`chord_naming`) com testes dourados.
-- [ ] Validação Flutter local (`flutter analyze`/`flutter test`).
+- [x] Validação Flutter local (`flutter analyze`/`flutter test`) com Flutter 3.50.1.
 - [ ] Integração real de `core_l10n` e da ponte Rust ↔ Flutter.
 - [x] Primeira execução do CI no GitHub (run `44665120771`, verde).
 - [x] App migrado para `material_ui` 1.11.1.

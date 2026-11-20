@@ -12,6 +12,7 @@
 - Pipeline não disparado no primeiro push por `[skip ci]`.
 - CI do GitHub verde no run `44665120771`: Rust, licenças, i18n e Flutter passaram.
 - App migrado para `material_ui` 1.11.1, eliminando a depreciação de `package:flutter/material.dart`.
+- Validação local com Flutter 3.50.1 (stable): `flutter analyze` sem achados, `flutter test` com o teste de fumaça passando e `flutter gen-l10n` de `core_l10n` gerando os arquivos sem erro.
 
 ### Entregáveis
 - Identidade **Kentron Music Hub** e licença Apache-2.0 com aviso de uso.
@@ -20,7 +21,7 @@
 - `notation_bundle` com `chord_naming` e parser ChordPro.
 
 ### Ressalvas
-- Flutter não está instalado neste ambiente; `flutter analyze`/`flutter test` não rodaram localmente.
+- Flutter 3.50.1 instalado em `~/development/flutter`; a validação local passou, mas o SDK ainda não está no `PATH` padrão do ambiente.
 - `core_l10n` ainda não está integrado ao app.
 - A ponte Rust ↔ Flutter é um placeholder.
 - CI do GitHub verde no run `44665120771`; a validação local de Flutter segue pendente.
