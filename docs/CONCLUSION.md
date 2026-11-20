@@ -99,6 +99,15 @@
 - O gate do kentron já tinha a mesma correção (`a68c85c`), então projeto e kit voltaram a concordar.
 - Fechamento: os dois itens saíram do PENDING; restam no kit apenas as ressalvas já documentadas (canário Claude live pendente de login do dono).
 
+## R0 · Matriz do CI com fonte única (2026-11-20)
+
+**Status:** 🟢 Entregue na `main`.
+
+- `.github/workflows/ci.yml` passou a instalar as ferramentas e chamar `./scripts/ci-local.sh`: a matriz existe num lugar só. Antes eram quatro jobs repetindo o script, com risco de divergir em silêncio — ressalva que a própria entrada da ADR-0004 registrava.
+- Cobertura conferida antes de trocar: Rust (`fmt --check`, `clippy -D warnings`, testes), `cargo deny`, paridade de ARBs, Flutter do app (`analyze`, `test`) e `core_l10n` (`gen-l10n` + `analyze`) — todas dentro do script, nenhuma a menos.
+- Gatilhos e pinagem por SHA preservados; nenhuma ação nova foi introduzida (as quatro usadas já estavam fixadas por SHA no arquivo).
+- Provas: YAML validado (1 job, 6 steps, três gatilhos) e `./scripts/ci-local.sh` verde de ponta a ponta (`exit 0`).
+
 ## R0 · Pipeline local-first (ADR-0004, 2026-11-20)
 
 **Status:** 🟢 Decisão aceita e implementada.

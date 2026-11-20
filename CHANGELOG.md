@@ -2,6 +2,14 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [Infra] Matriz do CI com fonte única (2026-11-20)
+### Alterado
+- `.github/workflows/ci.yml` deixou de duplicar a matriz: instala Rust, Flutter (3.50.1, casando com `.flutter-version`) e `cargo-deny`, e chama `./scripts/ci-local.sh`. Quatro jobs viraram um; a cobertura é a mesma, agora definida num lugar só.
+- Gatilhos preservados: `pull_request`, `workflow_dispatch` e `schedule` semanal — segue sem disparar em push para a `main` (ADR-0004).
+
+### Corrigido
+- O risco de divergência silenciosa entre script e workflow (item aberto no PENDING e na tabela de riscos do plano v2.6) deixa de existir: não há duas cópias para divergir.
+
 ## [Infra] Duas lições do kentron publicadas no sovereign-harness 0.7.2 (2026-11-20)
 ### Publicado
 - Release [v0.7.2](https://github.com/personal-digital-sovereignty/sovereign-harness/releases/tag/v0.7.2): skill `estado-compartilhado-multi-agente` §1c (PR [#21](https://github.com/personal-digital-sovereignty/sovereign-harness/pull/21)) e o gate de lint lendo a edição do manifesto (PR [#22](https://github.com/personal-digital-sovereignty/sovereign-harness/pull/22), tag `v0.7.2`), com teste novo provado no negativo.

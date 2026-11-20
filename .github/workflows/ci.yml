@@ -4,6 +4,13 @@ name: ci
 # antes de cada push. O Actions permanece como rede de segurança: valida pull
 # requests em ambiente limpo, aceita execução sob demanda e roda semanalmente
 # para detectar drift de dependências. Não dispara em push para a main.
+#
+# FONTE ÚNICA (2026-11-20): este workflow não repete a matriz. Ele instala as
+# ferramentas e chama o script. Antes a matriz estava duplicada aqui e no
+# script, podendo divergir em silêncio — era item aberto no PENDING. A
+# cobertura é a mesma, agora definida num lugar só: Rust (fmt, clippy, test),
+# cargo-deny, paridade de ARBs, Flutter do app (analyze, test) e core_l10n
+# (gen-l10n + analyze), todos dentro do script.
 on:
   pull_request:
   workflow_dispatch:
@@ -18,8 +25,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  rust:
-    name: rust (fmt, clippy, test)
+  pipeline:
+    name: pipeline local (scripts/ci-local.sh)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -27,46 +34,16 @@ jobs:
         with:
           components: clippy, rustfmt
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
-      - run: cargo fmt --all -- --check
-      - run: cargo clippy --workspace --all-targets -- -D warnings
-      - run: cargo test --workspace
-
-  licenses:
-    name: licenças e fontes (cargo-deny)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: EmbarkStudios/cargo-deny-action@17aeb3c839e42274e2b8adf721c8c65edfdc74dd # v2
-
-  l10n:
-    name: i18n (paridade de chaves e placeholders)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - run: python3 tools/check_arb.py
-
-  flutter:
-    name: flutter (analyze, test)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: apps/kentron_app
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           # Manter em sincronia com .flutter-version.
           flutter-version: '3.50.1'
           channel: 'stable'
           architecture: x64
-      - run: flutter pub get
-      - run: flutter analyze
-      - run: flutter test
-      - name: core_l10n (gen-l10n + analyze)
-        working-directory: packages/core_l10n
-        run: |
-          flutter pub get
-          flutter gen-l10n
-          # --no-fatal-infos: o código gerado emite `info` de depreciação.
-          flutter analyze --no-fatal-infos
+      # O script exige cargo-deny (fail-loud). O rust-cache acima já guarda
+      # ~/.cargo/bin entre execuções, então o custo é só na primeira vez.
+      - name: cargo-deny
+        run: cargo install --locked cargo-deny
+      - name: pipeline local
+        run: ./scripts/ci-local.sh
 

@@ -3,7 +3,7 @@
 ## 🚩 R0 (publicado, com ressalvas)
 - [x] `flutter analyze` de `packages/core_l10n` no pipeline local (cópia temporária, `--no-fatal-infos`).
 - [x] Versão do Flutter fixada em `.flutter-version` (3.50.1), verificada pelo script e espelhada no workflow.
-- [ ] Manter `scripts/ci-local.sh` e `.github/workflows/ci.yml` sincronizados: a matriz está duplicada e pode divergir.
+- [x] `scripts/ci-local.sh` e `.github/workflows/ci.yml` sincronizados: o workflow deixou de repetir a matriz e passou a chamar o script (fonte única). Cobertura preservada — Rust (fmt, clippy, test), `cargo-deny`, ARBs, Flutter do app e `core_l10n`.
 - [ ] Migrar `core_l10n` de `flutter_localizations` para `material_ui`: o código gerado emite `info` de depreciação (`Global*Localizations`).
 - [ ] Integrar `core_l10n` ao app e criar `lib/core_l10n.dart`.
 - [ ] Substituir o placeholder da ponte Rust ↔ Flutter por chamada real.

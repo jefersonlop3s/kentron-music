@@ -70,7 +70,7 @@ Ressalvas abertas:
 | MIR sem métrica de aceite | Dataset lícito, métricas e limiares antes dos spikes. |
 | Decisões D1–D9 bloqueando R0 | Apenas decisões imediatas bloqueiam; D3–D8 ficam para as releases afetadas. |
 | `cargo-deny` não cobre Dart | Inventário e verificação de licenças Dart no pipeline local. |
-| Matriz duplicada (script + workflow) | Manter `scripts/ci-local.sh` e `ci.yml` sincronizados; o script é a fonte de verdade. |
+| Matriz duplicada (script + workflow) | **Resolvido (2026-11-20):** o workflow não repete a matriz — instala as ferramentas e chama `scripts/ci-local.sh`, que é a fonte de verdade. |
 | Política de runners de terceiros | Pipeline local como portão principal; Actions apenas como rede de segurança. |
 | Versão do Flutter não fixada | Resolvido: `.flutter-version` (3.50.1) verificado pelo script e espelhado no workflow. |
 | `core_l10n` sem verificação | Resolvido: `gen-l10n` + `analyze --no-fatal-infos` na cópia temporária. |
