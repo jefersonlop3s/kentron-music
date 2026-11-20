@@ -2,6 +2,19 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [R1] Android local pronto e ponte provada no navegador (2026-11-20)
+### Verificado
+- **Prova no navegador:** a tela web mostrou dados vindos do núcleo Rust — `Exemplo`, `Kentron · tom C · 2 seção(ões)`, acordes `C G Am F` e `núcleo: kentron_ffi 0.0.0`. Cadeia Rust → wasm → Flutter web → tela provada no browser.
+
+### Toolchain Android (medida)
+- `flutter doctor`: **Android toolchain ✓** (SDK 36.0.0), com Java **Temurin 27**; comando de versões tirado do próprio SDK: compileSdk/targetSdk 36, minSdk 24, **NDK 28.2.13676358**, Gradle 9.5.0, AGP 9.3.1, KGP 2.4.20.
+- Pacotes instalados em `~/Library/Android/sdk`: build-tools 36.0.0, emulator 37.3.10, NDK 28.2.13676358, platform-tools 37.0.3, platforms;android-36, system-images;android-36;google_apis;arm64-v8a. AVD **`kentron`** criado.
+- `flutter config --android-sdk` aponta para esse SDK.
+
+### Armadilhas registradas
+- O `avdmanager` **do cask** resolve o SDK root pela própria localização (o cask), onde não há system-images — daí `Package path is not valid ... null`. O SDK root só fica íntegro com uma **cópia real** de `cmdline-tools` dentro dele (symlink não engana a detecção). O SDK em `~/Library/Android/sdk` também fica imune a `brew upgrade`.
+- `flutter doctor` avisa de **dois `adb`** (SDK + cask `android-platform-tools`) e existem **dois Flutter** (o do pipeline em `~/development/flutter` e o do cask). Ver PENDING.
+
 ## [R1] Tela inicial consumindo o núcleo Rust (2026-11-20)
 ### Adicionado
 - `HomeScreen` deixou de ser estática: chama `parseSong` e mostra título, artista/tom/seções, os acordes em chips e **qual núcleo respondeu** (`núcleo: kentron_ffi …`) — a ponte visível para quem usa o app.

@@ -99,6 +99,15 @@
 - O gate do kentron já tinha a mesma correção (`a68c85c`), então projeto e kit voltaram a concordar.
 - Fechamento: os dois itens saíram do PENDING; restam no kit apenas as ressalvas já documentadas (canário Claude live pendente de login do dono).
 
+## R1 · Android local pronto e ponte provada no navegador (2026-11-20)
+
+**Status:** 🟢 Toolchain Android completa e o app web provado no navegador; falta o app abrir no emulador (depende dos diretórios de plataforma) e o Xcode para iOS.
+
+- **O navegador mostrou o núcleo Rust**: `Exemplo`, `Kentron · tom C · 2 seção(ões)`, acordes `C G Am F`, `núcleo: kentron_ffi 0.0.0`. Era a última prova pendente do caminho web.
+- **Android medido e funcional**: SDK 36 completo (build-tools 36.0.0, emulator 37.3.10, **NDK 28.2.13676358**, platforms 36, imagem arm64-v8a), Java Temurin 27, AVD `kentron`, `flutter doctor` ✓.
+- Armadilha que custou investigação: o `avdmanager` do Homebrew resolve o SDK root para o cask e não enxerga os system-images; symlink não basta — o SDK root precisa de uma **cópia real** de `cmdline-tools`, que também o deixa imune a `brew upgrade`.
+- Higiene em aberto: dois Flutter e dois `adb` na máquina (ver PENDING) — mesma versão hoje, mas o PATH decide; escolher um.
+
 ## R1 · Tela inicial consumindo o núcleo Rust (2026-11-20)
 
 **Status:** 🟢 O caminho Dart está provado com o `cdylib` real; falta ver no navegador.
