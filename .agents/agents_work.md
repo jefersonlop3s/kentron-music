@@ -27,7 +27,24 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
-Nenhuma sessão ativa.
+### cline/de6b0 — Kentron: acesso remoto, host de build e alvo web
+- **Início**: 2026-11-20 17:35 (UTC) · **Última atualização**: 2026-11-20 18:20 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/alvo-web` (= `main` `2fec427`, integrada) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
+- **Demanda**: destravar o acesso remoto aos alvos, preparar o host de build e provar o app com o núcleo real.
+- **Paths sob edição**: `~/.ssh/config` (fora do repo), `apps/kentron_app/web/**`, `scripts/servir-web.py`, `docs/**`, `CHANGELOG.md`.
+- **Status**: alvo web entregue; fila de instalações em aberto (Android local, Xcode).
+- **PRs**: nenhum (integração por merge `--ff-only`).
+
+**Feito:**
+- **Acesso remoto:** este Mac rodava a variante **OSS do Tailscale** (`tailscaled` do Homebrew, sem Network Extension) — que, segundo a própria documentação, **anuncia rotas mas não as usa**. Trocada pelo cask `tailscale-app` (Standalone/System Extension): a rota `192.168.6.0/24` apareceu em `utun0` e `ssh workspace` conecta direto. A hipótese anterior (NextDNS) foi **descartada por medição**.
+- **Salto no `~/.ssh/config`** (aditivo; backup em `/tmp/ssh-config.backup-20261120T173755Z`): `Match originalhost … exec "! nc …"` só entra quando a LAN não responde e **autodesativou** depois da troca. Achado de sintaxe registrado: `Match host` casa com o nome **resolvido**; o apelido exige `originalhost`.
+- **`lab` (`runner-linux`, 6 vCPU · 16 GiB · 85 G livres):** Rust 1.100.0 + alvos Android; imagem `ghcr.io/cirruslabs/flutter:stable` medida por dentro (Flutter 3.44 · Java 21 · Android SDK em `/opt/android-sdk-linux`, **sem NDK e sem Rust**).
+- **Alvo web:** scaffold, wasm da ponte (`kentron_ffi_bg.wasm` 104 KB) e `scripts/servir-web.py` (COOP/COEP + `application/wasm`); build e serviço verificados nos dois sentidos — commit `2fec427`.
+
+**Ficou aberto:**
+- A tela ainda **não consome a ponte** (`parseSong`): a execução no navegador não está provada. E2E natural na CT `playwright` (Playwright 1.63) alcançando o app via Tailscale.
+- Instalações: NDK + Flutter pinado na `lab` (build Android por Docker), SDK/JDK/NDK no Mac (emulador) e Xcode (iOS — só o dono, via App Store).
+
 
 ## 🟡 Interrompido / órfão
 
