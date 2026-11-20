@@ -21,7 +21,8 @@ Concluído e publicado na `main`:
 - Nomeação de acordes em quatro sistemas, com testes dourados.
 - Workspace Flutter/Melos e scaffold de `kentron_app`.
 - ARBs da Faixa 1 e validador `tools/check_arb.py`.
-- CI com Rust, licenças, i18n e Flutter; ações fixadas por SHA.
+- CI com Rust, licenças, i18n e Flutter; ações fixadas por SHA. Verde no run `44665120771`.
+- App Flutter migrado para `material_ui` 1.11.1.
 - `cargo clippy`, `cargo fmt`, `cargo deny` e Semgrep sem achados no código do projeto.
 
 Ressalvas abertas:
@@ -29,7 +30,7 @@ Ressalvas abertas:
 - Flutter não está instalado neste ambiente; `flutter analyze` e `flutter test` ainda não rodaram localmente.
 - `core_l10n` ainda não está integrado ao app; o pacote não possui `lib/core_l10n.dart`.
 - A ponte `flutter_rust_bridge` é apenas um placeholder; não há chamada real Rust ↔ Flutter.
-- A primeira execução do CI no GitHub ainda precisa ser observada.
+- CI do GitHub verde no run `44665120771`; a validação local de Flutter segue pendente.
 
 ## 3. R1 · Cifra, palco local e projeção
 

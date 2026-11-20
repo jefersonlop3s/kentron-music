@@ -5,8 +5,8 @@
 - [ ] Integrar `core_l10n` ao app e criar `lib/core_l10n.dart`.
 - [ ] Substituir o placeholder da ponte Rust ↔ Flutter por chamada real.
 - [ ] Configurar proteção da branch `main` no GitHub.
-- [ ] Observar a primeira execução do CI no GitHub.
 - [ ] Registro final na verificação de desenvolvedor do Android.
+- [ ] Adicionar verificação de licenças para dependências Dart/Flutter.
 - [ ] Teste de fumaça do app Flutter em dispositivo real (Android/iOS).
 - [ ] Revisar traduções de es-419, pt-BR e en-US com falantes nativos.
 

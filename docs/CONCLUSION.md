@@ -10,6 +10,8 @@
 - 15 testes Rust passando; `cargo clippy`, `cargo fmt`, `cargo deny` e `check_arb.py` verdes.
 - Semgrep sem achados no código do projeto após exclusão dos scripts vendorizados do Impeccable.
 - Pipeline não disparado no primeiro push por `[skip ci]`.
+- CI do GitHub verde no run `44665120771`: Rust, licenças, i18n e Flutter passaram.
+- App migrado para `material_ui` 1.11.1, eliminando a depreciação de `package:flutter/material.dart`.
 
 ### Entregáveis
 - Identidade **Kentron Music Hub** e licença Apache-2.0 com aviso de uso.
@@ -21,7 +23,7 @@
 - Flutter não está instalado neste ambiente; `flutter analyze`/`flutter test` não rodaram localmente.
 - `core_l10n` ainda não está integrado ao app.
 - A ponte Rust ↔ Flutter é um placeholder.
-- O CI do GitHub ainda não foi observado em execução.
+- CI do GitHub verde no run `44665120771`; a validação local de Flutter segue pendente.
 
 ## R1 · Parser ChordPro (parcial, 2026-11-19)
 

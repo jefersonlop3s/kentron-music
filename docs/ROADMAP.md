@@ -17,7 +17,8 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 - [x] Core: `notation_bundle` (`chord_naming`) com testes dourados.
 - [ ] Validação Flutter local (`flutter analyze`/`flutter test`).
 - [ ] Integração real de `core_l10n` e da ponte Rust ↔ Flutter.
-- [ ] Primeira execução do CI no GitHub.
+- [x] Primeira execução do CI no GitHub (run `44665120771`, verde).
+- [x] App migrado para `material_ui` 1.11.1.
 
 ---
 
