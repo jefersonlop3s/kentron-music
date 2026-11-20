@@ -12,6 +12,6 @@ Status: Proposto → Aceito | Rejeitado | Descontinuado | Substituído. **O acei
 | ADR-0005 | Escopo da R1: ChordPro primeiro; MusicXML/ATEX em R1.1 | Rejeitado | 2026-11-20 | kentron-music |
 | ADR-0006 | Song Bundle v1: formato de persistência e primeira dependência externa | Aceito | 2026-11-20 | kentron-music |
 | ADR-0007 | Ponte Rust ↔ Flutter: mecanismo e alvo do primeiro incremento | Aceito | 2026-11-20 | kentron-music |
-| ADR-0008 | Empacotamento do Rust: Native Assets em vez de Cargokit | **Proposto** | 2026-11-20 | kentron-music |
+| ADR-0008 | Empacotamento do Rust: Native Assets em vez de Cargokit | Aceito | 2026-11-20 | kentron-music |
 
-**Próximo número livre**: ADR-0008.
+**Próximo número livre**: ADR-0009.

@@ -1,6 +1,6 @@
 # ADR-0008 · Empacotamento do Rust: Native Assets em vez de Cargokit
 
-- **Status:** **proposto** (2026-11-20) — aguarda aceite do dono do projeto; o spike que o fundamenta está na branch `spike/native-assets`
+- **Status:** **aceito** (2026-11-20) — decisão do dono do projeto; adotado a partir do commit `bb44789` (branch `spike/native-assets`), com iOS e Android buildando e **rodando** sem CocoaPods e sem o aviso de SPM
 - **Decisão do plano:** continuação da ADR-0007 (ponte Rust ↔ Flutter)
 
 ## Contexto
