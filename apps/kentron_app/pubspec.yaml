@@ -16,15 +16,13 @@ dependencies:
   core_l10n:
     path: ../../packages/core_l10n
   # Ponte Rust ↔ Flutter (ADR-0007). Os bindings são gerados por
-  # `flutter_rust_bridge_codegen` e vivem em `lib/src/rust/`.
+  # `flutter_rust_bridge_codegen` e vivem em `lib/src/rust/`. A compilação do
+  # crate fica com o backend **Native Assets**: `hook/build.dart` (através de
+  # `flutter_rust_bridge_hooks` → `native_toolchain_rust`) compila
+  # `../../crates/kentron_ffi` e registra o resultado como code asset — sem
+  # plugin, sem CocoaPods e sem Gradle no caminho do Rust.
   flutter_rust_bridge: 2.13.0
-  # O adaptador que compila o crate `kentron_ffi` e o embarca no build de cada
-  # plataforma (cargokit). Gerado por:
-  #   flutter_rust_bridge_codegen integrate --rust-crate-name kentron_ffi \
-  #     --rust-crate-dir ../../crates/kentron_ffi --platforms android \
-  #     --no-write-lib --no-integration-test
-  kentron_ffi:
-    path: rust_builder
+  flutter_rust_bridge_hooks: 2.13.0
 
 dev_dependencies:
   flutter_test:

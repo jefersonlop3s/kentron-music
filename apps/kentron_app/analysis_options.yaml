@@ -3,6 +3,5 @@ analyzer:
     - build/**
     - web/**
     - android/**
-    - rust_builder/cargokit/**
     - ios/**
 include: package:flutter_lints/flutter.yaml
