@@ -36,8 +36,8 @@ Nenhum.
 ## 🟢 Concluído recentemente
 
 ### cline/de6b0 — Kentron: higiene do CI, core_l10n integrado e ponte (ADR-0007)
-- **Início**: 2026-11-20 14:45 (UTC) · **Última atualização**: 2026-11-20 15:09 (UTC)
-- **Repositório**: `kentron-music` · **Branches**: `feature/ponte-rust-flutter` (= `main` `04e9ea5`, integrada; apagar junto com o worktree) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
+- **Início**: 2026-11-20 14:45 (UTC) · **Última atualização**: 2026-11-20 15:11 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/ponte-rust-flutter` (= `main` `b8d4cc8`, integrada; apagar junto com o worktree) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
 - **Demanda**: higienizar (branch de escopo + matriz do CI duplicada), integrar o `core_l10n` e entregar a ponte Rust↔Flutter.
 - **Paths sob edição**: nenhum (concluído).
 - **Status**: concluído — ponte integrada na `main` e empurrada (`04e9ea5`).
@@ -60,6 +60,7 @@ Nenhum.
 - `notation_bundle` volta a ser domínio puro, com `unsafe_code = "forbid"` intacto.
 - **Emenda medida à ADR-0007:** a cláusula "`forbid` permanece" era inalcançável — a cola gerada tem um bloco `unsafe` e `forbid` não aceita `allow`. O adaptador usa `deny` com `#[allow(unsafe_code)]` escopado ao módulo gerado; o invariante que o dono quis preservar segue de pé onde o código é nosso.
 - **Prova de ponta a ponta:** `apps/kentron_app/test/bridge_test.dart` carrega o cdylib e chama o Rust (resumo real; cifra vazia vira exceção). 58 testes Rust + 5 de Flutter verdes.
+- Doc de arquitetura atualizado: o crate adaptador entrou na decomposição e o "estado atual" deixou de dizer que `core_l10n`/ponte não estão integrados.
 - Dois bloqueios reais que viraram correção: o código gerado não é `rustfmt`-limpo na edição 2024 (o pipeline reprovou até formatar) e dependência de caminho sem `version` é lida como wildcard pelo `cargo deny`. Ambos registrados.
 
 ### cline/de6b0 — sovereign-harness 0.7.2: duas lições do kentron
