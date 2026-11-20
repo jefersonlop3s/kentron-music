@@ -51,6 +51,25 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - "Commit direto na `main` é permitido": o guard bloqueia; o fluxo correto é branch + merge *fast-forward*.
 - "A validação local de Flutter já ocorreu": não ocorreu; apenas o CI executou `flutter analyze`/`flutter test`.
 
+### cline/de6b0 — Instalação do Flutter e validação local
+- **Início**: 2026-11-20 03:20 (UTC) · **Última atualização**: 2026-11-20 03:40 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `main`
+- **Demanda**: instalar Flutter 3.50.x e fechar a pendência de validação local do R0.
+- **Paths sob edição**: nenhum.
+- **Status**: concluído.
+
+**Feito:**
+- Flutter 3.50.1 (stable) instalado em `~/development/flutter` (clone parcial, canal stable).
+- `flutter analyze` no app: sem achados. `flutter test`: teste de fumaça passando.
+- `flutter gen-l10n` em `packages/core_l10n`: geração sem erro; artefatos gerados removidos por serem reproduzíveis.
+- Documentos atualizados: README, ROADMAP, PENDING, CONCLUSION, CHANGELOG e plano v2.6.
+
+**Ficou aberto:**
+- O SDK não está no `PATH` padrão; usar `~/development/flutter/bin/flutter` ou exportar o caminho.
+- CI ainda não analisa `packages/core_l10n`; item registrado em PENDING.
+- `apps/kentron_app/analysis_options.yaml` tem alteração não commitada (exclusão de `build/**` no analyzer) que não foi feita por esta sessão; precisa de dono.
+
 ## Notas entre agentes
 
+- Flutter 3.50.1 instalado em `~/development/flutter` (não está no `PATH` padrão). Para usar: `export PATH="$HOME/development/flutter/bin:$PATH"`.
 - Remoção de worktrees validada em 2026-11-20 03:13 (UTC): o worktree `de6b0` está limpo e na branch `feature/R1-cifra-projecao`, publicada em `origin` (`4beb085`); os diretórios `40e55` e `b5088` em `~/.cline/worktrees` estão vazios. Nenhum stash pendente. O rascunho de harmonia está na branch local `wip/harmony-transpose`, que sobrevive à remoção do worktree.
