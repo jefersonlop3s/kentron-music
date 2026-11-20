@@ -34,6 +34,12 @@ Este projeto é distribuído "como está" (*as-is*), sem garantias de qualquer t
 | `deny.toml` | Lista de licenças permitidas (`cargo-deny`). |
 | `tools/check_arb.py` | Portão de i18n que não depende do Flutter. |
 
+## Requisitos
+
+- Rust estável (edition 2021) com `cargo`, `clippy` e `rustfmt`.
+- Flutter 3.50.x no canal `stable` (validado com 3.50.1). Se o SDK não estiver no `PATH`, use `~/development/flutter/bin/flutter`.
+- Python 3 para `tools/check_arb.py`.
+
 ## Comandos
 
 ```bash
