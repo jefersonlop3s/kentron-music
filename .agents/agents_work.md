@@ -27,7 +27,13 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
-Nenhum.
+### cline/de6b0 — R1 · Song Bundle v1 (persistência)
+- **Início**: 2026-11-20 12:28 (UTC) · **Última atualização**: 2026-11-20 12:28 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/song-bundle-v1` (derivada da `main` `280ee20`) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
+- **Demanda**: Song Bundle v1 — persistência local do acervo, migrações e exportação/restauração, antes do piloto.
+- **Paths sob edição**: `crates/notation_bundle/src/**`, `crates/notation_bundle/tests/**`, `docs/PENDING.md`, `docs/CONCLUSION.md`, `CHANGELOG.md`.
+- **Status**: em andamento
+- **PRs**: nenhum (integração por merge `--ff-only` na `main`).
 
 ## 🟡 Interrompido / órfão
 
@@ -52,9 +58,9 @@ Nenhum.
 - Documentos vivos atualizados: README, ROADMAP, PENDING, CONCLUSION, CHANGELOG, plano v2.6 e ADR-0005 (proposta).
 
 **Ficou aberto:**
-- **Aceite da ADR-0005** (escopo da R1): sem aceite, vale a ADR-0002 integral. O dono do projeto questionou se a redução é realmente necessária.
+- **ADR-0005 rejeitada** (2026-11-20): vale a ADR-0002 integral. MusicXML/ATEX seguem no marco R1.1 como ordem de execução, não como corte de escopo.
 - Fixtures de parser para acordes invertidos, `6/9` e acidentes duplos (a nomeação já os cobre; falta provar a preservação na leitura do `.cho`).
-- `wip/harmony-transpose` (`35971c4`) está totalmente absorvida; pode ser apagada após confirmação do dono.
+- Branches substituídas apagadas nesta sessão: `feature/R1-restante`, `feature/R1-transposicao-harmonia` e `wip/harmony-transpose` — nenhuma com conteúdo exclusivo em relação à `main`.
 
 ### cline/de6b0 — Rascunho de harmonia (WIP)
 > Entrada encerrada: absorvida pela entrada acima. Mantida como registro histórico. A branch `wip/harmony-transpose` (`35971c4`) está inteiramente contida na `main` e pode ser apagada após confirmação do dono.
@@ -158,4 +164,4 @@ Nenhum.
 
 - Flutter 3.50.1 instalado em `~/development/flutter` (não está no `PATH` padrão). Para usar: `export PATH="$HOME/development/flutter/bin:$PATH"`.
 - Remoção de worktrees validada em 2026-11-20 03:13 (UTC): o worktree `de6b0` está limpo; os diretórios `40e55` e `b5088` em `~/.cline/worktrees` estão vazios. Nenhum stash pendente. O rascunho de harmonia está na branch local `wip/harmony-transpose`, que sobrevive à remoção do worktree.
-- `feature/R1-cifra-projecao` foi integrada à `main` em `50c7323` e pode ser apagada após o push do merge.
+- Branch de escopo vira segundo trunk: `feature/R1-restante` era ancestral da `main` e continuava se apresentando como "o trabalho da R1" — o custo medido foi uma sessão lendo `git status` no checkout errado. Nome de branch = unidade de trabalho; ao entregar, apague a branch no mesmo passo (skill `estado-compartilhado-multi-agente` §1c).
