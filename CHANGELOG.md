@@ -2,6 +2,14 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [manutenção] Runtime de simulador único e o caso do SPM (2026-11-20)
+### Alterado
+- Removido o runtime iOS redundante **`24B91016s`** (seed, 7,7 GB): ficou o **`24B8117`**, onde está o iPhone 17 usado nas provas. `xcrun simctl list runtimes` agora lista um só.
+
+### Investigado (com medição — e uma hipótese minha derrubada)
+- O aviso *"plugins do not support Swift Package Manager … will become an error"* **não** é silenciado por `flutter config --no-enable-swift-package-manager`: com a flag desligada o build continuou verde **e o aviso continuou aparecendo** — é alerta informativo da resolução de plugins, independente da flag. A configuração foi **restaurada ao default** (`flutter config --clear-features`, que preserva `android-sdk` e `jdk-dir`).
+- `flutter_rust_bridge_codegen integrate` do **2.13.0** não tem opção de SPM e não gera `Package.swift`; o cargokit não tem builder SPM (só pod/gradle/cmake). Upstream o suporte existe (issues #3036 e #3202, fechadas) → o caminho durável é subir o gerador quando houver versão **estável** com SPM.
+
 ## [R1] iOS: o Rust entra no app e o app roda no simulador (2026-11-20)
 ### Adicionado
 - `apps/kentron_app/ios/`: scaffold (`flutter create --platforms=ios --org com.kentron`), bundle id `com.kentron.kentronApp`; o `pubspec` saiu **idêntico**.

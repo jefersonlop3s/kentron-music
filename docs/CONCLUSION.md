@@ -99,6 +99,14 @@
 - O gate do kentron já tinha a mesma correção (`a68c85c`), então projeto e kit voltaram a concordar.
 - Fechamento: os dois itens saíram do PENDING; restam no kit apenas as ressalvas já documentadas (canário Claude live pendente de login do dono).
 
+## Manutenção · Runtime único e o caso do SPM (2026-11-20)
+
+**Status:** 🟢 Um runtime de simulador só; o aviso de SPM fica como risco datado, com caminho definido e evidência registrada.
+
+- Removido o runtime `24B91016s` (seed, 7,7 GB); ficou o `24B8117`, com o iPhone 17 das provas.
+- Hipótese minha **derrubada por medição**: desligar SPM (`flutter config --no-enable-swift-package-manager`) **não** silencia o aviso — build verde e aviso presente. Config restaurada ao default, sem perder `android-sdk`/`jdk-dir`.
+- O suporte a SPM **não existe** no frb 2.13.0 estável (sem opção no `integrate`, sem `Package.swift` gerado) e o cargokit é CocoaPods-only; existe **upstream** (issues #3036 e #3202 fechadas). Quando houver estável com SPM, subir o gerador resolve de vez.
+
 ## R1 · iOS: o Rust no simulador (2026-11-20)
 
 **Status:** 🟢 O app roda no simulador iOS com o núcleo Rust. Três plataformas provadas: teste (cdylib), navegador (wasm) e Android/iOS.
