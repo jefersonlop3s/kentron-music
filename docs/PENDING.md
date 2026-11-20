@@ -2,6 +2,7 @@
 
 ## 🚩 R0 (publicado, com ressalvas)
 - [ ] Rodar `flutter analyze` e `flutter gen-l10n` de `packages/core_l10n` no CI (hoje o job cobre apenas `apps/kentron_app`).
+- [ ] Fixar a versão do Flutter no CI (o workflow usa o canal `stable` sem versão; a validação local usou 3.50.1).
 - [ ] Integrar `core_l10n` ao app e criar `lib/core_l10n.dart`.
 - [ ] Substituir o placeholder da ponte Rust ↔ Flutter por chamada real.
 - [ ] Configurar proteção da branch `main` no GitHub.
