@@ -35,6 +35,24 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/de6b0 — Kentron: lições da sessão viram skills
+- **Início**: 2026-11-20 23:20 (UTC) · **Última atualização**: 2026-11-20 23:51 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/skills-sessao` (de `main` `5582d2f`; integrada por merge) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
+- **Demanda**: o dono autorizou remover a branch `spike/native-assets` e pediu que as lições da sessão anterior virassem skills do projeto.
+- **Paths sob edição**: nenhum (concluído).
+- **Status**: concluído.
+- **PRs**: nenhum (integração por merge `--ff-only`).
+
+**Feito:**
+- **Quatro skills novas** em `.agents/skills/`, com gatilho na tabela do `AGENTS.md`: `empacotamento-rust-flutter` (Native Assets, predicados técnicos e erros com assinatura), `higiene-de-dispositivos` (encerrar emulador/simulador depois da prova), `lote-nao-e-sequencia` (comando agrupado roda em paralelo) e `toolchain-unica` (duplicata de binário decide o PATH).
+- **Mecanismo, não só prosa:** `scripts/encerrar-dispositivos.sh` detecta, encerra e verifica Android/iOS; `--dry-run` mostra o que faria; sai 1 se algo sobrar. Provado no sentido negativo com o emulador `kentron` no ar (`emulator-5554` detectado, encerrado, `adb devices` vazio).
+- **Skills existentes corrigidas:** `vies-de-plausibilidade` §11 (o diff tem direção e o olho lê ao contrário), `toolchain-unica` (o cask que resolve o SDK root para si mesmo) e `quadro-de-trabalho` (ordem do commit do quadro).
+- **Branches mergeadas removidas** com autorização do dono: `spike/native-assets` (local e `origin`), `feature/alvo-android`, `feature/alvo-ios`, `feature/alvo-web` e `feature/ponte-rust-flutter`.
+- **Dispositivos encerrados:** `adb devices` e `xcrun simctl list devices booted` vazios ao fim da sessão.
+
+**Ficou aberto:**
+- Skill é julgamento, não gate: só a higiene de dispositivos tem mecanismo, e ele depende de alguém rodar o script. Se isso voltar a custar sessão, vira gate no `pre-push`.
+
 ### cline/de6b0 — Kentron: acesso remoto, host de build e alvo web
 - **Início**: 2026-11-20 17:35 (UTC) · **Última atualização**: 2026-11-20 22:20 (UTC)
 - **Repositório**: `kentron-music` · **Branches**: `spike/native-assets` (= `main` `0da5011`, integrada por merge; apagar quando o worktree sair) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
