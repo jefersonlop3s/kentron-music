@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+# Pipeline local do Kentron Music Hub (ADR-0004).
+#
+# Executa a mesma matriz do workflow remoto sem depender de runners:
+# Rust (formatação, Clippy, testes), licenças, paridade de ARBs e Flutter.
+# O GitHub Actions permanece como rede de segurança para pull requests.
+#
+# Uso: ./scripts/ci-local.sh
+# Variáveis: FLUTTER_BIN (caminho do executável do Flutter, opcional).
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+
+step() { printf '\n==> %s\n' "$1"; }
+
+require() {
+  command -v "$1" >/dev/null 2>&1 || {
+    printf 'ERRO: %s não encontrado no PATH. Instale-o antes de rodar o pipeline local.\n' "$1" >&2
+    exit 1
+  }
+}
+
+# Detecção explícita do Flutter: sem fallback silencioso.
+resolve_flutter() {
+  if [[ -n "${FLUTTER_BIN:-}" ]]; then
+    [[ -x "$FLUTTER_BIN" ]] || {
+      printf 'ERRO: FLUTTER_BIN aponta para %s, que não é executável.\n' "$FLUTTER_BIN" >&2
+      exit 1
+    }
+    printf '%s\n' "$FLUTTER_BIN"
+    return 0
+  fi
+  if command -v flutter >/dev/null 2>&1; then
+    command -v flutter
+    return 0
+  fi
+  if [[ -x "$HOME/development/flutter/bin/flutter" ]]; then
+    printf '%s\n' "$HOME/development/flutter/bin/flutter"
+    return 0
+  fi
+  cat >&2 <<'EOF'
+ERRO: Flutter não encontrado.
+Instale o SDK 3.50.x (canal stable) ou defina FLUTTER_BIN com o caminho do executável.
+Sugestão:
+  git clone --filter=blob:none -b stable https://github.com/flutter/flutter.git ~/development/flutter
+  export PATH="$HOME/development/flutter/bin:$PATH"
+EOF
+  exit 1
+}
+
+require cargo
+require python3
+require cargo-deny
+
+FLUTTER="$(resolve_flutter)"
+
+step "Rust: formatação (cargo fmt --check)"
+cargo fmt --all -- --check
+
+step "Rust: Clippy (-D warnings)"
+cargo clippy --workspace --all-targets -- -D warnings
+
+step "Rust: testes"
+cargo test --workspace
+
+step "Licenças e fontes (cargo deny)"
+cargo deny check
+
+step "i18n: paridade de ARBs"
+python3 tools/check_arb.py
+
+step "Flutter: dependências (apps/kentron_app)"
+(cd apps/kentron_app && "$FLUTTER" pub get)
+
+step "Flutter: analyze (apps/kentron_app)"
+(cd apps/kentron_app && "$FLUTTER" analyze)
+
+step "Flutter: testes (apps/kentron_app)"
+(cd apps/kentron_app && "$FLUTTER" test)
+
+step "i18n: geração de localizações (packages/core_l10n)"
+# A geração roda numa cópia temporária: o l10n.yaml do pacote escreve em
+# lib/l10n, e gerar no lugar sujaria a árvore de trabalho.
+TMP_L10N="$(mktemp -d)"
+trap 'rm -rf "$TMP_L10N"' EXIT
+cp -R packages/core_l10n/. "$TMP_L10N/"
+rm -rf "$TMP_L10N/.dart_tool" "$TMP_L10N/build"
+(cd "$TMP_L10N" && "$FLUTTER" pub get >/dev/null && "$FLUTTER" gen-l10n)
+test -f "$TMP_L10N/lib/l10n/app_localizations.dart" || {
+  echo "ERRO: gen-l10n não gerou app_localizations.dart." >&2
+  exit 1
+}
+
+step "Pipeline local concluído: todos os portões passaram."

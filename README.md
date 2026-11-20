@@ -4,7 +4,7 @@ App livre e descentralizado para bandas e equipes de louvor: cifras, tablaturas 
 setlists, agenda e escalas, regência ao vivo e ponte para projeção (Holyrics/OpenLyrics) e OBS.
 Multilíngue desde o início (pt-BR, es-419, en-US primeiro).
 
-**Estado: R0 publicado na `main`; R1 parcialmente integrado à `main` (parser ChordPro e placeholder MusicXML), com o restante em branch própria.** O CI do GitHub está verde (run `44665120771`), incluindo `flutter analyze` e `flutter test`. A validação local também foi executada com Flutter 3.50.1: `flutter analyze` sem achados e teste de fumaça passando. O app usa `material_ui` 1.11.1. O nome definitivo é **Kentron**.
+**Estado: R0 publicado na `main`; R1 parcialmente integrado à `main` (parser ChordPro e placeholder MusicXML), com o restante em branch própria.** O portão principal é o **pipeline local** (`./scripts/ci-local.sh`), que roda Rust, licenças, ARBs e Flutter antes de cada push; o GitHub Actions permanece como rede de segurança em pull requests e no agendamento semanal (ADR-0004). O app usa `material_ui` 1.11.1. O nome definitivo é **Kentron**.
 
 Repositório: `https://github.com/jefersonlop3s/kentron-music`.
 
@@ -21,7 +21,7 @@ Este projeto é distribuído "como está" (*as-is*), sem garantias de qualquer t
 - [Plano mestre v2.5](docs/plano-mestre-v2.5.html): arquitetura, auditoria da v2.4 e histórico.
 - [Roadmap](docs/ROADMAP.md) · [Pendências](docs/PENDING.md) · [Conclusões](docs/CONCLUSION.md) · [Changelog](CHANGELOG.md).
 - [Arquitetura](docs/architecture/README.md) · [Design System](docs/design-system/README.md).
-- [ADR-0001](docs/adr/0001-licenca-apache-2-0.md) licença · [ADR-0002](docs/adr/0002-primeira-release-cifra-e-projecao.md) primeira release · [ADR-0003](docs/adr/0003-nome-de-trabalho.md) nome.
+- [ADR-0001](docs/adr/0001-licenca-apache-2-0.md) licença · [ADR-0002](docs/adr/0002-primeira-release-cifra-e-projecao.md) primeira release · [ADR-0003](docs/adr/0003-nome-de-trabalho.md) nome · [ADR-0004](docs/adr/0004-ci-local-first.md) CI local-first.
 
 ## Estrutura
 
@@ -41,6 +41,12 @@ Este projeto é distribuído "como está" (*as-is*), sem garantias de qualquer t
 - Python 3 para `tools/check_arb.py`.
 
 ## Comandos
+
+Pipeline local completo (portão principal, ADR-0004):
+
+```bash
+./scripts/ci-local.sh
+```
 
 ```bash
 cargo test --workspace

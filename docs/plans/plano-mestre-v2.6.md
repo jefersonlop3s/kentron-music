@@ -8,6 +8,7 @@
 - Licença: **Apache-2.0**, com aviso explícito de uso "como está" no README.
 - UI: metodologia **Impeccable**, com `DESIGN.md` como fonte de verdade visual.
 - Engenharia assistida: **Sovereign Harness**, com gates locais de segredo, SCA, SAST, tipos, testes e lint.
+- CI: **local-first** (ADR-0004). `scripts/ci-local.sh` é o portão principal; o GitHub Actions permanece como rede de segurança em PRs e semanal.
 - Repositório: `https://github.com/jefersonlop3s/kentron-music`.
 - Branch principal: `main`. O parser ChordPro da R1 foi integrado; o restante da R1 segue em branch própria a partir da `main`.
 - Dados musicais canônicos no Rust; tradução apenas na borda Flutter.
@@ -21,7 +22,7 @@ Concluído e publicado na `main`:
 - Nomeação de acordes em quatro sistemas, com testes dourados.
 - Workspace Flutter/Melos e scaffold de `kentron_app`.
 - ARBs da Faixa 1 e validador `tools/check_arb.py`.
-- CI com Rust, licenças, i18n e Flutter; ações fixadas por SHA. Verde no run `44665120771`.
+- Pipeline local `scripts/ci-local.sh` verde: Rust, licenças, i18n e Flutter. Actions como rede de segurança, sem gatilho em `push` para `main`.
 - App Flutter migrado para `material_ui` 1.11.1.
 - `cargo clippy`, `cargo fmt`, `cargo deny` e Semgrep sem achados no código do projeto.
 
@@ -30,7 +31,7 @@ Ressalvas abertas:
 - Flutter 3.50.1 instalado em `~/development/flutter`; `flutter analyze`, `flutter test` e `flutter gen-l10n` rodaram localmente com sucesso.
 - `core_l10n` ainda não está integrado ao app; o pacote não possui `lib/core_l10n.dart`.
 - A ponte `flutter_rust_bridge` é apenas um placeholder; não há chamada real Rust ↔ Flutter.
-- CI do GitHub verde no run `44665120771`; a validação local de Flutter foi executada com sucesso.
+- Pipeline local executado com sucesso; a validação local de Flutter foi executada com sucesso.
 
 ## 3. R1 · Cifra, palco local e projeção
 
@@ -66,10 +67,14 @@ Ressalvas abertas:
 | Sem spike de relógio/LAN | Spike específico antes da R3. |
 | MIR sem métrica de aceite | Dataset lícito, métricas e limiares antes dos spikes. |
 | Decisões D1–D9 bloqueando R0 | Apenas decisões imediatas bloqueiam; D3–D8 ficam para as releases afetadas. |
-| `cargo-deny` não cobre Dart | Inventário e verificação de licenças Dart no CI. |
+| `cargo-deny` não cobre Dart | Inventário e verificação de licenças Dart no pipeline local. |
+| Matriz duplicada (script + workflow) | Manter `scripts/ci-local.sh` e `ci.yml` sincronizados; o script é a fonte de verdade. |
+| Política de runners de terceiros | Pipeline local como portão principal; Actions apenas como rede de segurança. |
+| Versão do Flutter não fixada | Fixar a versão no pipeline e no workflow. |
 
 ## 5. Próximos passos
 
+0. Rodar `./scripts/ci-local.sh` antes de cada push; é o portão principal (ADR-0004).
 1. Rodar `flutter analyze` e `flutter test` em ambiente com Flutter; corrigir o app.
 2. Integrar `core_l10n` e criar a chamada real Rust ↔ Flutter.
 3. Fechar o parser ChordPro e iniciar Song Bundle/persistência.

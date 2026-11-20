@@ -1,13 +1,14 @@
 # Pendências · Kentron Music Hub
 
 ## 🚩 R0 (publicado, com ressalvas)
-- [ ] Rodar `flutter analyze` e `flutter gen-l10n` de `packages/core_l10n` no CI (hoje o job cobre apenas `apps/kentron_app`).
-- [ ] Fixar a versão do Flutter no CI (o workflow usa o canal `stable` sem versão; a validação local usou 3.50.1).
+- [ ] Rodar `flutter analyze` de `packages/core_l10n` no pipeline local (hoje `ci-local.sh` cobre `gen-l10n` do pacote, mas `analyze`/`test` apenas de `apps/kentron_app`).
+- [ ] Fixar a versão do Flutter no pipeline local e no workflow (hoje ambos usam `stable` sem versão; a validação local usou 3.50.1).
+- [ ] Manter `scripts/ci-local.sh` e `.github/workflows/ci.yml` sincronizados: a matriz está duplicada e pode divergir.
 - [ ] Integrar `core_l10n` ao app e criar `lib/core_l10n.dart`.
 - [ ] Substituir o placeholder da ponte Rust ↔ Flutter por chamada real.
 - [ ] Configurar proteção da branch `main` no GitHub.
 - [ ] Registro final na verificação de desenvolvedor do Android.
-- [ ] Adicionar verificação de licenças para dependências Dart/Flutter.
+- [ ] Adicionar verificação de licenças para dependências Dart/Flutter no pipeline local (`cargo-deny` cobre apenas Rust).
 - [ ] Teste de fumaça do app Flutter em dispositivo real (Android/iOS).
 - [ ] Revisar traduções de es-419, pt-BR e en-US com falantes nativos.
 

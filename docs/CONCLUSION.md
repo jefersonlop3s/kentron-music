@@ -2,7 +2,7 @@
 
 ## R0 · Fundação publicada (2026-11-19)
 
-**Status:** 🟢 Publicado na `main`, com ressalvas de validação Flutter.
+**Status:** 🟢 Publicado na `main`; validação local e pipeline local concluídos.
 
 ### Evidências
 - Commits: `7f68e2b` (R0), `b149bb3` (endurecimento de CI/app), `d21d1fe` (registros vivos alinhados ao CI verde e ao `material_ui`).
@@ -24,7 +24,7 @@
 - Flutter 3.50.1 instalado em `~/development/flutter`; a validação local passou, mas o SDK ainda não está no `PATH` padrão do ambiente.
 - `core_l10n` ainda não está integrado ao app.
 - A ponte Rust ↔ Flutter é um placeholder.
-- CI do GitHub verde no run `44665120771`; a validação local de Flutter segue pendente.
+- Pipeline local como portão principal (ADR-0004): `scripts/ci-local.sh` verde de ponta a ponta.
 
 ## R1 · Parser ChordPro (parcial integrado, 2026-11-20)
 
@@ -38,4 +38,22 @@
 - Persistência, transposição, UI de palco e projeção ainda não existem.
 
 **Próxima Fase:** concluir R1-A, R1-B e R1-C conforme o plano v2.6, em nova branch a partir da `main`.
+
+## R0 · Pipeline local-first (ADR-0004, 2026-11-20)
+
+**Status:** 🟢 Decisão aceita e implementada.
+
+### Evidências
+- ADR-0004 aceita: pipeline local como portão principal; Actions como rede de segurança.
+- `scripts/ci-local.sh` criado e executado com sucesso: `cargo fmt --check`, `cargo clippy`, `cargo test`, `cargo deny`, `check_arb.py`, `flutter analyze`, `flutter test` e `gen-l10n` de `core_l10n`.
+- `.githooks/pre-push` ampliado com gates transversais (`deny`, `arb`, `flutter`), garantindo que o push execute a matriz mesmo sem CI remoto.
+- `.github/workflows/ci.yml` sem gatilho em `push` para `main`; mantém `pull_request`, `workflow_dispatch` e `schedule` semanal.
+
+### Premissa corrigida
+- O repositório é **público**, portanto o Actions é gratuito e ilimitado. A decisão **não** foi motivada por custo, e sim por soberania, redução de ruído e não duplicação de validação.
+
+### Ressalvas
+- A matriz está duplicada entre `scripts/ci-local.sh` e `ci.yml`; pode divergir.
+- A versão do Flutter não está fixada em nenhum dos dois.
+- `packages/core_l10n` ainda não tem `analyze`/`test` no pipeline local.
 

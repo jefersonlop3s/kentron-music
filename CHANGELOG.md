@@ -2,6 +2,19 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [Infra] Pipeline local-first (ADR-0004, 2026-11-20)
+### Adicionado
+- `scripts/ci-local.sh` como portão principal: Rust (`fmt --check`, `clippy`, testes), `cargo deny`, paridade de ARBs e Flutter (`analyze`, `test`, `gen-l10n`).
+- ADR-0004 e entrada no índice de ADRs.
+- Gates transversais no `.githooks/pre-push` (`deny`, `arb`, `flutter`), com escape por `HARNESS_SKIP`.
+
+### Alterado
+- `.github/workflows/ci.yml` sem gatilho em `push` para `main`; mantém `pull_request`, `workflow_dispatch` e `schedule` semanal.
+- README, ROADMAP, PENDING e CONCLUSÃO alinhados ao pipeline local.
+
+### Premissa corrigida
+- O repositório é público, portanto o GitHub Actions é gratuito e ilimitado. A mudança é por soberania, redução de ruído e não duplicação de validação — não por custo.
+
 ## [R1] Cifra e Projeção (parcial integrado, 2026-11-20)
 ### Adicionado
 - Parser ChordPro com modelo canônico e testes dourados.

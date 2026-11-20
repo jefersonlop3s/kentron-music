@@ -1,9 +1,14 @@
 name: ci
 
+# ADR-0004: o pipeline local (scripts/ci-local.sh) é o portão principal e roda
+# antes de cada push. O Actions permanece como rede de segurança: valida pull
+# requests em ambiente limpo, aceita execução sob demanda e roda semanalmente
+# para detectar drift de dependências. Não dispara em push para a main.
 on:
   pull_request:
-  push:
-    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
 
 permissions:
   contents: read

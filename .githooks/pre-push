@@ -450,6 +450,50 @@ if [ -f "pyproject.toml" ] || [ -f "setup.py" ] || [ -f "requirements.txt" ]; th
     run_gate lint gate_lint
 fi
 
+# ---------- Gates transversais do Kentron (ADR-0004) ----------
+# O pipeline local (`scripts/ci-local.sh`) é a matriz completa. Estes gates
+# cobrem no push o que os gates por stack acima não cobrem: licenças de
+# dependências, paridade de ARBs e o app Flutter. Ferramenta ausente bloqueia,
+# como nos demais gates; o escape é `HARNESS_SKIP=<gate>`.
+if [ -f "deny.toml" ]; then
+    gate_deny() {
+        precisa_de cargo-deny "cargo install cargo-deny --locked" || return 127
+        cargo deny check
+    }
+    run_gate deny gate_deny
+fi
+
+if [ -f "tools/check_arb.py" ]; then
+    gate_arb() {
+        precisa_de python3 "https://www.python.org/downloads/" || return 127
+        python3 tools/check_arb.py
+    }
+    run_gate arb gate_arb
+fi
+
+if [ -f "apps/kentron_app/pubspec.yaml" ]; then
+    gate_flutter() {
+        local flutter_bin="${FLUTTER_BIN:-}"
+        if [ -z "$flutter_bin" ]; then
+            if command -v flutter >/dev/null 2>&1; then
+                flutter_bin=$(command -v flutter)
+            elif [ -x "$HOME/development/flutter/bin/flutter" ]; then
+                flutter_bin="$HOME/development/flutter/bin/flutter"
+            else
+                echo "Flutter não encontrado. Instale o SDK 3.50.x (stable) ou defina FLUTTER_BIN."
+                return 127
+            fi
+        fi
+        local app dir
+        for app in apps/*/pubspec.yaml; do
+            [ -f "$app" ] || continue
+            dir=$(dirname "$app")
+            ( cd "$dir" && "$flutter_bin" pub get >/dev/null && "$flutter_bin" analyze && "$flutter_bin" test ) || return $?
+        done
+    }
+    run_gate flutter gate_flutter
+fi
+
 # =============================================================================
 # Radar de skills — converte a prosa das skills em sinal no momento do push
 # =============================================================================

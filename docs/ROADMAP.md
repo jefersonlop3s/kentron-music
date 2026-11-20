@@ -14,10 +14,12 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 - [x] Sovereign Harness: guardrails e git hooks ativos.
 - [x] Impeccable UI: `DESIGN.md` e vocabulário visual definidos.
 - [x] Infra: Cargo Workspace, Melos, scaffold Flutter e CI com ações fixadas por SHA.
+- [x] Pipeline local `scripts/ci-local.sh` como portão principal (ADR-0004); Actions como rede de segurança em PRs e semanal.
 - [x] Core: `notation_bundle` (`chord_naming`) com testes dourados.
 - [x] Validação Flutter local (`flutter analyze`/`flutter test`) com Flutter 3.50.1.
 - [ ] Integração real de `core_l10n` e da ponte Rust ↔ Flutter.
-- [x] Primeira execução do CI no GitHub (run `44665120771`, verde).
+- [x] Pipeline local validado de ponta a ponta (Rust, licenças, ARBs e Flutter).
+- [x] CI remoto mantido como rede de segurança: sem gatilho em `push` para `main`; `pull_request`, `workflow_dispatch` e `schedule` semanal.
 - [x] App migrado para `material_ui` 1.11.1.
 
 ---
@@ -104,4 +106,6 @@ Para cada etapa, aplica-se o seguinte rigor:
 - **Exploratório:** Testes de estresse, limites de memória e casos de borda.
 - **Acessibilidade:** Contraste WCAG, alvos de toque $\ge 48\text{px}$ e Screen Readers.
 - **E2E:** Fluxos completos do usuário em dispositivos de referência.
+
+**Execução:** o pipeline local (`./scripts/ci-local.sh`) roda a matriz antes de cada push; o Actions cobre PRs em ambiente limpo e o agendamento semanal detecta *drift* de dependências (ADR-0004).
 
