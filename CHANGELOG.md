@@ -2,6 +2,22 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [R1] Tela inicial consumindo o núcleo Rust (2026-11-20)
+### Adicionado
+- `HomeScreen` deixou de ser estática: chama `parseSong` e mostra título, artista/tom/seções, os acordes em chips e **qual núcleo respondeu** (`núcleo: kentron_ffi …`) — a ponte visível para quem usa o app.
+- `cifraDeExemplo`: cifra **só de acordes** (sem letra de terceiros) usada pela tela; o objetivo é provar a ponte, não entregar repertório.
+- Carregador injetável (`carregar`) em `KentronApp`/`HomeScreen`: o default é o núcleo real, e os testes herméticos injetam outro.
+
+### Verificado
+- `bridge_test.dart`: teste de **widget com o `cdylib` real**, provando a tela renderizar o parse do Rust (título, tom, seções, acordes e o núcleo que respondeu). `flutter test`: 8/8 verdes; `flutter analyze`: sem issues.
+- O parse de linhas **só com acordes** (`[C] [G] [Am] [F]`) ficou provado por esse teste.
+
+### Decisão de teste
+- O teste com a ponte real **não** usa `pumpAndSettle`: o indicador de carregamento anima indefinidamente e a resposta chega por uma porta do FFI, que o relógio falso do teste não avança. A espera é em tempo real, via `runAsync`, até o indicador sair da árvore.
+
+### Não provado
+- A execução **no navegador**: o `build/web` está servível, mas ninguém abriu ainda. Ver a nota no PENDING sobre canvas/DOM antes de investir em E2E automatizado.
+
 ## [R1] Alvo web do app (2026-11-20)
 ### Adicionado
 - `apps/kentron_app/web/`: scaffold web (`flutter create --platforms=web`) com `index.html` carregando o glue wasm-bindgen (`pkg/kentron_ffi.js`) e título/descrição do Kentron.

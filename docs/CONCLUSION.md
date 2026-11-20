@@ -99,6 +99,16 @@
 - O gate do kentron já tinha a mesma correção (`a68c85c`), então projeto e kit voltaram a concordar.
 - Fechamento: os dois itens saíram do PENDING; restam no kit apenas as ressalvas já documentadas (canário Claude live pendente de login do dono).
 
+## R1 · Tela inicial consumindo o núcleo Rust (2026-11-20)
+
+**Status:** 🟢 O caminho Dart está provado com o `cdylib` real; falta ver no navegador.
+
+- A `HomeScreen` chama `parseSong` e mostra o que voltou do Rust — inclusive `núcleo: kentron_ffi …`, que identifica quem respondeu.
+- O carregador é injetável: os testes de widget ficam **herméticos** (sem FFI) e um teste no `bridge_test.dart` prova o caminho completo com o cdylib de verdade. 8/8 verdes, analyze limpo.
+- Armadilha registrada: com a ponte real, `pumpAndSettle` estoura — o indicador anima para sempre e a resposta chega por porta do FFI; a espera é em tempo real (`runAsync`).
+- Achado: o parser extrai acordes de linhas só com acordes (sem letra), provado por esse teste.
+- Aberto: a renderização no navegador (o Flutter web desenha em canvas — asserção de texto exigiria semântica habilitada).
+
 ## R1 · Alvo web (2026-11-20)
 
 **Status:** 🟢 Build e serviço verificados; a tela ainda não consome a ponte, então a execução no navegador **não** está provada.
