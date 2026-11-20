@@ -2,6 +2,25 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [R1] Alvo web do app (2026-11-20)
+### Adicionado
+- `apps/kentron_app/web/`: scaffold web (`flutter create --platforms=web`) com `index.html` carregando o glue wasm-bindgen (`pkg/kentron_ffi.js`) e título/descrição do Kentron.
+- `scripts/servir-web.py`: servidor estático que envia `Cross-Origin-Opener-Policy: same-origin` e `Cross-Origin-Embedder-Policy: require-corp` (sem eles não há `SharedArrayBuffer` e a ponte wasm não carrega), além de `application/wasm`; falha alto com instrução quando o build não existe.
+
+### Alterado
+- `apps/kentron_app/analysis_options.yaml`: `web/**` fora do analyzer (o próprio `flutter create` acrescenta).
+- Removido o `README.md` boilerplate que o `flutter create` gerou: documentação vive em `docs/`.
+
+### Verificado
+- `flutter build web --release` → `✓ Built build/web`; servido: `/` 200 com COOP, `/pkg/kentron_ffi_bg.wasm` 200 `application/wasm`, `/pkg/kentron_ffi.js` e `/main.dart.js` 200, `index.html` com a tag da ponte. Negativo: `servir-web.py` com dir inexistente → exit=1.
+
+### Pré-requisitos (medidos)
+- `build-web` compila com `-Z build-std` para atomics/shared memory: exige toolchain **nightly** com `rust-src` e o alvo `wasm32-unknown-unknown`.
+- O próprio gerador **auto-instala** ferramentas quando faltam: `cargo-expand` 1.0.127 e `wasm-pack` 0.15.1 (divulgado).
+
+### Decisão
+- O build web **não** entra no `ci-local.sh` por ora: exigiria nightly + `build-std` em toda bateria, custo alto para o benefício atual. Revisar quando o alvo web passar a ser entregue.
+
 ## [R1] Ponte Rust ↔ Flutter real (ADR-0007 aceita, 2026-11-20)
 ### Adicionado
 - `crates/kentron_ffi`: crate adaptador — o único `cdylib` do workspace e o único a depender do `flutter_rust_bridge` 2.13.0. Expõe `parse_song(input) -> SongSummary` (título, tom, artista, seções, acordes e qual núcleo respondeu).

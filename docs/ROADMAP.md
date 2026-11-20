@@ -19,6 +19,7 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 - [x] Validação Flutter local (`flutter analyze`/`flutter test`) com Flutter 3.50.1.
 - [x] Integração real do `core_l10n` no app: delegates, locales suportados e a saudação da tela inicial vindos do ARB. Provado em teste com en/pt/es e com o fallback regional `pt_PT` → `pt`.
 - [x] Ponte Rust ↔ Flutter: o crate adaptador `kentron_ffi` (único `cdylib`) expõe `parse_song` ao Dart, com bindings gerados e provados por teste de Flutter. Falta o app abrir em dispositivo — depende dos diretórios de plataforma.
+- [x] Alvo **web** do app: scaffold, wasm da ponte compilado e `scripts/servir-web.py` com COOP/COEP — build e serviço verificados. Falta a tela consumir a ponte (prova no navegador) e os diretórios `android/`/`ios/`.
 - [x] Pipeline local validado de ponta a ponta (Rust, licenças, ARBs e Flutter).
 - [x] CI remoto mantido como rede de segurança: sem gatilho em `push` para `main`; `pull_request`, `workflow_dispatch` e `schedule` semanal.
 - [x] App migrado para `material_ui` 1.11.1.

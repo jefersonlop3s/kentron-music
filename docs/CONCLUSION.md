@@ -99,6 +99,16 @@
 - O gate do kentron já tinha a mesma correção (`a68c85c`), então projeto e kit voltaram a concordar.
 - Fechamento: os dois itens saíram do PENDING; restam no kit apenas as ressalvas já documentadas (canário Claude live pendente de login do dono).
 
+## R1 · Alvo web (2026-11-20)
+
+**Status:** 🟢 Build e serviço verificados; a tela ainda não consome a ponte, então a execução no navegador **não** está provada.
+
+- `flutter create --platforms=web` deixou o `pubspec` intacto (comentários preservados) e só acrescentou `web/**` aos excludes do analyzer.
+- A ponte compila para wasm: `kentron_ffi_bg.wasm` (104 KB) + `kentron_ffi.js` (34 KB, alvo `no-modules`), com nightly + `rust-src`, porque o frb usa `-Z build-std` para atomics/shared memory.
+- `scripts/servir-web.py` serve o `build/web` com COOP/COEP e `application/wasm` — provado nos dois sentidos (200 nos artefatos; exit=1 quando o build não existe).
+- Achado de caminho a manter divulgado: o gerador **auto-instala** ferramentas quando faltam (`cargo-expand`, `wasm-pack`).
+- O que falta para "ver o núcleo rodando": ligar a tela a `parseSong` e provar num navegador — a CT `playwright` tem Playwright 1.63 e alcança o app servido aqui via Tailscale.
+
 ## R1 · Ponte Rust ↔ Flutter entregue (ADR-0007 aceita e emendada, 2026-11-20)
 
 **Status:** 🟢 A chamada real existe e está provada; falta o app abrir em dispositivo (diretórios de plataforma).
