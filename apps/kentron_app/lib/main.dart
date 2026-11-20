@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Sovereign Emerald, token visual do DESIGN.md.
 const _sovereignEmerald = Color(0xFF10B981);

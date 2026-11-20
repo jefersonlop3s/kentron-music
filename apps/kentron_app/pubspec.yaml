@@ -5,11 +5,12 @@ publish_to: none
 
 environment:
   sdk: '>=3.8.0 <4.0.0'
-  flutter: '>=3.32.0'
+  flutter: '>=3.50.0'
 
 dependencies:
   flutter:
     sdk: flutter
+  material_ui: ^1.11.1
   # core_l10n e flutter_rust_bridge entram quando o gerador de localização e a
   # ponte Rust estiverem realmente configurados. Até lá, o app deve compilar
   # sozinho para o CI não falhar em uma dependência inexistente.
