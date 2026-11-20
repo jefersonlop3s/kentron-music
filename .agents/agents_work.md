@@ -27,32 +27,35 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
-### cline/de6b0 — R1 · Song Bundle v1 (modelo em memória)
-- **Início**: 2026-11-20 12:28 (UTC) · **Última atualização**: 2026-11-20 13:20 (UTC)
-- **Repositório**: `kentron-music` · **Branches**: `feature/song-bundle-v1` (= `main` `329a8de`) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
-- **Demanda**: Song Bundle v1 — o dono decidiu começar pelo modelo em memória; persistência, migrações e exportação/restauração dependem da ADR-0006.
-- **Paths sob edição**: nenhum (aguardando decisão do dono).
-- **Status**: aguardando decisão do dono — modelo entregue na `main`; persistência só começa com o aceite da ADR-0006.
-- **PRs**: nenhum (integração por merge `--ff-only` na `main`).
-
-**Feito:**
-- Módulo `bundle` em `crates/notation_bundle`: `SongId`, `SetlistId`, `SongBundle`, `Library`, `Setlist` e `BundleError` com `message_key()` estável.
-- `SongBundle` não duplica bibliografia: título, tom e artista vêm do metadata do `.cho` (fonte única).
-- Invariantes provadas: id vazio, título ausente, duplicata de id, setlist só com música da biblioteca, entrada duplicada e resolução que falha alto quando a música sumiu.
-- 14 testes novos (11 unitários + 3 de integração sobre `worship.cho`); workspace de 29 para 43 testes; `ci-local.sh` verde.
-- `ADR-0006` proposta e **adiada pelo dono**: modelo primeiro, formato depois; nenhuma dependência externa adicionada.
-- Branches substituídas apagadas (`feature/R1-restante`, `feature/R1-transposicao-harmonia`, `wip/harmony-transpose`).
-
-**Ficou aberto:**
-- **Aceite da ADR-0006** (formato de persistência e `serde`/`serde_json` como primeira dependência): sem ele a persistência não começa.
-- Exportação/restauração e migrações de esquema: dependem do formato escolhido.
-- Exportação OpenLyrics/Holyrics, UI de palco, projeção e piloto: seguem na R1.
+Nenhum.
 
 ## 🟡 Interrompido / órfão
 
 Nenhum.
 
 ## 🟢 Concluído recentemente
+
+### cline/de6b0 — R1 · Song Bundle v1: modelo e persistência
+- **Início**: 2026-11-20 12:28 (UTC) · **Última atualização**: 2026-11-20 13:42 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/song-bundle-v1` (= `main` `95590b6`) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
+- **Demanda**: Song Bundle v1 — o dono decidiu começar pelo modelo em memória; com o modelo provado, aceitou a ADR-0006 e a persistência entrou.
+- **Paths sob edição**: nenhum (sessão encerrada).
+- **Status**: concluído.
+- **PRs**: nenhum (integração por merge `--ff-only` na `main`).
+
+**Feito:**
+- Modelo em memória (`bundle`): `SongId`, `SetlistId`, `SongBundle`, `Library`, `Setlist` e `BundleError` com `message_key()`; bibliografia vem do metadata do `.cho`, sem duplicação.
+- Persistência (`bundle_store`, ADR-0006 **aceita**): diretório com `meta.json` versionado + `song.cho`, `library.json`, setlist em JSON e exportação por cópia do diretório.
+- `chordpro::write` fecha o ciclo do parser com saída determinística; ida e volta pelo parser preserva o modelo.
+- Migração por degrau com cadeia vazia (v1 é o primeiro esquema): versão sem degrau é recusada em voz alta — provado com 0 e 2 recusados, 1 aceito.
+- Primeira dependência externa do workspace (`serde`/`serde_json`, **11 pacotes medidos** no `Cargo.lock`), aprovada por `cargo deny`.
+- 26 testes novos no total (14 do modelo + 12 da persistência); workspace de 29 para 55; `ci-local.sh` verde.
+- Branches substituídas apagadas (`feature/R1-restante`, `feature/R1-transposicao-harmonia`, `wip/harmony-transpose`).
+
+**Ficou aberto:**
+- Empacotar `score.musicxml` e `tabs/*.atex` no bundle: a ADR-0006 já os prevê, o v1 escreve só o `.cho`.
+- Contêiner de arquivo único (zip) para exportação — v1.1 da ADR-0006.
+- Integração Flutter (ponte real) e UI de leitor/setlists; exportação OpenLyrics/Holyrics; projeção; piloto.
 
 ### cline/de6b0 — R1 · Transposição e harmonia (Etapa 1)
 - **Início**: 2026-11-20 03:35 (UTC) · **Última atualização**: 2026-11-20 04:45 (UTC)
