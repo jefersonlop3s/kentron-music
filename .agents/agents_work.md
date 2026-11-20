@@ -27,6 +27,14 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
+### cline/de6b0 — CI local-first (ADR-0004)
+- **Início**: 2026-11-20 04:05 (UTC) · **Última atualização**: 2026-11-20 04:05 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `main` (a integrar por branch de documentação) · **Worktrees**: `~/Develop/Projects/app-music`
+- **Demanda**: replanejar as execuções de pipeline para o modelo local-first, com o Actions como rede de segurança.
+- **Paths sob edição**: `.githooks/pre-push`, `.github/workflows/ci.yml`, `scripts/ci-local.sh`, `docs/adr/0004-ci-local-first.md`, `docs/adr/ADR-INDEX.md`, `README.md`, `CHANGELOG.md`, `docs/ROADMAP.md`, `docs/PENDING.md`, `docs/CONCLUSION.md`, `docs/plans/plano-mestre-v2.6.md`.
+- **Status**: em andamento — pipeline local verde; falta commit e push.
+- **PRs**: nenhum.
+
 ### cline/de6b0 — Rascunho de harmonia (WIP)
 - **Início**: 2026-11-20 03:35 (UTC) · **Última atualização**: 2026-11-20 03:35 (UTC)
 - **Repositório**: `kentron-music` · **Branches**: `wip/harmony-transpose` (`35971c4`, local) · **Worktrees**: nenhum
