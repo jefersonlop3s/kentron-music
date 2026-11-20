@@ -83,6 +83,15 @@ def main() -> int:
         help="diretorio do build web (default: apps/kentron_app/build/web)",
     )
     parser.add_argument("--porta", type=int, default=8080, help="porta (default: 8080)")
+    parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help=(
+            "interface (default: 127.0.0.1, so a maquina local). Use 0.0.0.0 "
+            "apenas quando outro host precisar alcancar o servidor - isso "
+            "expoe o dev server na rede em que a maquina estiver."
+        ),
+    )
     args = parser.parse_args()
 
     diretorio = Path(args.dir).resolve()
@@ -106,9 +115,12 @@ def main() -> int:
         return 1
 
     handler = functools.partial(Handler, directory=str(diretorio))
-    with Servidor(("", args.porta), handler) as servidor:
-        print(f"servindo {diretorio} em http://localhost:{args.porta}/ (Ctrl+C para parar)")
-        print("cabecalhos COOP/COEP ativos - a ponte wasm carrega")
+    with Servidor((args.host, args.porta), handler) as servidor:
+        print(f"servindo {diretorio}")
+        print(f"  em http://{args.host}:{args.porta}/ (Ctrl+C para parar)")
+        if args.host not in ("127.0.0.1", "localhost"):
+            print("  atencao: escutando alem do local - o dev server esta exposto")
+        print("  cabecalhos COOP/COEP ativos - a ponte wasm carrega")
         try:
             servidor.serve_forever()
         except KeyboardInterrupt:
