@@ -3,19 +3,18 @@
 //! This module implements the parsing of MusicXML files, focusing on
 //! extracting chords and lyrics for a canonical representation.
 
-use std::collections::HashMap;
-use crate::chordpro::{Song, Section, Line, ChordPlacement};
+use crate::chordpro::Song;
 
 pub struct MusicXmlParser;
 
 impl MusicXmlParser {
-    pub fn parse(input: &str) -> Result<Song, String> {
+    pub fn parse(_input: &str) -> Result<Song, String> {
         // MusicXML is a complex XML format. For R1, we implement a simplified
         // extraction of chords and lyrics.
-        
+
         // TODO: Use a proper XML parser like `quick-xml` or `roxmltree`.
         // For now, we return a placeholder to be expanded in the next spike.
-        
+
         Err("MusicXML parsing not yet implemented in R1 base".to_string())
     }
 }

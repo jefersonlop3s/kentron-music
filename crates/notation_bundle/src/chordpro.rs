@@ -55,17 +55,17 @@ impl ChordProParser {
                 if let Some((key, value)) = content.split_once(":") {
                     metadata.insert(key.trim().to_string(), value.trim().to_string());
                 }
-            } else if trimmed.starts_with("#") {
+            } else if trimmed.starts_with('#') || trimmed.starts_with("[comment:") {
                 continue;
-            } else if trimmed.starts_with("[comment:") {
-                continue;
-            } else if trimmed.starts_with("[") && trimmed.ends_with("]") && Self::is_single_block(trimmed) && !Self::is_chord(trimmed) {
-                if !current_section.lines.is_empty() {
-                    sections.push(current_section);
-                } else if current_section.name.is_some() {
+            } else if trimmed.starts_with('[')
+                && trimmed.ends_with(']')
+                && Self::is_single_block(trimmed)
+                && !Self::is_chord(trimmed)
+            {
+                if !current_section.lines.is_empty() || current_section.name.is_some() {
                     sections.push(current_section);
                 }
-                
+
                 current_section = Section {
                     name: Some(trimmed[1..trimmed.len() - 1].to_string()),
                     lines: Vec::new(),
@@ -86,15 +86,18 @@ impl ChordProParser {
     fn is_single_block(s: &str) -> bool {
         let mut bracket_count = 0;
         let mut text_found = false;
-        let mut chars = s.chars().peekable();
 
-        while let Some(c) = chars.next() {
+        for c in s.chars() {
             if c == '[' {
-                if bracket_count != 0 { return false; }
+                if bracket_count != 0 {
+                    return false;
+                }
                 bracket_count += 1;
             } else if c == ']' {
                 bracket_count -= 1;
-                if bracket_count < 0 { return false; }
+                if bracket_count < 0 {
+                    return false;
+                }
             } else if bracket_count == 0 {
                 text_found = true;
             }
@@ -103,13 +106,19 @@ impl ChordProParser {
     }
 
     fn is_chord(s: &str) -> bool {
-        if s.len() > 12 { return false; }
+        if s.len() > 12 {
+            return false;
+        }
         let content = &s[1..s.len() - 1];
-        if content.is_empty() { return false; }
-        if content.contains(' ') { return false; }
-        
+        if content.is_empty() {
+            return false;
+        }
+        if content.contains(' ') {
+            return false;
+        }
+
         let first_char = content.chars().next().unwrap();
-        if ! "AGCEGBDFagcegbdf".contains(first_char) && first_char != '/' {
+        if !"AGCEGBDFagcegbdf".contains(first_char) && first_char != '/' {
             return false;
         }
 
@@ -128,7 +137,7 @@ impl ChordProParser {
                 let mut chord_val = String::new();
                 while let Some(&next) = chars.peek() {
                     if next == ']' {
-                        chars.next(); 
+                        chars.next();
                         break;
                     }
                     chord_val.push(chars.next().unwrap());
@@ -155,7 +164,7 @@ mod tests {
     fn test_basic_parsing() {
         let input = "{title: Test Song}\n{artist: Artist Name}\n\n[C] Hello [G] world";
         let song = ChordProParser::parse(input).unwrap();
-        
+
         assert_eq!(song.metadata.get("title").unwrap(), "Test Song");
         assert_eq!(song.metadata.get("artist").unwrap(), "Artist Name");
         assert_eq!(song.sections[0].lines[0].text, " Hello  world");
