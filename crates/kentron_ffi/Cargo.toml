@@ -1,0 +1,32 @@
+[package]
+name = "kentron_ffi"
+description = "Rust ↔ Flutter boundary (ADR-0007): the FFI adapter that exposes the domain crate to Dart."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+# O Flutter carrega este `cdylib`; `lib` continua existindo para os testes.
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+# A `version` aqui não é enfeite: `deny.toml` usa `wildcards = "deny"`, e uma
+# dependência de caminho sem versão é lida como wildcard pelo cargo-deny.
+notation_bundle = { path = "../notation_bundle", version = "0.0.0" }
+# Versão fixada igual à do gerador instalado: `flutter_rust_bridge_codegen`
+# 2.13.0 gera código casado com o crate 2.13.0.
+flutter_rust_bridge = "=2.13.0"
+
+# Este crate NÃO herda os lints do workspace, de propósito: o domínio
+# (`notation_bundle`) mantém `unsafe_code = "forbid"`, e a fronteira precisa de
+# `deny`. Motivo medido: a cola gerada pelo flutter_rust_bridge tem um bloco
+# `unsafe` (desserialização do wire), e `forbid` NÃO pode ser relaxado por
+# `allow` — com `deny`, o allow fica escopado ao módulo gerado em `src/lib.rs`,
+# e nada mais neste crate pode usar `unsafe` sem uma autorização explícita.
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }

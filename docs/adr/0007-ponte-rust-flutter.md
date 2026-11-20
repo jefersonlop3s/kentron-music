@@ -1,6 +1,6 @@
 # ADR-0007 · Ponte Rust ↔ Flutter: mecanismo e alvo do primeiro incremento
 
-- **Status:** proposto (2026-11-20) — aguarda aceite do dono do projeto
+- **Status:** **aceito** (2026-11-20) — decisão do dono do projeto; a instalação de `flutter_rust_bridge_codegen` 2.13.0 é o pré-requisito registrado nas Consequências; **emendado no mesmo dia** (ver Emenda, ao final): a cola do FFI vive em `crates/kentron_ffi`
 - **Decisão do plano:** plano v2.6, "Próximos passos" item 2 (integrar `core_l10n` e criar a chamada real Rust ↔ Flutter)
 
 ## Contexto
@@ -36,6 +36,17 @@ Forças em jogo:
 - **Custo:** nova dependência no crate + código gerado no repositório (ou passo de geração no pipeline) — a matriz do CI cresce e precisa cobrir a geração.
 - **Dívida assumida:** sem diretórios de plataforma, o incremento 1 é provado só em teste. O app não roda em dispositivo até o item 3.
 - **Reversão:** se o dono recusar a ferramenta, a alternativa é `dart:ffi` manual com `extern "C"` — sem dependência externa, mas com ABI mantida à mão, sem gerador e contrariando a arquitetura documentada.
+
+## Emenda (2026-11-20) — onde vive a cola do FFI
+
+A cláusula 4 da Decisão ("`unsafe_code = "forbid"` permanece") **não sobreviveu à medição**, e a emenda registra isso em vez de deixar a contradição no documento:
+
+- O código gerado pelo `flutter_rust_bridge` 2.13.0 tem **1 bloco `unsafe`** (`frb_generated.rs`, na desserialização do wire). Com `unsafe_code = "forbid"` o crate simplesmente não compila — e `forbid` **não** pode ser relaxado por `#[allow]`. Não é detalhe de estilo: **qualquer** FFI dentro de um crate com `forbid` colide com o invariante.
+- **Decisão emendada:** o FFI passa a viver num crate adaptador — `crates/kentron_ffi`, que é o único `cdylib` e o único a depender do `flutter_rust_bridge`. Esse crate **não herda** os lints do workspace: usa `unsafe_code = "deny"` com `#[allow(unsafe_code)]` **escopado ao módulo gerado** (`src/lib.rs`). O domínio (`notation_bundle`) mantém `unsafe_code = "forbid"`.
+- **O que não mudou:** o invariante que o dono quis preservar. `forbid` continua valendo onde o código é escrito à mão pelo projeto; a exceção fica confinada à fronteira e é auditável — um `allow` que se vê, num arquivo que se lê.
+- Ganho de desenho: a arquitetura é hexagonal e a ponte é um adaptador. Separar o crate torna isso explícito no layout, em vez de misturar domínio e FFI no mesmo pacote.
+
+Provas da emenda: `cargo build --workspace` compila com a cola gerada; `cargo clippy --workspace --all-targets -- -D warnings` limpo; **58 testes Rust** verdes; e o teste de Flutter carrega o `cdylib` e chama `parse_song` de verdade (`apps/kentron_app/test/bridge_test.dart`).
 
 ## Referências
 

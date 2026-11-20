@@ -5,8 +5,10 @@
 //! ADR-0006). The bundle is a directory with `meta.json` and `song.cho`; the
 //! optional `score.musicxml` and `tabs/*.atex` still arrive later, as does the
 //! projection-friendly verse pagination.
+//!
+//! This crate is domain only: no FFI, and `unsafe_code = "forbid"` holds. The
+//! Rust ↔ Flutter boundary lives in the `kentron_ffi` crate (ADR-0007).
 
-pub mod bridge;
 pub mod bundle;
 pub mod bundle_store;
 pub mod chord_naming;

@@ -80,7 +80,7 @@ Ressalvas abertas:
 
 0. Rodar `./scripts/ci-local.sh` antes de cada push; é o portão principal (ADR-0004).
 1. ~~Rodar `flutter analyze` e `flutter test` em ambiente com Flutter~~ — feito; o pipeline cobre app e `core_l10n`.
-2. ~~Integrar `core_l10n` e criar a chamada real Rust ↔ Flutter~~ — `core_l10n` **feito** (delegates, locales e o ARB `homeWelcome`, com teste por locale). A chamada real Rust ↔ Flutter segue pendente: ADR-0007 proposta, aguardando aceite do dono.
+2. ~~Integrar `core_l10n` e criar a chamada real Rust ↔ Flutter~~ — **feito**: `core_l10n` integrado (delegates, locales e o ARB `homeWelcome`, com teste por locale) e a chamada real existe — `crates/kentron_ffi` expõe `parse_song` ao Dart (ADR-0007), provada por teste de Flutter.
 3. Fechar o parser ChordPro e iniciar Song Bundle/persistência.
 4. Implementar OpenLyrics e Browser Source manual.
 5. Executar o piloto de dois cultos e só então publicar a R1.

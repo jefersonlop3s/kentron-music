@@ -15,9 +15,9 @@ dependencies:
   # não guarda string de interface — só o nome da marca.
   core_l10n:
     path: ../../packages/core_l10n
-  # flutter_rust_bridge entra quando a ponte Rust estiver de fato configurada
-  # (ADR-0007). Até lá, o app deve compilar sozinho para o CI não falhar em
-  # uma dependência inexistente.
+  # Ponte Rust ↔ Flutter (ADR-0007). Os bindings são gerados por
+  # `flutter_rust_bridge_codegen` e vivem em `lib/src/rust/`.
+  flutter_rust_bridge: 2.13.0
 
 dev_dependencies:
   flutter_test:

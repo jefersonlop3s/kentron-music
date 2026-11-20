@@ -18,7 +18,8 @@
 
 Parser ChordPro, transposição e testes dourados já integrados à `main`; o restante da R1 segue em branch por unidade de trabalho (`feature/song-bundle-v1`).
 - [ ] **Spike S5:** validar renderização de partituras/tabs via alphaTab/OSMD. Dimensiona o esforço de MusicXML/ATEX (R1.1); não bloqueia o piloto da R1.
-- [ ] **Ponte Rust ↔ Flutter (ADR-0007, proposta):** instalar `flutter_rust_bridge_codegen` 2.13.0 — ferramenta de sistema, decisão do dono — e trocar o placeholder de `bridge.rs` por uma chamada real, provada por teste de Flutter.
+- [x] **Ponte Rust ↔ Flutter (ADR-0007 aceita e emendada):** crate adaptador `crates/kentron_ffi` (único `cdylib`) expõe `parse_song` ao Dart via `flutter_rust_bridge` 2.13.0; bindings gerados e **provados** por `apps/kentron_app/test/bridge_test.dart`, que carrega o cdylib e chama o núcleo.
+- [ ] Documentar no README o pré-requisito de **regerar** os bindings quando `bridge.rs` mudar (`cargo install flutter_rust_bridge_codegen --version 2.13.0` e o comando do `flutter_rust_bridge.yaml`). Os arquivos gerados vão versionados, então o dia a dia não precisa da ferramenta.
 - [ ] Criar os diretórios de plataforma do app (`flutter create --platforms=...`): sem eles a ponte roda só em teste e o app não abre em dispositivo.
 - [ ] Adicionar fixtures de parser para acordes invertidos, `6/9`, acidentes duplos e letras multilíngues (a nomeação já os cobre; falta provar a preservação na leitura do `.cho`).
 - [x] Transposição no `chord_naming` e módulo `harmony` integrados à `main` (29 testes; acordes invertidos, `6/9` e acidentes duplos cobertos).

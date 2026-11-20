@@ -1,6 +1,6 @@
 [package]
 name = "notation_bundle"
-description = "Canonical chord model and localized chord naming (R0 slice of the notation bundle)."
+description = "Canonical chord model, chord naming, song bundle persistence (domain crate)."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

@@ -2,6 +2,22 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [R1] Ponte Rust ↔ Flutter real (ADR-0007 aceita, 2026-11-20)
+### Adicionado
+- `crates/kentron_ffi`: crate adaptador — o único `cdylib` do workspace e o único a depender do `flutter_rust_bridge` 2.13.0. Expõe `parse_song(input) -> SongSummary` (título, tom, artista, seções, acordes e qual núcleo respondeu).
+- Bindings gerados (`crates/kentron_ffi/src/frb_generated.rs` + `apps/kentron_app/lib/src/rust/`) e `flutter_rust_bridge.yaml` com o comando de regeração.
+- `apps/kentron_app/test/bridge_test.dart`: carrega o `cdylib` e chama o núcleo de verdade — prova a ponte, não um dublê.
+
+### Alterado
+- `notation_bundle` volta a ser domínio puro: sai o `cdylib` e a dependência de FFI, e `unsafe_code = "forbid"` segue valendo.
+- `scripts/ci-local.sh` e `.githooks/pre-push`: constroem o `cdylib` antes dos passos do app, porque o `flutter test` carrega o artefato.
+
+### Emenda à ADR-0007 (o que a medição obrigou)
+- A cláusula "`unsafe_code = "forbid"` permanece" era **inalcançável**: a cola gerada tem um bloco `unsafe` e `forbid` não pode ser relaxado por `allow`. O FFI passou para `crates/kentron_ffi` com `unsafe_code = "deny"` e `#[allow(unsafe_code)]` escopado ao módulo gerado — o domínio mantém `forbid`.
+
+### Validação
+- 58 testes Rust (3 do adaptador) e 5 de Flutter (2 da ponte) verdes; `cargo clippy --workspace --all-targets -- -D warnings` limpo; `ci-local.sh` verde.
+
 ## [R0] core_l10n integrado ao app (2026-11-20)
 ### Adicionado
 - `packages/core_l10n/lib/core_l10n.dart`: caminho único de import das localizações geradas — o app deixa de conhecer o caminho do arquivo gerado.

@@ -99,6 +99,18 @@
 - O gate do kentron já tinha a mesma correção (`a68c85c`), então projeto e kit voltaram a concordar.
 - Fechamento: os dois itens saíram do PENDING; restam no kit apenas as ressalvas já documentadas (canário Claude live pendente de login do dono).
 
+## R1 · Ponte Rust ↔ Flutter entregue (ADR-0007 aceita e emendada, 2026-11-20)
+
+**Status:** 🟢 A chamada real existe e está provada; falta o app abrir em dispositivo (diretórios de plataforma).
+
+- `crates/kentron_ffi` é o **adaptador**: único `cdylib` e único a depender do `flutter_rust_bridge` 2.13.0. Expõe `parse_song(input)`, devolvendo título, tom, artista, número de seções, acordes distintos e qual núcleo respondeu.
+- O domínio `notation_bundle` volta a ser puro e mantém `unsafe_code = "forbid"`.
+- **Emenda medida à ADR:** a cláusula 4 ("`forbid` permanece") não sobrevivia — a cola gerada tem um bloco `unsafe`, e `forbid` não aceita `allow`. O adaptador usa `deny` com o allow escopado ao módulo gerado; o invariante que o dono quis preservar segue de pé onde o código é nosso, e a exceção é auditável.
+- **Prova de ponta a ponta:** `apps/kentron_app/test/bridge_test.dart` carrega o `cdylib` e chama o Rust — `parse_song` devolve o resumo real e cifra vazia vira exceção. 58 testes Rust (3 do adaptador) + 5 de Flutter.
+- Pipeline e pre-push constroem o `cdylib` antes dos passos do app. Regerar bindings exige `flutter_rust_bridge_codegen` 2.13.0 **e** um `cargo fmt --all` depois (o gerador não segue a edição 2024 do crate) — documentado no `flutter_rust_bridge.yaml`.
+- Ferramenta instalada nesta máquina por `cargo install`; os arquivos gerados vão **versionados**, então o dia a dia não precisa dela.
+- Ficou aberto: diretórios de plataforma (`flutter create --platforms=...`) para o app rodar fora do teste.
+
 ## R0 · core_l10n integrado ao app (2026-11-20)
 
 **Status:** 🟢 Entregue na `main`.

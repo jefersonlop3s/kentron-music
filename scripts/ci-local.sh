@@ -81,6 +81,11 @@ cargo deny check
 step "i18n: paridade de ARBs"
 python3 tools/check_arb.py
 
+step "Rust: cdylib da ponte Rust ↔ Flutter (ADR-0007)"
+# O teste de ponte do app carrega `target/debug/libkentron_ffi.<ext>`; sem este
+# build o `flutter test` falha com "cdylib ausente".
+cargo build -p kentron_ffi
+
 step "i18n: geração de localizações (packages/core_l10n)"
 # Geração NO LUGAR, não mais numa cópia temporária (2026-11-20): o app depende
 # do pacote e precisa de `lib/l10n/app_localizations.dart` para analisar e

@@ -1,0 +1,15 @@
+# Ponte Rust ↔ Flutter (ADR-0007).
+#
+# Regenere os bindings depois de mudar `crates/kentron_ffi/src/bridge.rs`:
+#
+#   flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml
+#   cargo fmt --all
+#
+# O `cargo fmt` depois de gerar NÃO é opcional: o rustfmt que o gerador usa não
+# segue a edição do crate (2024), e tanto o `cargo fmt --check` do pipeline
+# quanto o `rustfmt` do pre-push reprovam o arquivo como ele sai.
+#
+# Comandos executados da raiz do repositório (os caminhos abaixo são relativos a ela).
+rust_input: crate::bridge
+rust_root: crates/kentron_ffi
+dart_output: apps/kentron_app/lib/src/rust

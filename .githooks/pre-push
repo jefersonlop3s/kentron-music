@@ -505,6 +505,14 @@ if [ -f "apps/kentron_app/pubspec.yaml" ]; then
         if [ -f packages/core_l10n/pubspec.yaml ]; then
             ( cd packages/core_l10n && "$flutter_bin" pub get >/dev/null && "$flutter_bin" gen-l10n >/dev/null ) || return $?
         fi
+        # O teste de ponte carrega o cdylib (ADR-0007): construir antes.
+        if [ -f crates/kentron_ffi/Cargo.toml ]; then
+            command -v cargo >/dev/null 2>&1 || {
+                echo "cargo não encontrado — o teste de ponte precisa do cdylib de kentron_ffi."
+                return 127
+            }
+            cargo build -p kentron_ffi >/dev/null || return $?
+        fi
         for app in apps/*/pubspec.yaml; do
             [ -f "$app" ] || continue
             dir=$(dirname "$app")
