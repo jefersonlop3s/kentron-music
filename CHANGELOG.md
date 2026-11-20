@@ -2,6 +2,22 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [R1] Empacotamento do Rust por Native Assets (ADR-0008 aceita) (2026-11-20)
+### Alterado
+- O Rust deixou de entrar no app como **plugin** (cargokit, CocoaPods-only) e passou a entrar como **code asset** por build hooks: `apps/kentron_app/hook/build.dart` → `native_toolchain_rust`, com `flutter_rust_bridge_hooks: 2.13.0`.
+- `apps/kentron_app/rust_builder/` removido; `pubspec` sem a dependência de path e `analysis_options` sem o exclude do cargokit.
+- `rust-toolchain.toml` passou de `stable` (flutuante) para **`1.97.1` pinado**, com a lista de alvos; **cópia dentro de `crates/kentron_ffi/`**, porque o `native_toolchain_rust` valida a toolchain no diretório do crate, não subindo a árvore.
+- `ios/` regenerado **sem CocoaPods**: sem `Podfile`, sem `Podfile.lock`, sem `Pods/`.
+
+### Verificado
+- `flutter build ios --debug --simulator` → `✓ Built Runner.app` (23,9 s) com **zero** ocorrências do aviso de SPM; app aberto no simulador mostrando os dados do núcleo.
+- `flutter build apk --debug` → `✓ Built app-debug.apk` (32,7 s); app rodando no emulador com `libkentron_ffi.so` dentro do APK.
+- `flutter test` 8/8 e `scripts/ci-local.sh` `EXIT=0` depois da migração.
+
+### Decisão
+- **ADR-0008** aceita pelo dono do projeto em 2026-11-20. Reversão é um commit (`git revert`), porque o commit do cargokit continua no histórico.
+
+
 ## [manutenção] Runtime de simulador único e o caso do SPM (2026-11-20)
 ### Alterado
 - Removido o runtime iOS redundante **`24B91016s`** (seed, 7,7 GB): ficou o **`24B8117`**, onde está o iPhone 17 usado nas provas. `xcrun simctl list runtimes` agora lista um só.

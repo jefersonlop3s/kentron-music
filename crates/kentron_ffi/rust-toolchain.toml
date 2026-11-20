@@ -1,0 +1,17 @@
+# Cópia do pin da raiz, exigida **dentro do crate**: o `native_toolchain_rust`
+# (usado pelo hook de Native Assets) valida a toolchain neste caminho, não subindo
+# a árvore do workspace. Mantenha os dois arquivos em sincronia.
+# https://github.com/GregoryConrad/native_toolchain_rust?tab=readme-ov-file#rust-toolchaintoml
+[toolchain]
+channel = "1.97.1"
+components = ["clippy", "rustfmt"]
+targets = [
+    "aarch64-apple-darwin",
+    "aarch64-apple-ios",
+    "aarch64-apple-ios-sim",
+    "x86_64-apple-ios",
+    "aarch64-linux-android",
+    "armv7-linux-androideabi",
+    "i686-linux-android",
+    "x86_64-linux-android",
+]

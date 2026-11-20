@@ -8,10 +8,11 @@ license.workspace = true
 publish.workspace = true
 
 # O Flutter carrega este `cdylib`; `lib` continua existindo para os testes.
-# `staticlib` é obrigatório para iOS/macOS: o cargokit do frb usa o `.a` e, sem
-# ele, cai no caminho de Framework e estoura "Unable to find bundle for dynamic
-# library" (medido no build do simulador em 2026-11-20). Android segue usando o
-# `cdylib` (`.so`).
+# `staticlib` + `cdylib` são o requisito do backend Native Assets
+# (`hook/build.dart` → `native_toolchain_rust`): o alvo de biblioteca precisa
+# produzir artefato estático **e** dinâmico. Historicamente (cargokit, até
+# 2026-11-20) o `staticlib` era o que fazia o iOS usar o `.a` em vez de exigir
+# um Framework.
 [lib]
 crate-type = ["lib", "cdylib", "staticlib"]
 

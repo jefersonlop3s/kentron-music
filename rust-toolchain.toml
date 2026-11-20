@@ -1,3 +1,17 @@
 [toolchain]
-channel = "stable"
+# Fixado em versão concreta (não "stable") porque o backend de Native Assets
+# (hook/build.dart → native_toolchain_rust) exige toolchain reprodutível:
+# https://github.com/fzyzcjy/flutter_rust_bridge/blob/master/website/docs/manual/integrate/03-native-assets.md
+# Os alvos listados são instalados/verificados pelo rustup neste toolchain.
+channel = "1.97.1"
 components = ["clippy", "rustfmt"]
+targets = [
+    "aarch64-apple-darwin",
+    "aarch64-apple-ios",
+    "aarch64-apple-ios-sim",
+    "x86_64-apple-ios",
+    "aarch64-linux-android",
+    "armv7-linux-androideabi",
+    "i686-linux-android",
+    "x86_64-linux-android",
+]

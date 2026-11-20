@@ -206,3 +206,25 @@
 - A versão do Flutter não está fixada em nenhum dos dois.
 - `packages/core_l10n` ainda não tem `analyze`/`test` no pipeline local.
 
+
+## R1 · Empacotamento do Rust por Native Assets (ADR-0008 aceita, 2026-11-20)
+
+**Status:** 🟢 Aceito e provado nas duas plataformas; o app deixa de depender de CocoaPods e do plugin do Gradle.
+
+### Evidências
+- `flutter build ios --debug --simulator` → `✓ Built Runner.app` (23,9 s), com **0** ocorrências do aviso *"plugins do not support Swift Package Manager"* (antes aparecia em todo build de iOS).
+- App instalado e aberto no simulador mostrando `Exemplo`, `tom C · 2 seção(ões)`, acordes `C G Am F` e `núcleo: kentron_ffi 0.0.0`.
+- `flutter build apk --debug` → `✓ Built app-debug.apk` (32,7 s); app rodando no emulador.
+- `flutter test` 8/8 e `scripts/ci-local.sh` `EXIT=0` após a migração.
+- `ios/` sem `Podfile`, sem `Podfile.lock` e sem `Pods/` — o `pod install` sai do caminho do Rust.
+
+### O que mudou no projeto
+- `hook/build.dart` aponta para `../../crates/kentron_ffi`; `rust_builder/` (cargokit) removido.
+- `rust-toolchain.toml` pinado em `1.97.1` com alvos, **duplicado dentro do crate** por exigência do `native_toolchain_rust`.
+- `crate-type` mantém `["lib", "cdylib", "staticlib"]` — requisito do backend e o que já satisfazia o cargokit.
+
+### Ressalvas
+- O pin da toolchain transforma bump de Rust em decisão deliberada (perde-se o "pega o latest stable").
+- O upstream testou este backend **só em Linux desktop**; iOS e Android foram provados aqui.
+- O gerador `flutter_rust_bridge_codegen` 2.13.0 continua sendo pré-requisito para **regerar** bindings quando `bridge.rs` mudar; os arquivos gerados ficam versionados.
+
