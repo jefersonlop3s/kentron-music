@@ -27,7 +27,21 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
-Nenhum.
+### cline/de6b0 — Kentron: higiene do CI, ponte Rust↔Flutter e core_l10n
+- **Início**: 2026-11-20 14:45 (UTC) · **Última atualização**: 2026-11-20 14:49 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/ponte-rust-flutter` (derivada da `main` `5576686`) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
+- **Demanda**: higienizar (branch de escopo + matriz do CI duplicada), entregar a ponte Rust↔Flutter e, na etapa seguinte, integrar o `core_l10n`.
+- **Paths sob edição**: `.github/workflows/ci.yml`, `scripts/ci-local.sh`, `crates/notation_bundle/**`, `apps/kentron_app/**`, `packages/core_l10n/**`, `docs/**`, `CHANGELOG.md`.
+- **Status**: em andamento
+- **PRs**: nenhum.
+
+**Feito até aqui:**
+- Branch de escopo `feature/song-bundle-v1` apagada (idêntica à `main`, nome de escopo); trabalho novo em `feature/ponte-rust-flutter`.
+- Matriz do CI com fonte única: o workflow instala as ferramentas e chama `scripts/ci-local.sh` — quatro jobs viraram um, mesma cobertura, sem ação nova e sem mudar gatilhos.
+
+**Pendente desta sessão:**
+- Ponte Rust↔Flutter: depende de decisão do dono (ADR-0007) — `flutter_rust_bridge_codegen` não está instalado e o app não tem diretórios de plataforma.
+- `core_l10n` integrado ao app (etapa seguinte, já ordenada pelo dono).
 
 ## 🟡 Interrompido / órfão
 
