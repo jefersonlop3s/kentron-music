@@ -2,6 +2,12 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [Infra] Duas lições do kentron publicadas no sovereign-harness 0.7.2 (2026-11-20)
+### Publicado
+- Release [v0.7.2](https://github.com/personal-digital-sovereignty/sovereign-harness/releases/tag/v0.7.2): skill `estado-compartilhado-multi-agente` §1c (PR [#21](https://github.com/personal-digital-sovereignty/sovereign-harness/pull/21)) e o gate de lint lendo a edição do manifesto (PR [#22](https://github.com/personal-digital-sovereignty/sovereign-harness/pull/22), tag `v0.7.2`), com teste novo provado no negativo.
+- Versões → 0.7.2 nos 7 manifestos do kit; `sincronizar --verificar` 45/45; CI verde em ubuntu e macos.
+- O projeto e o kit voltam a concordar sobre a edição do `rustfmt` — a correção do kentron (`a68c85c`) e a do template (0.7.2) são a mesma leitura do `Cargo.toml`.
+
 ## [Infra] Gate de lint do pre-push alinhado à edição do crate (2026-11-20)
 ### Corrigido
 - `.githooks/pre-push` formatava com `rustfmt --edition 2021` **fixo**, enquanto o workspace é edition 2024 e o `ci-local.sh` usa `cargo fmt` (que lê a edição real). Os dois gates do projeto passaram a discordar sobre a ordenação de itens de import e o push era bloqueado por arquivo que o próprio pipeline aprovava.

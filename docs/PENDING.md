@@ -12,8 +12,7 @@
 - [ ] Adicionar verificação de licenças para dependências Dart/Flutter no pipeline local (`cargo-deny` cobre apenas Rust).
 - [ ] Teste de fumaça do app Flutter em dispositivo real (Android/iOS).
 - [ ] Revisar traduções de es-419, pt-BR e en-US com falantes nativos.
-- [ ] Levar a lição "branch de escopo vira segundo trunk" ao `sovereign-harness` por PR: a skill `estado-compartilhado-multi-agente` do kit não cobre o caso e a cópia local é idêntica à de lá.
-- [ ] Levar ao `sovereign-harness` a correção do gate de lint (`rustfmt --edition` lido do manifesto): o template do pre-push fixa 2021 e volta a divergir do `cargo fmt` em qualquer projeto em edição 2024.
+- [x] Publicar as duas lições no `sovereign-harness`: a skill `estado-compartilhado-multi-agente` §1c (PR #21) e a correção do gate de lint (`rustfmt --edition` lido do manifesto, PR #22) saíram na **release 0.7.2**.
 
 ## 🎸 R1 (prioridades imediatas)
 

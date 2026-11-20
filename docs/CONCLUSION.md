@@ -89,6 +89,16 @@
 - A edição passa a vir do `Cargo.toml`; a prova negativa (arquivo mal formatado) continua reprovando, então o gate não foi afrouxado.
 - Limite conhecido e registrado: membro do workspace que declare edição própria seria verificado com a do workspace (hoje nenhum declara).
 
+## R0 · Lições do kentron publicadas no sovereign-harness 0.7.2 (2026-11-20)
+
+**Status:** 🟢 Publicado — release [v0.7.2](https://github.com/personal-digital-sovereignty/sovereign-harness/releases/tag/v0.7.2).
+
+- **PR [#21](https://github.com/personal-digital-sovereignty/sovereign-harness/pull/21)** (mergeado em `cb67018`): skill `estado-compartilhado-multi-agente` §1c — branch de escopo vira segundo trunk, com o caso medido aqui e os três comandos que separam trabalho de sombra.
+- **PR [#22](https://github.com/personal-digital-sovereignty/sovereign-harness/pull/22)** (mergeado em `4066f5a`, que é a tag `v0.7.2`): o gate `lint` do `templates/git/pre-push` passa a ler a edição do `Cargo.toml` em vez de fixar `2021`; teste novo provado no negativo.
+- Versões → 0.7.2 nos 7 manifestos do kit; `sincronizar --verificar` 45/45; CI verde em ubuntu e macos.
+- O gate do kentron já tinha a mesma correção (`a68c85c`), então projeto e kit voltaram a concordar.
+- Fechamento: os dois itens saíram do PENDING; restam no kit apenas as ressalvas já documentadas (canário Claude live pendente de login do dono).
+
 ## R0 · Pipeline local-first (ADR-0004, 2026-11-20)
 
 **Status:** 🟢 Decisão aceita e implementada.
