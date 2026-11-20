@@ -27,6 +27,22 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
+### cline/de6b0 — R1 · Cifra e projeção (branch ativa)
+- **Início**: 2026-11-19 21:31 (UTC) · **Última atualização**: 2026-11-20 03:35 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/R1-cifra-projecao` (`4beb085`, publicada) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
+- **Demanda**: entregar a R1 (cifra local, projeção manual) conforme o plano v2.6.
+- **Paths sob edição**: `crates/notation_bundle/`, `apps/kentron_app/`, `packages/core_l10n/` quando retomada.
+- **Status**: aguardando retomada.
+- **PRs**: sem PR; branch publicada em `origin`.
+
+### cline/de6b0 — Rascunho de harmonia (WIP)
+- **Início**: 2026-11-20 03:35 (UTC) · **Última atualização**: 2026-11-20 03:35 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `wip/harmony-transpose` (`35971c4`, local) · **Worktrees**: nenhum
+- **Demanda**: transposição e harmonia; o rascunho não compila.
+- **Paths sob edição**: `crates/notation_bundle/src/harmony.rs` e `crates/notation_bundle/tests/harmony_tests.rs` na branch.
+- **Status**: aguardando decisão do dono (concluir ou descartar).
+- **PRs**: nenhum.
+
 ## 🟡 Interrompido / órfão
 
 ## 🟢 Concluído recentemente
@@ -52,7 +68,7 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - "A validação local de Flutter já ocorreu": não ocorreu; apenas o CI executou `flutter analyze`/`flutter test`.
 
 ### cline/de6b0 — Instalação do Flutter e validação local
-- **Início**: 2026-11-20 03:20 (UTC) · **Última atualização**: 2026-11-20 03:40 (UTC)
+- **Início**: 2026-11-20 03:20 (UTC) · **Última atualização**: 2026-11-20 03:35 (UTC)
 - **Repositório**: `kentron-music` · **Branches**: `main`
 - **Demanda**: instalar Flutter 3.50.x e fechar a pendência de validação local do R0.
 - **Paths sob edição**: nenhum.
