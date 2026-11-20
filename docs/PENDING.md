@@ -20,7 +20,7 @@ Parser ChordPro, transposição e testes dourados já integrados à `main`; o re
 - [ ] **Spike S5:** validar renderização de partituras/tabs via alphaTab/OSMD. Dimensiona o esforço de MusicXML/ATEX (R1.1); não bloqueia o piloto da R1.
 - [ ] Adicionar fixtures de parser para acordes invertidos, `6/9`, acidentes duplos e letras multilíngues (a nomeação já os cobre; falta provar a preservação na leitura do `.cho`).
 - [x] Transposição no `chord_naming` e módulo `harmony` integrados à `main` (29 testes; acordes invertidos, `6/9` e acidentes duplos cobertos).
-- [ ] **Aceite da ADR-0006** (Song Bundle v1: formato de persistência e primeira dependência externa). Sem aceite, a persistência não começa.
+- [ ] **Aceite da ADR-0006** (Song Bundle v1: formato de persistência e primeira dependência externa). Adiada pelo dono: o modelo em memória veio primeiro; o formato é decidido depois.
 - [ ] Implementar persistência local (Song Bundle), migrações e exportação/restauração, conforme a ADR-0006.
 - [ ] Criar UI de leitor de cifras (Modo Palco) e setlists.
 - [ ] Implementar exportação OpenLyrics/Holyrics e validar XML.

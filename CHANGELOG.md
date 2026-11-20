@@ -2,6 +2,18 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [R1] Song Bundle v1: modelo em memória (2026-11-20)
+### Adicionado
+- Módulo `bundle` em `crates/notation_bundle`: `SongId`, `SetlistId`, `SongBundle`, `Library`, `Setlist` e `BundleError` com `message_key()` estável.
+- 14 testes: 11 unitários (invariantes de id, título, duplicata, setlist e resolução) e 3 de integração em `tests/bundle_tests.rs` sobre o fixture `worship.cho`.
+- Composição provada com parser e harmonia: o bundle carrega o `.cho` e a música transpõe sem perder a identidade bibliográfica.
+
+### Alterado
+- `lib.rs` documenta o que está implementado e o que depende da ADR-0006.
+
+### Premissa corrigida
+- "Persistência é o primeiro passo do Song Bundle": o dono decidiu o contrário — o modelo em memória vem primeiro e o formato é decidido depois. Nenhuma dependência externa foi adicionada; o workspace segue sem dependências.
+
 ## [Docs] ADR-0006 proposta: Song Bundle v1 (2026-11-20)
 ### Adicionado
 - ADR-0006 (proposta): Song Bundle como diretório com `meta.json` versionado, `serde`/`serde_json` como primeira dependência externa, migração por degrau e exportação por cópia do diretório na v1.

@@ -31,7 +31,7 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 ### R1-A · Cifra local utilizável
 - [x] Parser ChordPro e modelo canônico com testes dourados.
 - [ ] Fixtures de parser para acordes invertidos, `6/9` e acidentes duplos (a nomeação já os cobre).
-- [ ] Biblioteca local, setlists e Song Bundle versionado com exportação/restauração.
+- [ ] Biblioteca local, setlists e Song Bundle versionado com exportação/restauração. Modelo em memória pronto (`bundle`: `SongBundle`, `Library`, `Setlist`); persistência depende da ADR-0006.
 - [x] Transposição e renderização nos quatro sistemas (29 testes, incluindo acordes invertidos, `6/9` e acidentes duplos).
 - [ ] Testes de propriedade e regressão ampliada.
 

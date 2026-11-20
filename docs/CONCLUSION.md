@@ -59,6 +59,16 @@
 - Limpeza de branches: `feature/R1-restante`, `feature/R1-transposicao-harmonia` e `wip/harmony-transpose` apagadas — as duas primeiras eram ancestrais da `main` (0 commits exclusivos) e a terceira não tinha arquivo exclusivo. Worktree `de6b0` re-apontado para `feature/song-bundle-v1` a partir da `main`.
 - Próximo passo: Song Bundle v1 (persistência local, migrações e exportação/restauração).
 
+## R1 · Song Bundle v1: modelo em memória (2026-11-20)
+
+**Status:** 🟢 Modelo em memória entregue; persistência aguarda a ADR-0006.
+
+- Novo módulo `crates/notation_bundle/src/bundle.rs`: `SongId`, `SetlistId`, `SongBundle`, `Library`, `Setlist` e `BundleError` com `message_key()` estável para a UI.
+- `SongBundle` não duplica bibliografia: título, tom e artista vêm do `metadata` do `.cho`, que segue como fonte única.
+- Invariantes provadas: id vazio recusado, título ausente recusado, duplicata de id recusada na biblioteca, setlist só aceita música da biblioteca, entrada duplicada recusada, resolução de setlist falha alto quando a música sumiu.
+- 14 testes novos (11 unitários no módulo, 3 de integração em `tests/bundle_tests.rs` com o fixture `worship.cho`); workspace passa de 29 para 43 testes.
+- Decisão do dono: o formato de persistência é decidido **depois** do modelo — a ADR-0006 fica proposta e adiada, sem dependência externa adicionada.
+
 ## R0 · Pipeline local-first (ADR-0004, 2026-11-20)
 
 **Status:** 🟢 Decisão aceita e implementada.

@@ -1,6 +1,6 @@
 # ADR-0006 · Song Bundle v1: formato de persistência e primeira dependência externa
 
-- **Status:** proposto (2026-11-20) — aguarda aceite do dono do projeto
+- **Status:** proposto (2026-11-20) — **adiado pelo dono do projeto**: o modelo em memória (`SongBundle`, `Library`, `Setlist`) vem primeiro; o formato de persistência é decidido depois, com o modelo já provado
 - **Decisão do plano:** R1-A (biblioteca local, setlists e Song Bundle versionado)
 - **Não substitui:** ADR-0002 (o layout `meta.json` / `.cho` / `.musicxml` / `tabs/*.atex` já vem de lá)
 
