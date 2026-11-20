@@ -1,0 +1,52 @@
+{
+  "@@locale": "en",
+  "cueRepeatChorus": "Repeat chorus",
+  "@cueRepeatChorus": {
+    "description": "Maestro cue shown one bar before the band jumps back to the chorus. Stage screen: keep it short."
+  },
+  "cueGoToBridge": "Go to bridge",
+  "@cueGoToBridge": {
+    "description": "Maestro cue: the band moves to the bridge at the next bar."
+  },
+  "cueVamp": "Vamp",
+  "@cueVamp": {
+    "description": "Maestro cue: repeat the current section freely until told to move on."
+  },
+  "cueFinish": "Finish",
+  "@cueFinish": {
+    "description": "Maestro cue: end the song."
+  },
+  "instrumentAcousticGuitar": "Acoustic guitar",
+  "@instrumentAcousticGuitar": {
+    "description": "Instrument name. Regional variants exist in Portuguese and Spanish."
+  },
+  "gearMixingConsole": "Mixing console",
+  "@gearMixingConsole": {
+    "description": "Sound desk used by the sound engineer."
+  },
+  "gearProjectionScreen": "Projection screen",
+  "@gearProjectionScreen": {
+    "description": "The screen where lyrics are shown to the congregation."
+  },
+  "roleWorshipLeader": "Worship leader",
+  "@roleWorshipLeader": {
+    "description": "Role of the person who leads the music in a service."
+  },
+  "eventSoundcheck": "Soundcheck",
+  "@eventSoundcheck": {
+    "description": "Calendar event type."
+  },
+  "docChordChart": "Chord chart",
+  "@docChordChart": {
+    "description": "A song sheet with lyrics and chords."
+  },
+  "setlistSongCount": "{count, plural, =0{No songs} =1{1 song} other{{count} songs}}",
+  "@setlistSongCount": {
+    "description": "Number of songs in a setlist.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}

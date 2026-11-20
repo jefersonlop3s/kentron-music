@@ -1,0 +1,11 @@
+[package]
+name = "notation_bundle"
+description = "Canonical chord model and localized chord naming (R0 slice of the notation bundle)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true

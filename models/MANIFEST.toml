@@ -1,0 +1,23 @@
+# Manifesto de modelos e pesos de IA (ADR-0001).
+#
+# Todo arquivo de modelo distribuído com o app ou baixado por ele precisa de uma entrada
+# [[model]]. A licença dos PESOS é registrada separadamente da licença do código: um
+# projeto pode ser MIT enquanto os pesos têm restrição (ex.: modelos do madmom são
+# CC BY-NC-SA 4.0 e NÃO podem entrar).
+#
+# Licenças aceitas para pesos: as mesmas do deny.toml. Nada de CC BY-NC*.
+#
+# Exemplo (descomente e preencha ao adotar um modelo, depois do spike correspondente):
+#
+# [[model]]
+# id           = "beat_this"
+# purpose      = "beat and downbeat tracking"
+# code_license = "MIT"
+# weights_license = "MIT"          # confirmar na fonte dos pesos, não só no repositório
+# source_url   = "https://github.com/CPJKU/beat_this"
+# weights_url  = ""                # URL exata do arquivo usado
+# sha256       = ""                # hash do arquivo usado
+# format       = "onnx"
+# approved_in  = ""                # ADR ou spike que aprovou (ex.: spike S1)
+
+schema = 1

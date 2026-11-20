@@ -1,0 +1,36 @@
+# Rust
+/target
+**/*.rs.bk
+
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+pubspec.lock
+.flutter-plugins
+.flutter-plugins-dependencies
+**/ios/Pods/
+**/android/.gradle/
+**/android/local.properties
+
+# Segredos e credenciais de publicação (nunca versionar)
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+.env
+.env.*
+key.properties
+
+# Modelos de IA baixados (ver models/MANIFEST.toml)
+models/*.onnx
+models/*.ort
+models/*.tflite
+models/*.bin
+
+# Editor / SO
+.DS_Store
+.idea/
+.vscode/
+*.swp
