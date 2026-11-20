@@ -28,12 +28,12 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 ## 🔴 Em andamento
 
 ### cline/de6b0 — Kentron: higiene do CI, core_l10n integrado e ponte (ADR-0007)
-- **Início**: 2026-11-20 14:45 (UTC) · **Última atualização**: 2026-11-20 15:20 (UTC)
-- **Repositório**: `kentron-music` · **Branches**: `feature/ponte-rust-flutter` (= `main` `bdc8a57`) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
+- **Início**: 2026-11-20 14:45 (UTC) · **Última atualização**: 2026-11-20 15:09 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/ponte-rust-flutter` (`391bad1`) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
 - **Demanda**: higienizar (branch de escopo + matriz do CI duplicada), integrar o `core_l10n` e entregar a ponte Rust↔Flutter.
-- **Paths sob edição**: nenhum (aguardando decisão do dono).
-- **Status**: aguardando decisão do dono — higiene e `core_l10n` entregues; a ponte depende do aceite da ADR-0007.
-- **PRs**: nenhum.
+- **Paths sob edição**: `crates/kentron_ffi/**` (novo), `crates/notation_bundle/**`, `apps/kentron_app/{lib,test,pubspec}`, `flutter_rust_bridge.yaml`, `scripts/ci-local.sh`, `.githooks/pre-push`, `docs/**`, `CHANGELOG.md`.
+- **Status**: em andamento — ponte entregue, provada e commitada; merge/push em curso.
+- **PRs**: nenhum (repositório local; integração por merge `--ff-only`).
 
 **Feito:**
 - Branch de escopo `feature/song-bundle-v1` apagada (idêntica à `main`, nome de escopo); trabalho em `feature/ponte-rust-flutter`.
@@ -43,7 +43,16 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - Achado medido e registrado: as `Global*` do `flutter_localizations` que o `gen-l10n` emite não satisfazem o `MaterialLocalizations` do `material_ui`; a "migração do `core_l10n`" do PENDING depende do gerador, não do `pubspec`.
 
 **Pendente desta sessão:**
-- **ADR-0007 (proposta)**: ponte Rust↔Flutter exige decisão do dono — `flutter_rust_bridge_codegen` não está instalado (ferramenta de sistema) e o app não tem diretórios de plataforma.
+- Diretórios de plataforma do app (`flutter create --platforms=...`): sem eles a ponte roda em teste, mas o app não abre fora dele.
+- Documentar no README o pré-requisito de **regerar** os bindings (`flutter_rust_bridge_codegen` 2.13.0 + `cargo fmt --all` depois).
+
+**R1 · Ponte Rust↔Flutter (entregue):**
+- ADR-0007 **aceita pelo dono**; `flutter_rust_bridge_codegen` 2.13.0 instalado por `cargo install` (ferramenta de sistema, autorizada pelo aceite).
+- Novo crate adaptador `crates/kentron_ffi` — único `cdylib` e único a depender do `flutter_rust_bridge` — expõe `parse_song(input) -> SongSummary` ao Dart; bindings gerados e **versionados** em `crates/kentron_ffi/src/frb_generated.rs` e `apps/kentron_app/lib/src/rust/`.
+- `notation_bundle` volta a ser domínio puro, com `unsafe_code = "forbid"` intacto.
+- **Emenda medida à ADR-0007:** a cláusula "`forbid` permanece" era inalcançável — a cola gerada tem um bloco `unsafe` e `forbid` não aceita `allow`. O adaptador usa `deny` com `#[allow(unsafe_code)]` escopado ao módulo gerado; o invariante que o dono quis preservar segue de pé onde o código é nosso.
+- **Prova de ponta a ponta:** `apps/kentron_app/test/bridge_test.dart` carrega o cdylib e chama o Rust (resumo real; cifra vazia vira exceção). 58 testes Rust + 5 de Flutter verdes.
+- Dois bloqueios reais que viraram correção: o código gerado não é `rustfmt`-limpo na edição 2024 (o pipeline reprovou até formatar) e dependência de caminho sem `version` é lida como wildcard pelo `cargo deny`. Ambos registrados.
 
 ## 🟡 Interrompido / órfão
 
