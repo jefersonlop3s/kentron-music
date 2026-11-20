@@ -99,6 +99,16 @@
 - O gate do kentron já tinha a mesma correção (`a68c85c`), então projeto e kit voltaram a concordar.
 - Fechamento: os dois itens saíram do PENDING; restam no kit apenas as ressalvas já documentadas (canário Claude live pendente de login do dono).
 
+## R1 · iOS: o Rust no simulador (2026-11-20)
+
+**Status:** 🟢 O app roda no simulador iOS com o núcleo Rust. Três plataformas provadas: teste (cdylib), navegador (wasm) e Android/iOS.
+
+- `flutter create --platforms=ios --org com.kentron` → bundle id `com.kentron.kentronApp`, `pubspec` **idêntico**.
+- **A correção estava no código do cargokit**, não em tentativa: ele usa o `.a` quando existe e só exige Framework quando não existe. Como o crate declarava apenas `cdylib`, o iOS não gerava `.a` → `Unable to find bundle for dynamic library`. Basta **`staticlib` no `crate-type`** (Android segue no `cdylib`).
+- **Prova:** build do simulador verde (Xcode 27.2), app instalado e aberto (PID 53043) e o print — que eu li e conferi — mostra `Exemplo`, `tom C`, os acordes e `núcleo: kentron_ffi 0.0.0`. Regressão do Android revalidada depois da mudança de `crate-type`.
+- **Risco anotado:** o Flutter avisa que o plugin `kentron_ffi` não suporta **Swift Package Manager** e que isso *vai virar erro* numa versão futura (o cargokit é CocoaPods-only).
+- Higiene de disco: ficaram **dois** runtimes iOS 27.2 instalados (~7 GB cada); remover um quando não precisar.
+
 ## R1 · Android: o Rust no APK (2026-11-20)
 
 **Status:** 🟢 O app roda no emulador Android com o núcleo Rust; falta iOS (depende do Xcode, que só o dono instala).

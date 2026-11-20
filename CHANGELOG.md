@@ -2,6 +2,22 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [R1] iOS: o Rust entra no app e o app roda no simulador (2026-11-20)
+### Adicionado
+- `apps/kentron_app/ios/`: scaffold (`flutter create --platforms=ios --org com.kentron`), bundle id `com.kentron.kentronApp`; o `pubspec` saiu **idêntico**.
+- `crates/kentron_ffi`: **`staticlib`** no `crate-type` (`["lib", "cdylib", "staticlib"]`) — o Android segue no `cdylib` (`.so`) e o iOS usa o `.a`.
+
+### Verificado
+- `flutter build ios --debug --simulator` → `✓ Built build/ios/iphonesimulator/Runner.app` (Xcode 27.2, 24,6 s).
+- No simulador (iPhone 17): `simctl install` + `launch` (PID 53043); o print mostra `Exemplo`, `Kentron · tom C · 2 seção(ões)`, os acordes `C G Am F` e `núcleo: kentron_ffi 0.0.0` — o núcleo respondendo no iOS.
+- **Regressão do Android revalidada** com o novo `crate-type`: `flutter build apk --debug` verde.
+
+### Achado que custou tempo (com a correção)
+- `Exception: Unable to find bundle for dynamic library` (`cargokit/build_pod.dart:86`). O cargokit **usa o `.a` se ele existe** (`if (staticLibs.isNotEmpty)`) e só cai no caminho de Framework quando não existe; como o crate declarava apenas `cdylib`, não havia `.a` no alvo iOS e ele exigia `kentron_ffi.framework/…`. Ler o código do cargokit deu a correção exata, em vez de tentativa e erro.
+
+### Risco registrado
+- O Flutter avisa que **`kentron_ffi` não suporta Swift Package Manager** ("will become an error in a future version of Flutter"): o cargokit é CocoaPods-only. Quando o Flutter virar a chave para SPM, o plugin precisará de SPM (ou o iOS terá de continuar em CocoaPods explicitamente).
+
 ## [R1] Android: o Rust entra no APK e o app roda no emulador (2026-11-20)
 ### Adicionado
 - `apps/kentron_app/android/`: scaffold (`flutter create --platforms=android --org com.kentron`), appId `com.kentron.kentron_app` — sem `com.example`, que o Play rejeita. O `pubspec` saiu **idêntico** e o `analysis_options` só ganhou `android/**` nos excludes.
