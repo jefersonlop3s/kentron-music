@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+/// Sovereign Emerald, token visual do DESIGN.md.
+const _sovereignEmerald = Color(0xFF10B981);
+
 void main() {
   runApp(const KentronApp());
 }
@@ -13,7 +16,7 @@ class KentronApp extends StatelessWidget {
       title: 'Kentron Music Hub',
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.emerald),
+        colorScheme: ColorScheme.fromSeed(seedColor: _sovereignEmerald),
       ),
       home: const HomeScreen(),
     );
