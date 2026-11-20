@@ -13,6 +13,7 @@
 - [ ] Teste de fumaça do app Flutter em dispositivo real (Android/iOS).
 - [ ] Revisar traduções de es-419, pt-BR e en-US com falantes nativos.
 - [ ] Levar a lição "branch de escopo vira segundo trunk" ao `sovereign-harness` por PR: a skill `estado-compartilhado-multi-agente` do kit não cobre o caso e a cópia local é idêntica à de lá.
+- [ ] Levar ao `sovereign-harness` a correção do gate de lint (`rustfmt --edition` lido do manifesto): o template do pre-push fixa 2021 e volta a divergir do `cargo fmt` em qualquer projeto em edição 2024.
 
 ## 🎸 R1 (prioridades imediatas)
 

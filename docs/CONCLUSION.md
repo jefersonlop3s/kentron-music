@@ -81,6 +81,14 @@
 - Todo valor volta ao modelo pelos construtores validados: um setlist com entrada órfã é recusado na leitura, não carregado com buraco.
 - 55 testes no workspace (12 novos); `ci-local.sh` verde.
 
+## R0 · Gate de lint alinhado à edição do crate (2026-11-20)
+
+**Status:** 🟢 Corrigido e provado nos dois sentidos.
+
+- O pre-push formatava com `rustfmt --edition 2021` fixo; o workspace é edition 2024 e o `ci-local.sh` usa `cargo fmt`. Medição: **mesmo arquivo e mesmo `rustfmt`** — 2024 limpo, 2021 com diff.
+- A edição passa a vir do `Cargo.toml`; a prova negativa (arquivo mal formatado) continua reprovando, então o gate não foi afrouxado.
+- Limite conhecido e registrado: membro do workspace que declare edição própria seria verificado com a do workspace (hoje nenhum declara).
+
 ## R0 · Pipeline local-first (ADR-0004, 2026-11-20)
 
 **Status:** 🟢 Decisão aceita e implementada.

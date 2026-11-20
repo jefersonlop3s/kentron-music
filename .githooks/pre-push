@@ -374,7 +374,20 @@ if [ -f "Cargo.toml" ]; then
         # É a mesma classe do incidente do `cargo fmt` já registrado neste arquivo,
         # por mecanismo diferente: lá a ferramenta ignorava a lista e enumerava os
         # targets; aqui ela aceita a lista e expande a partir dela.
-        rustfmt --edition 2021 --check --config skip_children=true "${rs[@]}"
+        #
+        # A edição vem do manifesto, nunca de um literal (2026-11-20): o hook
+        # fixava `--edition 2021` e o workspace passou a 2024. O estilo 2024
+        # ordena itens de import de outro jeito, então este gate passou a
+        # reprovar arquivo que o OUTRO gate do projeto (`cargo fmt --all --
+        # --check`, no ci-local.sh, que lê a edição real) aprova. Medido no
+        # mesmo arquivo e no mesmo rustfmt: `--edition 2024` limpo, `--edition
+        # 2021` com diff. Ler o manifesto elimina a classe, em vez do caso.
+        # Limite conhecido: um membro do workspace que declare edição própria
+        # (hoje nenhum) seria verificado com a do workspace.
+        local edition
+        edition=$(sed -n 's/^[[:space:]]*edition[[:space:]]*=[[:space:]]*"\([0-9][0-9]*\)".*/\1/p' Cargo.toml 2>/dev/null | head -1)
+        [ -n "$edition" ] || edition=2021
+        rustfmt --edition "$edition" --check --config skip_children=true "${rs[@]}"
     }
     run_gate lint gate_lint
 fi
