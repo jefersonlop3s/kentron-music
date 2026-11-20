@@ -5,7 +5,7 @@
 **Status:** 🟢 Publicado na `main`, com ressalvas de validação Flutter.
 
 ### Evidências
-- Commits: `7f68e2b` (R0), `b149bb3` (endurecimento de CI/app).
+- Commits: `7f68e2b` (R0), `b149bb3` (endurecimento de CI/app), `d21d1fe` (registros vivos alinhados ao CI verde e ao `material_ui`).
 - `main` publicada em `origin`; branch padrão do GitHub alterada para `main`.
 - 15 testes Rust passando; `cargo clippy`, `cargo fmt`, `cargo deny` e `check_arb.py` verdes.
 - Semgrep sem achados no código do projeto após exclusão dos scripts vendorizados do Impeccable.

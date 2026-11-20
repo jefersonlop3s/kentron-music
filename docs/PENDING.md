@@ -1,7 +1,7 @@
 # Pendências · Kentron Music Hub
 
 ## 🚩 R0 (publicado, com ressalvas)
-- [ ] Rodar `flutter analyze` e `flutter test` em ambiente com Flutter.
+- [ ] Instalar Flutter 3.50.x localmente (SDK ausente neste ambiente) e rodar `flutter analyze` e `flutter test`.
 - [ ] Integrar `core_l10n` ao app e criar `lib/core_l10n.dart`.
 - [ ] Substituir o placeholder da ponte Rust ↔ Flutter por chamada real.
 - [ ] Configurar proteção da branch `main` no GitHub.
@@ -13,7 +13,7 @@
 ## 🎸 R1 (prioridades imediatas)
 - [ ] **Spike S5:** validar renderização de partituras/tabs via alphaTab/OSMD.
 - [ ] Ampliar o parser ChordPro: acordes invertidos, `6/9`, acidentes duplos e letras multilíngues.
-- [ ] Implementar transposição no `chord_naming` e reintroduzir o módulo `harmony`.
+- [ ] Implementar transposição no `chord_naming` e reintroduzir o módulo `harmony`. Rascunho preservado na branch local `wip/harmony-transpose` (`35971c4`); não compila e não foi publicada.
 - [ ] Implementar persistência local (Song Bundle), migrações e exportação/restauração.
 - [ ] Criar UI de leitor de cifras (Modo Palco) e setlists.
 - [ ] Implementar exportação OpenLyrics/Holyrics e validar XML.
