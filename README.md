@@ -36,9 +36,11 @@ Este projeto é distribuído "como está" (*as-is*), sem garantias de qualquer t
 
 ## Requisitos
 
-- Rust estável (edition 2021) com `cargo`, `clippy` e `rustfmt`.
+- Rust estável (edition 2021) com `cargo`, `clippy`, `rustfmt` e `cargo-deny` (`cargo install cargo-deny --locked`).
 - Flutter 3.50.x no canal `stable` (validado com 3.50.1). Se o SDK não estiver no `PATH`, use `~/development/flutter/bin/flutter`.
 - Python 3 para `tools/check_arb.py`.
+
+O hook de pré-push (`.githooks/pre-push`) executa os portões locais; ferramenta ausente **bloqueia** o push em vez de pular a validação.
 
 ## Comandos
 
