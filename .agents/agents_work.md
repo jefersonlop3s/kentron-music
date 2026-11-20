@@ -27,21 +27,23 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
-### cline/de6b0 — Kentron: higiene do CI, ponte Rust↔Flutter e core_l10n
-- **Início**: 2026-11-20 14:45 (UTC) · **Última atualização**: 2026-11-20 14:49 (UTC)
-- **Repositório**: `kentron-music` · **Branches**: `feature/ponte-rust-flutter` (derivada da `main` `5576686`) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
-- **Demanda**: higienizar (branch de escopo + matriz do CI duplicada), entregar a ponte Rust↔Flutter e, na etapa seguinte, integrar o `core_l10n`.
-- **Paths sob edição**: `.github/workflows/ci.yml`, `scripts/ci-local.sh`, `crates/notation_bundle/**`, `apps/kentron_app/**`, `packages/core_l10n/**`, `docs/**`, `CHANGELOG.md`.
-- **Status**: em andamento
+### cline/de6b0 — Kentron: higiene do CI, core_l10n integrado e ponte (ADR-0007)
+- **Início**: 2026-11-20 14:45 (UTC) · **Última atualização**: 2026-11-20 15:20 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/ponte-rust-flutter` (= `main` `bdc8a57`) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
+- **Demanda**: higienizar (branch de escopo + matriz do CI duplicada), integrar o `core_l10n` e entregar a ponte Rust↔Flutter.
+- **Paths sob edição**: nenhum (aguardando decisão do dono).
+- **Status**: aguardando decisão do dono — higiene e `core_l10n` entregues; a ponte depende do aceite da ADR-0007.
 - **PRs**: nenhum.
 
-**Feito até aqui:**
-- Branch de escopo `feature/song-bundle-v1` apagada (idêntica à `main`, nome de escopo); trabalho novo em `feature/ponte-rust-flutter`.
-- Matriz do CI com fonte única: o workflow instala as ferramentas e chama `scripts/ci-local.sh` — quatro jobs viraram um, mesma cobertura, sem ação nova e sem mudar gatilhos.
+**Feito:**
+- Branch de escopo `feature/song-bundle-v1` apagada (idêntica à `main`, nome de escopo); trabalho em `feature/ponte-rust-flutter`.
+- Matriz do CI com fonte única: o workflow instala as ferramentas e chama `scripts/ci-local.sh` — 4 jobs viraram 1, mesma cobertura, sem ação nova.
+- `core_l10n` integrado ao app: `lib/core_l10n.dart` como caminho único de import, `MaterialApp` com `CoreL10n.delegate` + `...GlobalMaterialLocalizations.delegates`, ARB `homeWelcome` (en/pt/es) na tela inicial e 3 testes de widget (en, pt, es e fallback `pt_PT` → `pt`).
+- Pipeline: geração do `core_l10n` no lugar e antes dos passos do app; o gate de Flutter do pre-push também gera.
+- Achado medido e registrado: as `Global*` do `flutter_localizations` que o `gen-l10n` emite não satisfazem o `MaterialLocalizations` do `material_ui`; a "migração do `core_l10n`" do PENDING depende do gerador, não do `pubspec`.
 
 **Pendente desta sessão:**
-- Ponte Rust↔Flutter: depende de decisão do dono (ADR-0007) — `flutter_rust_bridge_codegen` não está instalado e o app não tem diretórios de plataforma.
-- `core_l10n` integrado ao app (etapa seguinte, já ordenada pelo dono).
+- **ADR-0007 (proposta)**: ponte Rust↔Flutter exige decisão do dono — `flutter_rust_bridge_codegen` não está instalado (ferramenta de sistema) e o app não tem diretórios de plataforma.
 
 ## 🟡 Interrompido / órfão
 
