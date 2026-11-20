@@ -27,17 +27,37 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
-### cline/de6b0 — Rascunho de harmonia (WIP)
-- **Início**: 2026-11-20 03:35 (UTC) · **Última atualização**: 2026-11-20 03:35 (UTC)
-- **Repositório**: `kentron-music` · **Branches**: `wip/harmony-transpose` (`35971c4`, local) · **Worktrees**: nenhum
-- **Demanda**: transposição e harmonia; o rascunho não compila.
-- **Paths sob edição**: `crates/notation_bundle/src/harmony.rs` e `crates/notation_bundle/tests/harmony_tests.rs` na branch.
-- **Status**: aguardando decisão do dono (concluir ou descartar).
-- **PRs**: nenhum.
+Nenhum.
 
 ## 🟡 Interrompido / órfão
 
+Nenhum.
+
 ## 🟢 Concluído recentemente
+
+### cline/de6b0 — R1 · Transposição e harmonia (Etapa 1)
+- **Início**: 2026-11-20 03:35 (UTC) · **Última atualização**: 2026-11-20 04:45 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `main` (`29e2bda`) · **Worktrees**: `~/Develop/Projects/app-music`
+- **Demanda**: entregar a Etapa 1 da R1 (transposição) e trazer o rascunho de `wip/harmony-transpose` para a `main`.
+- **Paths sob edição**: nenhum.
+- **Status**: concluído.
+- **PRs**: nenhum.
+
+**Feito:**
+- `Chord::transpose` em `chord_naming.rs`: raiz e baixo movidos por letra e acidente, com fallback enarmônico quando a grafia diatônica passaria de dois acidentes.
+- `harmony.rs` reintroduzido: `HarmonyEngine` transpoe a música inteira (incluindo a metadata `key`) e renderiza em Common, Latin, German e Nashville.
+- Testes: 29 no workspace; unitários de transposição, integração do motor e dourados novos (`golden_harmony/worship.cho` + saídas Common e Latin).
+- Pipeline local (`./scripts/ci-local.sh`) verde, `exit 0`, antes do commit.
+- Integração por merge `--ff-only` em `main` (`8f596f4` código, `29e2bda` docs).
+- Documentos vivos atualizados: README, ROADMAP, PENDING, CONCLUSION, CHANGELOG, plano v2.6 e ADR-0005 (proposta).
+
+**Ficou aberto:**
+- **Aceite da ADR-0005** (escopo da R1): sem aceite, vale a ADR-0002 integral. O dono do projeto questionou se a redução é realmente necessária.
+- Fixtures de parser para acordes invertidos, `6/9` e acidentes duplos (a nomeação já os cobre; falta provar a preservação na leitura do `.cho`).
+- `wip/harmony-transpose` (`35971c4`) está totalmente absorvida; pode ser apagada após confirmação do dono.
+
+### cline/de6b0 — Rascunho de harmonia (WIP)
+> Entrada encerrada: absorvida pela entrada acima. Mantida como registro histórico. A branch `wip/harmony-transpose` (`35971c4`) está inteiramente contida na `main` e pode ser apagada após confirmação do dono.
 
 ### cline/de6b0 — CI: versão fixada e core_l10n no pipeline
 - **Início**: 2026-11-20 04:25 (UTC) · **Última atualização**: 2026-11-20 04:45 (UTC)
