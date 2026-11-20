@@ -20,6 +20,19 @@ Todos os eventos notáveis do projeto Kentron Music Hub.
 ### Premissa corrigida
 - O repositório é público, portanto o GitHub Actions é gratuito e ilimitado. A mudança é por soberania, redução de ruído e não duplicação de validação — não por custo.
 
+## [R1] Transposição e harmonia (2026-11-20)
+### Adicionado
+- `Chord::transpose` em `chord_naming.rs`, com aritmética de letra e acidente.
+- Módulo `harmony.rs` com transposição de música inteira e renderização nos quatro sistemas.
+- Testes dourados `golden_harmony/worship.cho` e saídas Common/Latin.
+- ADR-0005 (proposta): escopo da R1 com ChordPro primeiro e MusicXML/ATEX em R1.1.
+
+### Corrigido
+- Lints de formatação no código de harmonia e nos testes.
+
+### Validação
+- 29 testes Rust passando, incluindo acordes invertidos, `6/9`, acidentes duplos e acordes desconhecidos.
+
 ## [R1] Cifra e Projeção (parcial integrado, 2026-11-20)
 ### Adicionado
 - Parser ChordPro com modelo canônico e testes dourados.

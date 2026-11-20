@@ -1,6 +1,6 @@
 # ADR-0002 · Primeira release pública: cifra, palco local e projeção (R1)
 
-- **Status:** aceita (2026-11-18)
+- **Status:** aceita (2026-11-18); escopo de formatos emendado pela [ADR-0005](0005-escopo-da-r1.md) (proposta, aguardando aceite)
 - **Decisão do plano:** D2
 
 ## Contexto

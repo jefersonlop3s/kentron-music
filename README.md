@@ -4,7 +4,7 @@ App livre e descentralizado para bandas e equipes de louvor: cifras, tablaturas 
 setlists, agenda e escalas, regência ao vivo e ponte para projeção (Holyrics/OpenLyrics) e OBS.
 Multilíngue desde o início (pt-BR, es-419, en-US primeiro).
 
-**Estado: R0 publicado na `main`; R1 parcialmente integrado à `main` (parser ChordPro e placeholder MusicXML), com o restante em branch própria.** O portão principal é o **pipeline local** (`./scripts/ci-local.sh`), que roda Rust, licenças, ARBs e Flutter antes de cada push; o GitHub Actions permanece como rede de segurança em pull requests e no agendamento semanal (ADR-0004). O app usa `material_ui` 1.11.1. O nome definitivo é **Kentron**.
+**Estado: R0 publicado na `main`; R1 parcialmente integrado à `main` (parser ChordPro, transposição e placeholder MusicXML), com o restante em branch própria.** O portão principal é o **pipeline local** (`./scripts/ci-local.sh`), que roda Rust, licenças, ARBs e Flutter antes de cada push; o GitHub Actions permanece como rede de segurança em pull requests e no agendamento semanal (ADR-0004). O app usa `material_ui` 1.11.1. O nome definitivo é **Kentron**.
 
 Repositório: `https://github.com/jefersonlop3s/kentron-music`.
 

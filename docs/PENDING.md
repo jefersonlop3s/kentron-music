@@ -15,10 +15,11 @@
 
 ## 🎸 R1 (prioridades imediatas)
 
-Parser ChordPro e testes dourados já integrados à `main`; o restante da R1 segue em branch própria.
+Parser ChordPro, transposição e testes dourados já integrados à `main`; o restante da R1 segue em branch própria.
+- [ ] **Aceite da ADR-0005** (escopo da R1: ChordPro primeiro; MusicXML/ATEX em R1.1). Sem aceite, vale a ADR-0002 integral.
 - [ ] **Spike S5:** validar renderização de partituras/tabs via alphaTab/OSMD.
-- [ ] Ampliar o parser ChordPro: acordes invertidos, `6/9`, acidentes duplos e letras multilíngues.
-- [ ] Implementar transposição no `chord_naming` e reintroduzir o módulo `harmony`. Rascunho preservado na branch local `wip/harmony-transpose` (`35971c4`); não compila e não foi publicada.
+- [ ] Adicionar fixtures de parser para acordes invertidos, `6/9`, acidentes duplos e letras multilíngues (a nomeação já os cobre; falta provar a preservação na leitura do `.cho`).
+- [x] Transposição no `chord_naming` e módulo `harmony` integrados à `main` (29 testes; acordes invertidos, `6/9` e acidentes duplos cobertos).
 - [ ] Implementar persistência local (Song Bundle), migrações e exportação/restauração.
 - [ ] Criar UI de leitor de cifras (Modo Palco) e setlists.
 - [ ] Implementar exportação OpenLyrics/Holyrics e validar XML.

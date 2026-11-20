@@ -35,7 +35,17 @@
 - Integração na `main` pelo merge `50c7323`, com `analysis_options.yaml` ajustado no mesmo ciclo.
 - Validação do resultado integrado: 15 testes Rust, Clippy, formatação, `check_arb.py`, `cargo deny`, `flutter analyze` e `flutter test` verdes.
 - MusicXML permanece como placeholder.
-- Persistência, transposição, UI de palco e projeção ainda não existem.
+- Persistência, UI de palco e projeção ainda não existem.
+
+## R1 · Transposição e harmonia (2026-11-20)
+
+**Status:** 🟢 Integrada à `main`; o restante da R1 segue em branch própria.
+
+- `Chord::transpose` implementado em `chord_naming.rs`, com aritmética de letra e acidente.
+- Módulo `harmony.rs` reintroduzido: transposição de música inteira e renderização nos quatro sistemas.
+- Testes: 29 no workspace, incluindo acordes invertidos, `6/9`, acidentes duplos e acordes desconhecidos.
+- Testes dourados novos: `golden_harmony/worship.cho` e saídas em Common e Latin.
+- Escopo da R1 formalizado como proposta na ADR-0005 (ChordPro primeiro; MusicXML/ATEX em R1.1), aguardando aceite do dono.
 
 **Próxima Fase:** concluir R1-A, R1-B e R1-C conforme o plano v2.6, em nova branch a partir da `main`.
 

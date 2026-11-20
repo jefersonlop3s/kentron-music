@@ -10,7 +10,8 @@
 - Engenharia assistida: **Sovereign Harness**, com gates locais de segredo, SCA, SAST, tipos, testes e lint.
 - CI: **local-first** (ADR-0004). `scripts/ci-local.sh` é o portão principal; o GitHub Actions permanece como rede de segurança em PRs e semanal.
 - Repositório: `https://github.com/jefersonlop3s/kentron-music`.
-- Branch principal: `main`. O parser ChordPro da R1 foi integrado; o restante da R1 segue em branch própria a partir da `main`.
+- Branch principal: `main`. O parser ChordPro e a transposição da R1 foram integrados; o restante da R1 segue em branch própria a partir da `main`.
+- Escopo da R1: ChordPro primeiro; MusicXML/ATEX em R1.1 (ADR-0005, proposta aguardando aceite).
 - Dados musicais canônicos no Rust; tradução apenas na borda Flutter.
 - MIR, Matrix/Iroh e índice global ficam fora do primeiro release público.
 
@@ -38,9 +39,10 @@ Ressalvas abertas:
 ### R1-A · Cifra local utilizável
 
 - Parser ChordPro com modelo canônico e testes dourados. **Feito.**
-- Tratamento de acordes invertidos, `6/9`, acidentes duplos e letras multilíngues. **Pendente.**
+- Fixtures de parser para acordes invertidos, `6/9` e acidentes duplos. **Pendente** (a nomeação já os cobre; falta provar a preservação na leitura do `.cho`).
+- Letras multilíngues (projeção bilíngue). **Pendente** em R1-B.
 - Biblioteca local, setlists e Song Bundle versionado com exportação/restauração. **Pendente.**
-- Transposição e renderização nos quatro sistemas. **Pendente.**
+- Transposição e renderização nos quatro sistemas. **Feito** (29 testes, incluindo acordes invertidos, `6/9` e acidentes duplos).
 - Testes: unitários, regressivos, exploratórios e de propriedade. **Parcial.**
 
 ### R1-B · Projeção manual
@@ -55,7 +57,7 @@ Ressalvas abertas:
 - Dois cultos consecutivos em uma igreja, sem assistência do desenvolvedor. **Pendente.**
 - Nenhuma perda de dados, crash bloqueante ou falha de projeção. **Pendente.**
 - pt-BR, en-US e es-419 revisados. **Pendente.**
-- MusicXML e ATEX ficam para **R1.1**, condicionados ao spike S5.
+- MusicXML e ATEX ficam para **R1.1**, condicionados ao spike S5 (ADR-0005, proposta).
 
 ## 4. Riscos e mitigações
 
