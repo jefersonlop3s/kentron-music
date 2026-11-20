@@ -99,6 +99,16 @@
 - O gate do kentron já tinha a mesma correção (`a68c85c`), então projeto e kit voltaram a concordar.
 - Fechamento: os dois itens saíram do PENDING; restam no kit apenas as ressalvas já documentadas (canário Claude live pendente de login do dono).
 
+## R0 · core_l10n integrado ao app (2026-11-20)
+
+**Status:** 🟢 Entregue na `main`.
+
+- `packages/core_l10n/lib/core_l10n.dart` é o caminho único de import das localizações: o app não conhece o caminho do arquivo gerado.
+- O app monta `MaterialApp(locale:, localizationsDelegates: [CoreL10n.delegate, ...GlobalMaterialLocalizations.delegates], supportedLocales: CoreL10n.supportedLocales)`, e a saudação da tela inicial vem do ARB `homeWelcome` (en/pt/es) — nenhuma string de interface mora no app.
+- **Achado que mudou a leitura de um item do PENDING:** as `Global*` do `flutter_localizations` que o `gen-l10n` emite **não** satisfazem o `MaterialLocalizations` do `material_ui` — o app reprovava com "No MaterialLocalizations found". A migração pedida não é resolvível editando o `pubspec` do pacote: depende do gerador.
+- Pipeline: a geração passou a ser no lugar e **antes** dos passos do app (que precisam do arquivo gerado); o gate de Flutter do pre-push também gera, senão o push reprovaria por arquivo que o pipeline encontra pronto.
+- Provas: `flutter analyze` limpo no app e no pacote (pacote com `--no-fatal-infos`); 3 testes de widget verdes (en, pt, es e o fallback `pt_PT` → `pt`); paridade de ARBs ok com a chave nova; `ci-local.sh` verde.
+
 ## R0 · Matriz do CI com fonte única (2026-11-20)
 
 **Status:** 🟢 Entregue na `main`.

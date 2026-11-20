@@ -498,6 +498,13 @@ if [ -f "apps/kentron_app/pubspec.yaml" ]; then
             fi
         fi
         local app dir
+        # O app depende de `packages/core_l10n`, cujo arquivo gerado não é
+        # versionado: gerar ANTES de analisar/testar (2026-11-20). Sem isto o
+        # push reprova em `flutter analyze` por arquivo que o pipeline local,
+        # que já gera, encontra pronto.
+        if [ -f packages/core_l10n/pubspec.yaml ]; then
+            ( cd packages/core_l10n && "$flutter_bin" pub get >/dev/null && "$flutter_bin" gen-l10n >/dev/null ) || return $?
+        fi
         for app in apps/*/pubspec.yaml; do
             [ -f "$app" ] || continue
             dir=$(dirname "$app")

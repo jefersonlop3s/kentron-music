@@ -17,7 +17,8 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 - [x] Pipeline local `scripts/ci-local.sh` como portão principal (ADR-0004); Actions como rede de segurança em PRs e semanal.
 - [x] Core: `notation_bundle` (`chord_naming`) com testes dourados.
 - [x] Validação Flutter local (`flutter analyze`/`flutter test`) com Flutter 3.50.1.
-- [ ] Integração real de `core_l10n` e da ponte Rust ↔ Flutter.
+- [x] Integração real do `core_l10n` no app: delegates, locales suportados e a saudação da tela inicial vindos do ARB. Provado em teste com en/pt/es e com o fallback regional `pt_PT` → `pt`.
+- [ ] Ponte Rust ↔ Flutter real (ADR-0007): `bridge.rs` segue placeholder. Depende da ferramenta de geração e de diretórios de plataforma no app.
 - [x] Pipeline local validado de ponta a ponta (Rust, licenças, ARBs e Flutter).
 - [x] CI remoto mantido como rede de segurança: sem gatilho em `push` para `main`; `pull_request`, `workflow_dispatch` e `schedule` semanal.
 - [x] App migrado para `material_ui` 1.11.1.

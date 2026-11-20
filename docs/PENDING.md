@@ -4,8 +4,8 @@
 - [x] `flutter analyze` de `packages/core_l10n` no pipeline local (cópia temporária, `--no-fatal-infos`).
 - [x] Versão do Flutter fixada em `.flutter-version` (3.50.1), verificada pelo script e espelhada no workflow.
 - [x] `scripts/ci-local.sh` e `.github/workflows/ci.yml` sincronizados: o workflow deixou de repetir a matriz e passou a chamar o script (fonte única). Cobertura preservada — Rust (fmt, clippy, test), `cargo-deny`, ARBs, Flutter do app e `core_l10n`.
-- [ ] Migrar `core_l10n` de `flutter_localizations` para `material_ui`: o código gerado emite `info` de depreciação (`Global*Localizations`).
-- [ ] Integrar `core_l10n` ao app e criar `lib/core_l10n.dart`.
+- [ ] Migrar `core_l10n` de `flutter_localizations` para `material_ui`: **revisado em 2026-11-20** — a depreciação remanescente está no arquivo **gerado** (`gen-l10n` emite as `Global*` do `flutter_localizations`), e o próprio `material_ui` importa `GlobalWidgetsLocalizations` de lá. Não é resolvível editando o `pubspec` do pacote; depende do gerador. O app já usa as `Global*` do `material_ui`, então a depreciação é cosmética hoje.
+- [x] Integrar `core_l10n` ao app e criar `lib/core_l10n.dart`: o app monta o `MaterialApp` com `CoreL10n.delegate` + `...GlobalMaterialLocalizations.delegates`, resolve locale por `CoreL10n.supportedLocales` e a saudação da tela inicial vem do ARB (`homeWelcome`).
 - [ ] Substituir o placeholder da ponte Rust ↔ Flutter por chamada real.
 - [ ] Configurar proteção da branch `main` no GitHub.
 - [ ] Registro final na verificação de desenvolvedor do Android.

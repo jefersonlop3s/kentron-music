@@ -11,9 +11,13 @@ dependencies:
   flutter:
     sdk: flutter
   material_ui: ^1.11.1
-  # core_l10n e flutter_rust_bridge entram quando o gerador de localização e a
-  # ponte Rust estiverem realmente configurados. Até lá, o app deve compilar
-  # sozinho para o CI não falhar em uma dependência inexistente.
+  # Localizações: os ARBs, o gerador e os delegates vivem em core_l10n. O app
+  # não guarda string de interface — só o nome da marca.
+  core_l10n:
+    path: ../../packages/core_l10n
+  # flutter_rust_bridge entra quando a ponte Rust estiver de fato configurada
+  # (ADR-0007). Até lá, o app deve compilar sozinho para o CI não falhar em
+  # uma dependência inexistente.
 
 dev_dependencies:
   flutter_test:

@@ -81,6 +81,22 @@ cargo deny check
 step "i18n: paridade de ARBs"
 python3 tools/check_arb.py
 
+step "i18n: geração de localizações (packages/core_l10n)"
+# Geração NO LUGAR, não mais numa cópia temporária (2026-11-20): o app depende
+# do pacote e precisa de `lib/l10n/app_localizations.dart` para analisar e
+# testar. Os arquivos gerados estão no .gitignore, então a árvore segue limpa
+# para o git — e a ordem importa: gerar antes dos passos do app.
+(cd packages/core_l10n && "$FLUTTER" pub get >/dev/null && "$FLUTTER" gen-l10n)
+test -f packages/core_l10n/lib/l10n/app_localizations.dart || {
+  echo "ERRO: gen-l10n não gerou app_localizations.dart." >&2
+  exit 1
+}
+
+step "i18n: analyze do pacote core_l10n"
+# --no-fatal-infos: o código gerado por gen-l10n emite `info` de depreciação
+# (Global*Localizations). Erros e warnings continuam bloqueando.
+(cd packages/core_l10n && "$FLUTTER" analyze --no-fatal-infos)
+
 step "Flutter: dependências (apps/kentron_app)"
 (cd apps/kentron_app && "$FLUTTER" pub get)
 
@@ -89,23 +105,5 @@ step "Flutter: analyze (apps/kentron_app)"
 
 step "Flutter: testes (apps/kentron_app)"
 (cd apps/kentron_app && "$FLUTTER" test)
-
-step "i18n: geração de localizações (packages/core_l10n)"
-# A geração roda numa cópia temporária: o l10n.yaml do pacote escreve em
-# lib/l10n, e gerar no lugar sujaria a árvore de trabalho.
-TMP_L10N="$(mktemp -d)"
-trap 'rm -rf "$TMP_L10N"' EXIT
-cp -R packages/core_l10n/. "$TMP_L10N/"
-rm -rf "$TMP_L10N/.dart_tool" "$TMP_L10N/build"
-(cd "$TMP_L10N" && "$FLUTTER" pub get >/dev/null && "$FLUTTER" gen-l10n)
-test -f "$TMP_L10N/lib/l10n/app_localizations.dart" || {
-  echo "ERRO: gen-l10n não gerou app_localizations.dart." >&2
-  exit 1
-}
-
-step "i18n: analyze do pacote core_l10n"
-# --no-fatal-infos: o código gerado por gen-l10n emite `info` de depreciação
-# (Global*Localizations). Erros e warnings continuam bloqueando.
-(cd "$TMP_L10N" && "$FLUTTER" analyze --no-fatal-infos)
 
 step "Pipeline local concluído: todos os portões passaram."

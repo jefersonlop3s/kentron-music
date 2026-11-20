@@ -1,5 +1,9 @@
 {
   "@@locale": "en",
+  "homeWelcome": "Welcome to Kentron Music Hub",
+  "@homeWelcome": {
+    "description": "Greeting shown on the app shell's home screen. Exists so the localized shell proves the i18n path end to end."
+  },
   "cueRepeatChorus": "Repeat chorus",
   "@cueRepeatChorus": {
     "description": "Maestro cue shown one bar before the band jumps back to the chorus. Stage screen: keep it short."

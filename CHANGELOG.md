@@ -2,7 +2,21 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
-## [Infra] Matriz do CI com fonte única (2026-11-20)
+## [R0] core_l10n integrado ao app (2026-11-20)
+### Adicionado
+- `packages/core_l10n/lib/core_l10n.dart`: caminho único de import das localizações geradas — o app deixa de conhecer o caminho do arquivo gerado.
+- ARB `homeWelcome` (en/pt/es) e a tela inicial usando a string do ARB no lugar de texto fixo.
+- Testes do app cobrindo en, pt e es na mesma tela, mais o fallback regional `pt_PT` → `pt`.
+
+### Alterado
+- `apps/kentron_app` passou a depender de `core_l10n` e monta o `MaterialApp` com `CoreL10n.delegate` e `...GlobalMaterialLocalizations.delegates`; `supportedLocales` vem de `CoreL10n.supportedLocales`.
+- `scripts/ci-local.sh`: a geração do `core_l10n` passou a ser **no lugar** (não mais em cópia temporária) e **antes** dos passos do app, que precisam do arquivo gerado.
+- `.githooks/pre-push`: o gate de Flutter gera o `core_l10n` antes de analisar e testar — sem isso o push reprovaria por um arquivo que o pipeline encontra pronto.
+
+### Descoberto (e registrado no PENDING)
+- O `MaterialLocalizations` do `material_ui` **não** é satisfeito pelas `Global*` do `flutter_localizations` que o `gen-l10n` emite: o app reprovava com "No MaterialLocalizations found". A saída é usar as `Global*` do `material_ui` — e isso revisou o item que pedia "migrar `core_l10n` para `material_ui`", que **não** é resolvível no `pubspec` do pacote.
+
+
 ### Alterado
 - `.github/workflows/ci.yml` deixou de duplicar a matriz: instala Rust, Flutter (3.50.1, casando com `.flutter-version`) e `cargo-deny`, e chama `./scripts/ci-local.sh`. Quatro jobs viraram um; a cobertura é a mesma, agora definida num lugar só.
 - Gatilhos preservados: `pull_request`, `workflow_dispatch` e `schedule` semanal — segue sem disparar em push para a `main` (ADR-0004).
