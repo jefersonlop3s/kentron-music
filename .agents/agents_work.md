@@ -27,12 +27,20 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
+Nenhuma sessão ativa.
+
+## 🟡 Interrompido / órfão
+
+Nenhum.
+
+## 🟢 Concluído recentemente
+
 ### cline/de6b0 — Kentron: higiene do CI, core_l10n integrado e ponte (ADR-0007)
 - **Início**: 2026-11-20 14:45 (UTC) · **Última atualização**: 2026-11-20 15:09 (UTC)
-- **Repositório**: `kentron-music` · **Branches**: `feature/ponte-rust-flutter` (`391bad1`) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
+- **Repositório**: `kentron-music` · **Branches**: `feature/ponte-rust-flutter` (= `main` `04e9ea5`, integrada; apagar junto com o worktree) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
 - **Demanda**: higienizar (branch de escopo + matriz do CI duplicada), integrar o `core_l10n` e entregar a ponte Rust↔Flutter.
-- **Paths sob edição**: `crates/kentron_ffi/**` (novo), `crates/notation_bundle/**`, `apps/kentron_app/{lib,test,pubspec}`, `flutter_rust_bridge.yaml`, `scripts/ci-local.sh`, `.githooks/pre-push`, `docs/**`, `CHANGELOG.md`.
-- **Status**: em andamento — ponte entregue, provada e commitada; merge/push em curso.
+- **Paths sob edição**: nenhum (concluído).
+- **Status**: concluído — ponte integrada na `main` e empurrada (`04e9ea5`).
 - **PRs**: nenhum (repositório local; integração por merge `--ff-only`).
 
 **Feito:**
@@ -53,12 +61,6 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - **Emenda medida à ADR-0007:** a cláusula "`forbid` permanece" era inalcançável — a cola gerada tem um bloco `unsafe` e `forbid` não aceita `allow`. O adaptador usa `deny` com `#[allow(unsafe_code)]` escopado ao módulo gerado; o invariante que o dono quis preservar segue de pé onde o código é nosso.
 - **Prova de ponta a ponta:** `apps/kentron_app/test/bridge_test.dart` carrega o cdylib e chama o Rust (resumo real; cifra vazia vira exceção). 58 testes Rust + 5 de Flutter verdes.
 - Dois bloqueios reais que viraram correção: o código gerado não é `rustfmt`-limpo na edição 2024 (o pipeline reprovou até formatar) e dependência de caminho sem `version` é lida como wildcard pelo `cargo deny`. Ambos registrados.
-
-## 🟡 Interrompido / órfão
-
-Nenhum.
-
-## 🟢 Concluído recentemente
 
 ### cline/de6b0 — sovereign-harness 0.7.2: duas lições do kentron
 - **Início**: 2026-11-20 13:56 (UTC) · **Última atualização**: 2026-11-20 14:10 (UTC)
