@@ -61,6 +61,19 @@ impl Letter {
         }
     }
 
+    /// Returns the letter at `index` modulo 7, in the order C D E F G A B.
+    const fn from_index(index: usize) -> Self {
+        match index % 7 {
+            0 => Self::C,
+            1 => Self::D,
+            2 => Self::E,
+            3 => Self::F,
+            4 => Self::G,
+            5 => Self::A,
+            _ => Self::B,
+        }
+    }
+
     const fn common(self) -> &'static str {
         match self {
             Self::C => "C",
@@ -231,6 +244,71 @@ impl Chord {
         }
         Ok(out)
     }
+
+    /// Transposes the chord by the interval from `from` to `to`.
+    ///
+    /// The root and the bass are respelled diatonically: the letter moves by the same
+    /// number of scale steps as the interval, so `C` up a fourth becomes `F`, not `E#`.
+    /// When the diatonic spelling would need more than two accidentals, the nearest
+    /// enharmonic spelling is used instead. The suffix is preserved.
+    ///
+    /// The interval is measured ascending, so transposing from `G` to `C` moves up a
+    /// fourth rather than down a fifth.
+    #[must_use]
+    pub fn transpose(&self, from: Note, to: Note) -> Self {
+        let (semitones, steps) = interval(from, to);
+        Self {
+            root: transpose_note(self.root, semitones, steps),
+            suffix: self.suffix.clone(),
+            bass: self.bass.map(|bass| transpose_note(bass, semitones, steps)),
+        }
+    }
+}
+
+/// Ascending interval between two notes: semitones and diatonic scale steps.
+fn interval(from: Note, to: Note) -> (i32, i32) {
+    let semitones = (to.pitch_class() - from.pitch_class()).rem_euclid(12);
+    let steps = (to.letter.index() as i32 - from.letter.index() as i32).rem_euclid(7);
+    (semitones, steps)
+}
+
+fn transpose_note(note: Note, semitones: i32, steps: i32) -> Note {
+    let target = (note.pitch_class() + semitones).rem_euclid(12);
+    let preferred = Letter::from_index(note.letter.index() + steps as usize);
+    spell(target, preferred)
+}
+
+/// Spells `pitch_class` preferring `letter`, falling back to the nearest enharmonic
+/// spelling when the preferred one would need more than two accidentals.
+fn spell(pitch_class: i32, preferred: Letter) -> Note {
+    if let Some(note) = fit(pitch_class, preferred) {
+        return note;
+    }
+    const LETTERS: [Letter; 7] = [
+        Letter::C,
+        Letter::D,
+        Letter::E,
+        Letter::F,
+        Letter::G,
+        Letter::A,
+        Letter::B,
+    ];
+    LETTERS
+        .iter()
+        .filter_map(|&letter| fit(pitch_class, letter))
+        .min_by_key(|note| (note.accidental.unsigned_abs(), note.letter.index()))
+        .unwrap_or(Note::new(preferred, 0))
+}
+
+fn fit(pitch_class: i32, letter: Letter) -> Option<Note> {
+    let mut accidental = (pitch_class - letter.pitch_class()).rem_euclid(12);
+    if accidental > 6 {
+        accidental -= 12;
+    }
+    if accidental.unsigned_abs() > 2 {
+        return None;
+    }
+    Some(Note::new(letter, accidental as i8))
 }
 
 impl fmt::Display for Chord {
@@ -462,6 +540,60 @@ mod tests {
             "Gmaj9", "D/F#", "Em7", "Cm6", "Bbmaj9", "F/A", "Ebm6", "C6/9", "G", "F##dim",
         ] {
             assert_eq!(chord(s).to_string(), s);
+        }
+    }
+
+    #[test]
+    fn transposes_up_a_major_second() {
+        let from = Note::new(Letter::C, 0);
+        let to = Note::new(Letter::D, 0);
+        for (input, expected) in [
+            ("C", "D"),
+            ("G", "A"),
+            ("Am", "Bm"),
+            ("F", "G"),
+            ("D/F#", "E/G#"),
+        ] {
+            assert_eq!(
+                chord(input).transpose(from, to).to_string(),
+                expected,
+                "{input}"
+            );
+        }
+    }
+
+    #[test]
+    fn transposes_using_the_ascending_interval() {
+        let from = Note::new(Letter::G, 0);
+        let to = Note::new(Letter::C, 0);
+        assert_eq!(chord("G").transpose(from, to).to_string(), "C");
+        assert_eq!(chord("D/F#").transpose(from, to).to_string(), "G/B");
+    }
+
+    #[test]
+    fn double_accidental_keeps_the_diatonic_spelling() {
+        let from = Note::new(Letter::C, 0);
+        let to = Note::new(Letter::C, 1);
+        // Cbb up a semitone is Cb: same letter, one flat fewer.
+        assert_eq!(chord("Cbb").transpose(from, to).to_string(), "Cb");
+    }
+
+    #[test]
+    fn double_accidental_falls_back_to_an_enharmonic_spelling() {
+        let from = Note::new(Letter::C, 0);
+        let to = Note::new(Letter::C, 1);
+        // C## up a semitone would be C### (three sharps); the enharmonic D# is used instead.
+        assert_eq!(chord("C##").transpose(from, to).to_string(), "D#");
+    }
+
+    #[test]
+    fn transposition_round_trips() {
+        let from = Note::new(Letter::C, 0);
+        let to = Note::new(Letter::D, 0);
+        for input in ["C", "Gmaj9", "D/F#", "Bbmaj9/D", "C6/9", "F##dim"] {
+            let original = chord(input);
+            let up = original.transpose(from, to);
+            assert_eq!(up.transpose(to, from), original, "{input}");
         }
     }
 }
