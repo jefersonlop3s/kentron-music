@@ -2,6 +2,13 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [Docs] ADR-0006 proposta: Song Bundle v1 (2026-11-20)
+### Adicionado
+- ADR-0006 (proposta): Song Bundle como diretório com `meta.json` versionado, `serde`/`serde_json` como primeira dependência externa, migração por degrau e exportação por cópia do diretório na v1.
+
+### Alterado
+- Índice de ADRs: ADR-0006 registrada como proposta; próximo número livre passa a ADR-0007.
+
 ## [Docs] ADR-0005 rejeitada e branches limpas (2026-11-20)
 ### Alterado
 - ADR-0005 marcada como **rejeitada**: a redução de escopo da R1 tratava uma ordem de execução como corte de escopo de uma ADR já aceita. A ADR-0002 permanece integral.
