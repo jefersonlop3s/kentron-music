@@ -6,6 +6,10 @@
 use std::collections::HashMap;
 
 /// A representation of a song in ChordPro format.
+///
+/// The model carries no serialization attributes on purpose: the persisted
+/// content is the `.cho` text itself (ADR-0006), written by [`write`], and the
+/// JSON files hold only identity. See `crate::bundle_store`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Song {
     pub metadata: HashMap<String, String>,
@@ -156,6 +160,75 @@ impl ChordProParser {
     }
 }
 
+/// Serializes a song back to ChordPro text.
+///
+/// Metadata keys are written in sorted order so the output is deterministic —
+/// `metadata` is a `HashMap` and iteration order is not stable. Sections are
+/// separated by a blank line. `write` followed by [`ChordProParser::parse`]
+/// returns an equal model: comments and blank lines are not part of the model,
+/// so they are not part of the round-trip.
+#[must_use]
+pub fn write(song: &Song) -> String {
+    let mut out = String::new();
+
+    let mut keys: Vec<&String> = song.metadata.keys().collect();
+    keys.sort();
+    for key in keys {
+        if let Some(value) = song.metadata.get(key) {
+            out.push('{');
+            out.push_str(key);
+            out.push_str(": ");
+            out.push_str(value);
+            out.push_str("}\n");
+        }
+    }
+
+    for section in &song.sections {
+        out.push('\n');
+        if let Some(name) = &section.name {
+            out.push('[');
+            out.push_str(name);
+            out.push_str("]\n");
+        }
+        for line in &section.lines {
+            out.push_str(&write_line(line));
+            out.push('\n');
+        }
+    }
+
+    out
+}
+
+/// Writes one line, reinserting each chord before the character it was
+/// attached to. `ChordPlacement::position` counts characters of the lyric, as
+/// the parser counted them.
+fn write_line(line: &Line) -> String {
+    let mut out = String::new();
+    let mut chords: Vec<&ChordPlacement> = line.chords.iter().collect();
+    chords.sort_by_key(|placement| placement.position);
+
+    let mut next = 0;
+    for (position, character) in line.text.chars().enumerate() {
+        while next < chords.len() && chords[next].position <= position {
+            push_chord(&mut out, &chords[next].chord);
+            next += 1;
+        }
+        out.push(character);
+    }
+    while next < chords.len() {
+        push_chord(&mut out, &chords[next].chord);
+        next += 1;
+    }
+
+    out
+}
+
+fn push_chord(out: &mut String, chord: &str) {
+    out.push('[');
+    out.push_str(chord);
+    out.push(']');
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -172,5 +245,59 @@ mod tests {
         assert_eq!(song.sections[0].lines[0].chords[0].position, 0);
         assert_eq!(song.sections[0].lines[0].chords[1].chord, "G");
         assert_eq!(song.sections[0].lines[0].chords[1].position, 7);
+    }
+
+    #[test]
+    fn write_round_trips_through_the_parser() {
+        let input = "{title: Santo}\n{key: C}\n\n[Verse]\n[C]Santo, [G]santo, [Am]santo\n[F]Deus do [C]universo\n\n[Chorus]\n[Dm]Toda a [G]terra te a[C]dora\n";
+        let song = ChordProParser::parse(input).expect("fixture should parse");
+
+        let written = write(&song);
+        let reparsed = ChordProParser::parse(&written).expect("written text should parse");
+
+        assert_eq!(reparsed, song, "round-trip must preserve the model");
+    }
+
+    #[test]
+    fn write_is_deterministic_and_sorts_metadata() {
+        let song = ChordProParser::parse("{title: T}\n{artist: A}\n{key: C}\n\n[C]x\n")
+            .expect("fixture should parse");
+
+        let first = write(&song);
+        let second = write(&song);
+
+        assert_eq!(first, second, "same model, same bytes");
+        let artist = first.find("{artist:").expect("artist line");
+        let key = first.find("{key:").expect("key line");
+        let title = first.find("{title:").expect("title line");
+        assert!(
+            artist < key && key < title,
+            "metadata must be sorted: {first:?}"
+        );
+    }
+
+    #[test]
+    fn write_keeps_chords_attached_to_their_character() {
+        let song = ChordProParser::parse("[C]a[G]b\n").expect("fixture should parse");
+        assert_eq!(write(&song), "\n[C]a[G]b\n");
+    }
+
+    #[test]
+    fn write_puts_chords_past_the_end_after_the_lyric() {
+        let song = Song {
+            metadata: HashMap::new(),
+            sections: vec![Section {
+                name: None,
+                lines: vec![Line {
+                    chords: vec![ChordPlacement {
+                        position: 99,
+                        chord: "C".to_owned(),
+                    }],
+                    text: "abc".to_owned(),
+                }],
+            }],
+        };
+
+        assert_eq!(write(&song), "\nabc[C]\n");
     }
 }

@@ -69,6 +69,18 @@
 - 14 testes novos (11 unitários no módulo, 3 de integração em `tests/bundle_tests.rs` com o fixture `worship.cho`); workspace passa de 29 para 43 testes.
 - Decisão do dono: o formato de persistência é decidido **depois** do modelo — a ADR-0006 fica proposta e adiada, sem dependência externa adicionada.
 
+## R1 · Song Bundle v1: persistência (ADR-0006 aceita, 2026-11-20)
+
+**Status:** 🟢 Persistência entregue na `main`; resta empacotar `score.musicxml`/`tabs/*.atex` e o contêiner único (v1.1).
+
+- ADR-0006 **aceita** pelo dono, com o modelo em memória já entregue na ordem que ele pediu.
+- `bundle_store`: bundle é diretório com `meta.json` (`schema_version`, `id`, `updated_at`, inventário de arquivos) e `song.cho`; `library.json` indexa a biblioteca e cada setlist tem o seu `*.json`.
+- `chordpro::write` fecha o ciclo do parser: metadados em ordem determinística, acordes recolocados na posição, ida e volta preservando o modelo.
+- Migração por degrau com a cadeia vazia (v1 é o primeiro esquema) — versão sem degrau falha alto, provado nos dois sentidos (0 e 2 recusados, 1 aceito).
+- `serde`/`serde_json` entram como primeira dependência externa: **11 pacotes** medidos no `Cargo.lock`, todos aprovados por `cargo deny`.
+- Todo valor volta ao modelo pelos construtores validados: um setlist com entrada órfã é recusado na leitura, não carregado com buraco.
+- 55 testes no workspace (12 novos); `ci-local.sh` verde.
+
 ## R0 · Pipeline local-first (ADR-0004, 2026-11-20)
 
 **Status:** 🟢 Decisão aceita e implementada.

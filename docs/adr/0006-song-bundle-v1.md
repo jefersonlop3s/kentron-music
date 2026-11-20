@@ -1,6 +1,6 @@
 # ADR-0006 · Song Bundle v1: formato de persistência e primeira dependência externa
 
-- **Status:** proposto (2026-11-20) — **adiado pelo dono do projeto**: o modelo em memória (`SongBundle`, `Library`, `Setlist`) vem primeiro; o formato de persistência é decidido depois, com o modelo já provado
+- **Status:** **aceito** (2026-11-20) — decisão do dono do projeto. O modelo em memória (`SongBundle`, `Library`, `Setlist`) foi entregue antes, como o dono pediu; o formato desta ADR passa a valer a partir dele
 - **Decisão do plano:** R1-A (biblioteca local, setlists e Song Bundle versionado)
 - **Não substitui:** ADR-0002 (o layout `meta.json` / `.cho` / `.musicxml` / `tabs/*.atex` já vem de lá)
 
@@ -42,7 +42,7 @@ O Song Bundle v1 é um **diretório** com um manifesto versionado:
 
 - **Ganho:** formato legível, diffável e inspecionável sem ferramenta; o piloto pode fazer backup copiando uma pasta.
 - **Ganho:** a versão de esquema entra desde o primeiro commit, quando migrar ainda é barato.
-- **Custo:** `serde` + `serde_json` trazem ~5 crates transitivas; o workspace deixa de ser zero-dependência. `cargo deny` passa a valer como gate real, não decorativo.
+- **Custo:** medido em 2026-11-20 — `serde` + `serde_json` somam **11 pacotes** no `Cargo.lock` (`serde_core`, `serde_derive`, `proc-macro2`, `quote`, `syn`, `unicode-ident`, `itoa`, `memchr`, `zmij`); o workspace deixa de ser zero-dependência. `cargo deny` passa a valer como gate real, não decorativo.
 - **Custo:** exportar como diretório é desconfortável no celular; até a v1.1 o compartilhamento depende do app empacotar.
 - **Dívida assumida:** o contêiner de arquivo único fica para a v1.1. Se o piloto exigir compartilhamento por arquivo antes disso, a v1.1 sobe de prioridade.
 - **Reversão:** se o dono recusar a dependência, a alternativa é um JSON artesanal (sem dependências) — mais código de escape e parsing para manter, e nenhum ganho de formato.
