@@ -55,6 +55,17 @@ require cargo-deny
 
 FLUTTER="$(resolve_flutter)"
 
+# Versão fixada em .flutter-version (fonte única, espelhada no workflow).
+if [[ -f .flutter-version ]]; then
+  expected="$(tr -d '[:space:]' < .flutter-version)"
+  installed="$("$FLUTTER" --version 2>/dev/null | head -1 | awk '{print $2}')"
+  if [[ "$installed" != "$expected" ]]; then
+    printf 'ERRO: Flutter %s instalado; .flutter-version exige %s.\n' "$installed" "$expected" >&2
+    printf 'Atualize o SDK ou ajuste .flutter-version e o workflow.\n' >&2
+    exit 1
+  fi
+fi
+
 step "Rust: formatação (cargo fmt --check)"
 cargo fmt --all -- --check
 
@@ -91,5 +102,10 @@ test -f "$TMP_L10N/lib/l10n/app_localizations.dart" || {
   echo "ERRO: gen-l10n não gerou app_localizations.dart." >&2
   exit 1
 }
+
+step "i18n: analyze do pacote core_l10n"
+# --no-fatal-infos: o código gerado por gen-l10n emite `info` de depreciação
+# (Global*Localizations). Erros e warnings continuam bloqueando.
+(cd "$TMP_L10N" && "$FLUTTER" analyze --no-fatal-infos)
 
 step "Pipeline local concluído: todos os portões passaram."

@@ -22,6 +22,8 @@ O portão local (`.githooks/pre-push`) já roda gitleaks, Trivy, Semgrep, Clippy
 - `workflow_dispatch` permite executar o CI remoto sob demanda.
 - Custo adicional: nenhum. Ganho: menos ruído e independência de política de terceiros.
 - Validação: `scripts/ci-local.sh` deve passar no estado atual e o push de teste não deve criar execução remota.
+- Versão do Flutter fixada em `.flutter-version` (3.50.1); o script falha se a versão instalada divergir e o workflow espelha o mesmo valor.
+- `packages/core_l10n` entra no pipeline com `gen-l10n` e `analyze --no-fatal-infos` (o código gerado emite `info` de depreciação).
 
 ## Referências e evolução
 

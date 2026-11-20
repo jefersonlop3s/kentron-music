@@ -70,12 +70,14 @@ Ressalvas abertas:
 | `cargo-deny` não cobre Dart | Inventário e verificação de licenças Dart no pipeline local. |
 | Matriz duplicada (script + workflow) | Manter `scripts/ci-local.sh` e `ci.yml` sincronizados; o script é a fonte de verdade. |
 | Política de runners de terceiros | Pipeline local como portão principal; Actions apenas como rede de segurança. |
-| Versão do Flutter não fixada | Fixar a versão no pipeline e no workflow. |
+| Versão do Flutter não fixada | Resolvido: `.flutter-version` (3.50.1) verificado pelo script e espelhado no workflow. |
+| `core_l10n` sem verificação | Resolvido: `gen-l10n` + `analyze --no-fatal-infos` na cópia temporária. |
+| Depreciação em `core_l10n` | Migrar de `flutter_localizations` para `material_ui` (registrado em `PENDING`). |
 
 ## 5. Próximos passos
 
 0. Rodar `./scripts/ci-local.sh` antes de cada push; é o portão principal (ADR-0004).
-1. Rodar `flutter analyze` e `flutter test` em ambiente com Flutter; corrigir o app.
+1. ~~Rodar `flutter analyze` e `flutter test` em ambiente com Flutter~~ — feito; o pipeline cobre app e `core_l10n`.
 2. Integrar `core_l10n` e criar a chamada real Rust ↔ Flutter.
 3. Fechar o parser ChordPro e iniciar Song Bundle/persistência.
 4. Implementar OpenLyrics e Browser Source manual.

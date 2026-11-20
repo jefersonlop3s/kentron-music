@@ -12,6 +12,11 @@ Todos os eventos notáveis do projeto Kentron Music Hub.
 - `.github/workflows/ci.yml` sem gatilho em `push` para `main`; mantém `pull_request`, `workflow_dispatch` e `schedule` semanal.
 - README, ROADMAP, PENDING e CONCLUSÃO alinhados ao pipeline local.
 
+### Corrigido
+- Versão do Flutter fixada em `.flutter-version` (3.50.1), verificada pelo script e espelhada no workflow.
+- `packages/core_l10n` incluído no pipeline com `gen-l10n` e `analyze --no-fatal-infos`.
+- Localizações geradas (`app_localizations*.dart`) no `.gitignore`; deixam de poluir `git status`.
+
 ### Premissa corrigida
 - O repositório é público, portanto o GitHub Actions é gratuito e ilimitado. A mudança é por soberania, redução de ruído e não duplicação de validação — não por custo.
 

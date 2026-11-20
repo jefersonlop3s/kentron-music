@@ -13,6 +13,9 @@ pubspec.lock
 **/android/.gradle/
 **/android/local.properties
 
+# Localizações geradas por `flutter gen-l10n` (reproduzíveis a partir dos ARBs)
+packages/core_l10n/lib/l10n/app_localizations*.dart
+
 # Segredos e credenciais de publicação (nunca versionar)
 *.jks
 *.keystore
