@@ -28,11 +28,11 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 ## 🔴 Em andamento
 
 ### cline/de6b0 — Kentron: acesso remoto, host de build e alvo web
-- **Início**: 2026-11-20 17:35 (UTC) · **Última atualização**: 2026-11-20 21:00 (UTC)
-- **Repositório**: `kentron-music` · **Branches**: `feature/alvo-ios` (= `main` `91dd4e8`, integrada) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
+- **Início**: 2026-11-20 17:35 (UTC) · **Última atualização**: 2026-11-20 21:12 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/alvo-ios` (= `main` `7bb4e7a`, integrada) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
 - **Demanda**: destravar o acesso remoto aos alvos, preparar o host de build e provar o app com o núcleo real.
 - **Paths sob edição**: `~/.ssh/config` e `~/.zshrc` (fora do repo), `apps/kentron_app/{web,android,ios,rust_builder,lib,test}/**`, `crates/kentron_ffi/Cargo.toml`, `scripts/servir-web.py`, `docs/**`, `CHANGELOG.md`.
-- **Status**: núcleo Rust provado nos **quatro** caminhos — teste (cdylib), navegador (wasm), Android e iOS. Fila técnica concluída.
+- **Status**: núcleo Rust provado nos **quatro** caminhos (teste, navegador, Android, iOS); itens de manutenção fechados. Nada bloqueado.
 - **PRs**: nenhum (integração por merge `--ff-only`).
 
 **Feito:**
@@ -47,6 +47,7 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - **Falha minha, registrada:** li um `git diff` vazio como "o pubspec não ganhou a dependência" quando o diff era contra o `HEAD`, não contra o backup — o `integrate` havia feito o `pub add`. Bastava ter grepyado o arquivo em vez de concluir pelo diff.
 - **iOS entregue e rodando:** `ios/` criado (`--org com.kentron`; bundle id `com.kentron.kentronApp`, `pubspec` idêntico). O build falhou com `Unable to find bundle for dynamic library` — e a correção saiu de **ler o código do cargokit**: ele usa o `.a` **se existir** (`if (staticLibs.isNotEmpty)`) e só exige Framework quando não existe; como o crate declarava só `cdylib`, não havia `.a` para iOS. Bastou **`staticlib` no `crate-type`** (Android segue no `cdylib`). Prova: build do simulador verde (Xcode 27.2), app aberto (PID 53043) e o print — que eu li e conferi — com `Exemplo`, `tom C`, os acordes e `núcleo: kentron_ffi 0.0.0`. **Regressão do Android revalidada** após a mudança.
 - **Risco anotado:** o Flutter avisa que o plugin `kentron_ffi` **não suporta Swift Package Manager** e que isso *vai virar erro* numa versão futura (o cargokit é CocoaPods-only). Ver PENDING.
+- **Manutenção:** removido o runtime de simulador redundante (`24B91016s`, seed, 7,7 GB) — ficou o `24B8117`, com o iPhone 17 das provas. E o **SPM** foi investigado com medição: desligar `--no-enable-swift-package-manager` **não** silencia o aviso (build verde, aviso presente) → hipótese minha derrubada por medição e config **restaurada** ao default com `--clear-features` (preservando `android-sdk`/`jdk-dir`). O frb 2.13.0 estável não tem SPM (nem opção no `integrate`, nem `Package.swift`); upstream as issues #3036/#3202 estão fechadas → o caminho durável é subir o gerador quando houver estável com SPM.
 - **Lição de método (a que vale para a próxima sessão):** quando o erro está numa ferramenta de terceiro, **ler o código dela** deu a correção exata em minutos, enquanto tentativa e erro custaria builds de 5 min cada.
 - **Prova no navegador (feita pelo dono):** a tela web mostrou os dados do núcleo — `Exemplo`, `Kentron · tom C · 2 seção(ões)`, acordes `C G Am F` e `núcleo: kentron_ffi 0.0.0`. Cadeia Rust → wasm → Flutter web → tela provada.
 - **Toolchain Android medida e funcional:** SDK 36 completo em `~/Library/Android/sdk` (build-tools 36.0.0, emulator 37.3.10, **NDK 28.2.13676358**, platforms 36, imagem arm64-v8a), Java Temurin 27, AVD **`kentron`** criado, `flutter doctor` ✓. Versões tiradas do próprio SDK (não de memória).
@@ -54,11 +55,10 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - **Duas falhas minhas, registradas:** (1) paralelizei a cópia do `cmdline-tools` com o `avdmanager` que dependia dela e li a falha como bug da ferramenta; (2) **culpei o Flutter do brew** pela reprovação do gate sem provar — a reprodução isolada deu 5/5 e o teste completo 8/8. A causa era **contenção**: rodei a bateria enquanto baixava vários GB do SDK. A mesma revisão passou com a máquina livre.
 
 **Ficou aberto:**
-- **Swift Package Manager:** quando o Flutter tornar SPM obrigatório, o `kentron_ffi` (cargokit, CocoaPods-only) vai reprovar — decidir então entre adotar SPM no plugin ou manter o iOS em CocoaPods explicitamente.
-- **Higiene de disco:** há **dois** runtimes iOS 27.2 (`24B8117` e `24B91016s`, ~7 GB cada) — remover um com `xcrun simctl runtime delete <id>`.
+- **Swift Package Manager (risco datado, com caminho definido):** o Flutter avisa que o `kentron_ffi` não suporta SPM e que isso *vai virar erro* numa versão futura. Medido: o aviso independe da flag do Flutter (config restaurada) e o frb 2.13.0 estável não gera `Package.swift`; upstream as issues #3036/#3202 estão fechadas. Subir o gerador quando houver estável com SPM (detalhes e comandos no PENDING).
+- **Disco:** **25 GB livres** — apertado para builds de iOS; `~/Library/Developer/Xcode/DerivedData` e `apps/kentron_app/build/` são os candidatos de limpeza.
 - **Máquinas de pé:** emulador Android (`emulator -avd kentron`) e simulador iOS (iPhone 17 bootado) — encerrar quando não precisar.
-- **Higiene de credencial/segredo:** nada pendente; os casks duplicados foram removidos pelo dono e `~/development/flutter/bin` ficou à frente no PATH do `~/.zshrc`.
-- **Ver no navegador:** ✅ feito. **Android:** ✅ feito. **iOS:** ✅ feito.
+- **Ver no navegador / Android / iOS:** ✅ todos feitos.
 - Instalações: NDK + Flutter pinado na `lab` (build Android por Docker), SDK/JDK/NDK no Mac (emulador) e Xcode (iOS — só o dono, via App Store). Matriz de versões medida na fonte: compileSdk/targetSdk **36**, minSdk **24**, **NDK 28.2.13676358**, Gradle **9.5.0**, AGP **9.3.1**, KGP **2.4.20**, **JDK ≥ 17**.
 
 
