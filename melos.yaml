@@ -1,0 +1,16 @@
+name: kentron_monorepo
+
+packages:
+  - apps/**
+  - packages/**
+
+commands:
+  analyze:
+    run: melos exec --all "flutter analyze"
+    description: Run flutter analyze in all packages.
+  test:
+    run: melos exec --all "flutter test"
+    description: Run flutter tests in all packages.
+  build:
+    run: melos exec --all "flutter build"
+    description: Build all packages.

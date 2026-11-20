@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/jefersonlopes/.cline/worktrees/de6b0/app-music/.harness/harness_guard.py hook",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/jefersonlopes/.cline/worktrees/de6b0/app-music/.harness/harness_guard.py contexto",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

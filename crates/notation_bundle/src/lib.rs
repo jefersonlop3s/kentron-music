@@ -4,3 +4,5 @@
 //! `.musicxml`, `tabs/*.atex`) and the projection-friendly verse pagination arrive in R1.
 
 pub mod chord_naming;
+pub mod bridge;
+

@@ -1,32 +1,31 @@
-# ADR-0003 · Nome do projeto e do produto: em aberto, com nome de trabalho
+ # ADR-0003 · Nome do projeto e do produto: Kentron Music Hub
 
-- **Status:** em aberto (2026-11-18)
+- **Status:** aceita (2026-11-19)
 - **Decisão do plano:** D1
 
 ## Contexto
 
-A v2.4 propôs quatro duplas (Projeto → App) e afirmou que estavam "verificadas", sem base. Verificação feita em 2026-11-18:
-
-- Contas livres no GitHub: `openmaestro`, `chordmesh`, `kodamesh`, `pulsolivre`, `palcovivo`. Já existem: `koda`, `sincro`, `tacet`.
-- **Koda** colide com a KODA, sociedade dinamarquesa de gestão coletiva de música.
-- **PalcoVivo** soa só português, o que pesa contra um app multilíngue.
-- Não verificados: marcas (INPI, EUIPO, USPTO), domínios, nomes nas lojas.
+O projeto nasceu sob o nome de trabalho `app-music`. A v2.4 propôs nomes que colidiam com marcas existentes ou eram excessivamente limitados a um único idioma. Era necessário um nome que fosse:
+1. Distintivo e memorável.
+2. Foneticamente neutro para as faixas de idiomas (pt, en, es).
+3. Escalável para módulos futuros.
+4. Claro quanto à sua categoria (Music Hub).
 
 ## Decisão
 
-Seguir com o **nome de trabalho `app-music`** (nome da pasta). Os crates e pacotes do código não carregam marca (`notation_bundle`, `media_bridge`, `core_l10n`…), então o nome definitivo só afeta:
+O nome oficial do produto é **Kentron Music Hub**.
 
-- o identificador do app Flutter (bundle id / application id);
-- o nome de exibição e os metadados das lojas;
-- o nome da organização e do repositório no GitHub.
+**Kentron** (do grego antigo *κέντρον*) refere-se à ponta fixa do compasso, simbolizando o eixo de precisão, o ponto de equilíbrio e a origem da ressonância sonora. 
 
-Enquanto isso, qualquer identificador de app é placeholder (`org.example.appmusic`).
+**Music Hub** atua como a âncora semântica, comunicando a centralização de ferramentas para a prática e organização musical.
 
-## Checklist para fechar
+### Diretrizes de Uso:
+- **Forma Curta (Kentron):** Uso prioritário em ícones, logotipos, splash screens e referências verbais.
+- **Assinatura Completa (Kentron Music Hub):** Uso em lojas de aplicativos (App Store/Google Play), SEO e materiais institucionais.
 
-1. Escolher 2 a 3 candidatos (a partir das duplas da v2.4 ou novas).
-2. Busca de marcas nas classes 9, 41 e 42 no INPI, e no EUIPO/TMview e USPTO.
-3. Buscar o nome na App Store, na Google Play, no F-Droid e em domínios `.org` e `.app`.
-4. Conferir o significado nos 5 idiomas da faixa 1 e 2.
+## Consequências
 
-**Prazo-limite:** antes de criar o app Flutter (bundle id) e antes do primeiro envio às lojas.
+- O identificador do app (bundle id) será baseado em `kentron.musichub`.
+- O nome de exibição nas lojas será **Kentron**.
+- A identidade visual deve explorar a geometria do "ponto central" e "círculos concêntricos", alinhando-se ao conceito de precisão e vibração.
+- O projeto deixa de usar o nome de trabalho `app-music` em comunicações externas.

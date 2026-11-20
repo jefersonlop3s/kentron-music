@@ -1,11 +1,10 @@
-# app-music (nome de trabalho)
+# Kentron Music Hub
 
 App livre e descentralizado para bandas e equipes de louvor: cifras, tablaturas e partituras,
 setlists, agenda e escalas, regência ao vivo e ponte para projeção (Holyrics/OpenLyrics) e OBS.
 Multilíngue desde o início (pt-BR, es-419, en-US primeiro).
 
-**Estado: R0 (fundação).** Ainda não há app. O nome definitivo está em aberto
-([ADR-0003](docs/adr/0003-nome-de-trabalho.md)).
+**Estado: R0 (fundação).** Ainda não há app. O nome definitivo é **Kentron**.
 
 ## Documentos
 

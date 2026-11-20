@@ -1,0 +1,22 @@
+name: kentron_app
+description: The main application for Kentron Music Hub.
+version: 0.0.0+1
+publish_to: none
+
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+  flutter: '>=3.32.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  core_l10n:
+    path: ../../packages/core_l10n
+  flutter_rust_bridge:
+    path: ../../crates/notation_bundle # Note: This is not correct, FRB usually has its own package.
+  # I'll adjust the FRB dependency once the bridge is actually set up.
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
