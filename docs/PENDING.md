@@ -39,6 +39,8 @@ Parser ChordPro, transposição e testes dourados já integrados à `main`; o re
 - [ ] Validar Browser Source para OBS sem `obs-websocket`.
 - [ ] Executar piloto de dois cultos e fechar a R1.
 
+- [x] **Lições da sessão viram skills (2026-11-20):** `empacotamento-rust-flutter`, `higiene-de-dispositivos`, `lote-nao-e-sequencia` e `toolchain-unica` criadas em `.agents/skills/` e registradas na tabela do `AGENTS.md`; `scripts/encerrar-dispositivos.sh` é o mecanismo da higiene de dispositivos. Branches mergeadas removidas com autorização do dono do projeto.
+
 ## 🌐 R2+ (backlog)
 - [ ] Spike S4 (Matrix/Push iOS).
 - [ ] Spike S2 (sincronia de tempo).

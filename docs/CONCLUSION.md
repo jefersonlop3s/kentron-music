@@ -228,3 +228,29 @@
 - O upstream testou este backend **só em Linux desktop**; iOS e Android foram provados aqui.
 - O gerador `flutter_rust_bridge_codegen` 2.13.0 continua sendo pré-requisito para **regerar** bindings quando `bridge.rs` mudar; os arquivos gerados ficam versionados.
 
+## Processo · Lições da sessão viram skills e um mecanismo (2026-11-20)
+
+**Status:** 🟢 Integrado à `main`; as lições da sessão de Native Assets deixaram de viver só no relato e passaram a ser recuperáveis.
+
+### O que foi criado
+- **Quatro skills** em `.agents/skills/`, com gatilho concreto na tabela do `AGENTS.md`:
+  - `empacotamento-rust-flutter` — como o núcleo entra no app hoje (build hooks, ADR-0008), os predicados técnicos que quebram o build quando ausentes (`crate-type`, `rust-toolchain.toml` dentro do crate, JDK 21) e os erros com assinatura conhecida.
+  - `higiene-de-dispositivos` — encerrar emulador/simulador depois da prova, verificando pelo estado do dispositivo em vez de padrão de processo.
+  - `lote-nao-e-sequencia` — comandos agrupados executam em paralelo; dependência entre eles vira corrida.
+  - `toolchain-unica` — duas instalações do mesmo binário fazem o PATH decidir; duplicata se resolve removendo, não escolhendo.
+- **`scripts/encerrar-dispositivos.sh`** — o mecanismo da higiene de dispositivos: detecta, encerra e verifica Android e iOS, com `--dry-run` e saída 1 se algo sobrar.
+
+### O que foi corrigido nas skills existentes
+- `vies-de-plausibilidade` §11: o diff tem direção e o olho lê ao contrário (erro de método da sessão).
+- `toolchain-unica`: o caso do cask que resolve o SDK root para si mesmo (symlink não engana a detecção).
+- `quadro-de-trabalho`: a ordem do commit do quadro (na branch principal, depois do merge da branch de trabalho).
+
+### Evidências
+- `scripts/encerrar-dispositivos.sh` provado no sentido negativo: com o emulador `kentron` no ar, detectou `emulator-5554`, encerrou e o `adb devices` seguinte ficou vazio; `--dry-run` e o caminho sem `adb` exercitados.
+- `adb devices` e `xcrun simctl list devices booted` vazios ao fim da sessão.
+- Branches mergeadas removidas com autorização do dono: `spike/native-assets` (local e `origin`), `feature/alvo-android`, `feature/alvo-ios`, `feature/alvo-web` e `feature/ponte-rust-flutter`.
+
+### Ressalvas
+- Skill é julgamento, não gate: nada impede a próxima sessão de não carregá-la. O único item com mecanismo é a higiene de dispositivos, e mesmo ela depende de alguém rodar o script.
+- Apagar a branch remota antes da local faz o `git branch -d` recusar (ref rastreado obsoleto): `git fetch --prune origin` antes resolve.
+

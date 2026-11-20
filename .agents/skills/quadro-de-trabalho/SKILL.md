@@ -37,6 +37,7 @@ O `commit` usa `git commit <caminho>`, que leva só o quadro (o index costuma te
 1. **Antes**: leia o quadro inteiro. Se outra sessão já declarou o repositório, a branch ou — o que mais importa — os **paths** que você ia editar, não duplique: escolha outro item ou combine em "Notas entre agentes". Depois acrescente sua entrada em "Em andamento".
 2. **Durante**: atualize ao mudar de repositório, criar branch ou crescer o escopo. Entrada parada com escopo desatualizado é pior que nenhuma: a vizinha decide com base nela.
 3. **Ao terminar**: mova para "Concluído recentemente" com PRs e o que ficou aberto, e limpe as branches mergeadas (com prova por dois métodos). Entrega fechada vai para a branch principal no mesmo passo (skill `encerrar-documentacao`); a `saude` deve deixar de listar a sua branch.
+   **Ordem importa**: o commit do quadro vai na branch principal **depois** do merge da branch de trabalho. Commitar o quadro antes faz a branch divergir e exige rebase a cada push — caso medido em 2026-11-20: três rebases numa sessão pelo mesmo motivo.
 
 ## Formato da entrada
 

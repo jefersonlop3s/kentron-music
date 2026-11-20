@@ -2,6 +2,22 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] Lições da sessão viram skills e um mecanismo (2026-11-20)
+### Adicionado
+- Quatro skills em `.agents/skills/`: `empacotamento-rust-flutter` (Native Assets, predicados técnicos e erros com assinatura), `higiene-de-dispositivos` (encerrar emulador/simulador depois da prova), `lote-nao-e-sequencia` (comando agrupado roda em paralelo) e `toolchain-unica` (duplicata de binário decide o PATH).
+- `scripts/encerrar-dispositivos.sh`: detecta, encerra e verifica emulador Android e simulador iOS; `--dry-run` mostra o que faria; sai 1 se algo sobrar. Dispositivo físico é ignorado com aviso.
+- `vies-de-plausibilidade` §11 (o diff tem direção e o olho lê ao contrário); `toolchain-unica` ganhou o caso do cask que resolve o SDK root para si mesmo; `quadro-de-trabalho` registra a ordem do commit do quadro.
+
+### Removido
+- Branches já mergeadas, com autorização do dono do projeto: `spike/native-assets` (local e `origin`), `feature/alvo-android`, `feature/alvo-ios`, `feature/alvo-web` e `feature/ponte-rust-flutter`.
+
+### Verificado
+- `scripts/encerrar-dispositivos.sh` no sentido negativo: com o emulador `kentron` no ar, detectou `emulator-5554`, encerrou e o `adb devices` seguinte ficou vazio; `--dry-run` e o caminho sem `adb` também exercitados.
+- `adb devices` e `xcrun simctl list devices booted` vazios ao fim da sessão.
+
+### Achado que custou tempo
+- `git branch -d` recusou `spike/native-assets` porque o ref remoto rastreado ficou obsoleto depois de a remota ser apagada. Ordem correta: `git fetch --prune origin` antes do `-d` (ou apagar a local primeiro).
+
 ## [R1] Empacotamento do Rust por Native Assets (ADR-0008 aceita) (2026-11-20)
 ### Alterado
 - O Rust deixou de entrar no app como **plugin** (cargokit, CocoaPods-only) e passou a entrar como **code asset** por build hooks: `apps/kentron_app/hook/build.dart` → `native_toolchain_rust`, com `flutter_rust_bridge_hooks: 2.13.0`.

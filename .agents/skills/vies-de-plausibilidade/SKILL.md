@@ -85,6 +85,14 @@ Não ver um prompt/erro/log prova que naquele contexto ele não apareceu. Caso d
 
 Antes de cada nova tentativa, reconstrua o estado de partida inteiro (processo, arquivo de PID, porta, banco) e confira cada peça. E texto de entrega escrito antes da medição sai no pretérito com a mesma naturalidade de um resultado: releia toda frase "medido/validado" contra o que já rodou.
 
+## 11. O diff tem direção, e o olho lê ao contrário
+
+Caso de origem (2026-11-20): ao revisar um `git diff`, li as linhas `-` como adições e concluí que a alteração fazia o oposto do que fazia. A ferramenta mostrou a verdade; a leitura inverteu — e a inversão veio com convicção, porque "faz sentido" era o único critério.
+
+- Escreva a direção na frase que você vai afirmar: `git diff` compara **working tree → index** (o `-` é o que está no index); `git diff --cached` compara **index → HEAD** (o `-` é o que está no commit); `git diff A..B` vai de **A para B**.
+- Quando o sinal importa, leia o arquivo depois da mudança (`sed -n 'x,yp'`) em vez de reconstruir pelo diff.
+- Se a conclusão só fecha porque você assumiu um lado como "antes", inverta a hipótese e veja se ainda fecha. Fechando dos dois jeitos, o diff não é evidência.
+
 ## Checklist antes de declarar pronto
 
 1. O que afirmo foi medido? Com que comando — e o filtro dele pode mentir?

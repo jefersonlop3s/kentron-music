@@ -74,6 +74,9 @@ Transversais (carregar sempre): `vies-de-plausibilidade`, `disciplina-de-validac
 
 | Skill | Quando ler |
 |---|---|
-| `<skill-de-dominio>` | `<gatilho concreto>` |
+| `empacotamento-rust-flutter` | ao mexer em `crate-type`, toolchain, `hook/build.dart`, ao regerar bindings, ou quando o build falhar com "Unable to find bundle for dynamic library" |
+| `higiene-de-dispositivos` | ao terminar prova em emulador/simulador e ao liberar máquina |
+| `lote-nao-e-sequencia` | antes de agrupar comandos dependentes num mesmo lote |
+| `toolchain-unica` | ao ver aviso de duplicata no doctor ou gate que reprova só num contexto |
 
 Toda lição que custou uma sessão vira skill (julgamento) ou gate (mecanismo) — skill `prosa-vira-gate`.
