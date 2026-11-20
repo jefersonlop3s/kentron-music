@@ -99,6 +99,17 @@
 - O gate do kentron já tinha a mesma correção (`a68c85c`), então projeto e kit voltaram a concordar.
 - Fechamento: os dois itens saíram do PENDING; restam no kit apenas as ressalvas já documentadas (canário Claude live pendente de login do dono).
 
+## R1 · Android: o Rust no APK (2026-11-20)
+
+**Status:** 🟢 O app roda no emulador Android com o núcleo Rust; falta iOS (depende do Xcode, que só o dono instala).
+
+- `flutter create --platforms=android --org com.kentron` gerou o `android/` com appId de verdade (`com.kentron.kentron_app`) e **sem tocar no `pubspec`**.
+- O `integrate` criou o `rust_builder` (cargokit) apontando para o nosso crate fora do app: `manifestDir = "../../../../crates/kentron_ffi"` — e o `--no-write-lib` protegeu o `main.dart`, porque por padrão ele escreve código de exemplo.
+- **Prova:** `flutter build apk --debug` verde, com `libkentron_ffi.so` dentro do APK em três ABIs; no emulador o app abre (`COLD`, 1,7 s), o processo vive e o print mostra `Exemplo`, `tom C`, os acordes e `núcleo: kentron_ffi 0.0.0`.
+- **Java 27 não serve**: o Gradle 9.5 quebra com `Unsupported class file major version 71`. Ficou JDK 21 (`openjdk@21`, formula) + `flutter config --jdk-dir` — o Flutter já avisava que 27 era mais novo do que ele conhece.
+- Armadilha de sequência: o `integrate` precisa de `flutter` no PATH; sem ele, cria metade e falha no `pub add`, deixando o `rust_builder` sem dependência no `pubspec`.
+- Auto-instalação de ferramenta de novo: o cargokit baixou o alvo Rust `i686-linux-android` sozinho (quatro ABIs, não três).
+
 ## R1 · Android local pronto e ponte provada no navegador (2026-11-20)
 
 **Status:** 🟢 Toolchain Android completa e o app web provado no navegador; falta o app abrir no emulador (depende dos diretórios de plataforma) e o Xcode para iOS.

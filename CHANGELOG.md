@@ -2,6 +2,25 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [R1] Android: o Rust entra no APK e o app roda no emulador (2026-11-20)
+### Adicionado
+- `apps/kentron_app/android/`: scaffold (`flutter create --platforms=android --org com.kentron`), appId `com.kentron.kentron_app` — sem `com.example`, que o Play rejeita. O `pubspec` saiu **idêntico** e o `analysis_options` só ganhou `android/**` nos excludes.
+- `apps/kentron_app/rust_builder/`: plugin **cargokit** criado pelo `flutter_rust_bridge_codegen integrate --rust-crate-name kentron_ffi --rust-crate-dir ../../crates/kentron_ffi --platforms android --no-write-lib --no-integration-test`. O caminho do crate fica nos scripts (`manifestDir = "../../../../crates/kentron_ffi"`).
+- Dependência `kentron_ffi: path: rust_builder` no `pubspec`, comentada com o comando que a gera.
+
+### Verificado
+- `flutter build apk --debug` → `✓ Built .../app-debug.apk` (137,8 s); `unzip -l` mostra `lib/arm64-v8a/libkentron_ffi.so`, `lib/armeabi-v7a/libkentron_ffi.so` e `lib/x86_64/libkentron_ffi.so`.
+- No emulador `kentron`: `adb install` ok; `am start -W` → `Status: ok`, `LaunchState: COLD`, 1754 ms; processo vivo e **nenhum** `UnsatisfiedLink`/`FATAL`. O print mostra `Exemplo`, `Kentron · tom C · 2 seção(ões)`, os acordes `C G Am F` e `núcleo: kentron_ffi 0.0.0`.
+
+### Achados que custaram tempo
+- **Java 27 quebra o Gradle 9.5**: `BUG! ... Unsupported class file major version 71`. Corrigido com **JDK 21** (`brew install openjdk@21` — formula, sem sudo) + `flutter config --jdk-dir`. O Flutter já avisava: *"Newer than known valid Java version (27.0.1)"*.
+- O `integrate` **exige `flutter` no PATH** e morre no meio sem ele: a primeira rodada criou o `rust_builder` mas deixou o `pubspec` sem a dependência; a segunda, com PATH, fechou.
+- O cargokit compila **quatro** ABIs (inclui `i686-linux-android`) e **instala sozinho** o alvo Rust que falta — mesmo padrão de auto-instalação do `cargo-expand`/`wasm-pack`; divulgar sempre.
+
+### Ferramentas que o pipeline agora depende (medidas)
+- Flutter do projeto em `~/development/flutter` (o clone que o `.flutter-version` pina), agora **à frente no PATH** do `~/.zshrc`; os casks duplicados (`flutter`, `android-platform-tools`) foram removidos pelo dono.
+- JDK 21 via `flutter config --jdk-dir`; Gradle 9.5 e AGP 9.3.1 conforme o template do Flutter 3.50.1.
+
 ## [R1] Android local pronto e ponte provada no navegador (2026-11-20)
 ### Verificado
 - **Prova no navegador:** a tela web mostrou dados vindos do núcleo Rust — `Exemplo`, `Kentron · tom C · 2 seção(ões)`, acordes `C G Am F` e `núcleo: kentron_ffi 0.0.0`. Cadeia Rust → wasm → Flutter web → tela provada no browser.

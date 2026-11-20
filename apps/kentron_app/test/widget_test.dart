@@ -46,10 +46,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const KentronApp(
-        locale: Locale('pt', 'PT'),
-        carregar: _carregarFalso,
-      ),
+      const KentronApp(locale: Locale('pt', 'PT'), carregar: _carregarFalso),
     );
     expect(find.text('Bem-vindo ao Kentron Music Hub'), findsOneWidget);
   });

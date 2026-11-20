@@ -18,6 +18,13 @@ dependencies:
   # Ponte Rust ↔ Flutter (ADR-0007). Os bindings são gerados por
   # `flutter_rust_bridge_codegen` e vivem em `lib/src/rust/`.
   flutter_rust_bridge: 2.13.0
+  # O adaptador que compila o crate `kentron_ffi` e o embarca no build de cada
+  # plataforma (cargokit). Gerado por:
+  #   flutter_rust_bridge_codegen integrate --rust-crate-name kentron_ffi \
+  #     --rust-crate-dir ../../crates/kentron_ffi --platforms android \
+  #     --no-write-lib --no-integration-test
+  kentron_ffi:
+    path: rust_builder
 
 dev_dependencies:
   flutter_test:
