@@ -35,6 +35,25 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/de6b0 — sovereign-harness 0.7.2: duas lições do kentron
+- **Início**: 2026-11-20 13:56 (UTC) · **Última atualização**: 2026-11-20 14:10 (UTC)
+- **Repositório**: `sovereign-harness` (personal-digital-sovereignty) · **Branches**: `main` (`4066f5a`, tag `v0.7.2`) · **Worktrees**: nenhum (temporário removido)
+- **Demanda**: publicar no kit as duas lições nascidas no kentron e cortar a release 0.7.2.
+- **Paths sob edição**: nenhum (concluído).
+- **Status**: concluído.
+- **PRs**: [#21](https://github.com/personal-digital-sovereignty/sovereign-harness/pull/21) e [#22](https://github.com/personal-digital-sovereignty/sovereign-harness/pull/22), ambos mergeados.
+
+**Feito:**
+- PR #21 → skill `estado-compartilhado-multi-agente` §1c (branch de escopo vira segundo trunk), com o caso medido no kentron.
+- PR #22 → gate de lint lê a edição do `Cargo.toml` em vez de fixar 2021; teste novo provado no negativo; versões → 0.7.2 nos 7 manifestos do kit.
+- Tag anotada `v0.7.2` + release publicada; CI verde (ubuntu, macos, tipos do OpenCode).
+- Bateria local: 99 testes OK, `test_quadro`, `merge_gate_base` (5/5) e `test_ref_main` verdes; `sincronizar --verificar` 45/45.
+- Worktree temporário e as duas branches (a do fix e a do PR #21) apagadas.
+
+**Ficou aberto:**
+- O clone do marketplace nesta máquina segue em `2e654e2` (0.7.1): atualizar com `git pull --ff-only` é decisão do dono.
+- Canário Claude live segue pendente de `claude login` (documentado no kit, não bloqueia).
+
 ### cline/de6b0 — R1 · Song Bundle v1: modelo e persistência
 - **Início**: 2026-11-20 12:28 (UTC) · **Última atualização**: 2026-11-20 13:42 (UTC)
 - **Repositório**: `kentron-music` · **Branches**: `feature/song-bundle-v1` (= `main` `a68c85c`) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
