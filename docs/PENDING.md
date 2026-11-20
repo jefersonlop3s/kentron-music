@@ -6,7 +6,7 @@
 - [x] `scripts/ci-local.sh` e `.github/workflows/ci.yml` sincronizados: o workflow deixou de repetir a matriz e passou a chamar o script (fonte única). Cobertura preservada — Rust (fmt, clippy, test), `cargo-deny`, ARBs, Flutter do app e `core_l10n`.
 - [ ] Migrar `core_l10n` de `flutter_localizations` para `material_ui`: **revisado em 2026-11-20** — a depreciação remanescente está no arquivo **gerado** (`gen-l10n` emite as `Global*` do `flutter_localizations`), e o próprio `material_ui` importa `GlobalWidgetsLocalizations` de lá. Não é resolvível editando o `pubspec` do pacote; depende do gerador. O app já usa as `Global*` do `material_ui`, então a depreciação é cosmética hoje.
 - [x] Integrar `core_l10n` ao app e criar `lib/core_l10n.dart`: o app monta o `MaterialApp` com `CoreL10n.delegate` + `...GlobalMaterialLocalizations.delegates`, resolve locale por `CoreL10n.supportedLocales` e a saudação da tela inicial vem do ARB (`homeWelcome`).
-- [ ] Substituir o placeholder da ponte Rust ↔ Flutter por chamada real.
+- [x] Substituir o placeholder da ponte Rust ↔ Flutter por chamada real: entregue na R1 (crate adaptador `kentron_ffi`, provado por teste de Flutter que carrega o cdylib).
 - [ ] Configurar proteção da branch `main` no GitHub.
 - [ ] Registro final na verificação de desenvolvedor do Android.
 - [ ] Adicionar verificação de licenças para dependências Dart/Flutter no pipeline local (`cargo-deny` cobre apenas Rust).
@@ -16,7 +16,7 @@
 
 ## 🎸 R1 (prioridades imediatas)
 
-Parser ChordPro, transposição e testes dourados já integrados à `main`; o restante da R1 segue em branch por unidade de trabalho (`feature/song-bundle-v1`).
+Parser ChordPro, transposição e testes dourados já integrados à `main`; o restante da R1 segue em branch por unidade de trabalho — a branch de escopo `feature/song-bundle-v1` foi apagada em 2026-11-20 por ser idêntica à `main`.
 - [ ] **Spike S5:** validar renderização de partituras/tabs via alphaTab/OSMD. Dimensiona o esforço de MusicXML/ATEX (R1.1); não bloqueia o piloto da R1.
 - [x] **Ponte Rust ↔ Flutter (ADR-0007 aceita e emendada):** crate adaptador `crates/kentron_ffi` (único `cdylib`) expõe `parse_song` ao Dart via `flutter_rust_bridge` 2.13.0; bindings gerados e **provados** por `apps/kentron_app/test/bridge_test.dart`, que carrega o cdylib e chama o núcleo.
 - [ ] Documentar no README o pré-requisito de **regerar** os bindings quando `bridge.rs` mudar (`cargo install flutter_rust_bridge_codegen --version 2.13.0` e o comando do `flutter_rust_bridge.yaml`). Os arquivos gerados vão versionados, então o dia a dia não precisa da ferramenta.
