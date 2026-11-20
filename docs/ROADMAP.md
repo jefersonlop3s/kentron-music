@@ -7,29 +7,44 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 
 ---
 
-## 🏁 R0 · Fundação e Guardas (Concluído)
+## 🏁 R0 · Fundação e Guardas (publicado na `main`)
 **Objetivo:** Estabelecer a infraestrutura de engenharia e a identidade do produto.
 - [x] Nome definido: **Kentron Music Hub**.
-- [x] Licença: Apache-2.0.
-- [x] Sovereign Harness: Guardrails e Git Gates ativos.
+- [x] Licença: Apache-2.0, com aviso explícito de uso "como está".
+- [x] Sovereign Harness: guardrails e git hooks ativos.
 - [x] Impeccable UI: `DESIGN.md` e vocabulário visual definidos.
-- [x] Infra: Cargo Workspace, Melos, Flutter Scaffold e CI Pipeline.
-- [x] Core: `notation_bundle` (chord_naming) com testes dourados.
+- [x] Infra: Cargo Workspace, Melos, scaffold Flutter e CI com ações fixadas por SHA.
+- [x] Core: `notation_bundle` (`chord_naming`) com testes dourados.
+- [ ] Validação Flutter local (`flutter analyze`/`flutter test`).
+- [ ] Integração real de `core_l10n` e da ponte Rust ↔ Flutter.
+- [ ] Primeira execução do CI no GitHub.
 
 ---
 
-## 🎸 R1 · Cifra, Palco Local e Projeção (Atual)
+## 🎸 R1 · Cifra, Palco Local e Projeção (em andamento)
 **Objetivo:** Resolver a dor imediata de leitura e projeção de cifras offline.
 **Portão de Entrada:** Spike S5 (Renderização de Partituras/Tabs).
 
-### Etapas:
-1. **Parser de Cifras:** Leitor de `.cho` (ChordPro) e `.musicxml`.
-2. **Motor Harmônico:** Transposição matemática e 4 sistemas de notação.
-3. **UI de Palco:** Leitor de cifras, setlists locais e gestão de estilos.
-4. **Projeção:** Exportação OpenLyrics/Holyrics e Browser Source para OBS.
-5. **L10n:** Suporte total à Faixa 1 (pt-BR, en-US, es-419).
+### R1-A · Cifra local utilizável
+- [x] Parser ChordPro e modelo canônico com testes dourados.
+- [ ] Casos de borda: acordes invertidos, `6/9`, acidentes duplos e letras multilíngues.
+- [ ] Biblioteca local, setlists e Song Bundle versionado com exportação/restauração.
+- [ ] Transposição e renderização nos quatro sistemas.
+- [ ] Testes de propriedade e regressão ampliada.
 
-**Validação R1:** $\text{Unit} \rightarrow \text{Regression} \rightarrow \text{Exploratory} \rightarrow \text{Accessibility} \rightarrow \text{E2E (Piloto Igreja)}$.
+### R1-B · Projeção manual
+- [ ] Exportação OpenLyrics com validação XML e arquivos dourados.
+- [ ] Matriz de compatibilidade com versões fixadas de Holyrics e outros consumidores.
+- [ ] Browser Source para OBS, sem `obs-websocket` neste marco.
+- [ ] Paginação, acentos, pseudolocalização e projeção bilíngue.
+
+### R1-C · Piloto e release
+- [ ] Dois cultos consecutivos sem assistência do desenvolvedor.
+- [ ] Nenhuma perda de dados, crash bloqueante ou falha de projeção.
+- [ ] pt-BR, en-US e es-419 revisados.
+- [ ] MusicXML e ATEX ficam para R1.1, condicionados ao S5.
+
+**Validação R1:** unitária, regressiva, exploratória, acessibilidade e E2E (piloto de igreja).
 
 ---
 

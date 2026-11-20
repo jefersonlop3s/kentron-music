@@ -1,23 +1,36 @@
-# Conclusão · R0 (Fundação)
+# Conclusões · Kentron Music Hub
 
-**Data de Fechamento:** 2026-11-19
-**Status:** 🟢 Completo
+## R0 · Fundação publicada (2026-11-19)
 
-## Resumo da Entrega
-A fase de fundação (R0) estabeleceu a base técnica e a identidade do projeto. O foco foi remover ambiguidades e criar mecanismos de proteção contra a degradação do código.
+**Status:** 🟢 Publicado na `main`, com ressalvas de validação Flutter.
 
-### Entregáveis:
-1. **Identidade:** Nome Kentron Music Hub definido e documentado.
-2. **Governança:** Sovereign Harness ativo, impedindo commits que violem a disciplina de desenvolvimento.
-3. **Estética:** Vocabulário de design Impeccable implementado via `DESIGN.md`.
-4. **Técnica:** 
-   - Workspace Rust + Flutter configurado.
-   - CI Pipeline validando licenças e internacionalização.
-   - Primeiro módulo de lógica musical (`chord_naming`) com testes dourados.
+### Evidências
+- Commits: `7f68e2b` (R0), `b149bb3` (endurecimento de CI/app).
+- `main` publicada em `origin`; branch padrão do GitHub alterada para `main`.
+- 15 testes Rust passando; `cargo clippy`, `cargo fmt`, `cargo deny` e `check_arb.py` verdes.
+- Semgrep sem achados no código do projeto após exclusão dos scripts vendorizados do Impeccable.
+- Pipeline não disparado no primeiro push por `[skip ci]`.
 
-## Lições Aprendidas
-- A necessidade de um sistema de design rigoroso (Impeccable) evita o "slop" de interfaces geradas por IA.
-- O uso de `cargo-deny` desde o dia 1 previne a entrada de dependências com licenças incompatíveis (ex: LGPL/AGPL).
+### Entregáveis
+- Identidade **Kentron Music Hub** e licença Apache-2.0 com aviso de uso.
+- Sovereign Harness e Impeccable UI documentados.
+- Monorepo Melos, scaffold Flutter e CI com ações fixadas por SHA.
+- `notation_bundle` com `chord_naming` e parser ChordPro.
 
-**Próxima Fase:** R1 · Cifra, Palco Local e Projeção.
+### Ressalvas
+- Flutter não está instalado neste ambiente; `flutter analyze`/`flutter test` não rodaram localmente.
+- `core_l10n` ainda não está integrado ao app.
+- A ponte Rust ↔ Flutter é um placeholder.
+- O CI do GitHub ainda não foi observado em execução.
+
+## R1 · Parser ChordPro (parcial, 2026-11-19)
+
+**Status:** 🟡 Em andamento em `feature/R1-cifra-projecao`.
+
+- Parser ChordPro e testes dourados implementados (`1346dcf`).
+- Correções de lints e remoção do módulo `harmony` incompleto (`450b7b2`).
+- MusicXML permanece como placeholder.
+- Persistência, transposição, UI de palco e projeção ainda não existem.
+
+**Próxima Fase:** concluir R1-A, R1-B e R1-C conforme o plano v2.6.
 

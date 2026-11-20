@@ -31,3 +31,11 @@ O Kentron utiliza uma **Arquitetura Hexagonal (Ports and Adapters)** para garant
 
 O dado musical nunca é armazenado como string localizada; ele vive como estrutura canônica no Rust e é traduzido apenas na "borda" (Flutter) conforme a preferência do usuário.
 
+
+## 📌 Estado atual (R0/R1)
+
+- Existe apenas o crate `notation_bundle`, com `chord_naming`, parser ChordPro e placeholder de MusicXML.
+- Os módulos `mir_*`, `band_*`, `stage_*` e `trust_*` ainda não foram criados.
+- O app Flutter é um scaffold; `core_l10n` e `flutter_rust_bridge` ainda não estão integrados.
+- A ponte Rust ↔ Flutter é um placeholder (`bridge.rs`).
+

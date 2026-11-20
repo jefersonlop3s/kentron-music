@@ -4,7 +4,9 @@ App livre e descentralizado para bandas e equipes de louvor: cifras, tablaturas 
 setlists, agenda e escalas, regência ao vivo e ponte para projeção (Holyrics/OpenLyrics) e OBS.
 Multilíngue desde o início (pt-BR, es-419, en-US primeiro).
 
-**Estado: R0 (fundação).** Ainda não há app. O nome definitivo é **Kentron**.
+**Estado: R0 publicado na `main`; R1 em andamento em `feature/R1-cifra-projecao`.** O app Flutter existe como scaffold, mas a validação local de Flutter ainda não foi executada neste ambiente. O nome definitivo é **Kentron**.
+
+Repositório: `https://github.com/jefersonlop3s/kentron-music`.
 
 ---
 
@@ -15,14 +17,18 @@ Este projeto é distribuído "como está" (*as-is*), sem garantias de qualquer t
 
 ## Documentos
 
-- [Plano mestre v2.5](docs/plano-mestre-v2.5.html): arquitetura, auditoria da v2.4, i18n, roteiro por releases e decisões.
+- [Plano de execução v2.6](docs/plans/plano-mestre-v2.6.md): decisões vigentes, estado real e marcos da R1.
+- [Plano mestre v2.5](docs/plano-mestre-v2.5.html): arquitetura, auditoria da v2.4 e histórico.
+- [Roadmap](docs/ROADMAP.md) · [Pendências](docs/PENDING.md) · [Conclusões](docs/CONCLUSION.md) · [Changelog](CHANGELOG.md).
+- [Arquitetura](docs/architecture/README.md) · [Design System](docs/design-system/README.md).
 - [ADR-0001](docs/adr/0001-licenca-apache-2-0.md) licença · [ADR-0002](docs/adr/0002-primeira-release-cifra-e-projecao.md) primeira release · [ADR-0003](docs/adr/0003-nome-de-trabalho.md) nome.
 
 ## Estrutura
 
 | Caminho | O que é |
 |---|---|
-| `crates/notation_bundle` | Modelo canônico de acordes e nomeação em 4 sistemas (`chord_naming`), com testes dourados. Primeiro módulo do R0. |
+| `crates/notation_bundle` | Modelo canônico de acordes, nomeação em 4 sistemas e parser ChordPro. |
+| `apps/kentron_app` | Scaffold Flutter; ainda sem integração com `core_l10n` nem com a ponte Rust. |
 | `packages/core_l10n` | ARB e configuração de tradução (Flutter). Ver o README do pacote. |
 | `models/MANIFEST.toml` | Manifesto obrigatório de modelos de IA (licença do código **e** dos pesos). |
 | `deny.toml` | Lista de licenças permitidas (`cargo-deny`). |

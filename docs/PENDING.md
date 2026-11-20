@@ -1,21 +1,28 @@
 # Pendências · Kentron Music Hub
 
-## 🚩 R0 (Remanescentes)
+## 🚩 R0 (publicado, com ressalvas)
+- [ ] Rodar `flutter analyze` e `flutter test` em ambiente com Flutter.
+- [ ] Integrar `core_l10n` ao app e criar `lib/core_l10n.dart`.
+- [ ] Substituir o placeholder da ponte Rust ↔ Flutter por chamada real.
+- [ ] Configurar proteção da branch `main` no GitHub.
+- [ ] Observar a primeira execução do CI no GitHub.
 - [ ] Registro final na verificação de desenvolvedor do Android.
 - [ ] Teste de fumaça do app Flutter em dispositivo real (Android/iOS).
+- [ ] Revisar traduções de es-419, pt-BR e en-US com falantes nativos.
 
-## 🎸 R1 (Prioridades Imediatas)
-- [ ] **Spike S5:** Validar renderização de partituras/tabs via alphaTab/OSMD.
-- [ ] Implementar Parser de ChordPro (`.cho`).
-- [ ] Implementar Parser de MusicXML.
-- [ ] Criar UI de leitor de cifras (Modo Palco).
-- [ ] Implementar exportação OpenLyrics/Holyrics.
-- [ ] Validar Browser Source para OBS.
-- [ ] Revisão de glossário com falantes nativos de es-419, pt-PT e es-ES.
+## 🎸 R1 (prioridades imediatas)
+- [ ] **Spike S5:** validar renderização de partituras/tabs via alphaTab/OSMD.
+- [ ] Ampliar o parser ChordPro: acordes invertidos, `6/9`, acidentes duplos e letras multilíngues.
+- [ ] Implementar transposição no `chord_naming` e reintroduzir o módulo `harmony`.
+- [ ] Implementar persistência local (Song Bundle), migrações e exportação/restauração.
+- [ ] Criar UI de leitor de cifras (Modo Palco) e setlists.
+- [ ] Implementar exportação OpenLyrics/Holyrics e validar XML.
+- [ ] Validar Browser Source para OBS sem `obs-websocket`.
+- [ ] Executar piloto de dois cultos e fechar a R1.
 
-## 🌐 R2+ (Backlog)
+## 🌐 R2+ (backlog)
 - [ ] Spike S4 (Matrix/Push iOS).
-- [ ] Spike S2 (Sincronia de Tempo).
+- [ ] Spike S2 (sincronia de tempo).
 - [ ] Spike S1 (MIR on-device).
-- [ ] Spike S6 (Índice Global).
+- [ ] Spike S6 (índice global).
 

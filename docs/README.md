@@ -4,6 +4,7 @@ Este diretório é a fonte documental deste projeto ou do conjunto de repositór
 
 | Documento/pasta | Responsabilidade |
 |---|---|
+| [plans](plans/plano-mestre-v2.6.md) | Plano executivo vigente; a v2.5 permanece como histórico |
 | [PENDING](PENDING.md) | Trabalho aberto, impedimentos e próximo passo; aponta para detalhes |
 | [ROADMAP](ROADMAP.md) | Resultados desejados, sequência, dependências e critérios de priorização |
 | [CONCLUSION](CONCLUSION.md) | Entregue, resolvido, descartado ou decidido, com evidência e commit/PR |
