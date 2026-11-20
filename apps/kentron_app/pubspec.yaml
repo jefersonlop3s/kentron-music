@@ -10,11 +10,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  core_l10n:
-    path: ../../packages/core_l10n
-  flutter_rust_bridge:
-    path: ../../crates/notation_bundle # Note: This is not correct, FRB usually has its own package.
-  # I'll adjust the FRB dependency once the bridge is actually set up.
+  # core_l10n e flutter_rust_bridge entram quando o gerador de localização e a
+  # ponte Rust estiverem realmente configurados. Até lá, o app deve compilar
+  # sozinho para o CI não falhar em uma dependência inexistente.
 
 dev_dependencies:
   flutter_test:

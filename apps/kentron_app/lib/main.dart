@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:core_l10n/core_l10n.dart';
 
 void main() {
   runApp(const KentronApp());
