@@ -27,14 +27,6 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
-### cline/de6b0 — CI local-first (ADR-0004)
-- **Início**: 2026-11-20 04:05 (UTC) · **Última atualização**: 2026-11-20 04:05 (UTC)
-- **Repositório**: `kentron-music` · **Branches**: `main` (a integrar por branch de documentação) · **Worktrees**: `~/Develop/Projects/app-music`
-- **Demanda**: replanejar as execuções de pipeline para o modelo local-first, com o Actions como rede de segurança.
-- **Paths sob edição**: `.githooks/pre-push`, `.github/workflows/ci.yml`, `scripts/ci-local.sh`, `docs/adr/0004-ci-local-first.md`, `docs/adr/ADR-INDEX.md`, `README.md`, `CHANGELOG.md`, `docs/ROADMAP.md`, `docs/PENDING.md`, `docs/CONCLUSION.md`, `docs/plans/plano-mestre-v2.6.md`.
-- **Status**: em andamento — pipeline local verde; falta commit e push.
-- **PRs**: nenhum.
-
 ### cline/de6b0 — Rascunho de harmonia (WIP)
 - **Início**: 2026-11-20 03:35 (UTC) · **Última atualização**: 2026-11-20 03:35 (UTC)
 - **Repositório**: `kentron-music` · **Branches**: `wip/harmony-transpose` (`35971c4`, local) · **Worktrees**: nenhum
@@ -46,6 +38,27 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 ## 🟡 Interrompido / órfão
 
 ## 🟢 Concluído recentemente
+
+### cline/de6b0 — CI local-first (ADR-0004)
+- **Início**: 2026-11-20 04:05 (UTC) · **Última atualização**: 2026-11-20 04:20 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `main` (`9051b5b`) · **Worktrees**: `~/Develop/Projects/app-music`
+- **Demanda**: replanejar as execuções de pipeline para o modelo local-first, com o Actions como rede de segurança.
+- **Paths sob edição**: nenhum.
+- **Status**: concluído.
+- **PRs**: nenhum.
+
+**Feito:**
+- ADR-0004 aceita e registrada no índice.
+- `scripts/ci-local.sh` criado e verde de ponta a ponta (Rust, `cargo deny`, ARBs, Flutter `analyze`/`test`/`gen-l10n`).
+- `.githooks/pre-push` com gates transversais `deny`, `arb` e `flutter`.
+- `.github/workflows/ci.yml` sem gatilho em `push`; mantém `pull_request`, `workflow_dispatch` e `schedule` semanal.
+- Documentos vivos atualizados: README, ROADMAP, PENDING, CONCLUSÃO, CHANGELOG e plano v2.6.
+- Dois pushes (`3a8dc58`, `9051b5b`) sem disparar Actions — confirmado em `gh run list`.
+
+**Ficou aberto:**
+- Matriz duplicada entre script e workflow; risco de *drift* registrado em `PENDING`.
+- Versão do Flutter não fixada em nenhum dos dois.
+- `packages/core_l10n` sem `analyze` no pipeline local.
 
 ### cline/de6b0 — R1 · Cifra e projeção (branch ativa)
 - **Início**: 2026-11-19 21:31 (UTC) · **Última atualização**: 2026-11-20 03:44 (UTC)
