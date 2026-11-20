@@ -39,6 +39,25 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🟢 Concluído recentemente
 
+### cline/de6b0 — CI: versão fixada e core_l10n no pipeline
+- **Início**: 2026-11-20 04:25 (UTC) · **Última atualização**: 2026-11-20 04:45 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `main` (`e211ae7`) · **Worktrees**: `~/Develop/Projects/app-music`
+- **Demanda**: fechar as pendências do replanejamento: versão do Flutter, `core_l10n` no pipeline e risco de *drift*.
+- **Paths sob edição**: nenhum.
+- **Status**: concluído.
+- **PRs**: nenhum.
+
+**Feito:**
+- `.flutter-version` (3.50.1) como fonte única; o script falha se a versão instalada divergir (provado no sentido negativo).
+- `packages/core_l10n` coberto com `gen-l10n` + `analyze --no-fatal-infos` em cópia temporária.
+- Workflow espelha a versão fixada e cobre `core_l10n`.
+- Localizações geradas (`app_localizations*.dart`) no `.gitignore`.
+- Pipeline local verde (`exit 0`) após as mudanças.
+
+**Ficou aberto:**
+- Sincronia entre script e workflow continua manual (risco de *drift* registrado em `PENDING`).
+- Migração de `core_l10n` de `flutter_localizations` para `material_ui` (dois `info` de depreciação).
+
 ### cline/de6b0 — CI local-first (ADR-0004)
 - **Início**: 2026-11-20 04:05 (UTC) · **Última atualização**: 2026-11-20 04:20 (UTC)
 - **Repositório**: `kentron-music` · **Branches**: `main` (`9051b5b`) · **Worktrees**: `~/Develop/Projects/app-music`
