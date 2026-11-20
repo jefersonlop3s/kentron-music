@@ -22,7 +22,7 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 
 ---
 
-## 🎸 R1 · Cifra, Palco Local e Projeção (em andamento)
+## 🎸 R1 · Cifra, Palco Local e Projeção (parcialmente integrado à `main`)
 **Objetivo:** Resolver a dor imediata de leitura e projeção de cifras offline.
 **Portão de Entrada:** Spike S5 (Renderização de Partituras/Tabs).
 

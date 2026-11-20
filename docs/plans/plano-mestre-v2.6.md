@@ -9,7 +9,7 @@
 - UI: metodologia **Impeccable**, com `DESIGN.md` como fonte de verdade visual.
 - Engenharia assistida: **Sovereign Harness**, com gates locais de segredo, SCA, SAST, tipos, testes e lint.
 - Repositório: `https://github.com/jefersonlop3s/kentron-music`.
-- Branch principal: `main`. O trabalho da R1 ocorre em `feature/R1-cifra-projecao`.
+- Branch principal: `main`. O parser ChordPro da R1 foi integrado; o restante da R1 segue em branch própria a partir da `main`.
 - Dados musicais canônicos no Rust; tradução apenas na borda Flutter.
 - MIR, Matrix/Iroh e índice global ficam fora do primeiro release público.
 
@@ -30,7 +30,7 @@ Ressalvas abertas:
 - Flutter 3.50.1 instalado em `~/development/flutter`; `flutter analyze`, `flutter test` e `flutter gen-l10n` rodaram localmente com sucesso.
 - `core_l10n` ainda não está integrado ao app; o pacote não possui `lib/core_l10n.dart`.
 - A ponte `flutter_rust_bridge` é apenas um placeholder; não há chamada real Rust ↔ Flutter.
-- CI do GitHub verde no run `44665120771`; a validação local de Flutter segue pendente.
+- CI do GitHub verde no run `44665120771`; a validação local de Flutter foi executada com sucesso.
 
 ## 3. R1 · Cifra, palco local e projeção
 

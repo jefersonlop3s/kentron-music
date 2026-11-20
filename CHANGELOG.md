@@ -2,11 +2,11 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
-## [R1] Cifra e Projeção (em andamento, 2026-11-19)
+## [R1] Cifra e Projeção (parcial integrado, 2026-11-20)
 ### Adicionado
 - Parser ChordPro com modelo canônico e testes dourados.
 - Placeholder de parser MusicXML.
-- Branch `feature/R1-cifra-projecao` criada a partir da `main`.
+- Branch `feature/R1-cifra-projecao` criada a partir da `main` e integrada pelo merge `50c7323`.
 
 ### Corrigido
 - Lints do parser ChordPro e remoção do módulo `harmony` incompleto da árvore ativa.

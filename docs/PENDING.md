@@ -12,6 +12,8 @@
 - [ ] Revisar traduções de es-419, pt-BR e en-US com falantes nativos.
 
 ## 🎸 R1 (prioridades imediatas)
+
+Parser ChordPro e testes dourados já integrados à `main`; o restante da R1 segue em branch própria.
 - [ ] **Spike S5:** validar renderização de partituras/tabs via alphaTab/OSMD.
 - [ ] Ampliar o parser ChordPro: acordes invertidos, `6/9`, acidentes duplos e letras multilíngues.
 - [ ] Implementar transposição no `chord_naming` e reintroduzir o módulo `harmony`. Rascunho preservado na branch local `wip/harmony-transpose` (`35971c4`); não compila e não foi publicada.

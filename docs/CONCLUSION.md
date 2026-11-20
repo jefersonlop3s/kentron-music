@@ -26,14 +26,16 @@
 - A ponte Rust ↔ Flutter é um placeholder.
 - CI do GitHub verde no run `44665120771`; a validação local de Flutter segue pendente.
 
-## R1 · Parser ChordPro (parcial, 2026-11-19)
+## R1 · Parser ChordPro (parcial integrado, 2026-11-20)
 
-**Status:** 🟡 Em andamento em `feature/R1-cifra-projecao`.
+**Status:** 🟢 Parser integrado à `main`; o restante da R1 segue em branch própria.
 
-- Parser ChordPro e testes dourados implementados (`1346dcf`).
-- Correções de lints e remoção do módulo `harmony` incompleto (`450b7b2`).
+- Parser ChordPro e testes dourados implementados (`b42421a`).
+- Correções de lints e remoção do módulo `harmony` incompleto (`4beb085`).
+- Integração na `main` pelo merge `50c7323`, com `analysis_options.yaml` ajustado no mesmo ciclo.
+- Validação do resultado integrado: 15 testes Rust, Clippy, formatação, `check_arb.py`, `cargo deny`, `flutter analyze` e `flutter test` verdes.
 - MusicXML permanece como placeholder.
 - Persistência, transposição, UI de palco e projeção ainda não existem.
 
-**Próxima Fase:** concluir R1-A, R1-B e R1-C conforme o plano v2.6.
+**Próxima Fase:** concluir R1-A, R1-B e R1-C conforme o plano v2.6, em nova branch a partir da `main`.
 
