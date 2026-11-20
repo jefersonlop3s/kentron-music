@@ -37,7 +37,7 @@ Nenhum.
 
 ### cline/de6b0 — R1 · Song Bundle v1: modelo e persistência
 - **Início**: 2026-11-20 12:28 (UTC) · **Última atualização**: 2026-11-20 13:42 (UTC)
-- **Repositório**: `kentron-music` · **Branches**: `feature/song-bundle-v1` (= `main` `95590b6`) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
+- **Repositório**: `kentron-music` · **Branches**: `feature/song-bundle-v1` (= `main` `a68c85c`) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
 - **Demanda**: Song Bundle v1 — o dono decidiu começar pelo modelo em memória; com o modelo provado, aceitou a ADR-0006 e a persistência entrou.
 - **Paths sob edição**: nenhum (sessão encerrada).
 - **Status**: concluído.
@@ -51,6 +51,7 @@ Nenhum.
 - Primeira dependência externa do workspace (`serde`/`serde_json`, **11 pacotes medidos** no `Cargo.lock`), aprovada por `cargo deny`.
 - 26 testes novos no total (14 do modelo + 12 da persistência); workspace de 29 para 55; `ci-local.sh` verde.
 - Branches substituídas apagadas (`feature/R1-restante`, `feature/R1-transposicao-harmonia`, `wip/harmony-transpose`).
+- Achado no push: o gate de lint do pre-push formatava com `rustfmt --edition 2021` fixo contra um workspace em edition 2024 — os dois gates do projeto discordavam. Corrigido no commit `a68c85c` (edição lida do `Cargo.toml`), provado nos dois sentidos.
 
 **Ficou aberto:**
 - Empacotar `score.musicxml` e `tabs/*.atex` no bundle: a ADR-0006 já os prevê, o v1 escreve só o `.cho`.
