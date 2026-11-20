@@ -6,6 +6,13 @@ Multilíngue desde o início (pt-BR, es-419, en-US primeiro).
 
 **Estado: R0 (fundação).** Ainda não há app. O nome definitivo é **Kentron**.
 
+---
+
+## ⚠️ Aviso de Uso e Contribuição
+Este projeto é distribuído "como está" (*as-is*), sem garantias de qualquer tipo, expressas ou implícitas. Os mantenedores e contribuidores não assumem responsabilidade por qualquer dano, perda de dados ou problemas operacionais decorrentes do uso do software. O uso deste aplicativo é de inteira responsabilidade do usuário.
+
+---
+
 ## Documentos
 
 - [Plano mestre v2.5](docs/plano-mestre-v2.5.html): arquitetura, auditoria da v2.4, i18n, roteiro por releases e decisões.
