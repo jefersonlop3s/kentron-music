@@ -28,11 +28,11 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 ## 🔴 Em andamento
 
 ### cline/de6b0 — Kentron: acesso remoto, host de build e alvo web
-- **Início**: 2026-11-20 17:35 (UTC) · **Última atualização**: 2026-11-20 18:55 (UTC)
-- **Repositório**: `kentron-music` · **Branches**: `feature/alvo-web` (= `main` `b7a229f`, integrada) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
+- **Início**: 2026-11-20 17:35 (UTC) · **Última atualização**: 2026-11-20 19:08 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/alvo-android` (= `main` `8507800`, integrada) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
 - **Demanda**: destravar o acesso remoto aos alvos, preparar o host de build e provar o app com o núcleo real.
-- **Paths sob edição**: `~/.ssh/config` (fora do repo), `apps/kentron_app/{web,lib/main.dart,test}/**`, `scripts/servir-web.py`, `docs/**`, `CHANGELOG.md`.
-- **Status**: alvo web **provado no navegador**, toolchain Android completa (AVD `kentron`); falta a integração Android no app e o Xcode (dono).
+- **Paths sob edição**: `~/.ssh/config` e `~/.zshrc` (fora do repo), `apps/kentron_app/{web,android,rust_builder,lib,test}/**`, `scripts/servir-web.py`, `docs/**`, `CHANGELOG.md`.
+- **Status**: núcleo Rust provado no **navegador** e no **emulador Android**; falta iOS (Xcode, só o dono).
 - **PRs**: nenhum (integração por merge `--ff-only`).
 
 **Feito:**
@@ -42,6 +42,9 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - **Alvo web:** scaffold, wasm da ponte (`kentron_ffi_bg.wasm` 104 KB) e `scripts/servir-web.py` (COOP/COEP + `application/wasm`); build e serviço verificados nos dois sentidos — commit `2fec427`. Depois o servidor passou a escutar **só o local** por padrão (`--host` para expor).
 - **Tela ligada à ponte:** `HomeScreen` chama `parseSong` e mostra título/tom/seções/acordes + `núcleo: kentron_ffi …`; o carregador é injetável, então os testes de widget seguem herméticos. Prova com o **cdylib real** em `bridge_test.dart`: `flutter test` 8/8, `analyze` limpo, `ci-local.sh` EXIT=0.
 - **Achados:** `pumpAndSettle` estoura com a ponte real (o indicador anima sempre e a resposta chega por porta do FFI, fora do relógio falso) → espera em tempo real com `runAsync`; e o parser extrai acordes de linhas só com acordes.
+- **Android entregue e rodando:** `android/` criado (`--org com.kentron`; appId `com.kentron.kentron_app`), `rust_builder` do cargokit ligado ao nosso crate fora do app (`--rust-crate-dir ../../crates/kentron_ffi`) com `--no-write-lib`, que protegeu o `main.dart` do código de exemplo; dependência no `pubspec`. `flutter build apk --debug` verde, com **`libkentron_ffi.so` dentro do APK** em três ABIs; no emulador `kentron` o app abre (COLD, 1,7 s), o processo vive sem `UnsatisfiedLink`, e o print — que **eu li e conferi** (leio imagens) — mostra `Exemplo`, `tom C · 2 seção(ões)`, os acordes `C G Am F` e `núcleo: kentron_ffi 0.0.0`.
+- **Java 27 quebrava o build:** `Unsupported class file major version 71` no Gradle 9.5; resolvido com **JDK 21** (`brew install openjdk@21`, formula — sem sudo) + `flutter config --jdk-dir`. O Flutter já avisava que 27 era "newer than known valid".
+- **Falha minha, registrada:** li um `git diff` vazio como "o pubspec não ganhou a dependência" quando o diff era contra o `HEAD`, não contra o backup — o `integrate` havia feito o `pub add`. Bastava ter grepyado o arquivo em vez de concluir pelo diff.
 - **Lição de processo:** o commit do quadro vai na `main` **depois** do merge da branch — antes disso a branch diverge e exige rebase a cada push (aconteceu três vezes hoje).
 - **Prova no navegador (feita pelo dono):** a tela web mostrou os dados do núcleo — `Exemplo`, `Kentron · tom C · 2 seção(ões)`, acordes `C G Am F` e `núcleo: kentron_ffi 0.0.0`. Cadeia Rust → wasm → Flutter web → tela provada.
 - **Toolchain Android medida e funcional:** SDK 36 completo em `~/Library/Android/sdk` (build-tools 36.0.0, emulator 37.3.10, **NDK 28.2.13676358**, platforms 36, imagem arm64-v8a), Java Temurin 27, AVD **`kentron`** criado, `flutter doctor` ✓. Versões tiradas do próprio SDK (não de memória).
@@ -49,10 +52,10 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - **Duas falhas minhas, registradas:** (1) paralelizei a cópia do `cmdline-tools` com o `avdmanager` que dependia dela e li a falha como bug da ferramenta; (2) **culpei o Flutter do brew** pela reprovação do gate sem provar — a reprodução isolada deu 5/5 e o teste completo 8/8. A causa era **contenção**: rodei a bateria enquanto baixava vários GB do SDK. A mesma revisão passou com a máquina livre.
 
 **Ficou aberto:**
-- **Integração Android no app:** `flutter create --platforms=android` + `flutter_rust_bridge_codegen integrate --rust-crate-name kentron_ffi --platforms android --no-write-lib --no-integration-test` (o `--no-write-lib` protege o `main.dart`; o `integrate` por padrão escreve código de exemplo em `lib/`) e então `flutter build apk --debug` + `emulator -avd kentron`. É o que faz o Rust entrar no APK.
-- **Higiene de duplicatas:** dois Flutter (`~/development/flutter` — usado pelo pipeline e pinado — e o cask) e dois `adb`/platform-tools. Ambos os Flutter funcionam (medido); a duplicata é organização, não defeito. Sugestão: manter o clone pinado e remover os casks `flutter` e `android-platform-tools`.
-- **Xcode** (iOS): só o dono, via App Store/developer.apple.com; `xcode-select --switch` falha enquanto o `Xcode.app` não existir.
-- **Ver no navegador:** ✅ feito (registrado acima).
+- **iOS:** depende do Xcode (só o dono, App Store/developer.apple.com). Com ele: `flutter create --platforms=ios` + `flutter_rust_bridge_codegen integrate --platforms ios` (o `rust_builder` já existe; CocoaPods 1.17 instalado) e então `flutter build ios --no-codesign`.
+- **Emulador Android de pé nesta máquina** (`emulator -avd kentron`, app com PID 4184): encerrar quando não precisar.
+- **Higiene:** resolvida pelo dono — os casks duplicados (`flutter`, `android-platform-tools`) foram removidos e `~/development/flutter/bin` entrou à frente no PATH do `~/.zshrc`.
+- **Ver no navegador:** ✅ feito.
 - Instalações: NDK + Flutter pinado na `lab` (build Android por Docker), SDK/JDK/NDK no Mac (emulador) e Xcode (iOS — só o dono, via App Store). Matriz de versões medida na fonte: compileSdk/targetSdk **36**, minSdk **24**, **NDK 28.2.13676358**, Gradle **9.5.0**, AGP **9.3.1**, KGP **2.4.20**, **JDK ≥ 17**.
 
 
