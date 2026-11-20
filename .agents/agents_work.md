@@ -27,14 +27,6 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
-### cline/de6b0 — R1 · Cifra e projeção (branch ativa)
-- **Início**: 2026-11-19 21:31 (UTC) · **Última atualização**: 2026-11-20 03:35 (UTC)
-- **Repositório**: `kentron-music` · **Branches**: `feature/R1-cifra-projecao` (`4beb085`, publicada) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
-- **Demanda**: entregar a R1 (cifra local, projeção manual) conforme o plano v2.6.
-- **Paths sob edição**: `crates/notation_bundle/`, `apps/kentron_app/`, `packages/core_l10n/` quando retomada.
-- **Status**: aguardando retomada.
-- **PRs**: sem PR; branch publicada em `origin`.
-
 ### cline/de6b0 — Rascunho de harmonia (WIP)
 - **Início**: 2026-11-20 03:35 (UTC) · **Última atualização**: 2026-11-20 03:35 (UTC)
 - **Repositório**: `kentron-music` · **Branches**: `wip/harmony-transpose` (`35971c4`, local) · **Worktrees**: nenhum
@@ -46,6 +38,23 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 ## 🟡 Interrompido / órfão
 
 ## 🟢 Concluído recentemente
+
+### cline/de6b0 — R1 · Cifra e projeção (branch ativa)
+- **Início**: 2026-11-19 21:31 (UTC) · **Última atualização**: 2026-11-20 03:44 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/R1-cifra-projecao` integrada à `main` (`7460f57`) · **Worktrees**: `~/Develop/Projects/app-music`
+- **Demanda**: entregar a R1 (cifra local, projeção manual) e consolidar o parser na `main`.
+- **Paths sob edição**: nenhum.
+- **Status**: concluído — branch integrada e a apagar; o restante da R1 começa em nova branch.
+
+**Feito:**
+- `analysis_options.yaml` commitado em `91de756` (exclusão de `build/**` no analyzer).
+- `feature/R1-cifra-projecao` integrada por merge `50c7323`.
+- Documentação atualizada em `7460f57`.
+- Validação do resultado integrado: 15 testes Rust, Clippy, formatação, `check_arb.py`, `cargo deny`, `flutter analyze` e `flutter test` verdes.
+
+**Ficou aberto:**
+- O restante da R1 (transposição, persistência, UI de palco, projeção) deve começar em nova branch a partir da `main`.
+- `wip/harmony-transpose` permanece como rascunho local, aguardando decisão.
 
 ### cline/de6b0 — Análise dos planos, R0 publicado e R1 iniciada
 - **Início**: 2026-11-19 21:31 (UTC) · **Última atualização**: 2026-11-20 03:13 (UTC)
@@ -83,9 +92,10 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 **Ficou aberto:**
 - O SDK não está no `PATH` padrão; usar `~/development/flutter/bin/flutter` ou exportar o caminho.
 - CI ainda não analisa `packages/core_l10n`; item registrado em PENDING.
-- `apps/kentron_app/analysis_options.yaml` tem alteração não commitada (exclusão de `build/**` no analyzer) que não foi feita por esta sessão; precisa de dono.
+- `apps/kentron_app/analysis_options.yaml` foi assumido e commitado em `91de756` (exclusão de `build/**` no analyzer).
 
 ## Notas entre agentes
 
 - Flutter 3.50.1 instalado em `~/development/flutter` (não está no `PATH` padrão). Para usar: `export PATH="$HOME/development/flutter/bin:$PATH"`.
-- Remoção de worktrees validada em 2026-11-20 03:13 (UTC): o worktree `de6b0` está limpo e na branch `feature/R1-cifra-projecao`, publicada em `origin` (`4beb085`); os diretórios `40e55` e `b5088` em `~/.cline/worktrees` estão vazios. Nenhum stash pendente. O rascunho de harmonia está na branch local `wip/harmony-transpose`, que sobrevive à remoção do worktree.
+- Remoção de worktrees validada em 2026-11-20 03:13 (UTC): o worktree `de6b0` está limpo; os diretórios `40e55` e `b5088` em `~/.cline/worktrees` estão vazios. Nenhum stash pendente. O rascunho de harmonia está na branch local `wip/harmony-transpose`, que sobrevive à remoção do worktree.
+- `feature/R1-cifra-projecao` foi integrada à `main` em `50c7323` e pode ser apagada após o push do merge.
