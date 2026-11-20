@@ -70,7 +70,7 @@ seus próprios hooks e histórico; o meta-repo não executa testes deles implici
 
 **Onde ficam**: skills se criam e se editam só em `.agents/skills/<nome>/SKILL.md`. `.claude/skills` é symlink para `../.agents/skills` (o Claude Code só descobre esse caminho); nunca o transforme em diretório real.
 
-Transversais (carregar sempre): `vies-de-plausibilidade`, `disciplina-de-validacao`, `<skill de segurança do projeto>`.
+Transversais (carregar sempre): `vies-de-plausibilidade`, `disciplina-de-validacao`, `manuseio-segredos`.
 
 | Skill | Quando ler |
 |---|---|
