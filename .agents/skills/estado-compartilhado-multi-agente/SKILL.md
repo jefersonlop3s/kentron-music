@@ -25,6 +25,26 @@ Correção importante, medida: a branch atrasada NÃO reverte o que `main` ganho
 
 Uma branch EM DIA com `main` cujo commit sobrescreve um arquivo inteiro com uma versão velha (um `cp` malfeito) carrega a remoção explícita no diff; o merge a aplica sem conflito. Não há gate possível — é indistinguível de remoção deliberada. Defesa: olhar o `git diff` depois de qualquer `cp`/`mv`/geração por script.
 
+## 1c. Branch de escopo vira segundo trunk
+
+Uma branch cujo nome descreve **escopo** (`feature/R1-restante`, `feature/resto-do-projeto`) e não uma unidade de trabalho acaba como segundo trunk: sobrevive ao trabalho que a criou, recebe commits de assuntos diferentes e continua se apresentando como "o checkout daquele trabalho" para toda sessão que a lê.
+
+Caso medido (2026-11-20, `kentron-music`): `feature/R1-restante` era **ancestral** da `main` — 0 commits exclusivos, 3 commits atrás. O worktree apontava para ela e o checkout principal para a `main`; os dois se apresentavam como "o trabalho da R1". Numa sessão inteira, `git status` foi lido repetidamente no checkout errado e o estado relatado (commits atrás, módulo ausente) não correspondia ao repositório.
+
+Não é risco teórico: é o custo de não saber qual checkout é o trabalho.
+
+**Regra:** um nome de branch = uma unidade de trabalho entregável. Escopo pertence ao roadmap, não ao ref. Ao entregar, a branch é apagada no mesmo passo — `git branch -d` (seguro: recusa se não estiver integrada) e `git branch -D` só depois de provar que não há arquivo exclusivo.
+
+**Como distinguir trabalho de sombra** antes de qualquer leitura de estado:
+
+```bash
+git rev-list --count main..<branch>      # 0 = ancestral: sombra, não trabalho
+git diff --name-status <branch> main     # vazio = nenhum arquivo exclusivo
+git branch -vv                           # quem está em cada worktree
+```
+
+O `saude` do `quadro.sh` já lista branches com conteúdo fora da `main` e branches já publicadas que só faltam apagar. Rode-o ao ler o quadro, em vez de confiar no `git status` do checkout em que você caiu.
+
 ## 2. `rm` atravessa symlink e apaga o alvo
 
 O `node_modules` de um worktree costuma ser symlink para o do diretório principal. `rm -f "$WT/node_modules/pacote"` apaga o pacote da sessão vizinha. Antes de escrever fora do seu diretório: `readlink -f <caminho>`. Se sair da sua área, não é seu.
@@ -84,6 +104,7 @@ git diff --stat <arquivo sujo>            # igual ao de antes: só a edição al
 | Vou... | Confira com |
 |---|---|
 | criar worktree | `git fetch origin` e derivar de `origin/main` |
+| saber qual checkout é o trabalho | `git rev-list --count main..<branch>` (0 = sombra) e `git branch -vv` |
 | apagar/mover arquivo | `readlink -f` no caminho |
 | instalar dependência | `ls -la node_modules \| head -1` |
 | commitar | `git branch --show-current` e `git diff --cached --stat` |

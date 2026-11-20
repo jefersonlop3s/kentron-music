@@ -6,12 +6,12 @@
 
 - Nome do produto: **Kentron Music Hub**; identificador técnico provisório `kentron`.
 - Licença: **Apache-2.0**, com aviso explícito de uso "como está" no README.
-- UI: metodologia **Impeccable**, com `DESIGN.md` como fonte de verdade visual.
+- UI: metodologia **Impeccable**, com [DESIGN.md](../../DESIGN.md) como fonte de verdade visual.
 - Engenharia assistida: **Sovereign Harness**, com gates locais de segredo, SCA, SAST, tipos, testes e lint.
 - CI: **local-first** (ADR-0004). `scripts/ci-local.sh` é o portão principal; o GitHub Actions permanece como rede de segurança em PRs e semanal.
 - Repositório: `https://github.com/jefersonlop3s/kentron-music`.
-- Branch principal: `main`. O parser ChordPro e a transposição da R1 foram integrados; o restante da R1 segue em branch própria a partir da `main`.
-- Escopo da R1: ChordPro primeiro; MusicXML/ATEX em R1.1 (ADR-0005, proposta aguardando aceite).
+- Branch principal: `main`. O parser ChordPro e a transposição da R1 foram integrados; o restante da R1 segue em branch por unidade de trabalho, derivada da `main`.
+- Escopo da R1: a ADR-0002 vale integralmente (`.cho`, `.musicxml`, `.atex`). A **ordem de execução** é cifra primeiro e MusicXML/ATEX no marco R1.1; a redução de escopo proposta na ADR-0005 foi **rejeitada** (2026-11-20).
 - Dados musicais canônicos no Rust; tradução apenas na borda Flutter.
 - MIR, Matrix/Iroh e índice global ficam fora do primeiro release público.
 
@@ -57,7 +57,7 @@ Ressalvas abertas:
 - Dois cultos consecutivos em uma igreja, sem assistência do desenvolvedor. **Pendente.**
 - Nenhuma perda de dados, crash bloqueante ou falha de projeção. **Pendente.**
 - pt-BR, en-US e es-419 revisados. **Pendente.**
-- MusicXML e ATEX ficam para **R1.1**, condicionados ao spike S5 (ADR-0005, proposta).
+- MusicXML e ATEX ficam para **R1.1**, depois do spike S5 — ordem de execução, não redução de escopo (ADR-0005 rejeitada; ADR-0002 integral).
 
 ## 4. Riscos e mitigações
 

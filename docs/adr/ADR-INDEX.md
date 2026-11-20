@@ -9,6 +9,6 @@ Status: Proposto → Aceito | Rejeitado | Descontinuado | Substituído. **O acei
 | ADR-0002 | Primeira release: cifra e projeção | Aceito | 2026-11-18 | kentron-music |
 | ADR-0003 | Nome do projeto e do produto: Kentron Music Hub | Aceito | 2026-11-19 | kentron-music |
 | ADR-0004 | CI local-first com GitHub Actions como rede de segurança | Aceito | 2026-11-20 | kentron-music |
-| ADR-0005 | Escopo da R1: ChordPro primeiro; MusicXML/ATEX em R1.1 | Proposto | 2026-11-20 | kentron-music |
+| ADR-0005 | Escopo da R1: ChordPro primeiro; MusicXML/ATEX em R1.1 | Rejeitado | 2026-11-20 | kentron-music |
 
 **Próximo número livre**: ADR-0006.

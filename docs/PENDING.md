@@ -12,12 +12,12 @@
 - [ ] Adicionar verificação de licenças para dependências Dart/Flutter no pipeline local (`cargo-deny` cobre apenas Rust).
 - [ ] Teste de fumaça do app Flutter em dispositivo real (Android/iOS).
 - [ ] Revisar traduções de es-419, pt-BR e en-US com falantes nativos.
+- [ ] Levar a lição "branch de escopo vira segundo trunk" ao `sovereign-harness` por PR: a skill `estado-compartilhado-multi-agente` do kit não cobre o caso e a cópia local é idêntica à de lá.
 
 ## 🎸 R1 (prioridades imediatas)
 
-Parser ChordPro, transposição e testes dourados já integrados à `main`; o restante da R1 segue em branch própria.
-- [ ] **Aceite da ADR-0005** (escopo da R1: ChordPro primeiro; MusicXML/ATEX em R1.1). Sem aceite, vale a ADR-0002 integral.
-- [ ] **Spike S5:** validar renderização de partituras/tabs via alphaTab/OSMD.
+Parser ChordPro, transposição e testes dourados já integrados à `main`; o restante da R1 segue em branch por unidade de trabalho (`feature/song-bundle-v1`).
+- [ ] **Spike S5:** validar renderização de partituras/tabs via alphaTab/OSMD. Dimensiona o esforço de MusicXML/ATEX (R1.1); não bloqueia o piloto da R1.
 - [ ] Adicionar fixtures de parser para acordes invertidos, `6/9`, acidentes duplos e letras multilíngues (a nomeação já os cobre; falta provar a preservação na leitura do `.cho`).
 - [x] Transposição no `chord_naming` e módulo `harmony` integrados à `main` (29 testes; acordes invertidos, `6/9` e acidentes duplos cobertos).
 - [ ] Implementar persistência local (Song Bundle), migrações e exportação/restauração.

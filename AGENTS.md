@@ -1,6 +1,7 @@
 # Instruções para agentes de IA — "Kentron"
 
-> Fonte única das instruções do projeto. `CLAUDE.md` e `GEMINI.md` são symlinks para este arquivo;
+> Fonte única das instruções do projeto. `GEMINI.md` é symlink para este arquivo; `CLAUDE.md` carrega apenas
+> as instruções do RTK e não duplica este conteúdo;
 > o Antigravity o recebe pela regra `always_on` em `.agents/rules/`; Codex e OpenCode o leem nativamente.
 > Preencha os campos `<...>`. Mantenha curto: o que é verificável vira gate, o que é julgamento vira skill.
 
@@ -63,7 +64,7 @@ seus próprios hooks e histórico; o meta-repo não executa testes deles implici
 3. Worktree deriva da referência atualizada escolhida pelo projeto; conferir remote e branch. Sem remote, a referência local é a fonte.
 4. `rm`/`mv`/`npm install` em worktree atravessam symlinks: `readlink -f` antes (skill `estado-compartilhado-multi-agente`).
 5. Limpeza de branches segue a política e autorização do projeto, com prova de integração e preservação de trabalho exclusivo.
-6. Ao terminar: quadro atualizado, se adotado, e handover.
+6. Ao terminar: quadro atualizado, se adotado, branches substituídas apagadas e handover. Nome de branch é unidade de trabalho, não escopo — branch de escopo vira segundo trunk e faz sessões lerem o checkout errado (skill `estado-compartilhado-multi-agente` §1c).
 
 ## Skills do projeto
 

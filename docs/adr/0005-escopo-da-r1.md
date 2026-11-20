@@ -1,8 +1,9 @@
 # ADR-0005 · Escopo da R1: ChordPro primeiro; MusicXML/ATEX em R1.1
 
-- **Status:** proposto (2026-11-20) — aguarda aceite do dono do projeto
+- **Status:** **rejeitado** (2026-11-20) — decisão do dono do projeto; a ADR-0002 permanece integral
 - **Decisão do plano:** escopo da primeira release
-- **Emenda:** substitui a cláusula de formatos da ADR-0002
+- **Emenda:** nenhuma — a cláusula de formatos da ADR-0002 não foi emendada
+- **Não vigente:** as seções Contexto, Decisão e Consequências registram a proposta como foi submetida. O motivo da rejeição e o que vale no lugar estão na seção Rejeição.
 
 ## Contexto
 
@@ -25,6 +26,8 @@ O portão do piloto não muda: dois cultos consecutivos, offline, sem assistênc
 
 Se o dono do projeto rejeitar esta proposta, a alternativa é manter a ADR-0002 integralmente: MusicXML e ATEX voltam à R1 e o piloto público aguarda o S5. Nesse caso, a linha correspondente do plano v2.6 deve ser removida.
 
+> **Rejeitada.** A instrução acima não se aplica: a linha do plano v2.6 permanece como ordem de execução, e o piloto não aguarda o S5 — ver Rejeição, abaixo.
+
 ## Consequências
 
 - **Ganho:** o primeiro release público fica centrado no que a igreja piloto realmente usa; menos superfície de teste antes do piloto.
@@ -33,9 +36,24 @@ Se o dono do projeto rejeitar esta proposta, a alternativa é manter a ADR-0002 
 - **Custo:** a ADR-0002 deixa de valer integralmente para formatos; o histórico precisa apontar para esta emenda.
 - **Dívida assumida:** a decisão depende do S5. Se o spike mostrar custo baixo, a redução pode ser revertida com uma nova ADR.
 
+## Rejeição
+
+**Rejeitada pelo dono do projeto em 2026-11-20.** Três motivos, medidos na sessão que a propôs:
+
+1. **Tratava ordem de execução como corte de escopo.** O plano v2.6 já sequenciava MusicXML/ATEX depois da cifra. Formalizar isso como emenda de uma ADR já aceita criou a contradição documental que a própria proposta dizia estar resolvendo — em vez de resolvê-la.
+2. **A cláusula de fallback era inferência do autor, não da ADR-0002.** A ADR-0002 fixa o portão do piloto como "uma igreja piloto usa no culto, offline, em pt-BR ou es-419". Ela não condiciona o piloto ao S5. A frase "o piloto público aguarda o S5" foi escrita nesta proposta e não tem lastro na ADR que ela pretendia emendar.
+3. **Escopo de release aceita não se reduz por emenda unilateral.** O custo cai em quem planeja (bandas que precisam de partitura no primeiro dia) e cria precedente de reescrita de escopo sem nova decisão de produto.
+
+### O que vale no lugar
+
+- **ADR-0002 integral:** a R1 é o release com `.cho` / `.musicxml` / `.atex`, transposição, quatro sistemas, setlist local, estilos, exportação OpenLyrics/Holyrics e Browser Source do OBS (manual). Portão: uma igreja piloto usa no culto, offline, em pt-BR ou es-419.
+- **A sequência continua, como sequência:** cifra primeiro, MusicXML/ATEX depois, no marco R1.1 do plano v2.6. É ordem de trabalho, não escopo de release.
+- **O S5 mede esforço, não bloqueia o piloto:** ele dimensiona MusicXML/ATEX. O piloto da R1 não depende dele.
+- **Reintroduzir a redução exige ADR nova** com decisão do dono. Esta fica registrada como rejeitada para que nenhuma sessão futura a proponha como melhoria óbvia.
+
 ## Referências
 
 - ADR-0002 · Primeira release pública: cifra, palco local e projeção (R1).
-- `docs/plans/plano-mestre-v2.6.md`, seção 3 (R1).
-- `docs/PENDING.md`, seção R1 (spike S5).
+- [Plano de execução v2.6](../plans/plano-mestre-v2.6.md), seção 3 (R1).
+- [Pendências](../PENDING.md), seção R1 (spike S5).
 - Implementação: `crates/notation_bundle/src/harmony.rs`, `crates/notation_bundle/src/chord_naming.rs` e testes `harmony_tests.rs`, `golden_harmony.rs`.

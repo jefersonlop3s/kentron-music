@@ -45,9 +45,19 @@
 - Módulo `harmony.rs` reintroduzido: transposição de música inteira e renderização nos quatro sistemas.
 - Testes: 29 no workspace, incluindo acordes invertidos, `6/9`, acidentes duplos e acordes desconhecidos.
 - Testes dourados novos: `golden_harmony/worship.cho` e saídas em Common e Latin.
-- Escopo da R1 formalizado como proposta na ADR-0005 (ChordPro primeiro; MusicXML/ATEX em R1.1), aguardando aceite do dono.
+- Escopo da R1 formalizado como proposta na ADR-0005 (ChordPro primeiro; MusicXML/ATEX em R1.1) — **rejeitada** em 2026-11-20; ver seção abaixo.
 
 **Próxima Fase:** concluir R1-A, R1-B e R1-C conforme o plano v2.6, em nova branch a partir da `main`.
+
+## R1 · Escopo da R1: ADR-0005 rejeitada (2026-11-20)
+
+**Status:** 🟢 Decisão do dono registrada; ADR-0002 integral.
+
+- A ADR-0005 foi **rejeitada**: a redução de escopo tratava uma ordem de execução como corte de escopo de uma ADR já aceita.
+- A cláusula "o piloto público aguarda o S5" era inferência da proposta, não da ADR-0002: o portão do piloto continua sendo o uso real por uma igreja, offline, em pt-BR ou es-419.
+- O escopo de formatos da ADR-0002 permanece integral (`.cho`, `.musicxml`, `.atex`); a sequência cifra → MusicXML/ATEX continua como ordem de execução no marco R1.1.
+- Limpeza de branches: `feature/R1-restante`, `feature/R1-transposicao-harmonia` e `wip/harmony-transpose` apagadas — as duas primeiras eram ancestrais da `main` (0 commits exclusivos) e a terceira não tinha arquivo exclusivo. Worktree `de6b0` re-apontado para `feature/song-bundle-v1` a partir da `main`.
+- Próximo passo: Song Bundle v1 (persistência local, migrações e exportação/restauração).
 
 ## R0 · Pipeline local-first (ADR-0004, 2026-11-20)
 

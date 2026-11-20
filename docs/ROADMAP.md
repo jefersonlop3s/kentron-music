@@ -12,7 +12,7 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 - [x] Nome definido: **Kentron Music Hub**.
 - [x] Licença: Apache-2.0, com aviso explícito de uso "como está".
 - [x] Sovereign Harness: guardrails e git hooks ativos.
-- [x] Impeccable UI: `DESIGN.md` e vocabulário visual definidos.
+- [x] Impeccable UI: [DESIGN.md](../DESIGN.md) e vocabulário visual definidos.
 - [x] Infra: Cargo Workspace, Melos, scaffold Flutter e CI com ações fixadas por SHA.
 - [x] Pipeline local `scripts/ci-local.sh` como portão principal (ADR-0004); Actions como rede de segurança em PRs e semanal.
 - [x] Core: `notation_bundle` (`chord_naming`) com testes dourados.
@@ -45,7 +45,7 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 - [ ] Dois cultos consecutivos sem assistência do desenvolvedor.
 - [ ] Nenhuma perda de dados, crash bloqueante ou falha de projeção.
 - [ ] pt-BR, en-US e es-419 revisados.
-- [ ] MusicXML e ATEX ficam para R1.1, condicionados ao S5.
+- [ ] MusicXML e ATEX ficam para R1.1, depois do S5 — sequência de execução; o escopo de formatos da ADR-0002 permanece integral (ADR-0005 rejeitada).
 
 **Validação R1:** unitária, regressiva, exploratória, acessibilidade e E2E (piloto de igreja).
 
