@@ -13,6 +13,7 @@
 - [ ] Teste de fumaça do app Flutter em dispositivo real (Android/iOS).
 - [ ] Revisar traduções de es-419, pt-BR e en-US com falantes nativos.
 - [x] Publicar as duas lições no `sovereign-harness`: a skill `estado-compartilhado-multi-agente` §1c (PR #21) e a correção do gate de lint (`rustfmt --edition` lido do manifesto, PR #22) saíram na **release 0.7.2**.
+- [ ] **Anexo binário pelo chat é não confiável neste ambiente — usar caminho no disco.** Evidência medida (2026-11-21): dois `sdk.error` em `~/.cline/data/logs/code.log` às **18:17:55 e 18:21:50**, ambos com `transportState: "reconnecting"` e pilha `rejectPending` (Cline Desktop **0.0.49**, Tauri). O **transporte reconecta** e as requisições pendentes — inclusive envio de anexo — são rejeitadas; o front trava. Sintomas já observados: as imagens do dono **nunca foram gravadas** (`user-attachments/` vazio e `messages.json` só com dois ícones minúsculos) e a planilha chegou **corrompida** (118 bytes a mais, cabeçalho zip com bytes substituídos), o que obrigou a ler por varredura de bytes. **Prática adotada:** binário se entrega por **caminho no disco** (`~/Downloads`, `/tmp`) e o agente lê pelo caminho — verificado lendo PNG e o xlsx do `Downloads` (íntegro: 313 músicas, 15 colunas, batendo com a leitura anterior).
 
 ## 🎸 R1 (prioridades imediatas)
 
