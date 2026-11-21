@@ -1055,3 +1055,31 @@ disso:
 - o vínculo está escrito no asset, com exemplo real: *Holy, Holy, Holy* (Heber, 1826) no corpus ↔
   **09 Santo, Santo, Santo** (trad. João Gomes da Rocha, 1947 → PD 2018) nas fichas — mesma obra
   original, duas obras distintas, que é a regra 2 do corpus.
+
+## R4 · A ficha virou mecanismo no motor (2026-11-21)
+
+O asset deixou de ser dado inerte. `mir_engine::fichas` lê o TSV embutido e responde a pergunta que o
+produto faz — *esta versão pode ter letra?* —, e três decisões de desenho resolvem o que o material real
+expôs:
+
+1. **A resposta é derivada do ano, não da coluna.** `ano_dominio_publico` é o fato; `veredito` é o
+   retrato do dia da conferência. Em 2040 o 291 vira `Livre` **sem ninguém editar o asset**, e a ficha
+   continua dizendo a verdade de 2026. Provado nos dois lados: 2017 → `RequerLetraDoUsuario`, 2018 →
+   `Livre` (09); 2039 → protegida, 2040 → livre (291).
+2. **Título não é identidade — e são três "Louvor".** A busca por título devolveu **três** candidatas
+   (03 "Louvor ao Senhor", 135 "Louvamos-te, ó Deus", 385 "Louvor"), duas delas com vereditos opostos. O
+   motor devolve `Ambiguo` com as candidatas nomeadas, e o relatório de uso classifica como
+   `Indeterminado` em vez de escolher. O teste que eu escrevi esperava duas; o asset mostrou três — e o
+   número real ficou no teste e na skill.
+3. **A regra é uma só, e a auditoria prova a fronteira.** `obra_da_ficha` reconstrói a `Obra` para
+   `veredito_pd`: em cada linha, a obra tem de estar **protegida** em `ano - 1` e **livre** em `ano`. É
+   independente da data de hoje, então não vira bomba-relógio. O gate ganhou a mesma aritmética
+   (`ano_dominio_publico == morte + 71`) e a prova foi a **7 casos negativos**.
+
+**CLI:** `--ficha-hino "Cantor Cristão|09"` imprime a ficha com a procedência de cada campo e a resposta;
+`--listar-fichas` mostra as 12 com o desfecho; `--auditar-fichas` prova a fronteira. E `--hino` sem letra
+no corpus passa a **explicar pela ficha** — livre, protegida, gap ou ambígua — em vez de só dizer "não
+está no corpus".
+
+**Fora desta entrega:** o vínculo explícito entre a ficha e a **obra original** do corpus (*Holy, Holy,
+Holy* ↔ CC 09) e o app honrar a resposta (`lyrics_scope`).

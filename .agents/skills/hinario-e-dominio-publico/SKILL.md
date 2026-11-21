@@ -50,8 +50,13 @@ Placar medido dos 10: **6 domínio público** (09, 15, 46, 135, 295, 377), **3 p
 - **Não preencher lacuna por inferência** — o número não substitui a leitura da fonte.
 - **Não usar fonte web como primária** para decidir veredito.
 - **Não tratar título como identidade** — há **dois hinos chamados "Louvor"** no mesmo repertório
-  (135, domínio público; 385, protegido até 2033), com vereditos opostos.
+  (135, domínio público; 385, protegido até 2033), com vereditos opostos; e o livro tem ainda o
+  **03 "Louvor ao Senhor"**, que casa na busca por prefixo. Consulta por título devolve **todas** as
+  candidatas e o motor **recusa** escolher.
 - **Não fundir ficha com corpus de letras.** `hinos_dominio_publico.tsv` carrega o `verso` (9 campos
   posicionais) e é lido por `lyrics.rs` via `include_str!`; a ficha carrega **fato**. A tradução é obra
   própria (regra 2 do corpus), e é a ficha do tradutor que o corpus cobra para aceitar a versão.
+- **Não reimplementar a consulta.** O motor já tem `mir_engine::fichas` (identidade, ambiguidade,
+  derivação pelo ano, auditoria) e a CLI tem `--ficha-hino`, `--listar-fichas` e `--auditar-fichas`.
+  Consulta nova **usa** isso; o que ele não faz ainda é ligar a ficha à **obra original** do corpus.
 - **Não confundir as camadas**: o hino pode ser livre e a **tradução** que se canta não ser.

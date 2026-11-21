@@ -9,10 +9,15 @@ Todos os eventos notáveis do projeto Kentron Music Hub.
 - **`scripts/prova-verificar-fichas.sh`** — prova no sentido negativo com **seis** variações do asset que **têm** de reprovar — incluindo "fato sem procedência" e "procedência cita OCR sem observação"; reprovaram as seis.
 - **Gate na bateria:** o par asset+verificador roda no `.githooks/pre-push` (escopado ao `CHANGED_FILES`) e no `scripts/ci-local.sh`, **com a prova negativa junto** — se o verificador enfraquecer, é a prova que acusa. O `.harness.toml` passou a dizer onde ele vive.
 - Skills **`hinario-e-dominio-publico`** e **`ocr-em-digitalizacao`**, com o frontmatter das demais.
+- **`mir_engine::fichas`** — a ficha deixa de ser dado inerte: lê o asset embutido (procedência por campo), responde por **(hinário, número)**, **recusa** título ambíguo, **deriva a resposta do ano** (`Livre` / `RequerLetraDoUsuario` / `Gap` / `Ambiguo` / `SemFicha`) e `auditar()` prova `morte+71` linha a linha com a regra única (`lyrics::veredito_pd`).
+- **CLI:** `--ficha-hino "hinário|número"`, `--listar-fichas`, `--auditar-fichas`; `--hino` sem letra no corpus passa a **explicar pela ficha** (livre / protegida / gap / ambígua) em vez de só dizer "não está no corpus".
+- **`uso::veredito_por_titulo`** consulta a **ficha antes do corpus**: é a ficha que carrega a tradução, a camada que manda. Título ambíguo vira `Indeterminado` nomeando as candidatas.
 
 ### Verificado
 - Gate aprovando as 12 fichas e reprovando os 6 casos negativos; **o próprio hook recusou o push** com uma ficha `pd` sem ano (`PUSH BLOQUEADO — gate(s) reprovado(s): fichas`) e liberou com o asset íntegro; `ruff check`, `ruff format --check` e `shellcheck` verdes nos dois scripts; `documentation.py check` sem link quebrado; bateria do pre-push verde no push `a33598f..ca61cbb`.
 - **A auditoria do registro da sessão (22:02) achou uma leitura inventada:** o OCR da p.722 dizia `A.A. - Anlúniv Almeida` e os documentos passaram a afirmar `A.A. → Antônio Almeida` como leitura do índice. Corrigido no asset (com `fonte_traducao` + `observacao`), no `CONCLUSION`, no `PENDING` e nas duas skills — e o gate passou a exigir `observacao` quando a procedência cita OCR.
+- **Ficha no motor, provada:** 10 testes novos (asset com 12 fichas e 10 no repertório, identidade por par com número sem zero, ambiguidade do "Louvor", resposta derivada do ano em 2017/2018 e 2039/2040, `gap`, `sem_ficha`, asset malformado, auditoria da fronteira, obra derivada com o tradutor como camada que manda, e o uso recusando escolher qual "Louvor"); **31 testes no total**, `clippy -D warnings` limpo.
+- **Gate com a aritmética:** `verificar_fichas.py` passou a reprovar `ano_dominio_publico != morte + 71` (Lei 9.610/98, art. 41), e a prova foi a **7 casos negativos**.
 
 ### Ressalvas
 - O asset **ainda não é lido por código** — `lyrics.rs` continua com `hinos_dominio_publico.tsv`, intacto. O gate **está na bateria** e o contrato `[validation]` do `.harness.toml` segue só com gitleaks (decisão de 2026-11-21). A relação entre ficha e corpus está documentada nos dois arquivos (não se fundem); falta a **consulta em código** — PENDING.
