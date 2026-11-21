@@ -35,6 +35,23 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/de6b0 — Kentron: motor MIR (cifra, estrutura e dinâmica a partir do áudio)
+- **Início:** 2026-11-21 13:40 (UTC) · **Última atualização:** 2026-11-21 14:30 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `feature/mir-primeiro-incremento` e `feature/mir-contraprova-hermetica` (de `main` `06f43f8`; ambas integradas por merge `--ff-only`) · **Worktrees:** diretório principal
+- **Demanda:** o dono pediu cifra, letra, estrutura, dinâmica e tablatura a partir do áudio de uma música real, por transcrição, sem consultar repositório de cifras — enquanto outra sessão preparava o SSH do Windows.
+- **Paths sob edição:** nenhum (concluído).
+- **Status:** concluído — `main` = `origin/main`, bateria verde no push (o gate `docrefs` reprovou uma vez o link da ADR no `CONCLUSION`; corrigido no código, não no gate).
+- **PRs:** nenhum (merge `--ff-only` local).
+
+**Feito:** ADR-0011 + `crates/mir_engine` (DSP puro, sem modelo) — WAV PCM, dinâmica EBU R128, andamento, acordes por croma com picos interpolados e estrutura por novidade/auto-similaridade; CLI `mir` com resumo, `--json` e `--chordpro`.
+
+**Provado:** 4 testes em áudio sintetizado + **contraprova do LUFS contra o `ffmpeg`** (−12,6 vs −12,0 LUFS em música real; 400,4 s analisados em 0,77 s); `cargo deny` ok com `rustfft` como dependência nova.
+
+**Fora desta entrega, declarado na ADR e no PENDING:** letra (ASR) e tablatura (pitch + corda/traste) — cada uma exige peso no `models/MANIFEST.toml` e incremento próprio. O tom estimado é a fundamental mais frequente (devolveu `B` numa música em E maior).
+
+**Bloqueio que continua com outra sessão:** canal de execução remota no Windows (`192.168.6.240`) para o piloto automatizado R1-D — SSH e WinRM fechados no ambiente que o dono está preparando.
+
+
 ### cline/de6b0 — Kentron: dicionário de variantes (bloqueio + radar)
 - **Início:** 2026-11-21 11:00 (UTC) · **Última atualização:** 2026-11-21 11:35 (UTC)
 - **Repositório:** `kentron-music` · **Branches:** `feature/dicionario-variantes` (de `main` `3d322cb`; integrada por merge `--ff-only`) · **Worktrees:** diretório principal
