@@ -28,14 +28,20 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 ## 🔴 Em andamento
 
 ### cline/0caf3 — Retomada das fichas do hinário (wire do gate + consolidação do asset)
-- **Início:** 2026-11-21 21:42 (UTC) · **Última atualização:** 2026-11-21 21:42 (UTC)
-- **Repositório:** `kentron-music` · **Branches:** `cline/0caf3` (= `main` `846f4c1`; cada unidade nova sai daí com nome próprio) · **Worktrees:** `~/.cline/worktrees/0caf3/app-music`
-- **Demanda:** dar sequência à entrega das fichas — asset e gate já estão na `main`; faltam o wire do gate no pre-push e a consolidação com `hinos_dominio_publico.tsv`.
-- **Paths sob edição:** `.githooks/pre-push`, `scripts/verificar_fichas.py`, `scripts/prova-verificar-fichas.sh`, `crates/mir_engine/assets/` — ordem das unidades a confirmar com o dono.
-- **Status:** em andamento
+- **Início:** 2026-11-21 21:42 (UTC) · **Última atualização:** 2026-11-21 21:48 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `cline/0caf3`; unidade do gate em `feat/gate-fichas-bateria`, integrada na `main` por merge `--ff-only` · **Worktrees:** `~/.cline/worktrees/0caf3/app-music`
+- **Demanda:** a sessão anterior deixou o asset e o verificador **fora da bateria**; o wire foi feito e provado no negativo. Resta a relação fichas ↔ corpus de letras, que é decisão do dono.
+- **Paths sob edição:** nenhum (unidade concluída).
+- **Status:** aguardando decisão do dono (como ligar fichas e corpus de letras)
 - **PRs:** nenhum
 
 **Estado assumido (21:42):** worktree `de6b0` removido com prova (detached, **0 commits à frente**, árvore limpa, 8,1 GB só de build ignorado); diretórios órfãos `40e55`/`b5088` apagados; **nenhum stash**; resta o principal e este worktree, ambos em `846f4c1` = `origin/main`.
+
+**Feito (21:48):** gate `fichas` no `.githooks/pre-push` (escopado ao `CHANGED_FILES`, roda **com a prova negativa junto**) e em `scripts/ci-local.sh`; o `.harness.toml` passou a dizer onde ele vive; `avisa_base "${1:-origin}"` devolve ao hook a execução fora do push.
+
+**Provado:** com ficha `pd` sem ano, o próprio hook recusa (`PUSH BLOQUEADO — gate(s) reprovado(s): fichas`, log `linha 2: veredito "pd" sem ano de domínio público`); asset restaurado com md5 idêntico; `✅ fichas` no caminho positivo; `documentation.py check` sem link quebrado.
+
+**Aberto:** `hinos_dominio_publico.tsv` é **corpus de letras** (4 hinos, última coluna = texto), não fichas — fundir violaria o gate. Decisão do dono: ligar por título ou por (hinário, número).
 
 ## 🟡 Interrompido / órfão
 
