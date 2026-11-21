@@ -36,7 +36,7 @@ Nenhum.
 ## 🟢 Concluído recentemente
 
 ### cline/de6b0 — Kentron: letra na cifra (fonte declarada + alinhamento ao áudio)
-- **Início:** 2026-11-21 14:30 (UTC) · **Última atualização:** 2026-11-21 14:50 (UTC)
+- **Início:** 2026-11-21 14:30 (UTC) · **Última atualização:** 2026-11-21 14:55 (UTC)
 - **Repositório:** `kentron-music` · **Branches:** `feature/letra-na-cifra` (de `main` `d383eae`; integrada por merge `--ff-only`) · **Worktrees:** diretório principal
 - **Demanda:** o dono pediu a **letra renderizada na cifra**, buscada em "fontes oficiais" e cruzada com o áudio, sem custo legal nem computacional.
 - **Paths sob edição:** nenhum (concluído).
@@ -48,6 +48,8 @@ Nenhum.
 **Provado:** 11 testes Rust (incluindo ida e volta pelo parser do app e fixture dourada) + **32 do Flutter**, com a tela do Modo Palco desenhando a letra e o acorde da fixture que o motor gerou, pela ponte real. Detector de frase vocal medido em três desenhos: 1 frase de 385 s (pico global) → 4 frases exatas no sintético e **63 frases cobrindo 302 s de 400 s** no áudio real (máximo recente).
 
 **Fora desta entrega, declarado:** letra por ASR e tablatura (peso no `models/MANIFEST.toml`), entrada de letra na interface do app, e a calibração do detector no repertório inteiro.
+
+**Comparação medida contra gabarito humano (14:55):** o dono trouxe uma cifra feita à mão da mesma gravação — a cifra e a letra ficaram **fora do repositório** (conteúdo de terceiro). Resultado: **cobertura de fundamental 8/8** (todas as classes do gabarito aparecem) e a **modulação** do Solo 2 encontrada em 264–294 s (`Cmaj7 G D A Em7`), sem ninguém ter dito que havia modulação. Não entrega tablatura, inversões nem notação de tensão. O gabarito pagou um erro real: o motor entregava 45% dos trechos como potência; medidos os 91, a terça fica em **mediana 0,28** da fundamental e em **80%** abaixo de 0,4 — logo `5` era a leitura honesta na maioria. A regra `chords::com_terca` passou a dizer o acorde inteiro quando a terça passa de 0,4 (6 trechos mudaram, nenhum ganhou terça que não tem), provada no positivo e no negativo.
 
 
 ### cline/de6b0 — Kentron: motor MIR (cifra, estrutura e dinâmica a partir do áudio)
