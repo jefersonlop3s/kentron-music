@@ -35,6 +35,27 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/de6b0 — Kentron: contrato de validação com gitleaks
+- **Início**: 2026-11-21 00:02 (UTC) · **Última atualização**: 2026-11-21 00:10 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/contrato-validacao` + `fix/semgrep-canario` (de `main` `99012e3`; integradas por merge `--ff-only` → `3d6b826`) · **Worktrees**: diretório principal
+- **Demanda**: o dono decidiu que a bateria inteira **não** roda em toda invocação de validação e que derrubar emulador como gate é perigoso; o que vale como validação real é o gitleaks (mais o CI completo no `pre-push`).
+- **Paths sob edição**: nenhum (concluído).
+- **Status**: concluído — `main` = `origin/main` = `3d6b826`, bateria verde no push.
+- **PRs**: nenhum (integração por merge `--ff-only`).
+
+**Feito:**
+- **`.harness.toml` `[validation]`:** `configured = true` com um gate explícito — `gitleaks`, mesmo argv do `gate_gitleaks` do `pre-push`. O contrato recusava push por desenho enquanto estivesse vazio; agora declara a validação barata e real. A bateria completa continua no `pre-push`, onde já era aplicada.
+- **Higiene de dispositivos:** registrado na skill que **não** vira gate — derrubar dispositivo dentro de um comando de verificação é destrutivo para quem estiver com `flutter run`.
+
+**Provado:**
+- `validation.py check` → `gates: gitleaks`, `80 commits scanned`, `no leaks found`, saída 0.
+- Contrato no sentido negativo: gate trocado por `false` → `gates(s) reprovado(s): gitleaks`, saída 1 (arquivo restaurado depois).
+- Gitleaks no sentido negativo: repositório temporário com chave de formato AWS → `leaks found: 1`, saída 1.
+
+**Ficou aberto:**
+- O `semgrep` bloqueou o primeiro push porque o literal do canário estava no `CHANGELOG`/`CONCLUSION`. Reescrito sem o valor; o achado está registrado nos dois documentos.
+- Higiene de dispositivos segue como ritual + `scripts/encerrar-dispositivos.sh`, sem gate.
+
 ### cline/de6b0 — Kentron: perfil do projeto e shellcheck como gate
 - **Início**: 2026-11-20 23:52 (UTC) · **Última atualização**: 2026-11-21 00:00 (UTC)
 - **Repositório**: `kentron-music` · **Branches**: `feature/perfil-e-shellcheck` (de `main` `d5f2bbf`; integrada por merge `--ff-only` → `310199a`) · **Worktrees**: diretório principal
