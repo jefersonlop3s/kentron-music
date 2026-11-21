@@ -27,7 +27,15 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
-Nenhum.
+### cline/0caf3 — Retomada das fichas do hinário (wire do gate + consolidação do asset)
+- **Início:** 2026-11-21 21:42 (UTC) · **Última atualização:** 2026-11-21 21:42 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `cline/0caf3` (= `main` `846f4c1`; cada unidade nova sai daí com nome próprio) · **Worktrees:** `~/.cline/worktrees/0caf3/app-music`
+- **Demanda:** dar sequência à entrega das fichas — asset e gate já estão na `main`; faltam o wire do gate no pre-push e a consolidação com `hinos_dominio_publico.tsv`.
+- **Paths sob edição:** `.githooks/pre-push`, `scripts/verificar_fichas.py`, `scripts/prova-verificar-fichas.sh`, `crates/mir_engine/assets/` — ordem das unidades a confirmar com o dono.
+- **Status:** em andamento
+- **PRs:** nenhum
+
+**Estado assumido (21:42):** worktree `de6b0` removido com prova (detached, **0 commits à frente**, árvore limpa, 8,1 GB só de build ignorado); diretórios órfãos `40e55`/`b5088` apagados; **nenhum stash**; resta o principal e este worktree, ambos em `846f4c1` = `origin/main`.
 
 ## 🟡 Interrompido / órfão
 
