@@ -35,6 +35,18 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/de6b0 — Kentron: `pt` é pt-BR por gate
+- **Início:** 2026-11-21 10:30 (UTC) · **Última atualização:** 2026-11-21 10:45 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `feature/gate-pt-br` (de `main` `afe97f0`; integrada por merge `--ff-only`) · **Worktrees:** diretório principal
+- **Demanda:** o dono fixou que `pt` é português do Brasil, sem duplicação de ARB, e que isso não é negociável.
+- **Paths sob edição:** nenhum (concluído).
+- **Status:** concluído — `main` = `origin/main` = `53651b4`, bateria verde no push.
+- **PRs:** nenhum (merge `--ff-only` local).
+
+**Feito:** `tools/check_arb.py` reprova grafia de português europeu em `app_pt.arb` (`ecrã`, `secção`, `ficheiro`, `utilizador`, `telemóvel`, `autocarro`, `connosco`, `receção`); `pt_PT` segue livre para a variante europeia. `AGENTS.md` registra a regra e o gate.
+
+**Provado:** positivo com os cinco ARBs atuais (incluindo o "Ecrã" do `pt_PT`); negativo ao injetar "Ecrã" no `pt` — o gate reprovou apontando a chave e a palavra, e voltou a passar depois de restaurar. Push com todos os gates verdes.
+
 ### cline/de6b0 — Kentron: prova de navegador, locales e piloto automatizado
 - **Início:** 2026-11-21 09:30 (UTC) · **Última atualização:** 2026-11-21 10:20 (UTC)
 - **Repositório:** `kentron-music` · **Branches:** `feature/locales-pt-br` (de `main` `acf94f8`; integrada por merge `--ff-only`) · **Worktrees:** diretório principal
