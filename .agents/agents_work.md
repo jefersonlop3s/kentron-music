@@ -285,7 +285,7 @@ Nenhum.
 **Ficou aberto:**
 - **Toolchains duplicadas:** resolvido por remoção — o cask do Flutter saiu (fica só `~/development/flutter`) e o cask `android-platform-tools` também (fica só o `adb` do SDK).
 - **Disco:** **25 GB livres** — apertado para builds de iOS; `~/Library/Developer/Xcode/DerivedData` e `apps/kentron_app/build/` são os candidatos de limpeza.
-- **Máquinas de pé:** emulador Android (`emulator -avd kentron`) e simulador iOS (iPhone 17 bootado) — encerrar quando não precisar.
+- **Máquinas de pé:** **nenhum** emulador nem simulador — verificado por `scripts/encerrar-dispositivos.sh --dry-run` em 2026-11-21 (`OK: nenhum emulador/simulador rodando`), corrigindo a anotação anterior que os dava como ligados. O que está conectado é **dispositivo físico**: Motorola Edge 50 Neo (`0088871620`, USB) para a medição do whisper, com **~1,2 GB** em `/data/local/tmp/whisper` (binário arm64 + 4 `.so` + `small-q5_1` 190 MB + `medium-q5_0` 539 MB + âncoras) — limpar quando a campanha de medição fechar.
 - **Ver no navegador / Android / iOS:** ✅ todos feitos.
 - Instalações: NDK + Flutter pinado na `lab` (build Android por Docker), SDK/JDK/NDK no Mac (emulador) e Xcode (iOS — só o dono, via App Store). Matriz de versões medida na fonte: compileSdk/targetSdk **36**, minSdk **24**, **NDK 28.2.13676358**, Gradle **9.5.0**, AGP **9.3.1**, KGP **2.4.20**, **JDK ≥ 17**.
 
