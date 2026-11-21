@@ -40,12 +40,13 @@ Nenhum.
 - **Repositório**: `kentron-music` · **Branches**: `feature/contrato-validacao` + `fix/semgrep-canario` (de `main` `99012e3`; integradas por merge `--ff-only` → `3d6b826`) · **Worktrees**: diretório principal
 - **Demanda**: o dono decidiu que a bateria inteira **não** roda em toda invocação de validação e que derrubar emulador como gate é perigoso; o que vale como validação real é o gitleaks (mais o CI completo no `pre-push`).
 - **Paths sob edição**: nenhum (concluído).
-- **Status**: concluído — `main` = `origin/main` = `3d6b826`, bateria verde no push.
+- **Status**: concluído — `main` = `origin/main` = `66eacf1`, bateria verde no push.
 - **PRs**: nenhum (integração por merge `--ff-only`).
 
 **Feito:**
 - **`.harness.toml` `[validation]`:** `configured = true` com um gate explícito — `gitleaks`, mesmo argv do `gate_gitleaks` do `pre-push`. O contrato recusava push por desenho enquanto estivesse vazio; agora declara a validação barata e real. A bateria completa continua no `pre-push`, onde já era aplicada.
 - **Higiene de dispositivos:** registrado na skill que **não** vira gate — derrubar dispositivo dentro de um comando de verificação é destrutivo para quem estiver com `flutter run`.
+- **`origin/HEAD` para `main`:** o GitHub já tinha `main` como default; o ref **local** `refs/remotes/origin/HEAD` é que apontava para `master`. Corrigido com `git remote set-head origin -a`, sem mudança no GitHub.
 
 **Provado:**
 - `validation.py check` → `gates: gitleaks`, `80 commits scanned`, `no leaks found`, saída 0.
