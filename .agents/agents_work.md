@@ -35,6 +35,21 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/de6b0 — Kentron: letra na cifra (fonte declarada + alinhamento ao áudio)
+- **Início:** 2026-11-21 14:30 (UTC) · **Última atualização:** 2026-11-21 14:50 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `feature/letra-na-cifra` (de `main` `d383eae`; integrada por merge `--ff-only`) · **Worktrees:** diretório principal
+- **Demanda:** o dono pediu a **letra renderizada na cifra**, buscada em "fontes oficiais" e cruzada com o áudio, sem custo legal nem computacional.
+- **Paths sob edição:** nenhum (concluído).
+- **Status:** concluído — `main` = `origin/main`, bateria verde. **A ADR-0012 está em proposta**: o achado é que fonte "oficial" de letra é paga e proíbe armazenar o texto, então "oficial" e "sem custo legal" não convivem — o aceite e a escolha são do dono.
+- **PRs:** nenhum (merge `--ff-only` local).
+
+**Feito:** `mir_engine::lyrics` (procedência obrigatória, corpus de domínio público pré-1900 com regra de entrada no arquivo, frases vocais por energia 200–3500 Hz, alinhamento com confiança por linha) e `mir_engine::sheet` (a cifra vira `Song` do domínio, acorde na sílaba). CLI: `--letra`, `--hino`, `--listar-hinos`, `--frases-vocais`.
+
+**Provado:** 11 testes Rust (incluindo ida e volta pelo parser do app e fixture dourada) + **32 do Flutter**, com a tela do Modo Palco desenhando a letra e o acorde da fixture que o motor gerou, pela ponte real. Detector de frase vocal medido em três desenhos: 1 frase de 385 s (pico global) → 4 frases exatas no sintético e **63 frases cobrindo 302 s de 400 s** no áudio real (máximo recente).
+
+**Fora desta entrega, declarado:** letra por ASR e tablatura (peso no `models/MANIFEST.toml`), entrada de letra na interface do app, e a calibração do detector no repertório inteiro.
+
+
 ### cline/de6b0 — Kentron: motor MIR (cifra, estrutura e dinâmica a partir do áudio)
 - **Início:** 2026-11-21 13:40 (UTC) · **Última atualização:** 2026-11-21 14:30 (UTC)
 - **Repositório:** `kentron-music` · **Branches:** `feature/mir-primeiro-incremento` e `feature/mir-contraprova-hermetica` (de `main` `06f43f8`; ambas integradas por merge `--ff-only`) · **Worktrees:** diretório principal
