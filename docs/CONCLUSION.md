@@ -781,3 +781,48 @@ Criada em [`docs/legal/termo-de-uso.md`](legal/termo-de-uso.md) com 14 cláusula
 
 
 
+
+## R4 · Spike de ASR em três músicas reais, e as primeiras fichas do hinário (2026-11-21)
+
+**Status:** 🟢 Custo **e** qualidade medidos em material real. O dono mandou os MP3 e as fotos do hinário impresso.
+
+### As três músicas escolhidas, e por quê
+| Papel no teste | Música | Duração |
+|---|---|---|
+| **Âncora (WER)** | *Essência da Adoração* — David Quinlan e Mari Rocha | 400 s |
+| **Repertório real** | *Galileu* — Fernandinho (está na planilha do repertório) | 315 s |
+| **Outro estilo** | *Incondicional* — Oficina G3 (banda, mixagem densa) | 258 s |
+
+A âncora foi escolhida porque **a letra dela já estava em contexto** — o dono colou a cifra completa do CifraClub numa mensagem anterior —, o que dá verdade de referência legítima sem material novo. **Descoberta no caminho:** este MP3 é **a mesma gravação** que o link do YouTube do primeiro incremento: LUFS integrado idêntico (**−12,6**), duração idêntica (400,4 s) e mesma curva de dinâmica. A música que eu analisei às cegas no começo tem nome: *Essência da Adoração*, David Quinlan e Mari Rocha.
+
+### Custo (Mac/Metal, `whisper.cpp`)
+| Música | `small` | `medium` |
+|---|---|---|
+| âncora (400 s) | 9,1 s / 974 MB | 16,2 s / 2.307 MB |
+| repertório (315 s) | 4,6 s / 964 MB | 18,7 s / 2.336 MB |
+| banda (258 s) | 3,9 s / 984 MB | 9,9 s / 2.272 MB |
+
+**`medium` roda a ~25× o tempo real** → o repertório inteiro (313 músicas × 5 min) sai em **~63 min de CPU neste Mac**. O gargalo não é tempo: é **memória — 2,3 GB de pico**, que é o que decide no smartphone.
+
+### Qualidade: o que o número mostra (e o que ele não mostra)
+- **Na âncora**, WER do bloco conhecido (pré-refrão, 31 palavras): **3% no `small` e 10% no `medium`** — os dois transcrevem bem o canto; a diferença nesse tamanho de bloco não é sinal.
+- **`repertorio-small` classificou a música inteira como "[música]"** — **25 de 25 segmentos**, apenas 27 palavras transcritas —, enquanto o **`repertorio-medium` produziu 263 palavras com 1 único "[música]"**. É o achado que **sustenta a escolha do dono com dado**: em material de repertório real, o `small` pode simplesmente não transcrever.
+- Loops caíram muito em relação ao `tiny`/`base` (1 a 4 linhas idênticas, contra **82** do `tiny`): a alucinação em loop é fenômeno dos modelos pequenos.
+- **Ressalva metodológica registrada:** o WER de bloco só vale para a música cuja letra se conhece. Os 90–94% medidos nas outras duas **não são qualidade** — são a ausência daquele bloco nelas. Reportar isso como nota seria mentir.
+- **Cuidado de pipeline:** o WAV de 16 kHz serve para a ASR, **não** para a análise musical — o mesmo áudio deu 133,9 BPM em 16 kHz contra **129,2 BPM** em 44,1 kHz. Análise roda na taxa original.
+
+### As primeiras fichas lidas do hinário impresso (fatos, sem letra)
+O **Cantor Cristão Cifrado (2011)** imprime a ficha **em cada hino**: `Autoria:`, `Tradução:`, `Melodia:` — **com anos de nascimento e falecimento**. Três páginas fotografadas:
+
+| Hino | Título | Autoria | Tradução | Melodia | Veredito |
+|---|---|---|---|---|---|
+| 01 | Antífona | Maxwell Wright (1849-1931) | — | William H. Monk (1823-1889) | **domínio público** (BR: 1931+71 = 2002) |
+| 03 | Louvor ao Senhor | William E. Entzminger (1859-1930) | — | Robert Lowry (1826-1899) | **domínio público** (BR: 1930+71 = 2001) |
+| 09 | **Santo** | Reginald Heber (1783-1826) | **João Gomes da Rocha (1861-1947)** | J. B. Dykes (1823-1876) | **domínio público** (BR: 1947+71 = **2018**) |
+
+O hino **09** é um dos **10** do repertório do dono (a lista diz "Santo, Santo, Santo | 09 Cantor Cristão") — **a primeira ficha do repertório está resolvida**, e veio do livro dele. Consequência de método: a campanha de fichas deixa de ser pesquisa e passa a ser **fotografar a página do hino**.
+
+### Achado legal que muda o que se pode ingerir do livro
+A ficha catalográfica do **Cantor Cristão Cifrado** (JUERP/EME, 2011) diz: **"Todos os direitos reservados"**, *"É proibida a reprodução total ou parcial deste livro… por quaisquer meios: eletrônicos, mecânicos, **fotográficos**, xerográficos, gravação…"*, e ainda que o livro **"contém o nosso sistema de cifragem"** (incluindo o "**SOLOS POR NÚMEROS**", o sistema de tablatura deles).
+
+Leitura honesta: **fato não é protegido** — autor, tradutor e datas eu posso ler e registrar (e é o que sustenta a ficha). Mas **a letra transcrita e a cifra daquela edição são do editor**, e o *sistema de cifragem* é reivindicado por eles. Nosso desenho não precisa de nada disso: **derivamos a cifra do áudio** e a letra vem do usuário. As fotos **não entram no repositório** e ficaram em `/tmp/hinario`.
