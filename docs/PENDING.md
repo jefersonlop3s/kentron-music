@@ -35,6 +35,8 @@ Parser ChordPro, transposição e testes dourados já integrados à `main`; o re
 - [ ] Empacotar `score.musicxml` e `tabs/*.atex` no bundle: a ADR-0006 já os prevê, mas o v1 escreve só o `.cho`.
 - [ ] Contêiner de arquivo único (zip) para exportação: v1.1 da ADR-0006, se o piloto exigir compartilhar por arquivo.
 - [x] **UI de leitor de cifras (Modo Palco):** `SongReaderPage` desenha a cifra inteira com acorde sobre a letra, transposta pelo tom, e alterna contraste; alcançável pela tela inicial. Provada por 5 testes herméticos e 3 provas reais na ponte (`readSong`, `transposeSong`, `keyChoices`).
+- [x] **Modo projeção manual em tela cheia:** `ProjectionPage` projeta uma seção por vez, sem acorde, com avanço por toque, setas do teclado ou rodapé; aberta pelo botão "Projetar" do leitor. Provada por 5 testes herméticos.
+- [ ] Projeção em tela secundária (ou janela do OBS): o modo em tela cheia é o conteúdo; falta o transporte para a segunda tela.
 - [ ] Setlists utilizáveis no Modo Palco (navegar de uma música para a próxima sem voltar à biblioteca).
 - [ ] Implementar exportação OpenLyrics/Holyrics e validar XML.
 - [ ] Validar Browser Source para OBS sem `obs-websocket`.

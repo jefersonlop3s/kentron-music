@@ -68,5 +68,17 @@
   "stageOpenReader": "Open chord chart",
   "@stageOpenReader": {
     "description": "Button on the home screen that opens Stage Mode."
+  },
+  "stageProject": "Project",
+  "@stageProject": {
+    "description": "Opens the manual projection view from Stage Mode."
+  },
+  "stageProjectNext": "Next section",
+  "@stageProjectNext": {
+    "description": "Advances the projection to the next section."
+  },
+  "stageProjectPrevious": "Previous section",
+  "@stageProjectPrevious": {
+    "description": "Goes back to the previous section in the projection."
   }
 }

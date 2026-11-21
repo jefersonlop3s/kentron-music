@@ -2,6 +2,16 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [R1-C] Modo projeção manual em tela cheia
+### Adicionado
+- `ProjectionPage` (`apps/kentron_app/lib/src/stage/projection_page.dart`): uma seção por vez, sem acorde, com avanço por toque (metade esquerda/direita), setas do teclado e rodapé com contador e botões anterior/próxima. Abre pelo botão **Projetar** no leitor.
+- Chaves `stageProject`, `stageProjectNext` e `stageProjectPrevious` nos três ARBs-base.
+### Verificado
+- 5 testes herméticos do modo projeção (render sem acorde, avanço/volta, limites desabilitados, toque e teclado) + 1 prova de abertura a partir do leitor.
+- Suíte do app: **22 testes** passando; `flutter analyze` sem achados.
+### Nota
+- O modo em tela cheia é o **conteúdo** da projeção; o transporte para tela secundária ou janela do OBS segue aberto e não foi marcado como entregue.
+
 ## [R1-C] Leitor de cifras (Modo Palco) entregue e ligado à tela inicial
 ### Adicionado
 - **`SongReaderPage`** (`apps/kentron_app/lib/src/stage/song_reader_page.dart`): desenha a cifra inteira, acorde sobre a letra, com transposição por tom, alternância de contraste e erro do núcleo visível (não engolido). Carregador, transpositor e tons são injetáveis para os testes herméticos.

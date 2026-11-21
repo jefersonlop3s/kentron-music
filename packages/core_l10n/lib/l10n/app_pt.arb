@@ -15,5 +15,8 @@
   "stageContrast": "Contraste",
   "stageKey": "Tom",
   "stageLoadFailed": "Não foi possível carregar a cifra",
-  "stageOpenReader": "Abrir cifra"
+  "stageOpenReader": "Abrir cifra",
+  "stageProject": "Projetar",
+  "stageProjectNext": "Próxima seção",
+  "stageProjectPrevious": "Seção anterior"
 }

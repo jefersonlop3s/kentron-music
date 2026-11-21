@@ -356,3 +356,22 @@
 - Setlists utilizáveis no Modo Palco.
 - Ensaio assistido com dados sobrevivendo a fechar/reabrir.
 
+## R1 · Modo projeção manual em tela cheia (2026-11-21)
+
+**Status:** 🟢 Conteúdo da projeção pronto e aberto pelo leitor; transporte para segunda tela/OBS segue aberto.
+
+### O que foi entregue
+- `ProjectionPage`: uma seção por vez, sem acorde, com letra grande. Avanço por toque (metade esquerda/direita), setas do teclado e rodapé com contador e botões anterior/próxima. Limites desabilitam o botão em vez de sair do intervalo.
+- Botão **Projetar** no leitor abre a projeção com a cifra já lida — a projeção não relê o texto nem toca no núcleo de novo.
+- Chaves `stageProject`, `stageProjectNext` e `stageProjectPrevious` nos três ARBs-base.
+
+### Provas
+- 5 testes herméticos do modo projeção: render sem acorde, avanço/volta, limites, toque e teclado.
+- 1 prova de abertura a partir do leitor.
+- Suíte do app: **22 testes** passando; `flutter analyze` sem achados.
+
+### O que continua aberto
+- Transporte para **tela secundária** ou **janela do OBS** (Browser Source). O modo em tela cheia é o conteúdo; falta o canal para a segunda tela — não foi marcado como entregue.
+- Setlists no Modo Palco.
+- Ensaio assistido do R1-C.
+

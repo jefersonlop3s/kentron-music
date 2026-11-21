@@ -118,6 +118,26 @@ void main() {
     expect(pedido, 'D');
   });
 
+  testWidgets('abre a projeção a partir do leitor', (tester) async {
+    await tester.pumpWidget(
+      _montar(
+        const SongReaderPage(
+          input: 'ignorado',
+          ler: _ler,
+          transpor: _transpor,
+          tons: _tons,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Project'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Verse'), findsOneWidget);
+    expect(find.text('1 / 1'), findsOneWidget);
+  });
+
   testWidgets('mostra a falha do núcleo em vez de engolir', (tester) async {
     Future<SongDetail> lerQuebrado(String _) async {
       throw StateError('ponte caiu');

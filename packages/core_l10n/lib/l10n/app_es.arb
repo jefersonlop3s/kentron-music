@@ -15,5 +15,8 @@
   "stageContrast": "Contraste",
   "stageKey": "Tono",
   "stageLoadFailed": "No se pudo cargar el cifrado",
-  "stageOpenReader": "Abrir cifrado"
+  "stageOpenReader": "Abrir cifrado",
+  "stageProject": "Proyectar",
+  "stageProjectNext": "Sección siguiente",
+  "stageProjectPrevious": "Sección anterior"
 }

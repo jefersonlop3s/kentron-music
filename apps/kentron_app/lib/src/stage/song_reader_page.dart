@@ -1,6 +1,7 @@
 import 'package:core_l10n/core_l10n.dart';
 import 'package:kentron_app/src/rust/bridge.dart';
 import 'package:kentron_app/src/stage/chord_line.dart';
+import 'package:kentron_app/src/stage/projection_page.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Tokens do DESIGN.md usados no Modo Palco.
@@ -102,6 +103,16 @@ class _SongReaderPageState extends State<SongReaderPage> {
     }
   }
 
+  void _abrirProjecao() {
+    final cifra = _cifra;
+    if (cifra == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ProjectionPage(song: cifra),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = CoreL10n.of(context);
@@ -114,6 +125,11 @@ class _SongReaderPageState extends State<SongReaderPage> {
       appBar: AppBar(
         title: Text(titulo),
         actions: <Widget>[
+          IconButton(
+            tooltip: l10n.stageProject,
+            onPressed: _cifra == null ? null : _abrirProjecao,
+            icon: const Icon(Icons.slideshow),
+          ),
           IconButton(
             tooltip: l10n.stageContrast,
             onPressed: () => setState(() => _palco = !_palco),
