@@ -627,6 +627,36 @@ classificação (ADR-0012) — domínio público por ficha: 1 · sem ficha: 2
 - O **formato de licença continua decisão do dono**, e o projeto não inventa um. O que ele recebeu é a informação para decidir, não uma decisão tomada por mim.
 - `load_refuses_a_newer_schema` precisou acompanhar o bump do schema — teste calibrado por constante, não por número solto.
 
+## ADR-0012 · Fronteira de produto e o repertório real medido (2026-11-21)
+
+**Status:** 🟢 Medição feita, fronteira escrita. Nada de código mudou — e isso é o correto: aqui era hora de medir antes de construir.
+
+### A fronteira que o dono fixou
+> "É **entrada de usuário**, não que o produto decida sobre isso ou repertório."
+
+Repertório e versão **são do usuário**. O produto mede, posiciona e declara procedência — não escolhe o que se canta, não diz qual versão vai ao ar, não substitui a equipe. Escrito na ADR com o número que sustenta a decisão.
+
+### O que o repertório real mostrou (313 linhas exportadas)
+- **299 títulos distintos · 295 obras distintas** normalizando `(Ao Vivo)`/`(Live)`/`- Part. X` · **156 artistas**.
+- **O export já carrega os dois eixos da ADR-0012**: obra (`Song name`+`Artist`), versão (`Album`/`Version name`/`Version notes`), **fonograma com link em 299 das 313 linhas**, tom (293) e BPM (224). O modelo do produto **casou com o que a equipe já preenche** — sem campo inventado.
+- **244 linhas trazem a nuance de execução no próprio texto** ("Masculino: A / Feminino: D"): é exatamente o que o dono pediu para preservar na primeira mensagem, e agora tem lugar formal (`Execucao.versao` + `Execucao.tom`).
+- **O corpus de domínio público classifica 0 das 313.** Ele é de hinos ingleses pré-1900; o repertório é português.
+
+### As duas coortes — e por que a distinção importa
+| Coorte | Linhas | O que resolve |
+|---|---|---|
+| Hinário (Cantor Cristão, Harpa) | **10** | **ficha do tradutor** → veredito de domínio público, com a regra |
+| Contemporâneo | **303** | **atribuição + decisão de licença do dono**; nenhuma ficha torna essas obras livres |
+
+Dizer isso é o oposto de vender magia: `SEM FICHA` será a resposta da maior parte do repertório, e **não é falha do motor** — é a natureza daquelas obras.
+
+### Correção de escala (minha, não dele)
+Eu havia lido "mais de 1000 músicas" como tamanho de repertório; são **execuções por ano**. O repertório limpo é de **~300 obras**. Consequência prática: o esforço de ficha saiu de inviável para **factível**, e a lista priorizada pelo uso (`--relatorio-uso`) diz por onde começar.
+
+### Artefato para a próxima rodada
+Planilha de campanha em `/tmp/kentron-repertorio-campanha.tsv` (dado do dono, **fora do repositório**): título, artista, versão, notas de versão, tom, vídeo, coorte e colunas vazias de ficha (autor, ano, falecimento, base) para preencher. As 10 linhas de hinário vêm primeiro.
+
+
 
 
 

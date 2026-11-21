@@ -112,3 +112,23 @@ Decisão registrada:
 
 ### Ressalva que se mantém
 Continua **não sendo parecer jurídico**. O que a ADR garante é que o app não afirme domínio público sem ficha, não trate gravação como obra, e não publique o que nasceu privado.
+
+## Emenda · A entrada é do usuário; o produto não decide repertório nem versão (2026-11-21)
+
+O dono fixou a fronteira de produto, ao contar como a equipe trabalha hoje:
+
+> "O OBS Studio + Holyrics é facilitar que as versões que tocamos, as letras sejam transmitidas conforme nossa execução; logo, é **entrada de usuário**, não que o produto decida sobre isso ou repertório."
+
+### Decisão
+
+1. **Repertório e versão são entrada do usuário.** O produto **não** escolhe o que se canta, **não** decide qual versão é a certa e **não** substitui a decisão da equipe sobre arranjo, tom ou letra. O que ele faz é **medir, posicionar e declarar procedência**.
+2. **Medido no repertório real (313 linhas exportadas do app atual, 2026-11-21):** o export do usuário **já carrega os dois eixos desta ADR** — `Song name`+`Artist` (obra), `Album`/`Version name`/`Version notes` (versão), `Video` (fonograma com link), `Key` e `BPM` (execução). O modelo do produto **não inventa campos**: ele casa com o que a equipe já preenche.
+3. **Os links de letra e cifra que a planilha aponta (`letras.mus.br`, `cifraclub.com.br`, em 54–56 das 313 linhas) são do usuário, não do produto.** O app não os busca: ele **deriva a cifra do áudio** e recebe a letra do usuário, sob a responsabilidade e a licença dele (decisão anterior desta ADR).
+4. **O corpus de domínio público atual não cobre este repertório — medido: 0 de 313.** Ele é de hinos ingleses pré-1900; o repertório é português, com **10 linhas** de hinário (Cantor Cristão, Harpa) que exigem **ficha do tradutor** e **303** obras contemporâneas, que nenhuma ficha torna livres. Consequência honesta: para o hinário a ficha resolve; para o contemporâneo, o que resolve é **atribuição + decisão de licença do dono** — e o relatório de uso é o dado dessa decisão, não um veredito que eu dou.
+
+### Consequências
+
+- **Ganho:** a fronteira fica escrita — nem o produto escolhe repertório, nem o corpus se arvora em juiz do que a igreja canta. E o modelo já provado casa com o export existente, o que torna a migração do app atual mecânica.
+- **Limite aceito:** `SEM FICHA` continuará sendo a resposta da maior parte do repertório contemporâneo, e isso **não é falha do motor** — é a natureza daquelas obras.
+- **Escala real corrigida:** o repertório limpo tem **cerca de 300 obras distintas** (295 normalizando sufixos como "(Ao Vivo)"), não as 1000+ que eu havia lido — aquele número é de execuções por ano, não de obras distintas.
+

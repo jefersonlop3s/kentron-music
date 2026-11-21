@@ -2,6 +2,23 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [ADR-0012] Fronteira de produto e o repertório real medido (2026-11-21)
+### Medido
+- O dono exportou o repertório do app atual (313 linhas, `.xlsx`) e fixou a fronteira: **a versão e o repertório são entrada do usuário**; o produto não decide o que se canta nem qual versão vai ao ar. OBS + Holyrics são o transporte — o Kentron pretende substituí-los medindo e posicionando, não opinando.
+- **313 linhas · 299 títulos distintos (295 normalizando "(Ao Vivo)"/"(Live)"/"- Part.") · 156 artistas.**
+- **O export do usuário já carrega os dois eixos da ADR-0012:** `Song name`+`Artist` = obra; `Album`/`Version name`/`Version notes` = versão; `Video` = fonograma com link (**299 das 313**); `Key` (**293**) e `BPM` (**224**) = execução. **244 linhas** trazem nuance de execução no próprio texto ("Masculino: A / Feminino: D") — a nuance que o dono pediu para preservar desde o começo, agora num campo nosso (`Execucao`).
+- **O corpus de domínio público classifica 0 das 313 obras.** Ele é de hinos ingleses pré-1900; o repertório é português — **10 linhas** de hinário (Cantor Cristão, Harpa) e **303** contemporâneas.
+- **`letras.mus.br` / `cifraclub.com.br` aparecem em 54–56 linhas** — é o caminho de letra e cifra que a equipe usa hoje. O produto **não** os busca: deriva a cifra do áudio e recebe a letra do usuário (ADR-0012).
+- Qualidade de dado observada: em pelo menos uma linha o campo `Video` contém link de letra — o importador **não pode confiar no rótulo da coluna**, tem de olhar o domínio da URL.
+
+### Decidido
+- **Emenda à ADR-0012:** repertório e versão são entrada do usuário; o produto mede, posiciona e declara procedência. Escrito com o número que sustenta: o corpus atual **não** cobre este repertório, e `SEM FICHA` será a resposta da maior parte dele — o que **não é falha do motor**, é a natureza daquelas obras (contemporâneas, protegidas).
+- Duas coortes de trabalho, com tratamentos diferentes: **hinário** (ficha do tradutor → veredito de domínio público) e **contemporâneo** (atribuição + decisão de licença do dono; o relatório é o dado da decisão, não um veredito meu).
+
+### Ressalvas
+- **Escala corrigida:** o repertório limpo é de **~300 obras distintas**; as "1000+ por ano" que eu havia lido são **execuções**, não obras. Isso muda o esforço das fichas de inviável para factível.
+- Nada de código mudou nesta rodada: é medição e decisão. O corpus embutido segue com 4 hinos e **não** foi ampliado com hinários brasileiros — o que exige a ficha do tradutor, hino a hino (PENDING).
+
 ## [ADR-0006 emendada] A agenda vira o relatório de uso (2026-11-21)
 ### Adicionado
 - **`Execucao`**: a obra **e a versão em que foi tocada** (versão + tom). A mesma obra volta em outro culto e **nem sempre na mesma versão** — sem isso duas execuções diferentes viram a mesma linha.
