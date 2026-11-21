@@ -846,6 +846,34 @@ Falta **um**: **"A mensagem da Cruz" (291 na Harpa Cristã)** — o dono **não 
 
 **Procedência (ADR-0012) na prática:** o "Tudo Entregarei" está na planilha do dono como *Harpa Cristã*, mas foi fotografado do **Cantor Cristão Cifrado nº 295**. A ficha registra **de qual edição** veio o fato — sem isso, duas edições com traduções diferentes do mesmo hino apareceriam como contradição em vez de serem duas obras distintas.
 
+### Fontes externas: o que cada uma entrega, e o que uma delas erra
+
+O dono passou endereços para completar as fichas. Medido o que cada fonte dá — e o resultado muda o desenho do asset:
+
+| fonte | o que entrega | o que **não** entrega |
+|---|---|---|
+| `revistaebd.com.br/cantor-cristao/<n>` | título e **nomes com datas** | **o tradutor, em todos os hinos que cruzei**, e não separa autoria/tradução/melodia |
+| `hinologia.org/cantor-cristao-cc/` | **001–581 número → título** + história das edições (1891; 1924 com música; 37ª ed. = 581 hinos) | ficha por hino |
+| `hinologia.org/harpa-crista/` | **número → título** (paginado) | ficha por hino |
+| `harpacrista.digital/hinos/291-…` | letra completa (com "todos os direitos reservados" do site) | **nenhum crédito**: autor, tradutor, melodia, nada |
+| `revistaebd.com.br/harpa-crista/291` | letra e título | **nenhum crédito** |
+
+**A armadilha, medida:** o `revistaebd` **omite o tradutor em todos os hinos que cruzei** — e o tradutor é exatamente quem decide o veredito em três dos dez hinos dele. No **112** o site lista Steffe e Howe (1819-1910) e **cala o Pitrowsky (1965)**: quem se guiasse por ele concluiria **domínio público**, o oposto do correto. No **92** cala o Hazlett; no **295** cala o Ginsburg.
+
+**E um erro de data:** o site dá **"William Paton MacKay (1847-1929)"** no hino 135, enquanto a **ficha impressa do livro do dono diz William Paton MacKay (1839-1885)**. Hipótese do erro (marcada como hipótese): 1847-1929 são as datas do **tradutor daquele hino no livro**, **James Theodore Houston (1847-1929)** — o site parece ter colado as datas do tradutor no autor e descartado o tradutor. A fonte web não é só incompleta: **erra onde a impressa acerta**.
+
+Conclusão de método: a **ficha impressa do livro do dono permanece a fonte primária**, e cada linha do asset precisa registrar **de onde veio o fato e quais campos aquela fonte trazia** — a procedência do ADR-0012 passa a ser obrigatória **por campo**, não por hino.
+
+### O número só identifica junto com o hinário
+
+O dono avisou: *"o 291 da Harpa Cristã não existe no Cantor Cristão — naturalmente ele não é um hino batista tradicional como os presentes no Cantor Cristão"*. **Conferido em fonte independente: o Cantor Cristão nº 291 é "Comunhão Celeste"**, outra obra. Isso **corrige o meu próprio refinamento** anterior: eu havia dito que a numeração é convenção compartilhada e que é ela que liga a planilha ao hino — vale **dentro de cada hinário**, não entre hinários. A identidade de um hino é o **par (hinário, número)**, e é isso que a ficha precisa guardar. É a mesma razão pela qual o "Tudo Entregarei" da planilha (anotado como *Harpa Cristã*) apareceu fotografado do **Cantor Cristão nº 295**: sem o hinário, o número mente.
+
+### A Harpa Cristã ficou sem ficha — e isso é estado legítimo, não pendência disfarçada
+
+Nenhuma das fontes disponíveis publica a ficha do **291 A Mensagem da Cruz**: nem autor, nem tradutor, nem melodia. Esse hino — um dos que ele canta, que trouxe de outra igreja batista — fica **declaradamente sem ficha**, em vez de preenchido por inferência. O que é público sobre "The Old Rugged Cross" (**George Bennard, 1873-1958** → domínio público no Brasil só em **2029**) fica registrado como **não verificado no livro**, e o **tradutor da versão em português da Harpa não é conhecido por estas fontes** — o que, por si só, já impediria veredito. A Harpa (1922, oficial das Assembleias de Deus) carrega camada de tradução brasileira do século XX: se o 291 seguir o padrão do 112, o texto em português **provavelmente não está livre**.
+
+**Nota que amarra a camada protegida:** os dois hinos protegidos do repertório dele são dos **dois principais colaboradores brasileiros do Cantor Cristão** — **Manoel Avelino de Souza (29 hinos)** e o **Pastor Ricardo Pitrowsky (23 hinos)**, segundo o próprio hinologia.org. Não é azar: em repertório batista, a camada protegida é justamente a **tradução brasileira do século XX**.
+
 **Nota de mapeamento (correção de um erro meu nesta sessão):** o campo da planilha diz "Exultação | Cantor Cristão **015**" e isso é o **hino 15** — não o hino 01. O hino **01 é *Antífona*** (Wright/Monk), outra obra, que eu havia juntado com a Exultação numa mensagem anterior sem que a foto tivesse sido lida; a foto do livro desfez o nó. Fica registrado porque é a diferença entre **ler a fonte** e **inferir do número**.
 
 Duas naturezas que o desenho tinha previsto como hipótese e que o repertório real trouxe:
