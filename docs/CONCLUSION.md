@@ -681,6 +681,32 @@ Planilha de campanha em `/tmp/kentron-repertorio-campanha.tsv` (dado do dono, **
 - **ASR não implementado** — falta o peso no `MANIFEST`. O enquadramento (ato do usuário, escopo privado, `pode_publicar`) está pronto e provado.
 - A **titularidade da adaptação feita pela própria equipe** tem modelo, mas ainda não tem fluxo: quando a equipe adapta, ela é a titular, e isso precisa aparecer na ficha sem eu presumir por ela.
 
+## ADR-0012 · Como o Letras.mus.br / Cifra Club licencia — investigado nos Termos de Uso (2026-11-21)
+
+**Status:** 🟢 Investigação concluída com evidência primária (os próprios Termos de Uso e a Política de Privacidade).
+
+### Como a leitura foi feita (e o que ela custou)
+A borda **Akamai** (`errors.edgesuite.net`) recusa clientes automatizados: **HTTP 403** no `fetch`, no `curl` local e **até no Chromium headless**, e também das máquinas da LAN (`playwright` 192.168.6.221, `lab`). Com **navegador visível** e **sem stealth, sem user-agent falso, sem trocar de rota**, as páginas abriram (HTTP 200). Li **uma vez cada** documento; da página de letra extraí **apenas o rodapé de atribuição** — nenhum verso. Os scripts ficaram em `/tmp` (fora do repositório) e **não serão versionados**: manter no repo uma ferramenta que lê site que proíbe extração é convite a mau uso.
+
+### O que os termos dizem, literalmente
+- **"somos meros 'provedores de aplicações', nos termos do Marco Civil da Internet… Não nos cabe lançar ou postar qualquer conteúdo nos nossos sites… sendo a postagem de conteúdo, portanto, uma faculdade exclusiva dos nossos usuários. Por essa razão, como meros provedores, não nos responsabilizamos pelos conteúdos postados pelos usuários. Isso fica a cargo deles."**
+- **"Em relação aos direitos autorais, nós pressupomos que você lançará em nossos sites unicamente conteúdos livres e/ou licenciados… Nossa responsabilidade se limita a retirar conteúdos do ar sempre que viermos a receber uma ordem judicial nesse sentido, nos termos do Marco Civil da Internet (art. 19)."**
+- **"Não nos responsabilizamos por eventual violação de direitos da personalidade, direitos autorais, direitos conexos e direitos de marca… decorrente de qualquer conteúdo postado por usuários."**
+- Procedimento de retirada: notificação por e-mail com as URLs e prova de titularidade; **"Retirar o conteúdo do ar antes de receber uma ordem judicial é uma prerrogativa, um direito nosso, não propriamente uma obrigação."**
+- Compromisso do usuário: **nunca** "usar quaisquer métodos de prospecção ou métodos semelhantes de **extração de dados**".
+- **Acervo:** não há cláusula de licenciamento de obra de terceiro **nem de cessão de direito ao assinante**; a propriedade intelectual citada é a **da plataforma** (softwares, cursos, marcas), expressamente **não cedida** ao usuário.
+
+### A resposta à pergunta do dono
+**Não existe licença de letra nesse modelo.** Existe: **(1)** presunção de que quem envia tinha o direito; **(2)** limitação da responsabilidade da plataforma à retirada após ordem judicial (Marco Civil, art. 19); **(3)** isenção expressa; **(4)** canal de notificação. Um acervo de **3,9 milhões** de letras não é resultado de 3,9 milhões de acordos — é resultado disso. E o rodapé que o dono encontrou (**"Enviada por {usuário}… Revisões por 10 pessoas… Essa informação está errada? Nos avise"**) é a operação desse modelo em campo.
+
+**Assinatura:** vende **serviço** — sem anúncios, offline, cursos, treino de idioma. Nada cede direito sobre música. Detalhe revelador: ao cancelar, **até o conteúdo já baixado é bloqueado**.
+
+### O que isso confirma no projeto
+- O **modo teatro / tela cheia** que o próprio Letras oferece mostra o desenho regulatório aceito no mercado: **a ferramenta entrega a exibição; a responsabilidade é de quem a usa.** É exatamente a escolha da ADR-0012.
+- O caminho lícito para acervo de terceiro é **permissão pedida, concedida e creditada** — como no meio hinológico ("© Bill H. Ichter — **permissão concedida** à página Hinologia Cristã"; "dados **cedidos gentilmente** por D. Betty Antunes de Oliveira").
+- Raspar segue **proibido pelo próprio contrato** deles e desnecessário para nós: derivamos a cifra do áudio e recebemos a letra do usuário sob a licença dele.
+
+
 
 
 
