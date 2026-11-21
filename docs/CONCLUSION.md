@@ -917,6 +917,14 @@ Autores e Tradutores"** do hinário oficial da CPAD (p.722) traz **`A.A. → Ant
 | datas | 1879-1969 | hinologia.org (biografia) — secundária |
 | original | "The Old Rugged Cross", George Bennard (1873-1958) | doctypemusic — secundária, não no livro |
 
+**Correção desta tabela (2026-11-21, ao auditar o registro da sessão):** a saída de OCR está no
+histórico e diz **`A.A. - Anlúniv Almeida`**. O nome **Antônio Almeida** é **correção de leitura**,
+sustentada apenas por fonte secundária (hinologia.org, 1879-1969) — **não** é o que está impresso, e a
+linha "primária" acima está **errada**. O que a fonte primária sustenta é a **sigla `AA.` no hino** e a
+**existência da entrada `A.A.` no índice**. O ano **2040 fica provisório** até a conferência a olho do
+índice impresso; o veredito permanece **protegido** porque é a direção segura, e o asset passou a
+registrar isso na própria linha (`fonte_traducao` + `observacao`).
+
 **Veredito: PROTEGIDO até 2040** (1969+71) — a versão em português é a camada que manda, e é a mais
 longa dos dez. A edição é **CPAD © 2007**, "todos os direitos reservados para a língua portuguesa":
 mesma regra do Cantor Cristão Cifrado — **só fatos**; PDF e fotos fora do repositório.
@@ -967,9 +975,11 @@ O dono exigiu o número **no aparelho dele**, não uma estimativa. Feito: `whisp
 
 O repertório de dez hinos deixou de viver só como prosa no PENDING: virou
 `crates/mir_engine/assets/fichas_hinario.tsv`, **12 fichas** chaveadas pelo par **(hinário, número)** —
-**8 em domínio público, 3 protegidas e 1 GAP**. A procedência é **por linha** (`fonte`), porque a ficha
-do 291 só fecha em três fontes: sigla impressa (`AA.`, Cifrada p.255) → índice de autores do próprio
-hinário (CPAD p.722) → biografia (hinologia.org, 1879-1969).
+**8 em domínio público, 3 protegidas e 1 GAP**. A procedência é **por campo** — `fonte_autoria`,
+`fonte_traducao` e `fonte_melodia` —, porque a ficha do 291 só se sustenta em três elos: sigla
+impressa (`AA.`) → índice de autores do próprio hinário (CPAD p.722, **lido por OCR** como
+`Anlúniv Almeida`) → biografia (hinologia.org, 1879-1969). O nome "Antônio Almeida" é **correção de
+OCR + fonte secundária**, e o gate passou a exigir `observacao` sempre que a procedência citar OCR.
 
 **O limite legal virou mecanismo, não recomendação.** `scripts/verificar_fichas.py` reprova veredito
 fora de `pd|protegido|gap|sem_ficha`, `pd`/`protegido` sem ano, `gap` sem observação, `fonte` vazia,

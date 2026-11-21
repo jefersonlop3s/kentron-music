@@ -27,13 +27,16 @@ Placar medido dos 10: **6 domínio público** (09, 15, 46, 135, 295, 377), **3 p
 3. **A conta é pela morte mais recente entre autoria, tradução e melodia.** No Brasil: 70 anos
    contados de 1º de janeiro do ano seguinte ao falecimento — na prática, `ano_da_morte + 71`.
 4. **A camada que costuma mandar é a tradução brasileira do século XX**, não a letra original.
-   Casos reais: 291 (A.A., 1969 → 2040); 112 (Pitrowsky, 1965 → 2036); 385 (Avelino de Souza, 1962 → 2033).
+   Casos reais: 291 (`A.A.`, 1969 → 2040 — **ano provisório**: a sigla→nome veio de OCR corrigido
+   por fonte secundária); 112 (Pitrowsky, 1965 → 2036); 385 (Avelino de Souza, 1962 → 2033).
 5. **Fonte primária é o exemplar impresso.** O *Cantor Cristão Cifrado* imprime `Autoria:`,
    `Tradução:`, `Melodia:` **com anos** em cada hino. Fonte web é secundária: além de omitir o
    tradutor, errou a data do MacKay no 135 (deu 1847-1929, que são as datas do **tradutor** daquele
    hino no impresso).
-6. **Procedência por campo** — quem trouxe autoria, quem trouxe tradução, quem trouxe melodia. O
-   crédito pode vir do próprio hino (sigla) e o nome/datas de índice e biografia.
+6. **Procedência por campo, e o gate cobra** — `fonte_autoria`, `fonte_traducao`, `fonte_melodia`: o
+   crédito pode vir do próprio hino (sigla) e o nome/datas de índice e biografia. Campo com valor e
+   fonte vazia **reprova**; procedência que cita **OCR** exige `observacao` dizendo o que é leitura e
+   o que é inferência (caso `Anlúniv Almeida` → "Antônio Almeida", 2026-11-21).
 7. **A edição cifrada é obra protegida** (Cantor Cristão Cifrado, EME/JUERP 2011; Harpa Cristã
    Cifrada, CPAD © 2007 — "todos os direitos reservados para a língua portuguesa"): entram **só
    fatos**. Letra e cifra da edição **nunca**; fotos e PDFs **fora do repositório**.

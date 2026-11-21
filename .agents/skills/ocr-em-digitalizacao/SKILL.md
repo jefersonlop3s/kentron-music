@@ -8,7 +8,9 @@ description: Como extrair dado de hinário ou documento que só existe em PDF es
 Caso de origem (2026-11-21): a **Harpa Cristã Cifrada** (521 páginas) e a **Harpa Cristã tradicional
 CPAD** (724 páginas) vieram em PDF **sem camada de texto** (`get_text()` devolvia 0 caracteres em 6
 páginas). Com OCR nativo saíram, do próprio livro, o crédito do hino 291 (`AA.`) e o **Índice de
-Autores e Tradutores** (CPAD p.722) que fecha `A.A. → Antônio Almeida`.
+Autores e Tradutores** (CPAD p.722), cujo OCR trouxe **`A.A. - Anlúniv Almeida`**: o índice
+**localiza** a entrada, mas **não fecha o nome** — "Antônio Almeida" foi correção de leitura apoiada
+em fonte secundária, e chamar isso de leitura do impresso foi o erro de 2026-11-21.
 
 ## Mecânica
 
@@ -27,8 +29,10 @@ Autores e Tradutores** (CPAD p.722) que fecha `A.A. → Antônio Almeida`.
    `P.L.M.`, `D.L.`, `S.N.`); o nome sai do **índice do próprio livro**, quase sempre nas últimas
    páginas (`Índice de Autores e Tradutores`).
 6. **Valide no sentido negativo**: confirme o número pelo **índice das primeiras linhas** ("... 291").
-7. **OCR erra nome próprio** (`Anlúniv Almeida` = Antônio Almeida): use o OCR para **localizar** e
-   confirme o nome no índice impresso ou em fonte limpa.
+7. **OCR erra nome próprio** (`Anlúniv Almeida` para Antônio Almeida): use o OCR para **localizar** e
+   confirme o nome no impresso (a olho) ou em fonte limpa. **Registre a procedência com o cru e a
+   correção** — achar que a correção "obvia" é a leitura foi o que fez `Anlúniv Almeida` virar fato
+   nos documentos em 2026-11-21.
 
 ## O que NÃO fazer
 
