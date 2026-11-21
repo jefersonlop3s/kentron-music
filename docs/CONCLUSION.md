@@ -838,3 +838,36 @@ Ele está certo, e a "contradição" que ele percebe é **aparente**, não real:
 - **texto em domínio público** — o que já caiu não volta a ser de alguém por aparecer numa edição nova.
 
 Correção que eu faço nos meus próprios registros: a frase "a letra transcrita e a cifra daquela edição são do editor" continua válida para **a cifra e a transcrição daquela edição**; passou a valer mal-entendido se lida como "o hinário inteiro é deles". O caminho do projeto — **fatos para a ficha, cifra derivada do áudio, letra do usuário** — não encosta em nada reivindicado pelo editor, e ainda ganha com o argumento dele: a **numeração compartilhada** é justamente o que liga "377 Cantor Cristão" da planilha ao hino do livro.
+
+## R4 · Medição no aparelho: `whisper` no Motorola Edge 50 Neo (2026-11-21)
+
+O dono exigiu o número **no aparelho dele**, não uma estimativa. Feito: `whisper.cpp` compilado para **`arm64-v8a` com o NDK 28.2** e executado **no próprio celular**, sobre o **mesmo áudio âncora de 400,4 s** (16 kHz mono) da linha de base do Mac — para ser comparável, e não uma corrida entre áudios diferentes.
+
+**Aparelho (lido do sistema, não de catálogo):** `motorola edge 50 neo`, SoC **MT6878** (MediaTek), **Android 16 / SDK 36**, `arm64-v8a`, **8 núcleos**, **MemTotal 7.608.552 kB ≈ 7,26 GiB**, 70 GB livres.
+
+**Método:** `VmHWM` (pico real, do `/proc`) amostrado 1×/s **dentro do aparelho** — sem ida-e-volta pelo `adb` a cada amostra; tempo lido do `whisper_print_timings` **e** conferido contra o relógio de parede (bateram: `total time` 220.042 ms contra 220 s medidos por fora); texto comparado **no mesmo formato** dos dois lados (`-otxt`).
+
+| áudio âncora (400,4 s) | `small-q5_1` no celular | `small-q5_1` no Mac | `medium-q5_0` no Mac |
+|---|---|---|---|
+| tempo total | **220 s (3 min 40 s)** | 5,76 s | 13,67 s (8 threads) |
+| fator sobre o tempo real | **1,82× mais rápido** | 69× | 29× |
+| encode por janela | 7,67 s (16 janelas) | — | — |
+| **pico de memória** | **570.132 kB ≈ 557 MB** | 632 MB | 1.250 MB |
+
+**`medium-q5_0` no celular** (trecho de 60 s, 8 threads): **89,7 s**, encode **22,55 s por janela**, load 0,89 s, pico **1.162.076 kB ≈ 1,11 GB**. Ou seja: o `medium` é **3,1× mais lento** que o `small` no aparelho (contra 2,5× no Mac) — é mais limitado por banda de memória.
+
+### O que isso decide
+
+1. **A memória deixou de ser o limite duro.** O obstáculo era o **2,3 GB** do `medium` fp16; quantizado, o `medium` cabe no aparelho com **1,11 GB** e o `small` com **557 MB**, contra 7,26 GiB de RAM.
+2. **O tempo virou o limite.** O hino de 6:40 leva **3 min 40 s** com `small` no celular; projetando o `medium` (22,5 s por janela × 16 + tokens), **~10 min** — não é interativo nem aceitável como padrão no aparelho. Como a medição anterior sustentou o **`medium` como padrão de qualidade**, a conta empurra para **processar no servidor/desktop** (ou lote noturno no carregador) e usar o aparelho para capturar e revisar. **Não decido isso sozinho:** onde o `medium` roda é escolha de arquitetura do dono.
+3. **Throttling térmico é medido, não suposto:** a janela de encode do `small` foi de **6,99 s** (rodada de 60 s) para **7,67 s** (rodada de 400 s) — **+9,7%** de degradação sustentada. Estimativa de lote feita com rodada curta **subestima** o tempo.
+4. **8 threads vencem 4 no celular:** 29,2 s contra 33 s no trecho (encode 6,99 contra 8,13 s) — **12%**. E os 8 núcleos são 4×A78 + 4×A55: o ganho vem com os pequenos junto.
+5. **Reprodutibilidade depende do tamanho do modelo:** o `small` deu saída **quase idêntica** no Mac e no celular (só a última linha difere: "antes de meu chego" contra "aonde meu chego"); o `medium` divergiu mais (`[Música]` contra `Música`, frases diferentes). Para resultado estável entre plataformas, `small` é mais previsível.
+6. **Qualidade (mesmo trecho):** o `medium` acertou o que o `small` errou — *"Anseando oferecer / … Pra abençoar teu coração"* contra *"Anciam vou oferecer / … Pra vencer o ar teu coração"*. Confirma o achado anterior, agora no trecho curto.
+
+### Lições de mecânica (custaram tempo nesta sessão)
+
+- **`whisper-cli` sai linkado em `.so`, não estático.** Só rodou no aparelho depois de empurrar `libwhisper.so` + `libggml{,-base,-cpu}.so` **e** usar `LD_LIBRARY_PATH` **absoluto** — o `.` relativo **não resolve** no linker do Android. Para o app é a mesma família de problema da skill `empacotamento-rust-flutter`: link estático ou empacotar as `.so`.
+- **O `adb` não vê o aparelho só por ele estar no USB.** O celular expunha **uma** interface (`0xFF/0xFF/0x00`, nomeada "MTP") e **nenhuma** de ADB (`0xFF/0x42/0x01`): com a depuração inerte **não existe diálogo a aceitar** — o diálogo é consequência da interface, não causa. Depois de religar o switch **com o cabo conectado**, o celular re-enumerou e a interface nasceu (`ADB Interface@1`), flagrada ao vivo por um observador de 2 min.
+- **`system_profiler SPUSBDataType` devolve vazio neste shell** (sem permissão); a ferramenta é o `ioreg` (`IOUSBHostDevice`/`IOUSBHostInterface`). Foi o que **evitou** o diagnóstico errado de "troque o cabo": o aparelho sempre esteve no barramento, com o nome do modelo e o serial.
+- **Contagem de palavras só vale no mesmo formato.** Minha primeira comparação (620 contra 311) era **artefato meu**: a rodada do Mac imprimiu timestamps e o `wc -w` contou os tokens de tempo. Refeito com `-otxt` dos dois lados: **41 contra 40** no trecho. Medição comparada em formatos diferentes não é medição.
