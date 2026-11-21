@@ -656,6 +656,32 @@ Eu havia lido "mais de 1000 músicas" como tamanho de repertório; são **execu�
 ### Artefato para a próxima rodada
 Planilha de campanha em `/tmp/kentron-repertorio-campanha.tsv` (dado do dono, **fora do repositório**): título, artista, versão, notas de versão, tom, vídeo, coorte e colunas vazias de ficha (autor, ano, falecimento, base) para preencher. As 10 linhas de hinário vêm primeiro.
 
+## ADR-0012 · Sem catálogo, repertório móvel e obra derivada (2026-11-21)
+
+**Status:** 🟢 Decisões registradas e modeladas; 17 suítes de Rust verdes.
+
+### O que o dono corrigiu
+1. **Meu enquadramento de escala estava incompleto, não errado:** o repertório **já teve mais de 1000 obras**; as 313 de hoje vêm de um enxugamento que acontece (na intenção a cada 6 meses, na prática ano a ano), e as **execuções** é que são numerosas. Ou seja: **o repertório anda** — e nada no produto pode assumir catálogo estável.
+2. **"A ideia é o produto nascer sem catálogo"**, com onboarding explicando o funcionamento e o usuário o alimentando.
+3. **Transcrever a letra do áudio é o caminho principal**; letra fornecida é **opção** para quando a versão muda frases.
+4. **O caso "Maravilhosa Graça" → "Tremenda Graça"**: mesmo sentido, versos, poesia e música; **título e frases mudam**. Não é o mesmo caso de tradução nem é a mesma obra.
+
+### O que isso produziu
+- **O corpus não é catálogo**: é **tabela de referência de ficha**, que só responde quando o usuário traz a obra. Escrito na ADR — evita que alguém (inclusive uma sessão futura) o trate como repertório sugerido.
+- **O relatório é foto datada de repertório móvel**; o que se acumula é **histórico de execução**, e **ficha conferida não expira** (obra que sai pode voltar).
+- **Obra derivada ganhou modelo:** `adaptador`/`adaptador_morte` (o campo que era `tradutor`, porque **tradução é o primeiro caso de adaptação**) e **`obra_original`** — vínculo, não fusão. O caso geral que o dono descreveu (4 acordes de obra livre com frases novas) fica explícito: **a obra original pode ser livre e a adaptação, não**.
+- **O ASR ganhou um argumento técnico que eu não tinha visto:** para obra derivada, **é a única fonte**. Nenhuma base oficial tem "Tremenda Graça"; o áudio tem. Isso reforça a prioridade que o dono deu.
+
+### Provas
+- `adaptacao_com_frases_novas_e_obra_propria_e_nao_herda_o_veredito`: original de 1779 → domínio público; adaptação com adaptador falecido em 2015 → **protegida**, com a regra nomeando o **adaptador**.
+- Demonstração no CLI: mesma obra dá `domínio público (vida de Autor Antigo (1807) + 70 anos)`; a adaptação dá `protegido (vida de Adaptador da equipe (2015) + 70 anos)` e, nos EUA, `indeterminado — obra derivada: falta o ano de publicação da adaptação`.
+
+### Ressalvas
+- **Onboarding não existe** (PENDING): a decisão é o produto nascer vazio e explicar; a interface não foi feita.
+- **ASR não implementado** — falta o peso no `MANIFEST`. O enquadramento (ato do usuário, escopo privado, `pode_publicar`) está pronto e provado.
+- A **titularidade da adaptação feita pela própria equipe** tem modelo, mas ainda não tem fluxo: quando a equipe adapta, ela é a titular, e isso precisa aparecer na ficha sem eu presumir por ela.
+
+
 
 
 

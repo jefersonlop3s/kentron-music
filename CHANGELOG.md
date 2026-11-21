@@ -2,6 +2,28 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [ADR-0012] Sem catálogo, repertório móvel e obra derivada (2026-11-21)
+### Decidido
+- **O produto nasce sem catálogo**, com **onboarding** explicando o funcionamento e o usuário o alimentando (palavras do dono). Consequência declarada: o corpus de domínio público embutido **não é catálogo** — é **tabela de referência de ficha**, que só responde quando o usuário traz uma obra com aquele título. Ele não sugere repertório nem aparece como biblioteca.
+- **O repertório é móvel.** O dono corrigiu meu enquadramento: o repertório **já teve mais de 1000 obras**; as 313 de hoje vêm de um enxugamento que acontece (na intenção a cada 6 meses, na prática ano a ano), e as **execuções** é que são numerosas. Nada no produto pode assumir catálogo estável: o que se mantém é **histórico de execução**, e o relatório é **foto datada de repertório que anda**. Ficha conferida não expira — obra que sai pode voltar.
+- **Obra derivada é obra própria.** Caso do dono: **"Maravilhosa Graça"** e a versão **"Tremenda Graça"** — sentido, versos, poesia e música (cifra, refrões, arranjos) iguais, mas **título e frases mudam**. Não é tradução nem é a mesma obra: é **obra derivada**, julgada **pelo autor dela**. O caso geral que ele descreveu — *4 acordes de uma obra de domínio público com frases novas* — significa que **a obra original pode ser livre e a adaptação, não**.
+- **Alinhamento da letra (sem mudança de decisão):** transcrever do áudio é o caminho **principal**; letra fornecida é **opção** para quando a versão muda frases. A capacidade fica no produto; o **ato continua declarado como do usuário**, com escopo privado do grupo. Ganho técnico que só apareceu agora: **ASR é a única fonte da letra adaptada** — nenhuma fonte oficial tem "Tremenda Graça"; o áudio tem.
+
+### Adicionado
+- **`Obra.adaptador` / `adaptador_morte`** (o campo que era `tradutor`): **tradução é o primeiro caso de adaptação**, e o julgamento é o mesmo — pelo autor da obra derivada.
+- **`Obra.obra_original`**: referência à obra de que deriva, para "mesma música, outro título e outras frases". É vínculo, **não fusão** — o veredito de uma não empresta para a outra.
+- `--ficha` aceita a ficha com os novos campos e imprime o vínculo quando há adaptação.
+
+### Verificado
+- **`adaptacao_com_frases_novas_e_obra_propria_e_nao_herda_o_veredito`**: "Maravilhosa Graça" (1779) é domínio público; "Tremenda Graça" com adaptador falecido em 2015 é **protegida**, e a regra **nomeia o adaptador**. A ficha guarda `obra_original`.
+- Demonstração real: mesma obra → `domínio público (vida de Autor Antigo (1807) + 70 anos)`; adaptação → `protegido (vida de Adaptador da equipe (2015) + 70 anos)` e, nos EUA, `indeterminado — obra derivada: falta o ano de publicação da adaptação`.
+- **17 suítes de Rust verdes** (9 testes só de ficha/obra) e 32 do Flutter; `clippy -D warnings` limpo.
+
+### Ressalvas
+- **O onboarding não existe** — é item de PENDING; a decisão é que o produto nasça vazio e explique, mas a interface ainda não foi feita.
+- **A transcrição por ASR continua não implementada** (exige peso no `models/MANIFEST.toml`). O que existe é o enquadramento completo: origem declarada, escopo privado do grupo e `pode_publicar` reprovando.
+- O corpus segue com **4 hinos** e agora carrega a coluna de **obra derivada**; ampliá-lo com hinários brasileiros continua exigindo a ficha do adaptador/tradutor, hino a hino.
+
 ## [ADR-0012] Fronteira de produto e o repertório real medido (2026-11-21)
 ### Medido
 - O dono exportou o repertório do app atual (313 linhas, `.xlsx`) e fixou a fronteira: **a versão e o repertório são entrada do usuário**; o produto não decide o que se canta nem qual versão vai ao ar. OBS + Holyrics são o transporte — o Kentron pretende substituí-los medindo e posicionando, não opinando.

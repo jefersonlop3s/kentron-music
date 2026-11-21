@@ -46,8 +46,10 @@ impl Jurisdicao {
 /// A **obra** (letra e música): protegida por si, independente de quem gravou.
 ///
 /// A ficha é o que sustenta o veredito — sem ela o motor **não afirma** domínio
-/// público (fail-loud). `tradutor` existe porque **tradução é obra própria**: um
-/// hinário de 1922 pode conter tradução de 1980.
+/// público (fail-loud). `adaptador` existe porque **tradução e adaptação com
+/// frases novas são obra própria**: hinário de 1922 pode conter tradução de 1980,
+/// e "Tremenda Graça" é adaptação de frases novas sobre música antiga. A obra
+/// derivada é julgada **pelo autor dela**.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Obra {
     pub titulo: String,
@@ -55,9 +57,13 @@ pub struct Obra {
     pub ano: u16,
     /// Ano de falecimento do autor: é o que decide vida+70 no Brasil.
     pub autor_morte: Option<u16>,
-    pub tradutor: Option<String>,
-    /// Ano de falecimento do tradutor, quando a letra é tradução.
-    pub tradutor_morte: Option<u16>,
+    /// Autor da tradução ou da adaptação, quando a letra é derivada.
+    pub adaptador: Option<String>,
+    /// Ano de falecimento do adaptador, quando há adaptação.
+    pub adaptador_morte: Option<u16>,
+    /// Obra de que esta deriva ("mesma música, outro título e outras frases").
+    /// É referência, não fusão: o veredito de uma **não** empresta para a outra.
+    pub obra_original: Option<String>,
     /// Procedência da ficha: edição, hinário, partitura.
     pub base: String,
 }
@@ -126,9 +132,10 @@ impl Escopo {
 /// erro possível nesta função.
 #[must_use]
 pub fn veredito_pd(obra: &Obra, jurisdicao: Jurisdicao, ano_corrente: u16) -> Veredito {
-    // Tradução é obra própria: quem manda é o tradutor, não o autor original.
-    let (nome, morte) = match &obra.tradutor {
-        Some(tradutor) => (tradutor.clone(), obra.tradutor_morte),
+    // Tradução e adaptação são obra derivada: quem manda é o autor **dela**, não
+    // o autor do original. PD + adaptação recente = adaptação protegida.
+    let (nome, morte) = match &obra.adaptador {
+        Some(adaptador) => (adaptador.clone(), obra.adaptador_morte),
         None => (obra.autor.clone(), obra.autor_morte),
     };
 
@@ -156,12 +163,12 @@ pub fn veredito_pd(obra: &Obra, jurisdicao: Jurisdicao, ano_corrente: u16) -> Ve
                     motivo: "sem ano de publicação".to_owned(),
                 };
             }
-            if obra.tradutor.is_some() {
-                // Nos EUA quem decide é a data de publicação **da tradução**, que a
-                // ficha não carrega separada do original — e o original pode ser um
-                // século mais antigo que a tradução.
+            if obra.adaptador.is_some() {
+                // Nos EUA quem decide é a data de publicação **da adaptação**, que
+                // a ficha não carrega separada do original — e o original pode ser
+                // um século mais antigo.
                 return Veredito::Indeterminado {
-                    motivo: "tradução: falta o ano de publicação da tradução".to_owned(),
+                    motivo: "obra derivada: falta o ano de publicação da adaptação".to_owned(),
                 };
             }
             if obra.ano < PRIMEIRO_ANO_PROTEGIDO_EUA {
@@ -311,7 +318,8 @@ pub fn do_corpus(titulo: &str) -> Option<Letra> {
 
 /// Lê as fichas do corpus embutido. Uma linha por obra; campo vazio é ausente.
 ///
-/// Formato: `titulo, autor, ano, autor_morte, tradutor, tradutor_morte, base, verso`.
+/// Formato: `titulo, autor, ano, autor_morte, adaptador, adaptador_morte,
+/// obra_original, base, verso`.
 fn obras_do_corpus() -> Vec<Obra> {
     CORPUS_DOMINIO_PUBLICO
         .lines()
@@ -321,7 +329,7 @@ fn obras_do_corpus() -> Vec<Obra> {
         })
         .filter_map(|linha| {
             let campos: Vec<&str> = linha.split('\t').collect();
-            if campos.len() < 8 {
+            if campos.len() < 9 {
                 return None;
             }
             Some(Obra {
@@ -329,9 +337,10 @@ fn obras_do_corpus() -> Vec<Obra> {
                 autor: campos[1].trim().to_owned(),
                 ano: campos[2].trim().parse().unwrap_or(0),
                 autor_morte: campos[3].trim().parse().ok(),
-                tradutor: Some(campos[4].trim().to_owned()).filter(|t| !t.is_empty()),
-                tradutor_morte: campos[5].trim().parse().ok(),
-                base: campos[6].trim().to_owned(),
+                adaptador: Some(campos[4].trim().to_owned()).filter(|t| !t.is_empty()),
+                adaptador_morte: campos[5].trim().parse().ok(),
+                obra_original: Some(campos[6].trim().to_owned()).filter(|t| !t.is_empty()),
+                base: campos[7].trim().to_owned(),
             })
         })
         .collect()
@@ -341,10 +350,10 @@ fn obras_do_corpus() -> Vec<Obra> {
 fn verso_de(titulo: &str) -> Option<Vec<String>> {
     CORPUS_DOMINIO_PUBLICO.lines().find_map(|linha| {
         let campos: Vec<&str> = linha.split('\t').collect();
-        if campos.len() < 8 || campos[0].trim() != titulo {
+        if campos.len() < 9 || campos[0].trim() != titulo {
             return None;
         }
-        let linhas: Vec<String> = campos[7]
+        let linhas: Vec<String> = campos[8]
             .split(" | ")
             .map(|l| l.trim().to_owned())
             .filter(|l| !l.is_empty())

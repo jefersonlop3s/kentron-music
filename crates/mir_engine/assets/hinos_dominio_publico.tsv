@@ -6,7 +6,7 @@
 #      gravação de ontem de obra de 1822 continua protegida, e o app NUNCA dá
 #      veredito de domínio público sobre ela. Regravação "em outra roupagem",
 #      com link de YouTube, é fonograma de terceiro e se declara à parte.
-#   2. **Tradução é obra própria.** Hinário antigo (Harpa Cristã 1922, Cantor
+#   2. **Tradução e adaptação com frases novas são obra própria.** Hinário antigo (Harpa Cristã 1922, Cantor
 #      Cristão 1891) reúne traduções que podem ser MUITO mais novas que o
 #      original. Se a letra é traduzida, `tradutor` e `tradutor_morte` são
 #      obrigatórios — sem eles o veredito é Indeterminado, e Indeterminado não
@@ -21,7 +21,7 @@
 #      base é ficha sem procedência.
 #
 # Formato (TSV, uma obra por linha, `#` comenta; campo vazio = ausente):
-#   titulo \t autor \t ano \t autor_morte \t tradutor \t tradutor_morte \t base \t verso
+#   titulo \t autor \t ano \t autor_morte \t adaptador \t adaptador_morte \t obra_original \t base \t verso
 #   verso separa as linhas da letra por ` | `.
 #
 # Fichas conferidas em 2026-11-21 (datas de falecimento de domínio público
@@ -34,7 +34,7 @@
 #     Cantor Cristão inclusive: a tradução é obra nova, de autor que pode ter
 #     falecido há menos de 70 anos. Entram só com a ficha do tradutor.
 
-Amazing Grace	John Newton	1779	1807			texto original em inglês; edição de domínio público	Amazing grace! how sweet the sound | That saved a wretch like me! | I once was lost, but now am found | Was blind, but now I see.
-Come, Thou Fount of Every Blessing	Robert Robinson	1758	1790			texto original em inglês; edição de domínio público	Come, Thou Fount of every blessing | Tune my heart to sing Thy grace | Streams of mercy, never ceasing | Call for songs of loudest praise
-Holy, Holy, Holy	Reginald Heber	1826	1826			texto original em inglês; edição de domínio público	Holy, holy, holy! Lord God Almighty! | Early in the morning our song shall rise to Thee | Holy, holy, holy! merciful and mighty | God in three Persons, blessed Trinity!
-Rock of Ages	Augustus Toplady	1763	1778			texto original em inglês; edição de domínio público	Rock of Ages, cleft for me | Let me hide myself in Thee | Let the water and the blood | From Thy wounded side which flowed
+Amazing Grace	John Newton	1779	1807				texto original em inglês; edição de domínio público	Amazing grace! how sweet the sound | That saved a wretch like me! | I once was lost, but now am found | Was blind, but now I see.
+Come, Thou Fount of Every Blessing	Robert Robinson	1758	1790				texto original em inglês; edição de domínio público	Come, Thou Fount of every blessing | Tune my heart to sing Thy grace | Streams of mercy, never ceasing | Call for songs of loudest praise
+Holy, Holy, Holy	Reginald Heber	1826	1826				texto original em inglês; edição de domínio público	Holy, holy, holy! Lord God Almighty! | Early in the morning our song shall rise to Thee | Holy, holy, holy! merciful and mighty | God in three Persons, blessed Trinity!
+Rock of Ages	Augustus Toplady	1763	1778				texto original em inglês; edição de domínio público	Rock of Ages, cleft for me | Let me hide myself in Thee | Let the water and the blood | From Thy wounded side which flowed

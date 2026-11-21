@@ -132,3 +132,34 @@ O dono fixou a fronteira de produto, ao contar como a equipe trabalha hoje:
 - **Limite aceito:** `SEM FICHA` continuará sendo a resposta da maior parte do repertório contemporâneo, e isso **não é falha do motor** — é a natureza daquelas obras.
 - **Escala real corrigida:** o repertório limpo tem **cerca de 300 obras distintas** (295 normalizando sufixos como "(Ao Vivo)"), não as 1000+ que eu havia lido — aquele número é de execuções por ano, não de obras distintas.
 
+## Emenda · Sem catálogo embarcado, repertório móvel e obra derivada (2026-11-21)
+
+Três correções do dono, e uma delas é sobre um caso que eu não tinha modelado.
+
+### 1. O produto nasce **sem catálogo**, com onboarding
+
+Decisão do dono: **"a ideia é o produto nascer sem catálogo e termos um onboard explicando o funcionamento e o usuário atuando"**. Nada de repertório embarcado, nada de lista nossa de músicas: o produto chega vazio, explica como funciona e o usuário o alimenta.
+
+Consequência: o corpus de domínio público embutido **não é catálogo** — é **tabela de referência de ficha** (obra, autor, falecimento, base), que só responde quando o usuário traz uma obra com esse título. Ele não sugere repertório, não aparece como biblioteca e não substitui o onboarding.
+
+### 2. O repertório é **móvel** — o número é foto, não alvo
+
+O dono corrigiu meu enquadramento: o repertório **já teve mais de 1000 obras**; as 313 de hoje são o resultado de um enxugamento que acontece (na intenção, a cada 6 meses; na prática, ano a ano), e as **execuções** são gigantescas em número.
+
+Consequência de desenho: nada no produto pode assumir catálogo estável. O que ele mantém é **histórico de execução** — e é exatamente por isso que a agenda (ADR-0006, emenda) é o registro, e o relatório é **foto datada de um repertório que anda**. Ficha conferida não expira; obra que sai do repertório continua com ficha, porque pode voltar.
+
+### 3. Obra derivada: **frases novas são obra própria**
+
+Caso do dono: **"Maravilhosa Graça"** e a versão **"Tremenda Graça"** — sentido, versos, poesia e música (cifra, refrões, arranjos) são os mesmos, mas **mudam o título e as frases**.
+
+Isso não é tradução nem é a mesma obra: é **obra derivada**, com autor próprio. E o caso mais importante: **milhares de execuções são feitas sob 4 acordes de uma obra de domínio público e sob frases que são novas** — ou seja, **a obra original pode ser de domínio público e a adaptação, não** (e, se a adaptação é da própria equipe, é **dela** — e aí ela decide).
+
+Decisão:
+- O campo que era `tradutor` passa a `adaptador` (nome geral): **tradução é o primeiro caso de adaptação**, e o julgamento é o mesmo — **a obra derivada é julgada pelo autor dela**, não pelo autor do original.
+- A ficha ganha **`obra_original`**: referência à obra de que deriva, para o caso "mesma música, outro título e outras frases". É o que permite dizer "esta é a versão X de Y" sem fundir as duas numa só.
+- Consequência declarada: **o veredito da obra original não empresta** para a derivada. PD + adaptação recente = **adaptação protegida**, com a regra dita.
+
+### 4. Alinhamento sobre a letra (para não haver dúvida)
+O dono quer **transcrever a letra do áudio** como caminho principal, e a letra fornecida como **opção** para quando a versão muda frases. Está coerente com a decisão já tomada: **a capacidade fica no produto; o ato é declarado como do usuário**; a cifra nasce com escopo privado do grupo. E há um ganho técnico que só aparece agora: **ASR é a única fonte da letra adaptada** — nenhuma fonte oficial tem "Tremenda Graça"; o áudio tem.
+
+

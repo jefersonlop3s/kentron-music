@@ -13,7 +13,7 @@
 //! cargo run -p mir_engine -- musica.wav --chordpro --letra l.txt --extraida-por "José"
 //! cargo run -p mir_engine -- --listar-hinos                             # fichas do corpus
 //! cargo run -p mir_engine -- --auditar-corpus                            # confere as fichas
-//! cargo run -p mir_engine -- --ficha "Título|Autor|1822|1868|||Harpa Cristã"
+//! cargo run -p mir_engine -- --ficha "Título|Autor|1822|1868|Adaptador|morte do adaptador|obra original|base"
 //! cargo run -p mir_engine -- --relatorio-uso <pasta-do-bundle>   # uso + fichas
 //! ```
 //!
@@ -82,14 +82,27 @@ fn main() -> ExitCode {
             autor: campo(1).to_owned(),
             ano: campo(2).parse().unwrap_or(0),
             autor_morte: campo(3).parse().ok(),
-            tradutor: Some(campo(4).to_owned()).filter(|t| !t.is_empty()),
-            tradutor_morte: campo(5).parse().ok(),
-            base: campo(6).to_owned(),
+            // Tradução e adaptação com frases novas: obra derivada, autor próprio.
+            adaptador: Some(campo(4).to_owned()).filter(|t| !t.is_empty()),
+            adaptador_morte: campo(5).parse().ok(),
+            obra_original: Some(campo(6).to_owned()).filter(|t| !t.is_empty()),
+            base: campo(7).to_owned(),
         };
         println!(
             "obra:  {} — {} ({}), base: {}",
             obra.titulo, obra.autor, obra.ano, obra.base
         );
+        if let Some(adaptador) = &obra.adaptador {
+            let morte = obra.adaptador_morte.map_or_else(
+                || "falecimento não informado".to_owned(),
+                |ano| format!("falecido em {ano}"),
+            );
+            let original = obra
+                .obra_original
+                .as_deref()
+                .unwrap_or("obra original não informada");
+            println!("  derivada: adaptação/tradução de {adaptador} ({morte}) sobre {original}");
+        }
         for jurisdicao in [Jurisdicao::Brasil, Jurisdicao::Eua] {
             println!(
                 "  {}: {}",

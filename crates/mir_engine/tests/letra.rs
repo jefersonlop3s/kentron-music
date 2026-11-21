@@ -46,8 +46,9 @@ fn ficha_incompleta_nao_vira_dominio_publico() {
         autor: "Autor Desconhecido".to_owned(),
         ano: 1822,
         autor_morte: None,
-        tradutor: None,
-        tradutor_morte: None,
+        adaptador: None,
+        adaptador_morte: None,
+        obra_original: None,
         base: "Harpa Cristã".to_owned(),
     };
     let veredito = lyrics::veredito_pd(&sem_morte, Jurisdicao::Brasil, 2026);
@@ -65,8 +66,9 @@ fn obra_de_1822_com_gravacao_de_ontem_nao_vira_gravacao_livre() {
         autor: "Autor Falecido".to_owned(),
         ano: 1822,
         autor_morte: Some(1868),
-        tradutor: None,
-        tradutor_morte: None,
+        adaptador: None,
+        adaptador_morte: None,
+        obra_original: None,
         base: "edição de 1822".to_owned(),
     };
     assert_eq!(
@@ -92,8 +94,9 @@ fn obra_de_1822_com_gravacao_de_ontem_nao_vira_gravacao_livre() {
 
     // Tradução recente da mesma obra: outra obra, protegida no Brasil.
     let traduzida = Obra {
-        tradutor: Some("Tradutor Recente".to_owned()),
-        tradutor_morte: Some(1995),
+        adaptador: Some("Adaptador Recente".to_owned()),
+        adaptador_morte: Some(1995),
+        obra_original: Some("Hino de 1822".to_owned()),
         ..obra
     };
     assert!(matches!(
@@ -128,14 +131,64 @@ fn extracao_pelo_usuario_nasce_privada_e_nao_publica() {
 }
 
 #[test]
+fn adaptacao_com_frases_novas_e_obra_propria_e_nao_herda_o_veredito() {
+    // Caso do dono: "Maravilhosa Graça" (obra antiga) e a versão "Tremenda
+    // Graça" — mesma música, mesmo sentido, mas **título e frases mudam**.
+    // A original é de domínio público; a adaptação é obra própria, e o veredito
+    // de uma **não empresta** para a outra.
+    let original = Obra {
+        titulo: "Maravilhosa Graça".to_owned(),
+        autor: "Autor Antigo".to_owned(),
+        ano: 1779,
+        autor_morte: Some(1807),
+        adaptador: None,
+        adaptador_morte: None,
+        obra_original: None,
+        base: "edição de domínio público".to_owned(),
+    };
+    assert!(
+        lyrics::veredito_pd(&original, Jurisdicao::Brasil, 2026).eh_dominio_publico(),
+        "a obra antiga é de domínio público"
+    );
+
+    let adaptacao = Obra {
+        titulo: "Tremenda Graça".to_owned(),
+        autor: "Autor Antigo".to_owned(),
+        ano: 1779,
+        autor_morte: Some(1807),
+        adaptador: Some("Adaptador da equipe".to_owned()),
+        adaptador_morte: Some(2015),
+        obra_original: Some("Maravilhosa Graça".to_owned()),
+        base: "versão cantada pela equipe".to_owned(),
+    };
+    let veredito = lyrics::veredito_pd(&adaptacao, Jurisdicao::Brasil, 2026);
+    assert!(
+        matches!(veredito, Veredito::Protegido { .. }),
+        "a adaptação recente é protegida: {veredito:?}"
+    );
+    let regra = veredito.resumo();
+    assert!(
+        regra.contains("Adaptador da equipe"),
+        "a regra julga pelo adaptador: {regra}"
+    );
+    // E a ficha guarda o vínculo — sem fundir as duas obras numa só.
+    assert_eq!(
+        adaptacao.obra_original.as_deref(),
+        Some("Maravilhosa Graça")
+    );
+    assert_ne!(adaptacao.titulo, original.titulo);
+}
+
+#[test]
 fn obra_recente_nao_passa_por_dominio_publico() {
     let recente = Obra {
         titulo: "Obra recente".to_owned(),
         autor: "Autor Vivo".to_owned(),
         ano: 1980,
         autor_morte: Some(2010),
-        tradutor: None,
-        tradutor_morte: None,
+        adaptador: None,
+        adaptador_morte: None,
+        obra_original: None,
         base: "edição recente".to_owned(),
     };
     assert!(matches!(
