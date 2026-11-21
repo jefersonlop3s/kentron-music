@@ -995,3 +995,23 @@ própria. Ambos ficam em PENDING.
 impresso) e `ocr-em-digitalizacao` (calibrar página↔número antes de OCR; sigla → índice do próprio
 hinário; nome próprio saído de OCR não se aceita sem conferência). As duas com o mesmo frontmatter das
 outras 18.
+
+## R4 · Gate das fichas na bateria, provado pelo próprio hook (2026-11-21)
+
+A entrega anterior deixou o asset e o verificador na `main`, mas **fora de qualquer gate automático**:
+`scripts/verificar_fichas.py` só rodava se alguém lembrasse. O gate entrou no `.githooks/pre-push`
+(escopado ao `CHANGED_FILES`: asset, verificador, prova ou o próprio hook) e no `scripts/ci-local.sh`
+(bateria inteira). O contrato `[validation]` do `.harness.toml` **não** mudou — segue só com gitleaks,
+conforme a decisão de 2026-11-21 —, mas o arquivo passou a dizer **onde** o gate das fichas vive, para
+a próxima sessão não procurar no lugar errado.
+
+**A prova é no sentido negativo, exercitando o hook:** com uma ficha `pd` sem `ano_dominio_publico`, o
+push é recusado — `❌ fichas`, `PUSH BLOQUEADO — gate(s) reprovado(s): fichas`, e o log do gate traz
+`linha 2: veredito "pd" sem ano de domínio público`. Restaurado o asset, ele volta idêntico (md5
+conferido) e o mesmo hook passa com `✅ fichas`.
+
+**Defeito da ferramenta achado no caminho:** o hook chamava `avisa_base "$1"` e, fora do `git push`,
+`$1` não existe — com `set -u` ele abortava **antes de qualquer gate**, o que tornava impossível provar
+um gate manualmente. Passou a `"${1:-origin}"`.
+
+**Custo medido:** 0,1 s (12 fichas + as 4 variações da prova).
