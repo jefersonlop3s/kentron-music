@@ -822,13 +822,29 @@ O **Cantor Cristão Cifrado (2011)** imprime a ficha **em cada hino**: `Autoria:
 | 15 | **Exultação** | Fanny Jane Crosby (1820-1915) | Joseph Jones (1848-1927) | William Howard Doane (1832-1915) | **domínio público** (BR: 1927+71 = **1998**) |
 | 46 | **Jesus me transformou** | James Rowe (1865-1933) | Salomão Luiz Ginsburg (1867-1927) | Howard E. Smith (1863-1918) | **domínio público** (BR: 1933+71 = **2004**) |
 | 92 | **Substituição** ("Morri na cruz por ti") | Frances Ridley Havergal (1836-1879) | **D. M. Hazlett (1852-?)** | Philip Paul Bliss (1838-1876) | autoria e melodia PD; **tradutor sem data** → **GAP** |
+| 112 | **Vencendo vem Jesus** | Julia Ward Howe (1819-1910) | **Ricardo Pitrowsky (1891-1965)** | John William Steffe (sem datas na ficha) | ⚠️ **NÃO é domínio público** — só em **2036** (BR: 1965+71) |
+| 135 | **Louvor** ("Louvamos-te, ó Deus") | William Paton MacKay (1839-1885) | James Theodore Houston (1847-1929) | John Jenkins Husband (1760-1825) | **domínio público** (BR: 1929+71 = **2000**) |
+| 295 | **Tudo Entregarei** | Judson W. Van de Venter (1855-1939) | Salomão Luiz Ginsburg (1867-1927) | Winfield Scott Weeden (1847-1908) | **domínio público** (BR: 1939+71 = **2010**) |
+| 377 | **Não Sei Por Que** | Daniel Webster Whittle (1840-1901) | Justus Henry Nelson (1849-1931) | James McGranahan (1840-1907) | **domínio público** (BR: 1931+71 = **2002**) |
 | 385 | **Louvor** | **Manuel Avelino de Souza (1886-1962)** | — | Charles Hutchison Gabriel (1856-1932) | ⚠️ **NÃO é domínio público** — só em **2033** (BR: 1962+71) |
 
-O hino **09** é um dos **10** do repertório do dono (a lista diz "Santo, Santo, Santo | 09 Cantor Cristão") — **a primeira ficha do repertório está resolvida**, e veio do livro dele. Consequência de método: a campanha de fichas deixa de ser pesquisa e passa a ser **fotografar a página do hino**.
+O hino **09** foi a primeira ficha do repertório resolvida, e veio do livro do dono. Consequência de método: a campanha de fichas deixou de ser pesquisa e passou a ser **fotografar a página do hino**.
 
-### Cinco dos dez do repertório, e as duas naturezas difíceis que o material real trouxe
+### Nove dos dez do repertório, e os três vereditos que o material exigiu
 
-Tiradas as fotos direto do celular (via `adb`, de `DCIM/Camera`) — **cinco fichas do repertório**, com o número conferido contra a planilha do dono: **15 Exultação**, **46 Jesus me transformou**, **92 Substituição (Morri na cruz por ti)**, **385 Louvor** e **09 Santo**.
+As fotos vieram do celular do dono via `adb` (`DCIM/Camera`), em dois lotes — e a ficha traz **número, título, autoria, tradução e melodia com datas**. Somadas as páginas de **377**, **112**, **295** e **135**, o repertório fica com **nove dos dez hinos fichados**:
+
+| veredito | hinos | por quê |
+|---|---|---|
+| **domínio público** (6) | 09, 15, 46, 135, 295, 377 | a morte mais recente entre autor, tradutor e melodia + 71 anos já passou |
+| **protegido** (2) | **385 Louvor** (até **2033**) e **112 Vencendo vem Jesus** (até **2036**) | 385: Manuel Avelino de Souza (1962). 112: Howe (1910) e Steffe são livres, mas **a tradução de Ricardo Pitrowsky (1965) não é** — a obra brasileira é dele |
+| **GAP** (1) | 92 Substituição | tradutor **D. M. Hazlett (1852-?)**: o livro não publica o falecimento, então não se afirma a queda |
+
+Falta **um**: **"A mensagem da Cruz" (291 na Harpa Cristã)** — o dono **não tem a Harpa em papel**, então essa ficha precisa vir de outra edição ou ficar declaradamente sem ficha.
+
+**O caso que prova o argumento do dono:** há **dois hinos chamados "Louvor"** no repertório dele — o **135** (domínio público) e o **385** (protegido até 2033). Mesmo título, hinos diferentes, vereditos opostos: **quem identifica é o número**, não o título. É exatamente o que ele disse ao contestar minha leitura do livro ("hino 9 = Santo para qualquer batista"), agora medido no repertório dele.
+
+**Procedência (ADR-0012) na prática:** o "Tudo Entregarei" está na planilha do dono como *Harpa Cristã*, mas foi fotografado do **Cantor Cristão Cifrado nº 295**. A ficha registra **de qual edição** veio o fato — sem isso, duas edições com traduções diferentes do mesmo hino apareceriam como contradição em vez de serem duas obras distintas.
 
 **Nota de mapeamento (correção de um erro meu nesta sessão):** o campo da planilha diz "Exultação | Cantor Cristão **015**" e isso é o **hino 15** — não o hino 01. O hino **01 é *Antífona*** (Wright/Monk), outra obra, que eu havia juntado com a Exultação numa mensagem anterior sem que a foto tivesse sido lida; a foto do livro desfez o nó. Fica registrado porque é a diferença entre **ler a fonte** e **inferir do número**.
 
