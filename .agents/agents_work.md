@@ -35,6 +35,24 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/de6b0 — Kentron: leitor de cifras (Modo Palco) entregue
+- **Início**: 2026-11-21 02:00 (UTC) · **Última atualização**: 2026-11-21 02:40 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/leitor-cifras` (de `main` `12ca7fb`; integrada por merge `--ff-only`) · **Worktrees**: diretório principal
+- **Demanda**: continuar a R1-C depois de o ROADMAP separar alpha de piloto; o próximo passo era o leitor de cifras.
+- **Paths sob edição**: nenhum (concluído).
+- **Status**: concluído — `main` = `origin/main` = `60dd439`, bateria verde no push.
+- **PRs**: nenhum (merge `--ff-only` local).
+
+**Feito:**
+- `SongReaderPage` (Modo Palco): cifra inteira, acorde sobre a letra, transposição por tom e alternância de contraste; erro do núcleo visível.
+- `chordLine` alinha acordes nas colunas do núcleo; acorde que invadiria o anterior é empurrado.
+- Botão **Abrir cifra** na tela inicial; chaves novas `stageContrast`, `stageKey`, `stageLoadFailed`, `stageOpenReader` nos ARBs-base.
+- `ROADMAP` R1-C: leitor marcado; setlists e projeção seguem abertas. `PENDING`, `CHANGELOG` e `CONCLUSION` atualizados.
+
+**Provado:** `flutter analyze` limpo; 16 testes de app (5 herméticos do leitor + 3 provas reais na ponte + 8 anteriores); push com gitleaks, trivy, semgrep, types, test, lint, shell, deny, arb e flutter aprovados.
+
+**Próximo passo:** projeção manual (tela secundária/OBS) e setlists no Modo Palco; depois o ensaio assistido do R1-C.
+
 ### cline/de6b0 — Kentron: ROADMAP corrigido, portão da R1 em dois
 - **Início**: 2026-11-21 01:40 (UTC) · **Última atualização**: 2026-11-21 01:59 (UTC)
 - **Repositório**: `kentron-music` · **Branches**: `feature/roadmap-portao-r1` (de `main` `25edaad`; integrada por merge `--ff-only`) · **Worktrees**: diretório principal
