@@ -28,11 +28,11 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 ## 🔴 Em andamento
 
 ### cline/0caf3 — Retomada das fichas do hinário (wire do gate + consolidação do asset)
-- **Início:** 2026-11-21 21:42 (UTC) · **Última atualização:** 2026-11-21 21:54 (UTC)
-- **Repositório:** `kentron-music` · **Branches:** `cline/0caf3`; unidade do gate em `feat/gate-fichas-bateria`, integrada na `main` por merge `--ff-only` · **Worktrees:** `~/.cline/worktrees/0caf3/app-music`
-- **Demanda:** a sessão anterior deixou o asset e o verificador **fora da bateria**; o wire foi feito e provado no negativo. Resta a relação fichas ↔ corpus de letras, que é decisão do dono.
-- **Paths sob edição:** nenhum (unidade concluída).
-- **Status:** aguardando decisão do dono (como ligar fichas e corpus de letras)
+- **Início:** 2026-11-21 21:42 (UTC) · **Última atualização:** 2026-11-21 22:02 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `cline/0caf3`; unidades em `feat/gate-fichas-bateria` e `feat/fichas-corpus-e-comentario`, integradas na `main` por `--ff-only` · **Worktrees:** `~/.cline/worktrees/0caf3/app-music`
+- **Demanda:** a sessão anterior deixou o asset e o verificador **fora da bateria** (wire feito e provado) e deixou uma **leitura de OCR promovida a fato** nos documentos — auditada e corrigida em 22:02.
+- **Paths sob edição:** nenhum (unidades concluídas).
+- **Status:** aguardando o dono (conferência a olho do índice da CPAD e a consulta que liga ficha e corpus)
 - **PRs:** nenhum
 
 **Estado assumido (21:42):** worktree `de6b0` removido com prova (detached, **0 commits à frente**, árvore limpa, 8,1 GB só de build ignorado); diretórios órfãos `40e55`/`b5088` apagados; **nenhum stash**; resta o principal e este worktree, ambos em `846f4c1` = `origin/main`.
@@ -43,7 +43,9 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 **Feito (21:54):** o desencontro sobre `hinos_dominio_publico.tsv` foi resolvido **no repositório**: ele existe desde `e9f388f`, tem 40 linhas (35 de comentário), 9 campos posicionais e é compilado em `lyrics.rs` por `include_str!` — sem ele o `clippy` reprovaria o push. O asset de fichas ganhou cabeçalho `#` documentando formato e relação (não se fundem: lá é letra, aqui é fato), o verificador passou a ignorar `#` e a prova ganhou o **5º caso negativo** (arquivo só com cabeçalho reprova).
 
-**Aberto (código):** a consulta que liga ficha e corpus — ficha por (hinário, número) e vínculo com a obra original (*Holy, Holy, Holy* ↔ CC 09, trad. de 1947 → PD 2018).
+**Corrigido (22:02) — auditoria do registro da sessão anterior:** em `#5451` o assistente escreveu, como leitura do índice da CPAD, `A.A. - Antônio Almeida`; a saída de OCR colada pelo dono (`#5450` e, de novo, `#5456`) diz `A.A. - Anlúniv Almeida`. A correção de leitura virou "fonte primária" em 6 lugares. Feito: asset reescrito com **procedência por campo** (`fonte_autoria`/`fonte_traducao`/`fonte_melodia`) e `observacao` no 291 dizendo que o nome é correção + fonte secundária e o ano é provisório; gate passou a reprovar **fato sem procedência** e **procedência que cita OCR sem observação** (6 casos negativos); `CONCLUSION`, `PENDING`, `CHANGELOG` e as duas skills corrigidos com nota datada. No mesmo push, o registro histórico da ficha do 291 recebeu a correção no lugar onde afirmava o elo "na fonte primária".
+
+**Aberto (código):** a consulta que liga ficha e corpus — ficha por (hinário, número) e vínculo com a obra original (*Holy, Holy, Holy* ↔ CC 09, trad. de 1947 → PD 2018). **Aberto (dono):** conferir a olho o índice de autores da CPAD (p.722) para fechar o nome do tradutor do 291.
 
 ## 🟡 Interrompido / órfão
 
@@ -538,4 +540,4 @@ Nenhum.
 
 **Consequências:** a **ficha impressa do livro continua a fonte primária**; a procedência do ADR-0012 passa a ser exigida **por campo** (qual fonte trouxe autoria, tradução, melodia); e **"sem ficha"** é estado legítimo — o caso do **291 A Mensagem da Cruz** da Harpa, que o dono não tem em papel. **Identidade = par (hinário, número):** conferido em fonte independente que o **Cantor Cristão nº 291 é "Comunhão Celeste"** — o dono estava certo de que o 291 da Harpa não existe no Cantor Cristão, e isso **corrige o meu refinamento anterior**: a numeração é convenção **dentro** de cada hinário, não entre hinários (é também o que explica o "Tudo Entregarei" da planilha, anotado como Harpa, ter vindo do Cantor Cristão nº 295).
 
-**Ficha do 291 fechada por OCR (2026-11-21).** A Harpa veio em PDF do dono (`~/Downloads/harpa/`); os dois hinários são digitalizações sem texto → OCR nativo do macOS (Vision) em `/tmp/pdfvenv`. Localização por calibração página↔hino (Cifrada p.254 = 291); crédito = sigla impressa `AA.`; elo fechado no **Índice de Autores e Tradutores do próprio hinário** (CPAD p.722): A.A. = **Antônio Almeida (1879-1969)** → **protegido até 2040**. Placar: **10 de 10** (6 domínio público, 3 protegidos, 1 GAP). O índice da Harpa dá nomes **sem anos** — por isso a Harpa custa três fontes por hino. Celular desconectado pelo dono e modelos mantidos por decisão dele: pendência de limpeza encerrada.
+**Ficha do 291 fechada por OCR (2026-11-21).** A Harpa veio em PDF do dono (`~/Downloads/harpa/`); os dois hinários são digitalizações sem texto → OCR nativo do macOS (Vision) em `/tmp/pdfvenv`. Localização por calibração página↔hino (Cifrada p.254 = 291); crédito = sigla impressa `AA.`; elo fechado no **Índice de Autores e Tradutores do próprio hinário** (CPAD p.722): A.A. = **Antônio Almeida (1879-1969)** → **protegido até 2040**. **Correção (22:02):** o OCR dessa página diz `A.A. - Anlúniv Almeida`; "Antônio Almeida" é correção de leitura + fonte secundária (hinologia.org), não leitura do impresso, e o ano 2040 é **provisório** até a conferência a olho. Placar: **10 de 10** (6 domínio público, 3 protegidos, 1 GAP). O índice da Harpa dá nomes **sem anos** — por isso a Harpa custa três fontes por hino. Celular desconectado pelo dono e modelos mantidos por decisão dele: pendência de limpeza encerrada.
