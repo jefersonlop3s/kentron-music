@@ -51,6 +51,8 @@ Nenhum.
 
 **Comparação medida contra gabarito humano (14:55):** o dono trouxe uma cifra feita à mão da mesma gravação — a cifra e a letra ficaram **fora do repositório** (conteúdo de terceiro). Resultado: **cobertura de fundamental 8/8** (todas as classes do gabarito aparecem) e a **modulação** do Solo 2 encontrada em 264–294 s (`Cmaj7 G D A Em7`), sem ninguém ter dito que havia modulação. Não entrega tablatura, inversões nem notação de tensão. O gabarito pagou um erro real: o motor entregava 45% dos trechos como potência; medidos os 91, a terça fica em **mediana 0,28** da fundamental e em **80%** abaixo de 0,4 — logo `5` era a leitura honesta na maioria. A regra `chords::com_terca` passou a dizer o acorde inteiro quando a terça passa de 0,4 (6 trechos mudaram, nenhum ganhou terça que não tem), provada no positivo e no negativo.
 
+**Emenda do crédito (15:05):** o dono questionou a ADR-0012 — se a live sem crédito cai, e o crédito na tela resolve, extrair a letra do áudio não seria o mesmo que obter de arquivo? **Argumento registrado com resposta** na ADR: crédito é direito moral, reprodução/comunicação ao público são patrimoniais e não são cobertos por crédito; a queda vem do licenciamento da plataforma ou do Content ID sobre o fonograma. O que o argumento acertou: o que muda não é a fonte, é **de quem é o ato** — e o caminho que resolve o caso da igreja é a **licença que ele já tem** (CCLI e equivalentes), com o app como instrumento do licenciado. Nada de código mudou; a decisão segue proposta.
+
 
 ### cline/de6b0 — Kentron: motor MIR (cifra, estrutura e dinâmica a partir do áudio)
 - **Início:** 2026-11-21 13:40 (UTC) · **Última atualização:** 2026-11-21 14:30 (UTC)
