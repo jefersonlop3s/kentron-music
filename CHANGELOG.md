@@ -9,9 +9,10 @@ Todos os eventos notáveis do projeto Kentron Music Hub.
 ### Verificado
 - `python3 .harness/validation.py check` → `gates aprovados: 1`, `EXIT=0` (80 commits, nenhum vazamento).
 - Sentido negativo do contrato: gate trocado por `false` → `gates reprovados: gitleaks (exit 1)`, `EXIT=1`.
-- Sentido negativo do gitleaks: repositório temporário com `AKIAQ5T7B2N8X4L9R3WZ` → `leaks found: 1`, `EXIT=1`.
+- Sentido negativo do gitleaks: repositório temporário com uma chave de formato AWS (`AKIA` + 16 caracteres) → `leaks found: 1`, `EXIT=1`.
 ### Achado
-- A chave de exemplo canônica da AWS (`AKIAIOSFODNN7EXAMPLE`) **não** é detectada: está na allowlist padrão do gitleaks. Canário com ela passa em falso e não prova nada.
+- A chave de exemplo canônica da AWS (a que termina em `EXAMPLE`) **não** é detectada: está na allowlist padrão do gitleaks. Canário com ela passa em falso e não prova nada.
+- O literal do canário não entra na documentação: o `semgrep` bloqueia `AKIA` + 16 caracteres em qualquer arquivo, inclusive `.md`. O push foi bloqueado por isso e a entrada foi reescrita sem o valor.
 
 ## [processo] Perfil do projeto preenchido e shellcheck vira gate (2026-11-20)
 ### Adicionado

@@ -286,10 +286,11 @@
 ### Evidências
 - `python3 .harness/validation.py check` → `gates aprovados: 1`, `EXIT=0` (80 commits, `no leaks found`).
 - Contrato no sentido negativo: gate trocado por `false` → `gates reprovados: gitleaks (exit 1)`, `EXIT=1`; arquivo restaurado depois.
-- Gitleaks no sentido negativo: repositório temporário com `AKIAQ5T7B2N8X4L9R3WZ` → `leaks found: 1`, `EXIT=1`.
+- Gitleaks no sentido negativo: repositório temporário com uma chave de formato AWS (`AKIA` + 16 caracteres) → `leaks found: 1`, `EXIT=1`.
 
 ### Achado
-- `AKIAIOSFODNN7EXAMPLE` (a chave de exemplo da documentação da AWS) **não** é detectada: está na allowlist padrão do gitleaks. Canário com ela devolve `no leaks found` e daria falsa confiança — o teste precisa de chave plausível.
+- A chave de exemplo da documentação da AWS (a que termina em `EXAMPLE`) **não** é detectada: está na allowlist padrão do gitleaks. Canário com ela devolve `no leaks found` e daria falsa confiança — o teste precisa de chave plausível.
+- O literal do canário não pode morar na documentação: o `semgrep` bloqueia `AKIA` + 16 caracteres em qualquer arquivo, inclusive `.md`. O primeiro push desta entrada foi bloqueado por isso; o texto foi reescrito sem o valor.
 
 ### Ressalva
 - O argv do contrato é estático: se `.gitleaks.toml` ou `.gitleaks-baseline.json` forem criados, o hook os acrescenta e o contrato não. Anotado no próprio `.harness.toml`.
