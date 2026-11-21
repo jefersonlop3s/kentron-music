@@ -36,11 +36,11 @@ Nenhum.
 ## 🟢 Concluído recentemente
 
 ### cline/0caf3 — Fichas do hinário: asset com gate e prova negativa
-- **Início:** 2026-11-21 21:17 (UTC) · **Última atualização:** 2026-11-21 21:32 (UTC)
+- **Início:** 2026-11-21 21:17 (UTC) · **Última atualização:** 2026-11-21 21:33 (UTC)
 - **Repositório:** `kentron-music` · **Branches:** `docs/fichas-hinario` (de `main` `a33598f`; integrada por merge `--ff-only`) · **Worktrees:** principal
 - **Demanda:** fechar o asset de fichas do hinário do ciclo anterior — dado em TSV, gate de consistência e do limite legal, skill e registro nos dois documentos centrais.
 - **Paths sob edição:** nenhum (concluído).
-- **Status:** concluído — os dois commits (`82b70d0`, `eb14537`) estão na `main`; bateria do pre-push roda de verdade neste push (antes, "nada a commitar" deixava `CHANGED_FILES` vazio).
+- **Status:** concluído — `82b70d0`, `eb14537` e `bae664a` (CHANGELOG) estão na `main`, e a bateria do pre-push rodou de verdade neste push (antes, "nada a commitar" deixava `CHANGED_FILES` vazio).
 - **PRs:** nenhum (merge `--ff-only` local).
 
 **Feito:** `crates/mir_engine/assets/fichas_hinario.tsv` (12 fichas por par hinário+número: **8 pd, 3 protegidos, 1 gap**, procedência por linha), `scripts/verificar_fichas.py`, `scripts/prova-verificar-fichas.sh` e as skills `hinario-e-dominio-publico` e `ocr-em-digitalizacao`.
