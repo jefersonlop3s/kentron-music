@@ -56,10 +56,13 @@ Parser ChordPro, transposição e testes dourados já integrados à `main`; o re
 ## 🧠 R4 · Primeiro incremento entregue (instrumento de trabalho, ADR-0011)
 
 DSP puro, sem modelo: dinâmica (EBU R128), andamento, acordes e estrutura. O que falta:
-- [ ] **Letra por ASR** (transcrição de canto): exige peso declarado no `models/MANIFEST.toml` (licença, fonte, hash, ADR) e correção humana no fluxo — o resultado de ASR de canto não é confiável sozinho.
+- [ ] **Letra por ASR** (transcrição de canto): exige peso declarado no `models/MANIFEST.toml` (licença, fonte, hash, ADR) e correção humana no fluxo — o resultado de ASR de canto não é confiável sozinho. Declarado e **não implementado** na ADR-0012.
+- [ ] **Decisão do dono sobre a fonte da letra (ADR-0012 está proposta):** provedor "oficial" de letra é pago e proíbe armazenar o texto — o pedido original ("fontes oficiais" + "sem custo legal") é incompatível, e o que existe é texto do usuário + domínio público. Sem o aceite, a ADR fica em proposta.
+- [ ] **Afinar o detector de frase vocal no repertório:** hoje calibrado em **dois** casos (um áudio sintetizado e uma música real: 4 frases exatas e 63 frases cobrindo 302 s de 400 s). Falta medir em 10–20 músicas e registrar a taxa de linha no lugar certo.
+- [ ] **Entrada de letra na interface:** a CLI tem `--letra`/`--hino`/`--listar-hinos`; o app ainda não oferece colar/escolher a letra, nem exportar a cifra com letra pelo bundle.
+- [ ] **Centro tonal de verdade**: hoje `tom_estimado` devolve a fundamental mais frequente — numa música em E maior devolveu `B`, e na fixture em Dó devolveu `Am`. Falta perfil de tonalidade (Krumhansl) ou HMM de tom.
 - [ ] **Tablatura de solo**: pitch tracking + casamento de corda/traste. Ambíguo por natureza (a mesma altura tem várias posições); exige decisão de afinação e de digitação.
 - [ ] **Separação em stems** (htdemucs 6s, MIT): melhora acorde e dinâmica por instrumento e é pré-requisito realista da tablatura. Portão: spike S1 (MIR on-device) + entrada no `MANIFEST`.
-- [ ] **Centro tonal de verdade**: hoje `tom_estimado` devolve a fundamental mais frequente — numa música em E maior devolveu `B`. Falta perfil de tonalidade (Krumhansl) ou HMM de tom.
 - [ ] **Dinâmica por instrumento**: a curva de pressão sonora (LUFS por stem) que o plano v2.x previa — depende dos stems.
 - [ ] **Integração com o app**: o relatório e o ChordPro do `mir_engine` ainda não entram no bundle nem no leitor/projeção; hoje só a CLI consome.
 - [ ] **Pico verdadeiro** (true peak) em vez de pico de amostra: exige sobreamostragem com filtro polifásico.

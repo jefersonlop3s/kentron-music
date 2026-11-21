@@ -477,3 +477,35 @@
 - **Pico de amostra, não pico verdadeiro** — nomear diferente seria mentir no relatório.
 - O áudio usado na prova foi obtido **fora do repositório** (nenhum downloader foi versionado); o motor consome WAV, e a etapa de aquisição é decisão do dono.
 
+
+## R4 · Letra na cifra: fonte declarada, alinhamento ao áudio e desenho no app (ADR-0012 proposta, 2026-11-21)
+
+**Status:** 🟢 Entregue e provado de ponta a ponta. A ADR-0012 está **proposta** — o aceite é do dono, porque um ponto dela contraria o pedido original.
+
+### O achado que mudou o desenho
+- O pedido era buscar a letra em "fontes oficiais" e cruzar com o áudio, pagando pouco e sem compromisso legal. Medido: **não existe fonte oficial de letra gratuita.** Os provedores oficiais (Musixmatch, LyricFind, Genius, letras do Spotify) são licenciados e pagos, e seus termos **proíbem armazenar ou reproduzir** a letra — exatamente o compromisso que se queria evitar. "Oficial" e "sem custo legal" não convivem hoje.
+- O que é barato **e** legítimo: texto do próprio usuário, obra em **domínio público** (corpus embutido, só pré-1900, com autor e ano por entrada) e, no futuro, ASR local com peso declarado.
+- O "cruzar com o que o áudio apresenta" é **alinhamento forçado** — técnica que não depende de licença nenhuma: texto conhecido + áudio.
+
+### O que ficou de pé
+- `lyrics`: procedência obrigatória, leitura de letra livre/ChordPro, corpus de domínio público com regra de entrada escrita no arquivo, **frases vocais** por energia 200–3500 Hz e alinhamento das linhas com **confiança por linha**.
+- `sheet`: a cifra vira `notation_bundle::chordpro::Song` — o acorde é colocado na **sílaba** que o tempo dele indica, e o texto é escrito por `chordpro::write`. O formato do app é o mesmo por construção; **nenhum binding novo** foi preciso.
+- CLI: `--letra`, `--hino`, `--listar-hinos`, `--frases-vocais`.
+- Fixture única (`crates/mir_engine/tests/fixtures/cifra-com-letra.cho`): o teste dourado do motor fixa o arquivo e o teste de Flutter desenha **esse mesmo arquivo** pela ponte real. Se o formato mudar, os dois lados quebram juntos.
+
+### Provas
+- **Rust: 11 testes.** Procedência e recusa do corpus no sentido negativo (o hino protegido **não** está lá), sílaba ("San-to", não "Sa-nto"; "Bra-vo" com o `r` na sílaba certa), alinhamento casando com quatro blocos cantados, ida e volta pelo parser do app (`write` → `parse` devolve a mesma música) e fixture dourada.
+- **App: 32 testes de Flutter**, incluindo o núcleo devolvendo a letra com acordes por cima e a **tela do Modo Palco desenhando letra e acorde** sobre a cifra do motor.
+- **Detector de frase vocal medido em três desenhos.** Pico global: **1 frase de 385 s em 400** na música real (inútil). Média local causal: no sintético **não achava o primeiro bloco** (nível constante nunca fica 15% acima da própria média) e truncava as frases em 2,8 s. Máximo recente: **4 frases casando exato** com os 4 blocos cantados e **63 frases cobrindo 302 s de 400 s** na música real, de 1,5 a 5,8 s cada — escala de linha cantada.
+
+### O que o processo de teste pegou (e valeu a sessão)
+- **Minha síntese estava errada:** a tríade era tocada em **sequência**, e o detector lia três acordes onde havia um (fixture saía `[F][A5][Dsus4]`). Corrigido para tríade sustentada — a fixture passou a trazer a progressão real, C, G, Am e F.
+- **Formante senoidal é nota:** 900 Hz ≈ Lá 5 injetava um A no croma e o acorde de Dó saía `Am7`. Virou ruído de banda larga.
+- **A conferência procurava texto contíguo** num arquivo onde os colchetes interrompem a letra (`[C]Ama[G]zing`): passou a conferir o texto que o parser separa — o que o app desenha.
+
+### Ressalvas honestas
+- **Alinhamento por frase é aproximado**, não fonema a fonema: sem modelo acústico não há como amarrar sílaba a instante. Por isso a confiança por linha existe.
+- **Música protegida cuja letra o dono não tenha:** sai o **esqueleto** (onde cada linha cai, seção e dinâmica), **não** as palavras. É limitação declarada, não defeito.
+- Detector calibrado em **dois** casos; o repertório é medição pendente (PENDING).
+- O tom estimado continua heurístico (devolveu `Am` na fixture em Dó).
+

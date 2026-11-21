@@ -105,6 +105,33 @@ impl Spectrogram {
         }
     }
 
+    /// Energia (RMS das magnitudes) por quadro numa faixa de frequência.
+    ///
+    /// É o que separa **voz** do resto sem modelo: a banda 200–3500 Hz carrega a
+    /// fala e o canto, e bumbo/baixo ficam abaixo dela.
+    #[must_use]
+    pub fn energia_banda(&self, taxa: u32, de_hz: f32, ate_hz: f32) -> Vec<f32> {
+        let hz_por_bin = taxa as f32 / self.janela as f32;
+        let bins = self.quadros.first().map_or(0, Vec::len);
+        if bins == 0 {
+            return Vec::new();
+        }
+        let inicio = ((de_hz / hz_por_bin).ceil() as usize).min(bins - 1);
+        let fim = ((ate_hz / hz_por_bin).floor() as usize).clamp(inicio, bins - 1);
+        self.quadros
+            .iter()
+            .map(|mags| {
+                let fim = fim.min(mags.len() - 1);
+                if inicio > fim {
+                    return 0.0;
+                }
+                let fatia = &mags[inicio..=fim];
+                let soma: f32 = fatia.iter().map(|m| m * m).sum();
+                (soma / fatia.len() as f32).sqrt()
+            })
+            .collect()
+    }
+
     /// Novidade espectral (fluxo positivo) por quadro — base dos onsets.
     #[must_use]
     pub fn novidade(&self) -> Vec<f32> {

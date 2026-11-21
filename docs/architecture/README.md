@@ -14,7 +14,7 @@ O Kentron utiliza uma **Arquitetura Hexagonal (Ports and Adapters)** para garant
 ### 1. Rust Core (`crates/`)
 - `notation_bundle`: Modelo canônico de música. Lida com transposição, notação e parsing de arquivos. É **domínio puro**: sem FFI e com `unsafe_code = "forbid"`.
 - `kentron_ffi`: **Adaptador** Rust ↔ Flutter (ADR-0007). Único `cdylib` e único a depender do `flutter_rust_bridge`; declara a API que o Dart enxerga (`bridge.rs`) e hospeda o código gerado.
-- `mir_engine`: Motor de análise de áudio (MIR). **Primeiro incremento** (ADR-0011): DSP puro — dinâmica por EBU R128, andamento, acordes por croma e estrutura —, sem modelos. A parte de ONNX (stems, tablatura, letra) segue pendente.
+- `mir_engine`: Motor de análise de áudio (MIR). **Incrementos 1 e 2** (ADR-0011, ADR-0012): DSP puro — dinâmica por EBU R128, andamento, acordes por croma, estrutura, **letra com procedência declarada e alinhada ao áudio** — e a cifra montada como `Song` do domínio. Sem modelos; a parte de ONNX (stems, tablatura, letra por ASR) segue pendente.
 - `harmonic_index`: Gestão do índice de obras e busca global.
 - `band_mesh`: Implementação do protocolo Matrix e sincronia de estado.
 - `stage_clock`: Lógica de regência, tempo e sincronia de palco.

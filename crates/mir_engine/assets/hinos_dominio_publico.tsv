@@ -1,0 +1,26 @@
+# Corpus de letras em domínio público (ADR-0012).
+#
+# REGRA DE ENTRADA — sem procedência, não entra:
+#   1. Só obra cujo TEXTO esteja em domínio público pela data de publicação
+#      (aqui: tudo anterior a 1900, sem exceção).
+#   2. Tradução e arranjo modernos têm proteção própria e NÃO entram, mesmo que a
+#      obra original seja antiga. Por isso este corpus é só de texto original em
+#      inglês: não há como garantir o status de uma tradução recente.
+#   3. Cada entrada declara título, autor, ano e base. Conferir antes de somar.
+#
+# Formato (TSV, uma entrada por linha, `#` comenta):
+#   <titulo>\t<autor>\t<ano>\t<linha 1> | <linha 2> | ...
+#
+# Entradas verificadas em 2026-11-21. Autores falecidos há mais de 100 anos e
+# publicação anterior a 1900 — domínio público nos termos usuais (vida+70 ou
+# publicação+95). Obra de 1923 ou posterior NÃO entra sem checagem própria.
+#
+# Hinos populares de igreja que NÃO estão aqui de propósito:
+#   · "How Great Thou Art" — tradução inglesa de 1949 (Stuart Hine), protegida;
+#   · "Great Is Thy Faithfulness" — 1923, fronteira, exige checagem por país;
+#   · qualquer hino com tradução recente para o português.
+
+Amazing Grace	John Newton	1779	Amazing grace! how sweet the sound | That saved a wretch like me! | I once was lost, but now am found | Was blind, but now I see.
+Come, Thou Fount of Every Blessing	Robert Robinson	1758	Come, Thou Fount of every blessing | Tune my heart to sing Thy grace | Streams of mercy, never ceasing | Call for songs of loudest praise
+Holy, Holy, Holy	Reginald Heber	1826	Holy, holy, holy! Lord God Almighty! | Early in the morning our song shall rise to Thee | Holy, holy, holy! merciful and mighty | God in three Persons, blessed Trinity!
+Rock of Ages	Augustus Toplady	1763	Rock of Ages, cleft for me | Let me hide myself in Thee | Let the water and the blood | From Thy wounded side which flowed

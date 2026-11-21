@@ -2,6 +2,36 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [R4] Letra na cifra: fonte declarada, alinhamento ao áudio e desenho no app (2026-11-21)
+### Adicionado
+- **`mir_engine::lyrics`** — fonte da letra com **procedência obrigatória** (`do usuário`, `domínio público`, `ASR` declarado e não implementado), leitura de texto livre/ChordPro, **frases vocais** por energia na banda 200–3500 Hz e **alinhamento** das linhas ao tempo, com confiança por linha.
+- **Corpus de domínio público embutido** (`assets/hinos_dominio_publico.tsv`): quatro hinos pré-1900 com autor e ano. Regra de entrada escrita no próprio arquivo, e os hinos que **não** podem entrar (tradução inglesa de 1949, obra de 1923 na fronteira) estão lá nomeados como recusa.
+- **`mir_engine::sheet`** — monta a cifra como **objeto do domínio** (`notation_bundle::chordpro::Song`) e o acorde vai para a **sílaba** que o tempo dele indica; escrita por `chordpro::write`. `notation_bundle` passa a ser dependência do motor: o formato do app é o mesmo por construção.
+- **CLI**: `--letra <arquivo>`, `--hino <título>`, `--listar-hinos` e `--frases-vocais` (esqueleto: onde a voz soa, para encaixar letra própria).
+- **Testes**: 4 de letra/sílaba/alinhamento, 3 de fixture/negativos, além dos 4 da análise. O app ganhou `test/cifra_com_letra_test.dart`, que lê a **fixture gerada pelo motor** pela ponte real e desenha no Modo Palco.
+
+### Decidido
+- **ADR-0012 (proposta ao dono).** Achado que muda o pedido: **não existe fonte oficial de letra gratuita** — os provedores "oficiais" são pagos e **proíbem armazenar** o texto. Portanto "oficial" e "sem custo legal" são incompatíveis, e o caminho barato e legítimo é texto do próprio usuário + obra em **domínio público**. Raspador de site de letra não é escrito nem para teste.
+- O "cruzar a letra com o áudio" do pedido é **alinhamento forçado**, que não depende de licença nenhuma: texto conhecido + áudio.
+- **Pressuposto de produto nomeado:** a letra que o usuário já possui é fornecida por ele; o app é a régua que posiciona a letra sobre o áudio, não a fonte de letra de terceiro.
+
+### Corrigido
+- **Detector de frase vocal, três vezes.** Começou com limiar sobre o pico global → **uma frase de 385 s em 400** na música real (em mixagem densa a banda da voz nunca cai a 12% do pico). Passou para média local (causal) → no áudio sintetizado **não achava o primeiro bloco cantado**: nível constante nunca fica 15% acima da própria média. Ficou em **queda sob o máximo recente** — presença de voz é *pausa*, e a frase é o que fica entre pausas. Medido: **4 frases casando exato** com 4 blocos cantados (sintético) e **63 frases, 302 s de 400 s** na música real, de 1,5 a 5,8 s cada.
+- **Síntese do teste estava errada:** eu "tocava" a tríade em **sequência** (C, depois E, depois G) e o detector lia três acordes onde havia um — a fixture saía `[F][A5][Dsus4]` em vez de `C`. Acorde é simultâneo; com a tríade sustentada a fixture traz a progressão real (C, G, Am, F).
+- **Formante senoidal virava nota:** 900 Hz ≈ Lá 5 injetava um A no croma e o acorde de Dó saía `Am7`. O sopro da voz de teste agora é ruído de banda larga.
+- **`.cho` com a letra interrompida:** a conferência procurava a frase contígua no arquivo, mas `[C]Ama[G]zing` **quebra** o texto — a verificação passou a ser no texto que o parser separa, que é o que o app desenha.
+
+### Verificado
+- **Rust:** 11 testes verdes — procedência e recusa do corpus (negativo: hino protegido não está lá), sílaba ("San-to" e não "Sa-nto"; "Bra-vo" com o `r` na sílaba certa), alinhamento em quatro blocos cantados, ida e volta pelo parser do app (`write` → `parse` devolve a mesma música) e **fixture dourada**.
+- **App:** 32 testes de Flutter verdes, incluindo os dois novos — o núcleo devolve a letra com os acordes por cima e a **tela do Modo Palco desenha letra e acorde**, com a seção carregando o papel inferido do áudio.
+- Fixture única para os dois lados (`crates/mir_engine/tests/fixtures/cifra-com-letra.cho`): o teste dourado de Rust confere contra o gerador, e o teste do app desenha esse mesmo arquivo.
+
+### Ressalvas
+- **Alinhamento por frase é aproximado**, não fonema a fonema: sem modelo acústico não há como amarrar sílaba a instante. A confiança por linha existe para o músico saber onde conferir.
+- **Música protegida cuja letra o dono não tenha:** o motor entrega o **esqueleto** (onde cada linha cai, seção, dinâmica), não as palavras. É limitação declarada, não defeito.
+- Detector afinado em **dois** casos (um sintético, uma música real). O repertório inteiro é medição pendente.
+- Tom estimado segue sendo a fundamental mais frequente (a fixture devolve `Am` onde a música está em Dó).
+
 ## [R4] Motor MIR: cifra, estrutura e dinâmica a partir do áudio (2026-11-21)
 ### Adicionado
 - **`crates/mir_engine`** — primeiro incremento do motor de análise (ADR-0011): lê WAV PCM, calcula **dinâmica** (EBU R128 por pesagem K, blocos de 400 ms, portão absoluto e relativo, LRA, pico de amostra), **andamento** (autocorrelação da novidade espectral) e **acordes** (croma por picos interpolados + casamento por template, com confiança por trecho).

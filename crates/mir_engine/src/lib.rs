@@ -14,7 +14,9 @@
 
 pub mod chords;
 pub mod dynamics;
+pub mod lyrics;
 pub mod report;
+pub mod sheet;
 pub mod spectrum;
 pub mod structure;
 pub mod wav;
@@ -48,12 +50,20 @@ impl Default for Opts {
 /// Analisa o áudio e devolve o relatório completo.
 #[must_use]
 pub fn analyze(audio: &Audio, opts: &Opts) -> report::Report {
-    let dynamics = dynamics::analyze(&audio.amostras, audio.taxa);
     let spectro = spectrum::Spectrogram::new(audio, opts.janela, opts.salto);
+    analyze_com(audio, opts, &spectro)
+}
+
+/// Analisa reaproveitando uma STFT já calculada.
+///
+/// O alinhamento da letra olha o mesmo espectro, e recalcular a STFT para ele
+/// seria pagar duas vezes pelo mesmo trabalho num arquivo de seis minutos.
+#[must_use]
+pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) -> report::Report {
     let chroma = spectro.chroma(audio.taxa);
     let chords = chords::detect(&chroma);
-    let tempo = structure::estimate_tempo(&spectro, audio.taxa);
-    let sections = structure::segment(&spectro, &chroma, audio.taxa, opts.trecho_minimo_s);
+    let tempo = structure::estimate_tempo(spectro, audio.taxa);
+    let sections = structure::segment(spectro, &chroma, audio.taxa, opts.trecho_minimo_s);
 
     report::Report {
         audio: report::AudioInfo {
@@ -61,9 +71,26 @@ pub fn analyze(audio: &Audio, opts: &Opts) -> report::Report {
             canais: audio.canais,
             duracao_s: audio.duracao(),
         },
-        dynamics,
+        dynamics: dynamics::analyze(&audio.amostras, audio.taxa),
         tempo,
         chords,
         sections,
     }
+}
+
+/// Análise + alinhamento da letra, com uma STFT só.
+///
+/// Sem letra, devolve o alinhamento vazio — não inventa linha nenhuma.
+#[must_use]
+pub fn analyze_com_letra(
+    audio: &Audio,
+    opts: &Opts,
+    letra: Option<&lyrics::Letra>,
+) -> (report::Report, Vec<lyrics::LinhaAlinhada>) {
+    let spectro = spectrum::Spectrogram::new(audio, opts.janela, opts.salto);
+    let relatorio = analyze_com(audio, opts, &spectro);
+    let alinhadas = letra.map_or_else(Vec::new, |letra| {
+        lyrics::alinhar(&relatorio, letra, &spectro, audio.taxa)
+    });
+    (relatorio, alinhadas)
 }

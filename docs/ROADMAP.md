@@ -102,6 +102,8 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 **Portão de Entrada:** Spikes S1 (MIR on-device), S2 e S3 (Identidade da Obra).
 
 > **Primeiro incremento entregue (2026-11-21, ADR-0011):** dinâmica (EBU R128, contraprovada contra o `ffmpeg`), andamento, acordes e estrutura — **DSP puro, sem modelo**, aberto por decisão do dono como instrumento de trabalho e **fora do portão da R1**. O portão de entrada acima segue valendo para a parte com ML (stems, letra, tablatura).
+>
+> **Segundo incremento (2026-11-21, ADR-0012 em proposta):** a **letra** entra na cifra por fonte declarada (texto do usuário ou corpus de domínio público) e é **alinhada ao áudio** por frases vocais; os acordes caem sobre a sílaba. O provedor "oficial" de letra é pago e proíbe armazenar o texto — decisão do dono pendente.
 
 ### Etapas:
 1. **Análise Local:** Áudio $\rightarrow$ Acordes, Tom e Compasso (Desktop primeiro). *Acordes e andamento entregues; tom é estimativa simples (fundamental mais frequente).*

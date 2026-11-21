@@ -16,5 +16,6 @@ Status: Proposto → Aceito | Rejeitado | Descontinuado | Substituído. **O acei
 | ADR-0009 | Portão inicial da R1: alpha assistido antes do piloto de culto | Aceito, emendado pela ADR-0010 | 2026-11-21 | kentron-music |
 | ADR-0010 | Piloto automatizado antes do uso ao vivo | Aceito | 2026-11-21 | kentron-music |
 | ADR-0011 | MIR: primeiro incremento da análise de áudio | Aceito | 2026-11-21 | kentron-music |
+| ADR-0012 | Letra: fonte, alinhamento e limites | **Proposto** — aguarda o dono | 2026-11-21 | kentron-music |
 
-**Próximo número livre**: ADR-0012.
+**Próximo número livre**: ADR-0013.

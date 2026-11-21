@@ -466,6 +466,7 @@ dependencies = [
 name = "mir_engine"
 version = "0.0.0"
 dependencies = [
+ "notation_bundle",
  "rustfft",
  "serde",
  "serde_json",
