@@ -4,14 +4,14 @@ Todos os eventos notáveis do projeto Kentron Music Hub.
 
 ## [processo] Fichas do hinário: dado em TSV, gate e prova negativa (2026-11-21)
 ### Adicionado
-- **`crates/mir_engine/assets/fichas_hinario.tsv`** — **12 fichas** chaveadas pelo par **(hinário, número)**: **8 em domínio público, 3 protegidas e 1 GAP**, com **procedência por linha** (`fonte`). Só fatos: letra e cifra da edição não entram.
+- **`crates/mir_engine/assets/fichas_hinario.tsv`** — **12 fichas** chaveadas pelo par **(hinário, número)**: **8 em domínio público, 3 protegidas e 1 GAP**, com **procedência por linha** (`fonte`). Só fatos: letra e cifra da edição não entram. Cabeçalho `#` documenta o formato e por que ele **não se funde** com `hinos_dominio_publico.tsv` (lá é corpus de letras, lido por `include_str!`; aqui é ficha).
 - **`scripts/verificar_fichas.py`** — reprova veredito inválido, `pd`/`protegido` sem ano, `gap` sem observação, `fonte` vazia, campo acima de 300 caracteres e **qualquer coluna de letra/cifra/tablatura**. O limite legal deixa de ser recomendação: vira mecanismo.
 - **`scripts/prova-verificar-fichas.sh`** — prova no sentido negativo com quatro variações do asset que **têm** de reprovar; reprovaram as quatro.
 - **Gate na bateria:** o par asset+verificador roda no `.githooks/pre-push` (escopado ao `CHANGED_FILES`) e no `scripts/ci-local.sh`, **com a prova negativa junto** — se o verificador enfraquecer, é a prova que acusa. O `.harness.toml` passou a dizer onde ele vive.
 - Skills **`hinario-e-dominio-publico`** e **`ocr-em-digitalizacao`**, com o frontmatter das demais.
 
 ### Verificado
-- Gate aprovando as 12 fichas e reprovando os 4 casos negativos; **o próprio hook recusou o push** com uma ficha `pd` sem ano (`PUSH BLOQUEADO — gate(s) reprovado(s): fichas`) e liberou com o asset íntegro; `ruff check`, `ruff format --check` e `shellcheck` verdes nos dois scripts; `documentation.py check` sem link quebrado; bateria do pre-push verde no push `a33598f..ca61cbb`.
+- Gate aprovando as 12 fichas e reprovando os 5 casos negativos; **o próprio hook recusou o push** com uma ficha `pd` sem ano (`PUSH BLOQUEADO — gate(s) reprovado(s): fichas`) e liberou com o asset íntegro; `ruff check`, `ruff format --check` e `shellcheck` verdes nos dois scripts; `documentation.py check` sem link quebrado; bateria do pre-push verde no push `a33598f..ca61cbb`.
 
 ### Ressalvas
 - O asset **ainda não é lido por código** — `lyrics.rs` continua com `hinos_dominio_publico.tsv`, intacto. O gate **está na bateria** e o contrato `[validation]` do `.harness.toml` segue só com gitleaks (decisão de 2026-11-21). Como fichas e **corpus de letras** se relacionam é decisão do dono — PENDING.

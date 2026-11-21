@@ -1015,3 +1015,25 @@ conferido) e o mesmo hook passa com `✅ fichas`.
 um gate manualmente. Passou a `"${1:-origin}"`.
 
 **Custo medido:** 0,1 s (12 fichas + as 4 variações da prova).
+
+## R4 · O corpus que "não existia": verificado no repositório, não na memória (2026-11-21)
+
+A sessão anterior parou porque o agente pediu ao dono que **colasse** o conteúdo de
+`crates/mir_engine/assets/hinos_dominio_publico.tsv`. O dono respondeu que não tinha o arquivo e que
+"era para o modelo ter gerado e pelo jeito não gerou". O arquivo **existia**, e a verificação custou
+três comandos: está commitado desde `e9f388f` (ampliado em `1cc5d91`, último toque em `7c67d0d`, 13:58
+de hoje), tem **40 linhas** — 35 de comentário e 4 hinos — e **9 campos posicionais**, o último o
+`verso`; e é lido em **tempo de compilação** por `lyrics.rs`, via `include_str!`. Sem ele o
+`cargo clippy` reprovaria o push, e o push estava verde.
+
+**A lição não é sobre o arquivo, é sobre o caminho:** pedir ao dono um dado que está no repositório é
+sintoma de agente sem leitura — e o custo aparece como sessão perdida, não como erro. O que ficou
+disso:
+
+- o asset de fichas ganhou **cabeçalho `#`** que documenta o formato e a relação com o corpus — os
+  dois **não se fundem**: lá é letra, aqui é fato;
+- o verificador passou a **ignorar `#`** (mesma convenção do corpus) e a prova ganhou o **5º caso
+  negativo**: arquivo só com comentários e cabeçalho tem de reprovar;
+- o vínculo está escrito no asset, com exemplo real: *Holy, Holy, Holy* (Heber, 1826) no corpus ↔
+  **09 Santo, Santo, Santo** (trad. João Gomes da Rocha, 1947 → PD 2018) nas fichas — mesma obra
+  original, duas obras distintas, que é a regra 2 do corpus.
