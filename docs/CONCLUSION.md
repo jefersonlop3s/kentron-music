@@ -233,7 +233,7 @@
 **Status:** 🟢 Integrado à `main`; as lições da sessão de Native Assets deixaram de viver só no relato e passaram a ser recuperáveis.
 
 ### O que foi criado
-- **Quatro skills** em `.agents/skills/`, com gatilho concreto na tabela do `AGENTS.md`:
+- **Quatro skills** em `.agents/skills/`, com gatilho concreto na tabela do `/AGENTS.md`:
   - `empacotamento-rust-flutter` — como o núcleo entra no app hoje (build hooks, ADR-0008), os predicados técnicos que quebram o build quando ausentes (`crate-type`, `rust-toolchain.toml` dentro do crate, JDK 21) e os erros com assinatura conhecida.
   - `higiene-de-dispositivos` — encerrar emulador/simulador depois da prova, verificando pelo estado do dispositivo em vez de padrão de processo.
   - `lote-nao-e-sequencia` — comandos agrupados executam em paralelo; dependência entre eles vira corrida.
@@ -253,4 +253,25 @@
 ### Ressalvas
 - Skill é julgamento, não gate: nada impede a próxima sessão de não carregá-la. O único item com mecanismo é a higiene de dispositivos, e mesmo ela depende de alguém rodar o script.
 - Apagar a branch remota antes da local faz o `git branch -d` recusar (ref rastreado obsoleto): `git fetch --prune origin` antes resolve.
+
+## Processo · Perfil do projeto e shellcheck como gate (2026-11-20)
+
+**Status:** 🟢 Integrado à `main`; `/AGENTS.md` deixou de ter placeholders e o `shellcheck` virou gate nos dois pontos onde a bateria roda.
+
+### O que foi preenchido
+- **Perfil do projeto** no `/AGENTS.md`: topologia de repositório único (`.harness.toml`), fronteiras (workspace Rust, app Flutter, pacote de localização, ferramentas Python), `main` protegida com `origin` como único remote, stack com as versões pinadas, comandos reais de validação, locales dos ARBs e autoridades de aprovação.
+- **Comunicação**: português (Brasil).
+- **Release**: sem release publicada; `0.0.0` em `Cargo.toml` e `apps/kentron_app/pubspec.yaml`; a primeira é o piloto da R1.
+
+### O que virou mecanismo
+- `shellcheck` em `scripts/ci-local.sh` (todos os `scripts/*.sh`, com `require` fail-loud) e em `.githooks/pre-push` (só os `.sh` do push, mesmo recorte dos gates de lint por stack). O workflow `.github/workflows/ci.yml` instala a ferramenta antes de chamar o script.
+- `.githooks/pre-push` corrigiu SC2164: `cd "$REPO_ROOT" || exit 1`. Sem isso, um `cd` que falhasse deixava os gates rodando no diretório errado, sem aviso.
+
+### Evidências
+- `shellcheck scripts/*.sh` → `EXIT=0` nos três scripts.
+- Gate `shell` no sentido negativo: linha defeituosa injetada em `scripts/encerrar-dispositivos.sh` → `❌ shell`, `PUSH BLOQUEADO`, `HOOK_EXIT=1`, log com SC2154/SC2086; arquivo restaurado → `✅ shell`, `HOOK_EXIT=0`.
+
+### Ressalvas
+- O hook continua com 17 achados de `shellcheck`: SC2329 é falso positivo (função chamada por `run_gate`) e SC2001 é estilo. O gate cobre `scripts/*.sh`, não o hook, porque um erro no hook já aparece como falha de gate durante o push.
+- `.harness.toml` segue com `[validation] configured = false` e `gates = []` enquanto o projeto tem gates reais; `.harness/validation.py` recusa rodar nesse estado. Declarar o contrato é decisão do dono: apontar para `scripts/ci-local.sh` faz a bateria completa rodar de novo a cada invocação.
 

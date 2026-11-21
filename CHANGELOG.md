@@ -2,6 +2,18 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] Perfil do projeto preenchido e shellcheck vira gate (2026-11-20)
+### Adicionado
+- `shellcheck` nos dois pontos onde a bateria roda: `scripts/ci-local.sh` (todos os `scripts/*.sh`) e `.githooks/pre-push` (só os `.sh` que o push toca, mesmo recorte dos gates de lint por stack). O workflow `.github/workflows/ci.yml` instala a ferramenta antes de chamar o script.
+### Alterado
+- `AGENTS.md` deixou de ter placeholders: "Perfil do projeto" declara topologia, estrutura, branch/remote, stack, comandos de validação, idiomas e autoridades de aprovação; "Comunicação" fixa português (Brasil); "Release" diz o estado real (sem release publicada, `0.0.0` nos dois manifestos).
+- `.githooks/pre-push`: `cd "$REPO_ROOT"` passou a `cd "$REPO_ROOT" || exit 1` (SC2164) — sem isso, um `cd` que falha deixava os gates rodando no diretório errado, em silêncio.
+### Verificado
+- `shellcheck scripts/*.sh` → `EXIT=0` (três scripts, zero achados).
+- Gate `shell` provado no sentido negativo: com uma linha defeituosa injetada em `scripts/encerrar-dispositivos.sh`, o hook reprovou (`❌ shell`, `PUSH BLOQUEADO`, `HOOK_EXIT=1`) e o log diagnóstico mostrou SC2154/SC2086; com o arquivo restaurado, o mesmo hook passou (`✅ shell`, `HOOK_EXIT=0`).
+### Ressalva
+- O hook em si continua com 17 achados de `shellcheck` (SC2329 é falso positivo de função chamada por `run_gate`; SC2001 é estilo). Por isso o gate cobre `scripts/*.sh`, não o hook.
+
 ## [processo] Lições da sessão viram skills e um mecanismo (2026-11-20)
 ### Adicionado
 - Quatro skills em `.agents/skills/`: `empacotamento-rust-flutter` (Native Assets, predicados técnicos e erros com assinatura), `higiene-de-dispositivos` (encerrar emulador/simulador depois da prova), `lote-nao-e-sequencia` (comando agrupado roda em paralelo) e `toolchain-unica` (duplicata de binário decide o PATH).

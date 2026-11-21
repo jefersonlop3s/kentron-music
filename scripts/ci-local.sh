@@ -52,6 +52,7 @@ EOF
 require cargo
 require python3
 require cargo-deny
+require shellcheck
 
 FLUTTER="$(resolve_flutter)"
 
@@ -65,6 +66,12 @@ if [[ -f .flutter-version ]]; then
     exit 1
   fi
 fi
+
+step "Shell: shellcheck (scripts/*.sh)"
+# O hook de push checa só os .sh que o push toca; aqui é a bateria inteira.
+# O próprio hook fica de fora: ele roda DURANTE o push e tem falsos positivos
+# (SC2329 em função chamada por `run_gate`).
+shellcheck scripts/*.sh
 
 step "Rust: formatação (cargo fmt --check)"
 cargo fmt --all -- --check

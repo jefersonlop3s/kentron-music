@@ -38,7 +38,7 @@ set -uo pipefail
 unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
-cd "$REPO_ROOT"
+cd "$REPO_ROOT" || exit 1
 REPO_NAME=$(basename "$REPO_ROOT")
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BLUE='\033[0;34m'; NC='\033[0m'
@@ -461,6 +461,27 @@ if [ -f "pyproject.toml" ] || [ -f "setup.py" ] || [ -f "requirements.txt" ]; th
         ruff check "${py[@]}" && ruff format --check "${py[@]}"
     }
     run_gate lint gate_lint
+fi
+
+# ---------- Shell (scripts/*.sh) ----------
+# Mesmo recorte dos gates de lint acima: só os `.sh` que o push toca. O próprio
+# hook (`.githooks/pre-push`) fica de fora de propósito — ele roda DURANTE o
+# push, então um erro de shell nele já aparece como falha de gate. Medido em
+# 2026-11-20: `shellcheck` no hook devolve 17 achados, todos SC2329 (falso
+# positivo de função chamada por `run_gate`) ou SC2001 (estilo); nos
+# `scripts/*.sh` devolve zero. O SC2164 real (`cd` sem `|| exit`) foi corrigido
+# neste mesmo push.
+if compgen -G "scripts/*.sh" >/dev/null 2>&1; then
+    gate_shell() {
+        precisa_de shellcheck "brew install shellcheck (macOS) · https://www.shellcheck.net" || return 127
+        local sh=()
+        while IFS= read -r f; do
+            [ -n "$f" ] && [ -f "$f" ] && case "$f" in *.sh) sh+=("$f") ;; esac
+        done <<< "$CHANGED_FILES"
+        [ ${#sh[@]} -eq 0 ] && { echo "nenhum .sh no push"; return 0; }
+        shellcheck "${sh[@]}"
+    }
+    run_gate shell gate_shell
 fi
 
 # ---------- Gates transversais do Kentron (ADR-0004) ----------

@@ -44,6 +44,10 @@ jobs:
       # ~/.cargo/bin entre execuções, então o custo é só na primeira vez.
       - name: cargo-deny
         run: cargo install --locked cargo-deny
+      # O script também exige shellcheck (fail-loud). A imagem do runner já traz
+      # o binário; instalar explicitamente evita depender do que a imagem tem.
+      - name: shellcheck
+        run: sudo apt-get install -y --no-install-recommends shellcheck
       - name: pipeline local
         run: ./scripts/ci-local.sh
 

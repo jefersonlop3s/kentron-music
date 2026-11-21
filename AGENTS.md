@@ -3,7 +3,7 @@
 > Fonte única das instruções do projeto. `GEMINI.md` é symlink para este arquivo; `CLAUDE.md` carrega apenas
 > as instruções do RTK e não duplica este conteúdo;
 > o Antigravity o recebe pela regra `always_on` em `.agents/rules/`; Codex e OpenCode o leem nativamente.
-> Preencha os campos `<...>`. Mantenha curto: o que é verificável vira gate, o que é julgamento vira skill.
+> Mantenha curto: o que é verificável vira gate, o que é julgamento vira skill.
 
 ## Leitura obrigatória
 
@@ -16,15 +16,27 @@
 
 ## Perfil do projeto
 
-Declarar topologia (repo único, monorepo ou metarrepositório), membros e fronteiras
-de responsabilidade, branch principal/remotes quando existirem, stack, comandos
-reais de validação, idiomas/locales e autoridades de aprovação. O harness não
-infere esses contratos a partir de nomes de pasta. Membros independentes mantêm
-seus próprios hooks e histórico; o meta-repo não executa testes deles implicitamente.
+- **Topologia**: repositório único (`topology = "repository"` em `.harness.toml`), sem membros
+  independentes — um histórico e um conjunto de hooks. O harness não infere isso do nome das pastas.
+- **Fronteiras**: workspace Rust (`crates/kentron_ffi`, o núcleo exposto ao app — ADR-0007/ADR-0008),
+  app Flutter (`apps/kentron_app`, alvos Android, iOS e Web), pacote de localização
+  (`packages/core_l10n`) e ferramentas Python (`tools/`, `scripts/`).
+- **Branch principal e remote**: `main`, protegida no guard contra commit direto; único remote
+  `origin` (`github.com/jefersonlop3s/kentron-music`).
+- **Stack**: Rust 1.97.1 (pinado em `crates/kentron_ffi/rust-toolchain.toml`), Flutter 3.50.1
+  (pinado em `.flutter-version`), JDK 21, NDK 28.2.13676358, Gradle 9.5.0, AGP 9.3.1, KGP 2.4.20,
+  compileSdk/targetSdk 36, minSdk 24.
+- **Comandos reais de validação**: `./scripts/ci-local.sh` (bateria completa, mesma matriz do
+  workflow) e `.githooks/pre-push` (gates por push: gitleaks, trivy, semgrep, clippy, testes,
+  rustfmt, shellcheck, cargo-deny, ARBs, Flutter).
+- **Idiomas e locales**: documentação e comunicação em português (Brasil); o app tem ARBs `en`
+  (template), `es`, `es_ES`, `pt` e `pt_PT`.
+- **Autoridades de aprovação**: o dono do projeto aprova decisão estrutural (ADR), remoção de
+  branches e release.
 
 ## Comunicação
 
-- Idioma: `<idioma>`. Técnico e direto, sem bajulação.
+- Idioma: português (Brasil). Técnico e direto, sem bajulação.
 - Senso crítico: revise a própria sugestão contra o histórico do projeto antes de propor.
 
 ## Segurança e soberania
@@ -47,7 +59,7 @@ seus próprios hooks e histórico; o meta-repo não executa testes deles implici
 3. **Autoria** segue a identidade Git configurada e a política de contribuição. Não alterar identidade global.
 4. **Gates locais**: configurar comandos reais em `.harness.toml` antes de ativar `git config core.hooksPath .githooks` em cada clone. Gate reprovou: corrija o código ou o gate (skill `gate-reprovou`). O runner portátil não oferece bypass por variável; escapes do guard e do perfil legado são mecanismos distintos e não certificam validação.
 5. **Merge** pelo mecanismo aprovado pelo projeto, com validação do resultado integrado. Adaptador GitHub só se aplica quando essa for a forge; repositório local não exige PR remoto. Não desativar os checks requeridos.
-6. **Release**: `<processo>`. Versão semântica conferida nos manifestos antes de qualquer push de versão.
+6. **Release**: ainda não há release publicada — versão `0.0.0` em `Cargo.toml` e em `apps/kentron_app/pubspec.yaml`. A primeira é o piloto da R1 (R1-C em `docs/ROADMAP.md`); a versão semântica é conferida nos dois manifestos antes de qualquer push de versão.
 
 ## Documentação viva
 

@@ -54,5 +54,5 @@ Migrar o empacotamento do Rust para o backend **Native Assets**, eliminando o pl
 ## Referências
 
 - ADR-0007 (mecanismo da ponte) e sua emenda.
-- Doc upstream: `manual/integrate/03-native-assets.md` e `manual/integrate/05-migrate-cargokit-to-native-assets.md` (PR #3285).
+- Doc upstream (no repositório do `flutter_rust_bridge`, não neste): `manual/integrate/03-native-assets` e `manual/integrate/05-migrate-cargokit-to-native-assets` (PR #3285).
 - Spike local: branch `spike/native-assets`, com builds e execução medidos em 2026-11-20.
