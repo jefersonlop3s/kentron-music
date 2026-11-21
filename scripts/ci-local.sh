@@ -88,6 +88,13 @@ cargo deny check
 step "i18n: paridade de ARBs"
 python3 tools/check_arb.py
 
+step "Fichas do hinário: asset + prova no sentido negativo"
+# O hook de push roda os dois quando o push toca asset/verificador/prova. Aqui é
+# a bateria inteira: o asset de fatos nunca tem letra nem cifra (limite legal da
+# edição protegida) e a prova garante que o verificador ainda reprova o que deve.
+python3 scripts/verificar_fichas.py
+bash scripts/prova-verificar-fichas.sh
+
 step "Rust: cdylib da ponte Rust ↔ Flutter (ADR-0007)"
 # O teste de ponte do app carrega `target/debug/libkentron_ffi.<ext>`; sem este
 # build o `flutter test` falha com "cdylib ausente".

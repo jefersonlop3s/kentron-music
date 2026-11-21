@@ -48,6 +48,10 @@ members = []
 # flutter analyze/test) já é aplicada pelo `.githooks/pre-push` em cada push —
 # repeti-la aqui dobraria o custo sem acrescentar cobertura. Este contrato
 # declara a validação barata e real; a caríssima continua no hook.
+#
+# O gate das fichas do hinário (`scripts/verificar_fichas.py` + prova negativa)
+# também vive no `.githooks/pre-push`, não aqui: é dado do projeto, não validação
+# de dependência, e roda escopado ao que o push toca (decisão de 2026-11-21).
 configured = true
 
 [[validation.gates]]

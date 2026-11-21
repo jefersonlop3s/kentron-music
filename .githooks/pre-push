@@ -285,7 +285,10 @@ avisa_base() {
         echo -e "${YELLOW}   O merge de três vias resolve sem conflito. Rebase é opcional.${NC}"
     fi
 }
-avisa_base "$1"
+# O git passa o nome do remote em `$1`; manualmente (prova de gate) não há `$1`,
+# e com `set -u` o hook abortava na linha seguinte — o gate não podia ser provado
+# fora do push (medido em 2026-11-21).
+avisa_base "${1:-origin}"
 
 
 valida_baseline_gitleaks
@@ -511,6 +514,37 @@ if [ -f "tools/check_arb.py" ]; then
             FAILED+=("arb")
         fi
     fi
+fi
+
+# ---------- Fichas do hinário (asset de fatos + gate) ----------
+# O asset `crates/mir_engine/assets/fichas_hinario.tsv` guarda SÓ FATOS de hino
+# (autoria, tradução, melodia, anos, veredito e procedência) — nunca letra nem
+# cifra, que pertencem à edição protegida (EME/JUERP 2011; CPAD © 2007).
+# `scripts/verificar_fichas.py` reprova veredito inválido, pd/protegido sem ano,
+# gap sem observação, procedência vazia, campo acima de 300 caracteres e
+# QUALQUER coluna de letra/cifra/tablatura: o limite legal vira mecanismo
+# (skill `hinario-e-dominio-publico`, 2026-11-21).
+#
+# A prova no sentido negativo roda JUNTO (2026-11-21): o verificador é o único
+# código do par, e um gate que nunca reprova não verifica nada — se alguém
+# enfraquecer o verificador, é a prova que acusa. Custo medido: 0,1 s para
+# quatro variações sobre 12 fichas.
+#
+# Escopo ao que está sendo enviado, como nos demais gates: asset, verificador,
+# prova ou este próprio hook no `CHANGED_FILES`; sem eles, nada a checar.
+if [ -f "scripts/verificar_fichas.py" ]; then
+    gate_fichas() {
+        precisa_de python3 "https://www.python.org/downloads/" || return 127
+        # Herestring + `grep -q`, nunca `printf | grep -q`: com pipefail o grep
+        # fecha o pipe cedo e o gate seria pulado em silêncio (lição do radar).
+        if ! grep -qE '^(crates/[^/]+/assets/fichas_hinario\.tsv|scripts/verificar_fichas\.py|scripts/prova-verificar-fichas\.sh|\.githooks/pre-push)$' <<< "$CHANGED_FILES"; then
+            echo "nenhum arquivo de fichas no push"
+            return 0
+        fi
+        python3 scripts/verificar_fichas.py || return $?
+        bash scripts/prova-verificar-fichas.sh
+    }
+    run_gate fichas gate_fichas
 fi
 
 if [ -f "apps/kentron_app/pubspec.yaml" ]; then
