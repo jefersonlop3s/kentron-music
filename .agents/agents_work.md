@@ -35,6 +35,26 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/de6b0 — Kentron: prova de navegador, locales e piloto automatizado
+- **Início:** 2026-11-21 09:30 (UTC) · **Última atualização:** 2026-11-21 10:20 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `feature/locales-pt-br` (de `main` `acf94f8`; integrada por merge `--ff-only`) · **Worktrees:** diretório principal
+- **Demanda:** o dono respondeu as pendências (locale `pt_BR`, contrato do `musicxml`, piloto automatizado) e pediu para **ver e testar** o que foi entregue.
+- **Paths sob edição:** nenhum (concluído).
+- **Status:** concluído — `main` = `origin/main` = `302f7d0`, bateria verde no push.
+- **PRs:** nenhum (merge `--ff-only` local).
+
+**Feito:**
+- **i18n:** `pt_BR` era a resposta, mas o `gen-l10n` exige arquivo-base por idioma — `pt_BR` sem `pt` aborta, e `es_419` é região UN M49 que ele não trata como país. Ficou `pt`/`en`/`es` com a correspondência explícita no `AGENTS.md`.
+- **Contrato de arquitetura:** `musicxml` é **stub**, não entrega.
+- **Prova de navegador** (Playwright/Chromium headless) sobre o build web: home, leitor, transposição, projeção, avanço/volta, contraste, bootstrap por URL e cópia do link.
+- **Dois defeitos achados por olhar a tela:** ícones como "tofu" (`pubspec` sem `flutter: uses-material-design`) e AppBar do Modo Palco claro sobre corpo escuro. Ambos corrigidos, com teste.
+- **ADR-0010:** portão R1-D vira **piloto automatizado** (VM Windows + OBS por Browser Source, duas rodadas simuladas); o uso ao vivo vem depois. ADR-0002/ADR-0009 emendados; ROADMAP e plano v2.6 alinhados.
+- **`scripts/e2e-web.sh`** versiona a prova de fumaça (Playwright fora do repositório).
+
+**Provado:** 30 testes de app; `flutter analyze` limpo; `flutter build web --release` verde; prova de navegador com clipboard contendo `…/?projecao=<base64>`; push com gitleaks, trivy, semgrep, types, test, lint, shell, deny, arb e flutter.
+
+**Aberto:** prova **dentro do OBS** (roteiro do piloto automatizado); erro de console `wasm_bindgen` declarado duas vezes; setlists; alpha assistido.
+
 ### cline/de6b0 — Kentron: Browser Source do OBS por URL
 - **Início:** 2026-11-21 03:10 (UTC) · **Última atualização:** 2026-11-21 03:35 (UTC)
 - **Repositório:** `kentron-music` · **Branches:** `feature/browser-source-obs` (de `main` `789dd4f`; integrada por merge `--ff-only`) · **Worktrees:** diretório principal
