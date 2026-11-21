@@ -35,6 +35,26 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/de6b0 — Kentron: perfil do projeto e shellcheck como gate
+- **Início**: 2026-11-20 23:52 (UTC) · **Última atualização**: 2026-11-21 00:00 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/perfil-e-shellcheck` (de `main` `d5f2bbf`; integrada por merge `--ff-only` → `310199a`) · **Worktrees**: diretório principal
+- **Demanda**: o dono pediu para ajustar o que ficou em aberto na sessão anterior — placeholders do `AGENTS.md`, `shellcheck` no script novo e a higiene de dispositivos como gate.
+- **Paths sob edição**: nenhum (concluído).
+- **Status**: concluído — `main` = `origin/main` = `310199a`, bateria verde no push.
+- **PRs**: nenhum (integração por merge `--ff-only`).
+
+**Feito:**
+- **`AGENTS.md` sem placeholders:** "Perfil do projeto" declara topologia (`repository`), fronteiras (Rust + Flutter + `core_l10n` + Python), `main` protegida com `origin` único, stack com versões pinadas, comandos reais de validação, locales (`en`, `es`, `es_ES`, `pt`, `pt_PT`) e autoridades de aprovação; "Comunicação" fixa português (Brasil); "Release" diz o que existe (versão 0.0.0, sem release publicada).
+- **`shellcheck` virou gate em dois pontos:** `scripts/ci-local.sh` (todos os `scripts/*.sh`, com `require` fail-loud) e `.githooks/pre-push` (só os `.sh` do push, mesmo recorte dos gates de lint por stack); o workflow `ci.yml` instala a ferramenta.
+- **SC2164 corrigido no hook:** `cd "$REPO_ROOT" || exit 1` — sem isso, um `cd` que falhasse deixava os gates rodando no diretório errado, em silêncio.
+- **Validadores verdes:** `verificar_refs.py` (estava quebrado com 7 referências, 3 delas minhas), `verificar_adr.py` e `documentation.py check`.
+
+**Provado no sentido negativo:** com um `.sh` defeituoso injetado, o hook reprovou (`❌ shell`, `HOOK_EXIT=1`) e o log diagnóstico mostrou o achado; restaurado, o mesmo hook passou. No push real, `✅ shell` apareceu na bateria.
+
+**Ficou aberto:**
+- Higiene de dispositivos **não** virou gate: só vira se voltar a custar sessão — encerrar dispositivo durante um push é efeito colateral num comando de verificação.
+- `.harness.toml` `[validation]` segue `configured = false`/`gates = []` embora o projeto tenha gates; `validation.py` recusa rodar assim. Decisão do dono, porque rodar a bateria inteira por push tem custo.
+
 ### cline/de6b0 — Kentron: lições da sessão viram skills
 - **Início**: 2026-11-20 23:20 (UTC) · **Última atualização**: 2026-11-20 23:51 (UTC)
 - **Repositório**: `kentron-music` · **Branches**: `feature/skills-sessao` (de `main` `5582d2f`; integrada por merge) · **Worktrees**: `~/.cline/worktrees/de6b0/app-music`
