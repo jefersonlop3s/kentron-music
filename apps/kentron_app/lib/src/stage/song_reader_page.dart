@@ -135,6 +135,10 @@ class _SongReaderPageState extends State<SongReaderPage> {
     return Scaffold(
       backgroundColor: _palco ? _slateInk : null,
       appBar: AppBar(
+        // O AppBar acompanha o modo Palco: sem isto, a barra fica clara sobre
+        // um corpo escuro — medido na prova de navegador em 2026-11-21.
+        backgroundColor: _palco ? _slateInk : null,
+        foregroundColor: _palco ? _paperWhite : null,
         title: Text(titulo),
         actions: <Widget>[
           IconButton(

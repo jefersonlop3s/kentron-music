@@ -40,7 +40,9 @@ Parser ChordPro, transposição e testes dourados já integrados à `main`; o re
 - [ ] Setlists utilizáveis no Modo Palco (navegar de uma música para a próxima sem voltar à biblioteca).
 - [ ] Implementar exportação OpenLyrics/Holyrics e validar XML.
 - [x] **Bootstrap de projeção por URL:** `?projecao=<base64url do ChordPro>` abre o app direto na projeção; o leitor oferece "Copiar link de projeção" no alvo web. Sem `obs-websocket`. Provado por 5 testes de URL + 2 de bootstrap e pela compilação do build web.
-- [ ] Provar o Browser Source dentro do OBS: o bootstrap compila, mas o round-trip no OBS não foi executado.
+- [x] **Prova de navegador dos entregues (2026-11-21):** Playwright + Chromium headless sobre o build web — home, leitor, transposição, projeção, avanço/volta de seção, contraste, bootstrap por URL e cópia do link, com screenshots.
+- [ ] **Piloto automatizado (R1-D, ADR-0010):** roteiro na VM Windows + OBS carregando a projeção por Browser Source — abrir, transpor, projetar, navegar, fechar/reabrir — e duas rodadas consecutivas simuladas. Cobre a prova no OBS.
+- [ ] **Erro de console `wasm_bindgen` declarado duas vezes:** o `index.html` carrega `pkg/kentron_ffi.js` e o carregador do frb injeta o mesmo glue outra vez. O app funciona (a ponte respondeu na prova de navegador), mas a dupla carga precisa ser resolvida — registrado no `scripts/e2e-web.sh` como aviso, não como falha.
 - [ ] **Alpha assistido (R1-C, ADR-0009):** um ensaio com o fluxo completo — leitor, projeção e transposição —, falhas registradas com diagnóstico e dados sobrevivendo a fechar/reabrir o app. É o portão inicial e não depende de calendário de culto.
 - [ ] Executar o piloto de dois cultos e fechar a R1 (R1-D, portão final, depois do R1.1 — ADR-0009).
 

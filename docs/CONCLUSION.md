@@ -395,3 +395,28 @@
 - O round-trip **dentro do OBS** não foi executado: o build web prova compilação, não o Browser Source em uso. Essa prova continua pendente.
 - Tela secundária nativa (fora do OBS) segue sem transporte.
 
+## Processo · Prova de navegador, locales e piloto automatizado (2026-11-21)
+
+**Status:** 🟢 Telas entregues provadas em navegador real; dois defeitos encontrados e corrigidos; portão da R1 passa a ser automatizado.
+
+### O que foi provado (Playwright + Chromium headless, sobre o build web)
+- **Home:** saudação localizada, `núcleo: kentron_ffi 0.0.0` (a ponte wasm responde no navegador) e o botão **Abrir cifra**.
+- **Leitor:** seções, acordes alinhados em ouro, seletor `Tom: C` e os três ícones de ação.
+- **Transposição:** trocar o tom levou `C G Am F` a `Db Ab Bbm Gb` — transpõe de verdade na tela.
+- **Projeção:** fundo escuro, seção e letra grandes; **avanço/volta por toque** mudam `1 / 2` ↔ `2 / 2`.
+- **Bootstrap por URL:** `?projecao=<base64>` abriu direto na projeção com a cifra da URL.
+- **Copiar link:** o clipboard saiu de vazio para `…/?projecao=<base64 do ChordPro>`.
+
+### Defeitos encontrados por olhar a tela (e corrigidos)
+- **Ícones como "tofu":** o `pubspec.yaml` não tinha a seção `flutter:`, então `uses-material-design` estava desligado e a fonte de ícones não era empacotada. Corrigido; o build passou a fazer tree-shake de 1,6 MB → 2 KB.
+- **AppBar do Modo Palco claro sobre corpo escuro:** corrigido com `backgroundColor`/`foregroundColor` seguindo o modo, e coberto por teste.
+
+### Decisões registradas
+- **Locale de faixa 1:** `pt_BR` foi pedido, mas o `gen-l10n` **exige arquivo-base por idioma** (`pt_BR` sem `pt` faz o gerador abortar) e `es_419` usa região UN M49 que o gerador não trata como país. Ficou `pt`/`en`/`es` com a correspondência explícita no `/AGENTS.md` (`pt` = pt-BR, `es` = es-419), sem duplicar texto.
+- **Contrato de arquitetura:** `musicxml` é **stub**, não entrega — o `architecture/README.md` foi corrigido.
+- **ADR-0010:** o portão R1-D passa a ser **piloto automatizado** (VM Windows + OBS por Browser Source, duas rodadas simuladas); o uso ao vivo vem depois e realimenta a próxima release. ADR-0002 e ADR-0009 ganharam a nota de emenda, e ROADMAP/plano v2.6 foram alinhados — sem contradição entre eles.
+
+### Evidências
+- 30 testes de app; `flutter analyze` limpo; `flutter build web --release` verde.
+- Screenshots da prova em `/tmp/kentron-e2e/shots2` e `/tmp/kentron-e2e/shots3` (artefatos locais da sessão).
+

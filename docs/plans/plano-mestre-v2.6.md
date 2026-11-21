@@ -59,11 +59,12 @@ Ressalvas abertas:
 - Alpha assistido em um ensaio, com falhas registradas e diagnosticadas. **Pendente.**
 - Dados sobrevivem a fechar e reabrir o app. **Pendente.**
 
-### R1-D · Piloto e release (portão final, depois do R1.1)
+### R1-D · Piloto automatizado e release (portão, ADR-0010)
 
-- Dois cultos consecutivos em uma igreja, sem assistência do desenvolvedor. **Pendente.**
+- Piloto automatizado na VM Windows + OBS (Browser Source): abrir, transpor, projetar e navegar. **Pendente.**
+- Duas rodadas consecutivas simuladas (substituem os "dois cultos" como espera). **Pendente.**
 - Nenhuma perda de dados, crash bloqueante ou falha de projeção. **Pendente.**
-- pt-BR, en-US e es-419 revisados por falantes nativos. **Pendente.**
+- pt-BR, en-US e es-419 revisados por falantes nativos — em paralelo. **Pendente.**
 - MusicXML e ATEX ficam para **R1.1**, depois do spike S5 — ordem de execução, não redução de escopo (ADR-0005 rejeitada; ADR-0002 integral).
 
 ## 4. Riscos e mitigações
@@ -90,4 +91,4 @@ Ressalvas abertas:
 2. ~~Integrar `core_l10n` e criar a chamada real Rust ↔ Flutter~~ — **feito**: `core_l10n` integrado (delegates, locales e o ARB `homeWelcome`, com teste por locale) e a chamada real existe — `crates/kentron_ffi` expõe `parse_song` ao Dart (ADR-0007), provada por teste de Flutter.
 3. Fechar o parser ChordPro e iniciar Song Bundle/persistência.
 4. Implementar OpenLyrics e Browser Source manual.
-5. Fechar o alpha em ensaio (R1-C), depois o piloto de dois cultos (R1-D) e só então publicar a R1.
+5. Fechar o alpha em ensaio (R1-C), depois o piloto automatizado (R1-D) e publicar; o uso ao vivo vem **depois** e realimenta a próxima release.

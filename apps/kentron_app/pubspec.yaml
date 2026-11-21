@@ -28,3 +28,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+
+flutter:
+  # Empacota a fonte de ícones do Material. Sem isto, `Icons.*` não tem glifo
+  # no build — no web o ícone vira "tofu" (quadrado). Medido em 2026-11-21 no
+  # rodapé da projeção (chevron), achado pela prova de navegador.
+  uses-material-design: true

@@ -2,6 +2,19 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] Prova de navegador, locales e piloto automatizado (2026-11-21)
+### Adicionado
+- **Prova de navegador** (Playwright + Chromium headless) sobre o build web: home, leitor, transposição, projeção, avanço/volta de seção, contraste, bootstrap por URL e cópia do link — com screenshots. Evidência do link: o clipboard passou de vazio para `…/?projecao=<base64 do ChordPro>`.
+- **ADR-0010 · Piloto automatizado antes do uso ao vivo:** o portão R1-D passa a ser automatizado (VM Windows + OBS via Browser Source) com duas rodadas consecutivas simuladas; o uso ao vivo vem depois e realimenta a próxima release.
+### Corrigido
+- `apps/kentron_app/pubspec.yaml` não tinha a seção `flutter:`, então `uses-material-design` estava desligado e a **fonte de ícones não era empacotada** — no web os ícones saíam como "tofu". Achado pela prova de navegador e corrigido (tree-shake de 1,6 MB → 2 KB).
+- O **AppBar do Modo Palco** não acompanhava o tema: barra clara sobre corpo escuro. Corrigido e coberto por teste.
+- `docs/architecture/README.md` listava `musicxml` como entregue; é **stub** — o contrato existe e recusa com erro explícito.
+### Decidido
+- Locale de faixa 1 conforme a ADR-0002 (pt-BR, en-US, es-419). O `gen-l10n` **exige arquivo-base por idioma**, então os ARBs seguem `pt`/`en`/`es` e a correspondência (`pt` = pt-BR, `es` = es-419) fica explícita no `AGENTS.md` — um `pt_BR` sem `pt` faz o gerador abortar.
+### Verificado
+- 30 testes de app; `flutter analyze` limpo; `flutter build web --release` verde com a fonte de ícones empacotada.
+
 ## [R1-B] Browser Source do OBS por URL
 ### Adicionado
 - `projection_link.dart`: `chordproDaUrl` (lê `?projecao=<base64url do ChordPro>`) e `urlDaProjecao` (monta a URL preservando host, caminho e fragmento). Base64url evita escapes de `&`, `#` e acentos.

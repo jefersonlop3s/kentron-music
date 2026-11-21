@@ -118,6 +118,31 @@ void main() {
     expect(pedido, 'D');
   });
 
+  testWidgets('o modo Palco escurece também o AppBar', (tester) async {
+    await tester.pumpWidget(
+      _montar(
+        const SongReaderPage(
+          input: 'ignorado',
+          ler: _ler,
+          transpor: _transpor,
+          tons: _tons,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<AppBar>(find.byType(AppBar)).backgroundColor, isNull);
+
+    await tester.tap(find.byTooltip('Contrast'));
+    await tester.pumpAndSettle();
+
+    // Mesmo tom de Slate Ink do corpo: nada de barra clara sobre fundo escuro.
+    expect(
+      tester.widget<AppBar>(find.byType(AppBar)).backgroundColor,
+      const Color(0xFF0B0F14),
+    );
+  });
+
   testWidgets('abre a projeção a partir do leitor', (tester) async {
     await tester.pumpWidget(
       _montar(

@@ -1,6 +1,6 @@
 # ADR-0009 · Portão inicial da R1: alpha assistido antes do piloto de culto
 
-- **Status:** aceito (2026-11-21) — decisão do dono do projeto: o piloto pesado não pode ser o primeiro portão
+- **Status:** aceito (2026-11-21), **emendado pela [ADR-0010](0010-piloto-automatizado-antes-do-uso-ao-vivo.md)** — o portão R1-D passa a ser piloto automatizado
 - **Decisão do plano:** sequência da R1 (plano v2.6, §3 e §5)
 
 ## Contexto

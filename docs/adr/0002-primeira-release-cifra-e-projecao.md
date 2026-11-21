@@ -1,6 +1,6 @@
 # ADR-0002 · Primeira release pública: cifra, palco local e projeção (R1)
 
-- **Status:** aceita (2026-11-18); a emenda de formatos proposta na [ADR-0005](0005-escopo-da-r1.md) foi **rejeitada** (2026-11-20) — o escopo desta ADR permanece integral
+- **Status:** aceita (2026-11-18); a emenda de formatos proposta na [ADR-0005](0005-escopo-da-r1.md) foi **rejeitada** (2026-11-20) — o escopo desta ADR permanece integral. O **portão de release** é emendado pela [ADR-0010](0010-piloto-automatizado-antes-do-uso-ao-vivo.md): piloto automatizado, com o uso ao vivo como passo seguinte
 - **Decisão do plano:** D2
 
 ## Contexto

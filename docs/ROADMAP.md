@@ -59,14 +59,17 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 - [ ] Alpha assistido: um ensaio com o fluxo completo, desenvolvedor presente, falhas registradas com diagnóstico.
 - [ ] Dados sobrevivem a fechar e reabrir o app (bundle restaurado).
 
-### R1-D · Piloto e release (portão final, depois do R1.1)
-**Objetivo:** provar o produto em produção de igreja — o portão caro, no fim da linha (ADR-0002 inalterada).
-- [ ] Dois cultos consecutivos sem assistência do desenvolvedor.
+### R1-D · Piloto automatizado e release (portão final, ADR-0010)
+**Objetivo:** provar a release em ambiente controlado, sem depender de calendário de igreja.
+- [ ] Piloto automatizado na VM Windows + OBS: projeção carregada por Browser Source, cifra aberta, transposta, projetada e navegada; app sobrevive a fechar/reabrir.
+- [ ] Duas rodadas consecutivas simuladas (substituem os "dois cultos" como espera).
 - [ ] Nenhuma perda de dados, crash bloqueante ou falha de projeção.
-- [ ] pt-BR, en-US e es-419 revisados por falantes nativos.
+- [ ] pt-BR, en-US e es-419 revisados por falantes nativos — em paralelo, não como portão de calendário.
 - [ ] MusicXML e ATEX ficam para R1.1, depois do S5 — sequência de execução; o escopo de formatos da ADR-0002 permanece integral (ADR-0005 rejeitada).
 
-**Validação R1:** unitária, regressiva, exploratória e acessibilidade em todo push; E2E por alpha assistido (R1-C) e, no fim, piloto de igreja (R1-D).
+**Depois da release:** o uso ao vivo em culto acontece e realimenta a próxima release; **não** bloqueia a publicação.
+
+**Validação R1:** unitária, regressiva, exploratória e acessibilidade em todo push; E2E por alpha assistido (R1-C) e, no fim, piloto automatizado (R1-D).
 
 ---
 

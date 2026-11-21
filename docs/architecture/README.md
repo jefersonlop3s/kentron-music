@@ -35,7 +35,7 @@ O dado musical nunca é armazenado como string localizada; ele vive como estrutu
 
 ## 📌 Estado atual (R0/R1)
 
-- O domínio é `notation_bundle`: `chord_naming`, parser ChordPro, `harmony`, o modelo de bundle/setlists com persistência (ADR-0006) e `musicxml`. Os módulos `mir_*`, `band_*`, `stage_*` e `trust_*` ainda não existem.
+- O domínio é `notation_bundle`: `chord_naming`, parser ChordPro, `harmony`, o modelo de bundle/setlists com persistência (ADR-0006) e `musicxml` **como stub** — o módulo assina o contrato (`MusicXmlParser::parse`) e recusa com erro explícito; a implementação depende do spike S5 (R1.1). Os módulos `mir_*`, `band_*`, `stage_*` e `trust_*` ainda não existem.
 - A fronteira FFI é `kentron_ffi` (ADR-0007): expõe `parse_song` ao Dart e é a única a carregar código gerado — o domínio segue sem FFI, com `unsafe_code = "forbid"`.
 - `core_l10n` e `flutter_rust_bridge` **estão integrados**; a ponte deixou de ser placeholder e é provada por um teste de Flutter que carrega o `cdylib` e chama o núcleo.
 - O app Flutter ainda **não tem diretórios de plataforma**: a ponte roda em teste, mas o app não abre em dispositivo até isso ser criado.

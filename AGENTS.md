@@ -31,8 +31,11 @@
   rustfmt, shellcheck, cargo-deny, ARBs, Flutter). O contrato `[validation]` do `.harness.toml`
   declara o **gitleaks** como validação de toda invocação do `validation.py`; a bateria completa
   fica no hook, não no contrato (decisão de 2026-11-21).
-- **Idiomas e locales**: documentação e comunicação em português (Brasil); o app tem ARBs `en`
-  (template), `es`, `es_ES`, `pt` e `pt_PT`.
+- **Idiomas e locales**: documentação e comunicação em português (Brasil). Os ARBs são nomeados pelo
+  **idioma-base** — `en` (en-US), `es` (es-419), `pt` (pt-BR) — porque o `gen-l10n` exige um arquivo
+  base para cada idioma (um `pt_BR` sem `pt` faz o gerador abortar); `es_ES` e `pt_PT` sobrescrevem
+  as variantes europeias. A faixa 1 da ADR-0002 (pt-BR, en-US, es-419) é atendida por essa
+  correspondência.
 - **Autoridades de aprovação**: o dono do projeto aprova decisão estrutural (ADR), remoção de
   branches e release.
 
