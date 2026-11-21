@@ -540,4 +540,25 @@ Conclusão medida: na maior parte **a terça não está audível** — o `5` é 
 ### Leitura honesta do conjunto
 Não é mágica: é DSP sem modelo, **0,77 s para 400 s**, acertando o esqueleto harmônico inteiro, a estrutura e uma modulação — e falhando exatamente onde a informação não está no áudio (terça mascarada, baixo, digitação). O que falta é o que exige mais que DSP: **separar instrumentos** (stems) para recuperar terça e baixo, e **pitch tracking** para tablatura. Isso é o portão da R4 que segue de pé (spike S1 + peso no `MANIFEST`).
 
+## ADR-0012 · Crédito não é licença: o argumento do dono, com resposta (2026-11-21)
+
+**Status:** 🟡 Argumento registrado; a ADR segue **proposta** (o aceite é do dono).
+
+### O argumento, do jeito que veio
+O dono observou que a live da banda é derrubada quando executa música sem os créditos dos artistas originais — e que isso é justo. Daí: se eu informo na tela (ou na transmissão) quem detém o direito, o que diferencia extrair o texto **do áudio** de obtê-lo de **arquivo ou link**? Não seria a mesma coisa?
+
+### Por que não é a mesma coisa
+- **Crédito e licença são direitos distintos.** Crédito cumpre o **direito moral** (paternidade). **Reprodução** e **comunicação ao público** — tela, projeção, transmissão — são **direitos patrimoniais**, e é isso que a autorização tem de cobrir. Quem credita e não licenciou continua sem licença.
+- **A derrubada tem duas origens diferentes, e isso explica a assimetria que o dono notou:** a plataforma exigindo identificação/lincenciamento da obra, e o **Content ID** casando o **fonograma**. O que cai, no segundo caso, é a **gravação do titular** — por isso a banda ao vivo costuma passar e a gravação original não.
+- **A letra é obra autônoma**, protegida à parte da melodia e do fonograma. Extrair o texto cantado — por ouvido, por OCR ou por ASR — produz uma **cópia** dela. O meio não muda a natureza do ato; "é praticamente transcrição" descreve o ato, não o defende.
+
+### O que o argumento acertou
+O dono está certo em um ponto que importa: **a diferença entre os caminhos não é a "fonte", é de quem é o ato.** E há um caminho que ele **já tem** e resolve o caso da igreja: a **licença coletiva** (CCLI e equivalentes), que autoriza reproduzir e projetar letra. Com ela declarada, o app deixa de ser fonte concorrente de letra e passa a ser **ferramenta do licenciado** — e o motor agrega o que o texto sozinho não tem: alinhamento ao áudio, dinâmica por linha, estrutura e tempo.
+
+### Consequências registradas
+- ADR-0012 emendada: o **argumento do crédito fica escrito com a resposta** (para não voltar como "melhoria óbvia"), o passo 1 da decisão passa a nomear **letra sob licença declarada do usuário**, e a ressalva é explícita: **não é parecer jurídico**.
+- PENDING ganhou a proposta que operacionaliza a emenda: a cifra carregar `{lyrics_license: ...}` e um relatório de uso por música — que é justamente o que a licença coletiva exige de quem projeta e transmite. Formato é decisão do dono; o motor não arbitra licença.
+- Nada disso muda o que o ASR faria: ele continua atrás de decisão de peso **e** de licença, porque é o caminho em que o **produto** passa a ser quem reproduz.
+
+
 

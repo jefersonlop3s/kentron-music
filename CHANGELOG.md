@@ -2,6 +2,15 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [ADR-0012] Crédito não é licença: o argumento do dono, registrado (2026-11-21)
+### Decidido
+- **Emenda proposta à ADR-0012.** O dono perguntou, com razão de fato: se uma live sem crédito é derrubada, por que extrair o texto do áudio seria diferente de obtê-lo de arquivo ou link, **informando na tela quem detém o direito**? O argumento foi registrado com a resposta, em vez de descartado — para nenhuma sessão futura tratá-lo como exceção óbvia.
+- **Crédito e licença são direitos diferentes.** Crédito cumpre o **direito moral** de paternidade; **reprodução** e **comunicação ao público** (tela, projeção, transmissão) são **direitos patrimoniais**. Creditar não autoriza. A queda de live vem, tipicamente, da exigência de identificação/licenciamento da plataforma ou do **Content ID casando o fonograma** — é por isso que a banda ao vivo passa e a gravação original cai.
+- **A letra é obra autônoma**, protegida separadamente da melodia e do fonograma. Extrair o texto por ouvido, por OCR ou por **ASR** produz uma **cópia** dela: o meio não muda a natureza do ato. "É praticamente transcrição" descreve o ato, não o defende.
+- **O que muda entre os caminhos é de quem é o ato:** do usuário que transcreve para uso próprio, do **produto** que gera e distribui (um produto publicado não invoca uso privado), de ninguém no domínio público, do provedor licenciado, ou **do usuário licenciado** quando a letra é dele sob licença própria.
+- **A ADR passa a nomear o caminho que resolve — e não é ASR:** é a **licença que o usuário já tem** (licença coletiva de igreja/CCLI e equivalentes, que autoriza reproduzir e projetar letra). Com ela o app deixa de ser fonte concorrente de letra e vira **ferramenta do licenciado**; o motor agrega o que o texto sozinho não tem — alinhamento ao áudio, dinâmica por linha, estrutura e tempo.
+- **Ressalva escrita na ADR:** é registro de decisão de produto, **não parecer jurídico**; o caso concreto (igreja, transmissão, país) quem confirma é a entidade de licenciamento.
+
 ## [R4] Comparação medida contra uma cifra humana de referência (2026-11-21)
 ### Medido
 - O dono trouxe uma **cifra feita à mão** (CifraClub) da mesma música analisada no incremento 1, como gabarito. A cifra e a letra **não entram no repositório** (conteúdo de terceiro); o que fica registrado são os números e o método.
