@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Verifica o asset de fichas do hinário (skill `hinario-e-dominio-publico`).
 
+0. `#` comenta e é ignorado — mesma convenção do corpus `hinos_dominio_publico.tsv`;
+   a primeira linha não-comentada é o cabeçalho;
 1. toda ficha tem par (hinário, número) não vazio;
 2. veredito é um de: pd, protegido, gap, sem_ficha;
 3. pd e protegido exigem ano de morte relevante E ano de domínio público;
@@ -22,7 +24,11 @@ caminho = pathlib.Path(
 )
 if not caminho.exists():
     sys.exit(f"REPROVADO: asset não encontrado em {caminho}")
-linhas = [l for l in caminho.read_text(encoding="utf-8").splitlines() if l.strip()]
+linhas = [
+    texto
+    for texto in caminho.read_text(encoding="utf-8").splitlines()
+    if texto.strip() and not texto.lstrip().startswith("#")
+]
 if len(linhas) < 2:
     sys.exit("REPROVADO: asset vazio ou só com cabeçalho")
 

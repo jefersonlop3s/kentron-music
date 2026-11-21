@@ -20,14 +20,17 @@ prova() {
 python3 - "$BASE" "$TMP" <<'PY'
 import pathlib, sys
 base, tmp = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
-linhas = base.read_text(encoding='utf-8').splitlines()
-cab = linhas[0].split('\t')
+todas = base.read_text(encoding='utf-8').splitlines()
+# `#` comenta no asset (mesma convencao do corpus): a prova tambem ignora,
+# senao o cabecalho lido seria a primeira linha de comentario.
+dados = [l for l in todas if l.strip() and not l.lstrip().startswith('#')]
+cab = dados[0].split('\t')
 i_morte, i_ver, i_pd, i_fonte = cab.index('ano_relevante'), cab.index('veredito'), \
     cab.index('ano_dominio_publico'), cab.index('fonte')
 
 def variar(nome, muda):
-    saida = [linhas[0]]
-    for l in linhas[1:]:
+    saida = [dados[0]]
+    for l in dados[1:]:
         c = l.split('\t')
         muda(c)
         saida.append('\t'.join(c))
@@ -37,17 +40,21 @@ variar('sem-ano.tsv', lambda c: c.__setitem__(i_pd, '') if c[i_ver] == 'pd' else
 variar('protegido-sem-morte.tsv', lambda c: c.__setitem__(i_morte, '') if c[i_ver] == 'protegido' else None)
 variar('sem-fonte.tsv', lambda c: c.__setitem__(i_fonte, ''))
 (tmp / 'com-letra.tsv').write_text(
-    '\n'.join([linhas[0] + '\tletra'] + [l + '\ttexto qualquer' for l in linhas[1:]]) + '\n',
+    '\n'.join([dados[0] + '\tletra'] + [l + '\ttexto qualquer' for l in dados[1:]]) + '\n',
     encoding='utf-8')
+# Caso novo (2026-11-21): ignorar `#` nao pode transformar um arquivo so de
+# comentarios e cabecalho em asset aprovado.
+(tmp / 'so-cabecalho.tsv').write_text('# so comentario\n' + dados[0] + '\n', encoding='utf-8')
 PY
 
 prova 'registro pd sem ano de domínio público' "$TMP/sem-ano.tsv"
 prova 'registro protegido sem ano de morte'      "$TMP/protegido-sem-morte.tsv"
 prova 'procedência (fonte) vazia'                "$TMP/sem-fonte.tsv"
 prova 'coluna proibida de letra'                 "$TMP/com-letra.tsv"
+prova 'asset só com comentários e cabeçalho'     "$TMP/so-cabecalho.tsv"
 
 if [ "$falhas" -ne 0 ]; then
   echo "REPROVADO: $falhas caso(s) não reprovaram — o gate é fraco"
   exit 1
 fi
-echo "APROVADO: o gate reprovou os 4 casos negativos"
+echo "APROVADO: o gate reprovou os 5 casos negativos"

@@ -48,4 +48,7 @@ Placar medido dos 10: **6 domínio público** (09, 15, 46, 135, 295, 377), **3 p
 - **Não usar fonte web como primária** para decidir veredito.
 - **Não tratar título como identidade** — há **dois hinos chamados "Louvor"** no mesmo repertório
   (135, domínio público; 385, protegido até 2033), com vereditos opostos.
+- **Não fundir ficha com corpus de letras.** `hinos_dominio_publico.tsv` carrega o `verso` (9 campos
+  posicionais) e é lido por `lyrics.rs` via `include_str!`; a ficha carrega **fato**. A tradução é obra
+  própria (regra 2 do corpus), e é a ficha do tradutor que o corpus cobra para aceitar a versão.
 - **Não confundir as camadas**: o hino pode ser livre e a **tradução** que se canta não ser.

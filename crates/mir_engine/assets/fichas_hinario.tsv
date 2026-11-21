@@ -1,3 +1,22 @@
+# Fichas de hino — SÓ FATOS (ADR-0012; skill `hinario-e-dominio-publico`, 2026-11-21).
+#
+# Entram autoria, tradução, melodia, anos de falecimento, veredito e procedência.
+# NÃO entram letra nem cifra: são da edição protegida (Cantor Cristão Cifrado,
+# EME/JUERP 2011; Harpa Cristã Cifrada, CPAD © 2007), e o gate reprova qualquer
+# coluna com `letra`, `cifra` ou `tablatura`, além de campo acima de 300 caracteres.
+#
+# RELAÇÃO COM `hinos_dominio_publico.tsv` — os dois NÃO se fundem:
+#   · lá é CORPUS DE LETRAS: 9 campos posicionais, o último é o `verso`, lido por
+#     `lyrics.rs` via `include_str!` — mexer no formato quebra o motor;
+#   · aqui é FICHA (fatos), que decide se aquela versão pode ter letra.
+#   A regra 2 do próprio corpus já cobra o que esta tabela entrega: a tradução
+#   brasileira é obra própria e "entra só com a ficha do tradutor".
+#   Exemplo real: "Holy, Holy, Holy" (Heber, 1826) está no corpus; o "09 Santo,
+#   Santo, Santo" do Cantor Cristão é a tradução de João Gomes da Rocha (1947),
+#   com ficha própria aqui — domínio público desde 2018.
+#
+# Identidade é o par (hinário, número) MAIS o título: o 291 do Cantor Cristão é
+# "Comunhão Celeste"; o 291 da Harpa Cristã é "A Mensagem da Cruz".
 hinario	numero	titulo	autoria	traducao	melodia	ano_relevante	veredito	ano_dominio_publico	fonte	no_repertorio	observacao
 Cantor Cristão (Cifrado, EME/JUERP 2011)	01	Antífona	Maxwell Wright (1849-1931)		William H. Monk (1823-1889)	1931	pd	2002	ficha impressa no livro	nao	
 Cantor Cristão (Cifrado, EME/JUERP 2011)	03	Louvor ao Senhor	William E. Entzminger (1859-1930)		Robert Lowry (1826-1899)	1930	pd	2001	ficha impressa no livro	nao	
