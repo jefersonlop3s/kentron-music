@@ -18,7 +18,12 @@ serde_json = "1.0"
 # A cifra é montada como objeto do domínio e escrita por `chordpro::write`
 # (ADR-0012): o formato do app passa a ser o mesmo por construção, em vez de
 # texto montado à mão aqui dentro.
-notation_bundle = { path = "../notation_bundle" }
+#
+# A `version` aqui não é enfeite: `deny.toml` usa `wildcards = "deny"`, e uma
+# dependência de caminho sem versão é lida como wildcard pelo cargo-deny — o
+# gate `deny` reprovou o push até isto entrar (mesma armadilha documentada no
+# `kentron_ffi`).
+notation_bundle = { path = "../notation_bundle", version = "0.0.0" }
 
 [lints]
 workspace = true

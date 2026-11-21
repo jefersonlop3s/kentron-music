@@ -20,6 +20,7 @@ Todos os eventos notáveis do projeto Kentron Music Hub.
 - **Síntese do teste estava errada:** eu "tocava" a tríade em **sequência** (C, depois E, depois G) e o detector lia três acordes onde havia um — a fixture saía `[F][A5][Dsus4]` em vez de `C`. Acorde é simultâneo; com a tríade sustentada a fixture traz a progressão real (C, G, Am, F).
 - **Formante senoidal virava nota:** 900 Hz ≈ Lá 5 injetava um A no croma e o acorde de Dó saía `Am7`. O sopro da voz de teste agora é ruído de banda larga.
 - **`.cho` com a letra interrompida:** a conferência procurava a frase contígua no arquivo, mas `[C]Ama[G]zing` **quebra** o texto — a verificação passou a ser no texto que o parser separa, que é o que o app desenha.
+- **`deny` reprovou o push (2026-11-21):** a dependência de caminho para `notation_bundle` entrou sem `version`, e o `cargo-deny` lê dependência de caminho sem versão como **wildcard** (`wildcards = "deny"`). Mesma armadilha já documentada no `kentron_ffi`; corrigido com `version = "0.0.0"` e o motivo escrito no `Cargo.toml`.
 
 ### Verificado
 - **Rust:** 11 testes verdes — procedência e recusa do corpus (negativo: hino protegido não está lá), sílaba ("San-to" e não "Sa-nto"; "Bra-vo" com o `r` na sílaba certa), alinhamento em quatro blocos cantados, ida e volta pelo parser do app (`write` → `parse` devolve a mesma música) e **fixture dourada**.
