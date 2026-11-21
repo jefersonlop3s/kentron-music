@@ -2,6 +2,20 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] Fichas do hinário: dado em TSV, gate e prova negativa (2026-11-21)
+### Adicionado
+- **`crates/mir_engine/assets/fichas_hinario.tsv`** — **12 fichas** chaveadas pelo par **(hinário, número)**: **8 em domínio público, 3 protegidas e 1 GAP**, com **procedência por linha** (`fonte`). Só fatos: letra e cifra da edição não entram.
+- **`scripts/verificar_fichas.py`** — reprova veredito inválido, `pd`/`protegido` sem ano, `gap` sem observação, `fonte` vazia, campo acima de 300 caracteres e **qualquer coluna de letra/cifra/tablatura**. O limite legal deixa de ser recomendação: vira mecanismo.
+- **`scripts/prova-verificar-fichas.sh`** — prova no sentido negativo com quatro variações do asset que **têm** de reprovar; reprovaram as quatro.
+- Skills **`hinario-e-dominio-publico`** e **`ocr-em-digitalizacao`**, com o frontmatter das demais.
+
+### Verificado
+- Gate aprovando as 12 fichas e reprovando os 4 casos negativos; `ruff check`, `ruff format --check` e `shellcheck` verdes nos dois scripts; `documentation.py check` sem link quebrado; bateria do pre-push verde no push `a33598f..ca61cbb`.
+
+### Ressalvas
+- O asset **ainda não é lido por código** — `lyrics.rs` continua com `hinos_dominio_publico.tsv`, intacto — e o gate **não está no `.githooks/pre-push`**: a decisão de 2026-11-21 manteve o contrato `[validation]` do `.harness.toml` em gitleaks. PENDING traz o próximo passo.
+- **Duas reprovações reais só apareceram quando o commit existiu:** o push anterior dizia "nada a commitar" e deixava `CHANGED_FILES` vazio — `lint` e `shell` não tinham arquivo para olhar. `ruff format` e `shellcheck` (SC2164) reprovaram então, e foram corrigidos antes do commit.
+
 ## [ADR-0012] Sem catálogo, repertório móvel e obra derivada (2026-11-21)
 ### Decidido
 - **O produto nasce sem catálogo**, com **onboarding** explicando o funcionamento e o usuário o alimentando (palavras do dono). Consequência declarada: o corpus de domínio público embutido **não é catálogo** — é **tabela de referência de ficha**, que só responde quando o usuário traz uma obra com aquele título. Ele não sugere repertório nem aparece como biblioteca.
