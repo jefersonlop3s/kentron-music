@@ -930,3 +930,35 @@ O dono exigiu o número **no aparelho dele**, não uma estimativa. Feito: `whisp
 - **O `adb` não vê o aparelho só por ele estar no USB.** O celular expunha **uma** interface (`0xFF/0xFF/0x00`, nomeada "MTP") e **nenhuma** de ADB (`0xFF/0x42/0x01`): com a depuração inerte **não existe diálogo a aceitar** — o diálogo é consequência da interface, não causa. Depois de religar o switch **com o cabo conectado**, o celular re-enumerou e a interface nasceu (`ADB Interface@1`), flagrada ao vivo por um observador de 2 min.
 - **`system_profiler SPUSBDataType` devolve vazio neste shell** (sem permissão); a ferramenta é o `ioreg` (`IOUSBHostDevice`/`IOUSBHostInterface`). Foi o que **evitou** o diagnóstico errado de "troque o cabo": o aparelho sempre esteve no barramento, com o nome do modelo e o serial.
 - **Contagem de palavras só vale no mesmo formato.** Minha primeira comparação (620 contra 311) era **artefato meu**: a rodada do Mac imprimiu timestamps e o `wc -w` contou os tokens de tempo. Refeito com `-otxt` dos dois lados: **41 contra 40** no trecho. Medição comparada em formatos diferentes não é medição.
+
+### O 291 da Harpa Cristã: fechado com procedência por campo (2026-11-21)
+
+A Harpa não veio do livro do dono (ele não tem o exemplar em mãos): veio de **PDFs baixados**
+(`~/Downloads/harpa/`). Os dois hinários são **digitalizações sem camada de texto** — o texto saiu
+por **OCR nativo do macOS (Vision)**, em ambiente isolado (`/tmp/pdfvenv`: `pymupdf` +
+`pyobjc-framework-Vision`; nada instalado no sistema). O hino foi localizado por **calibração
+página↔número** (Cifrada: p.273 = 313, p.300 = 345 → **p.254 = 291**) e o crédito saiu das
+**iniciais impressas no próprio hino** — o sistema de siglas da Harpa (`AA.` no 291, `P.L.M.` no
+292, `D.L.` no 312, `S.N.` no 290). O elo final foi fechado **na fonte primária**: o **"Índice de
+Autores e Tradutores"** do hinário oficial da CPAD (p.722) traz **`A.A. → Antônio Almeida`**.
+
+| campo | valor | fonte |
+|---|---|---|
+| número/título | 291 A Mensagem da Cruz | hinário (Cifrada p.254; CPAD p.717) — **primária** |
+| sigla impressa | `AA.` | hinário (Cifrada p.255) — **primária** |
+| sigla → nome | **Antônio Almeida** | **índice do próprio hinário (CPAD p.722)** — **primária** |
+| datas | 1879-1969 | hinologia.org (biografia) — secundária |
+| original | "The Old Rugged Cross", George Bennard (1873-1958) | doctypemusic — secundária, não no livro |
+
+**Veredito: PROTEGIDO até 2040** (1969+71) — a versão em português é a camada que manda, e é a mais
+longa dos dez. A edição é **CPAD © 2007**, "todos os direitos reservados para a língua portuguesa":
+mesma regra do Cantor Cristão Cifrado — **só fatos**; PDF e fotos fora do repositório.
+
+**O "padrão assembleiano", medido:** a Harpa dá **sigla + índice de nomes, sem anos**; o Cantor
+Cristão Cifrado dá **Autoria/Tradução/Melodia com datas**. A Harpa custa **três fontes por hino**
+(hino → índice → biografia) para o que o Cantor Cristão resolve numa linha. O dono apontou isso
+antes de eu medir, e ele está certo.
+
+**Placar final do repertório: 10 de 10 com veredito** — 6 em domínio público (09, 15, 46, 135, 295,
+377), 3 protegidos (385→2033, 112→2036, **291→2040**) e 1 GAP (92, tradutor sem data).
+**Quatro dos dez exigem o caminho "ficha + letra do usuário"; os outros seis podem ter letra livre.**
