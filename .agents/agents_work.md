@@ -35,6 +35,20 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/de6b0 — Kentron: modo projeção manual em tela cheia
+- **Início**: 2026-11-21 02:45 (UTC) · **Última atualização**: 2026-11-21 03:05 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/modo-projecao` (de `main` `2e35d0c`; integrada por merge `--ff-only`) · **Worktrees**: diretório principal
+- **Demanda**: continuar a R1-C depois do leitor; a projeção era o próximo item do caminho.
+- **Paths sob edição**: nenhum (concluído).
+- **Status**: concluído — `main` = `origin/main` = `97a484b`, bateria verde no push.
+- **PRs**: nenhum (merge `--ff-only` local).
+
+**Feito:** `ProjectionPage` com uma seção por vez, sem acorde, avanço por toque/teclado/rodapé; botão **Projetar** no leitor; chaves `stageProject`, `stageProjectNext` e `stageProjectPrevious` nos três ARBs-base. `ROADMAP`, `PENDING`, `CHANGELOG` e `CONCLUSION` atualizados.
+
+**Provado:** `flutter analyze` limpo; **22 testes** de app passando (5 do modo projeção + 1 de abertura a partir do leitor); push com gitleaks, trivy, semgrep, types, test, lint, shell, deny, arb e flutter aprovados.
+
+**Próximo passo:** transporte para tela secundária/janela do OBS e setlists; depois o ensaio assistido do R1-C.
+
 ### cline/de6b0 — Kentron: leitor de cifras (Modo Palco) entregue
 - **Início**: 2026-11-21 02:00 (UTC) · **Última atualização**: 2026-11-21 02:40 (UTC)
 - **Repositório**: `kentron-music` · **Branches**: `feature/leitor-cifras` (de `main` `12ca7fb`; integrada por merge `--ff-only`) · **Worktrees**: diretório principal
