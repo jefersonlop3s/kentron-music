@@ -759,7 +759,7 @@ O dono escolheu **`medium` por padrão com `large`/`turbo` opcional por disposit
 Cuidado metodológico registrado: no mesmo modelo, **quanto mais ele alucina, mais tempo leva** (o `tiny` gastou mais que o `base` porque inventou minutos de texto).
 
 ### Minuta do termo de uso
-Criada em [`docs/legal/termo-de-uso.md`](legal/termo-de-uso.md) com 14 cláusulas e **fundamento rastreável cláusula a cláusula** (quadro "Fundamentos"), incluindo: declarações e garantias do usuário, escopo privado por padrão, sem garantia de exatidão (§7.2 — ancorada na medição acima), isenção e indenidade, canal de notificação com prova de titularidade, registro do ato e a cláusula que não se omite: **"este termo não substitui licença de titular"**. Marcada como **minuta para revisão jurídica**, com `<...>` onde falta decisão do dono. Categoria nova declarada em `docs/README.md` (`legal/`).
+Criada em [`docs/legal/termo-de-uso.md`](legal/termo-de-uso.md) com 14 cláusulas e **fundamento rastreável cláusula a cláusula** (quadro "Fundamentos"), incluindo: declarações e garantias do usuário, escopo privado por padrão, sem garantia de exatidão (§7.2 — ancorada na medição acima), isenção e indenidade, canal de notificação com prova de titularidade, registro do ato e a cláusula que não se omite: **"este termo não substitui licença de titular"**. Marcada como **minuta para revisão jurídica**, com `<...>` onde falta decisão do dono. Categoria nova declarada no índice documental (`README.md` deste diretório, seção `legal/`).
 
 
 

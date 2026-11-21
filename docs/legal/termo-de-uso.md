@@ -2,7 +2,7 @@
 
 > **Este documento é uma MINUTA.** Não é parecer jurídico e não está pronto para publicação: foi escrito para ser revisado pelo jurídico do dono, que decide o que entra, o que sai e como fica. Onde houver `<...>`, falta decisão do dono.
 
-**Versão:** 0.1 (minuta) · **Data:** 2026-11-21 · **Base:** pesquisas registradas na [ADR-0012](../../adr/0012-letra-fonte-alinhamento-e-limites.md) e no [CONCLUSION](../../CONCLUSION.md)
+**Versão:** 0.1 (minuta) · **Data:** 2026-11-21 · **Base:** pesquisas registradas na [ADR-0012](../adr/0012-letra-fonte-alinhamento-e-limites.md) e no [CONCLUSION](../CONCLUSION.md)
 
 ---
 
