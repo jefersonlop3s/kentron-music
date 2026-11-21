@@ -21,31 +21,212 @@ use crate::spectrum::Spectrogram;
 /// próprio arquivo. Nada entra sem autor, ano e base.
 const CORPUS_DOMINIO_PUBLICO: &str = include_str!("../assets/hinos_dominio_publico.tsv");
 
-/// De onde veio a letra. Nunca é opcional: fonte sem procedência não entra.
+/// Corte da regra norte-americana em 2026: obra **publicada antes** deste ano
+/// está em domínio público (regra dos 95 anos rolantes).
+const PRIMEIRO_ANO_PROTEGIDO_EUA: u16 = 1930;
+
+/// Onde a pergunta está sendo feita. "Domínio público" sem jurisdição é meia
+/// resposta: Brasil e EUA decidem por regras diferentes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub enum Jurisdicao {
+    Brasil,
+    Eua,
+}
+
+impl Jurisdicao {
+    #[must_use]
+    pub fn nome(self) -> &'static str {
+        match self {
+            Self::Brasil => "Brasil",
+            Self::Eua => "EUA",
+        }
+    }
+}
+
+/// A **obra** (letra e música): protegida por si, independente de quem gravou.
+///
+/// A ficha é o que sustenta o veredito — sem ela o motor **não afirma** domínio
+/// público (fail-loud). `tradutor` existe porque **tradução é obra própria**: um
+/// hinário de 1922 pode conter tradução de 1980.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Obra {
+    pub titulo: String,
+    pub autor: String,
+    pub ano: u16,
+    /// Ano de falecimento do autor: é o que decide vida+70 no Brasil.
+    pub autor_morte: Option<u16>,
+    pub tradutor: Option<String>,
+    /// Ano de falecimento do tradutor, quando a letra é tradução.
+    pub tradutor_morte: Option<u16>,
+    /// Procedência da ficha: edição, hinário, partitura.
+    pub base: String,
+}
+
+/// O **fonograma**: a gravação analisada.
+///
+/// Tem vida própria e por isso **não carrega veredito de domínio público** — a
+/// categoria não existe do lado da gravação. Uma gravação de ontem de obra de
+/// 1822 continua protegida; este tipo existe para o app dizer de quem é o áudio,
+/// em vez de tratar obra e gravação como a mesma coisa.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Fonograma {
+    pub descricao: String,
+    pub ano: Option<u16>,
+    pub titular: Option<String>,
+}
+
+/// Veredito sobre a obra — três estados, porque "não sei" não é "pode".
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub enum Veredito {
+    DominioPublico { regra: String },
+    Protegido { regra: String },
+    Indeterminado { motivo: String },
+}
+
+impl Veredito {
+    /// Texto curto para a cifra e para o relatório.
+    #[must_use]
+    pub fn resumo(&self) -> String {
+        match self {
+            Self::DominioPublico { regra } => format!("domínio público ({regra})"),
+            Self::Protegido { regra } => format!("protegido ({regra})"),
+            Self::Indeterminado { motivo } => format!("indeterminado — {motivo}"),
+        }
+    }
+
+    #[must_use]
+    pub fn eh_dominio_publico(&self) -> bool {
+        matches!(self, Self::DominioPublico { .. })
+    }
+}
+
+/// Onde a cifra pode circular. Extração feita pelo usuário nasce **privada**
+/// (ADR-0012): o que publica é a licença coletiva do usuário, não o app.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub enum Escopo {
+    Grupo,
+    Publico,
+}
+
+impl Escopo {
+    #[must_use]
+    pub fn nome(self) -> &'static str {
+        match self {
+            Self::Grupo => "grupo",
+            Self::Publico => "público",
+        }
+    }
+}
+
+/// Calcula o veredito da obra numa jurisdição. `ano_corrente` entra por parâmetro
+/// para o teste ser determinístico e para a regra rolante dos EUA ser explícita.
+///
+/// Não existe atalho: sem ano de falecimento (ou, na tradução, sem o do tradutor)
+/// o resultado é `Indeterminado`. Chutar "domínio público" sem ficha seria o pior
+/// erro possível nesta função.
+#[must_use]
+pub fn veredito_pd(obra: &Obra, jurisdicao: Jurisdicao, ano_corrente: u16) -> Veredito {
+    // Tradução é obra própria: quem manda é o tradutor, não o autor original.
+    let (nome, morte) = match &obra.tradutor {
+        Some(tradutor) => (tradutor.clone(), obra.tradutor_morte),
+        None => (obra.autor.clone(), obra.autor_morte),
+    };
+
+    match jurisdicao {
+        Jurisdicao::Brasil => match morte {
+            // Lei 9.610/98, art. 41: 70 anos contados de 1º de janeiro do ano
+            // seguinte ao falecimento — livre a partir de morte + 71.
+            Some(ano_morte) => {
+                let regra = format!("vida de {nome} ({ano_morte}) + 70 anos");
+                if ano_corrente >= ano_morte.saturating_add(71) {
+                    Veredito::DominioPublico { regra }
+                } else {
+                    Veredito::Protegido { regra }
+                }
+            }
+            None => Veredito::Indeterminado {
+                motivo: format!(
+                    "sem ano de falecimento de {nome}: vida+70 não se calcula e o motor não chuta"
+                ),
+            },
+        },
+        Jurisdicao::Eua => {
+            if obra.ano == 0 {
+                return Veredito::Indeterminado {
+                    motivo: "sem ano de publicação".to_owned(),
+                };
+            }
+            if obra.tradutor.is_some() {
+                // Nos EUA quem decide é a data de publicação **da tradução**, que a
+                // ficha não carrega separada do original — e o original pode ser um
+                // século mais antigo que a tradução.
+                return Veredito::Indeterminado {
+                    motivo: "tradução: falta o ano de publicação da tradução".to_owned(),
+                };
+            }
+            if obra.ano < PRIMEIRO_ANO_PROTEGIDO_EUA {
+                Veredito::DominioPublico {
+                    regra: format!(
+                        "publicado em {} (antes de {PRIMEIRO_ANO_PROTEGIDO_EUA})",
+                        obra.ano
+                    ),
+                }
+            } else {
+                Veredito::Protegido {
+                    regra: format!(
+                        "publicado em {} (a partir de {PRIMEIRO_ANO_PROTEGIDO_EUA})",
+                        obra.ano
+                    ),
+                }
+            }
+        }
+    }
+}
+
+/// De onde veio a letra. O **ato tem dono** — e não existe variante para extração
+/// feita *pelo produto*: ela exigiria licença e decisão própria (ADR-0012), e um
+/// enum que a aceitasse seria convite a usá-la.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub enum Origem {
-    /// Texto fornecido pelo próprio usuário (biblioteca, transcrição dele).
-    DoUsuario,
-    /// Corpus embutido de domínio público.
-    DominioPublico {
-        titulo: String,
-        autor: String,
-        ano: u16,
+    /// Texto fornecido pelo próprio usuário (biblioteca, transcrição dele, ou
+    /// sob licença que ele declara).
+    DoUsuario { licenca: Option<String> },
+    /// Corpus de domínio público, com a ficha que sustenta o veredito.
+    DominioPublico { obra: Obra },
+    /// Letra **extraída do áudio pelo usuário**: o ato é dele e a cifra nasce
+    /// privada no grupo. `obra` continua bem-vinda: extrair não transfere direito
+    /// nem torna a obra pública.
+    ExtraidaPeloUsuario {
+        responsavel: String,
+        obra: Option<Obra>,
     },
-    /// Transcrição automática do áudio — **não implementada** (ver ADR-0012).
-    Asr,
 }
 
 impl Origem {
+    /// Onde esta cifra pode circular.
+    #[must_use]
+    pub fn escopo(&self) -> Escopo {
+        match self {
+            Self::ExtraidaPeloUsuario { .. } => Escopo::Grupo,
+            Self::DoUsuario { .. } | Self::DominioPublico { .. } => Escopo::Publico,
+        }
+    }
+
     /// Descrição legível, para o relatório e para a cifra.
     #[must_use]
     pub fn descricao(&self) -> String {
         match self {
-            Self::DoUsuario => "fornecida pelo usuário".to_owned(),
-            Self::DominioPublico { titulo, autor, ano } => {
-                format!("domínio público — {titulo}, {autor} ({ano})")
+            Self::DoUsuario {
+                licenca: Some(licenca),
+            } => format!("fornecida pelo usuário; licença declarada: {licenca}"),
+            Self::DoUsuario { licenca: None } => "fornecida pelo usuário".to_owned(),
+            Self::DominioPublico { obra } => format!(
+                "domínio público — {}, {} ({})",
+                obra.titulo, obra.autor, obra.ano
+            ),
+            Self::ExtraidaPeloUsuario { responsavel, .. } => {
+                format!("extraída do áudio por {responsavel} (circulação privada no grupo)")
             }
-            Self::Asr => "transcrição automática (não implementada)".to_owned(),
         }
     }
 }
@@ -58,12 +239,12 @@ pub struct Letra {
     pub linhas: Vec<String>,
 }
 
-/// Lê letra de texto livre ou de ChordPro.
+/// Lê letra de texto livre ou de ChordPro, com licença declarada opcional.
 ///
 /// Em ChordPro, o que está entre colchetes é acorde: sai. Metadados (`{...}`),
 /// comentários (`#`) e linhas vazias também saem — sobra o texto cantado.
 #[must_use]
-pub fn ler_do_usuario(texto: &str) -> Letra {
+pub fn do_usuario(texto: &str, licenca: Option<String>) -> Letra {
     let mut linhas = Vec::new();
     for linha in texto.lines() {
         let limpa = linha.trim();
@@ -81,9 +262,15 @@ pub fn ler_do_usuario(texto: &str) -> Letra {
         linhas.push(sem_acordes.trim_end().to_owned());
     }
     Letra {
-        origem: Origem::DoUsuario,
+        origem: Origem::DoUsuario { licenca },
         linhas,
     }
+}
+
+/// Lê letra do usuário sem declarar licença.
+#[must_use]
+pub fn ler_do_usuario(texto: &str) -> Letra {
+    do_usuario(texto, None)
 }
 
 /// Remove trechos entre colchetes (acordes e nomes de seção).
@@ -108,38 +295,24 @@ fn sem_colchetes(linha: &str) -> String {
 #[must_use]
 pub fn do_corpus(titulo: &str) -> Option<Letra> {
     let alvo = titulo.trim().to_lowercase();
-    for linha in CORPUS_DOMINIO_PUBLICO.lines() {
-        let linha = linha.trim();
-        if linha.is_empty() || linha.starts_with('#') {
-            continue;
-        }
-        let mut campos = linha.split('\t');
-        let (Some(titulo_dp), Some(autor), Some(ano), Some(verso)) =
-            (campos.next(), campos.next(), campos.next(), campos.next())
-        else {
-            continue;
-        };
-        if titulo_dp.to_lowercase().starts_with(&alvo) {
+    for obra in obras_do_corpus() {
+        if obra.titulo.to_lowercase().starts_with(&alvo) {
+            // Ficha cuja obra não resolva domínio público na jurisdição de
+            // referência não é servida como letra — ver `auditar_corpus`.
+            let verso = verso_de(&obra.titulo)?;
             return Some(Letra {
-                origem: Origem::DominioPublico {
-                    titulo: titulo_dp.to_owned(),
-                    autor: autor.to_owned(),
-                    ano: ano.parse().unwrap_or(0),
-                },
-                linhas: verso
-                    .split(" | ")
-                    .map(|l| l.trim().to_owned())
-                    .filter(|l| !l.is_empty())
-                    .collect(),
+                origem: Origem::DominioPublico { obra },
+                linhas: verso,
             });
         }
     }
     None
 }
 
-/// Títulos disponíveis no corpus embutido: `(título, autor, ano)`.
-#[must_use]
-pub fn titulos_do_corpus() -> Vec<(String, String, u16)> {
+/// Lê as fichas do corpus embutido. Uma linha por obra; campo vazio é ausente.
+///
+/// Formato: `titulo, autor, ano, autor_morte, tradutor, tradutor_morte, base, verso`.
+fn obras_do_corpus() -> Vec<Obra> {
     CORPUS_DOMINIO_PUBLICO
         .lines()
         .filter(|l| {
@@ -147,14 +320,88 @@ pub fn titulos_do_corpus() -> Vec<(String, String, u16)> {
             !l.is_empty() && !l.starts_with('#')
         })
         .filter_map(|linha| {
-            let mut campos = linha.split('\t');
-            Some((
-                campos.next()?.to_owned(),
-                campos.next()?.to_owned(),
-                campos.next()?.parse().ok()?,
-            ))
+            let campos: Vec<&str> = linha.split('\t').collect();
+            if campos.len() < 8 {
+                return None;
+            }
+            Some(Obra {
+                titulo: campos[0].trim().to_owned(),
+                autor: campos[1].trim().to_owned(),
+                ano: campos[2].trim().parse().unwrap_or(0),
+                autor_morte: campos[3].trim().parse().ok(),
+                tradutor: Some(campos[4].trim().to_owned()).filter(|t| !t.is_empty()),
+                tradutor_morte: campos[5].trim().parse().ok(),
+                base: campos[6].trim().to_owned(),
+            })
         })
         .collect()
+}
+
+/// Linhas da letra de uma obra do corpus.
+fn verso_de(titulo: &str) -> Option<Vec<String>> {
+    CORPUS_DOMINIO_PUBLICO.lines().find_map(|linha| {
+        let campos: Vec<&str> = linha.split('\t').collect();
+        if campos.len() < 8 || campos[0].trim() != titulo {
+            return None;
+        }
+        let linhas: Vec<String> = campos[7]
+            .split(" | ")
+            .map(|l| l.trim().to_owned())
+            .filter(|l| !l.is_empty())
+            .collect();
+        (!linhas.is_empty()).then_some(linhas)
+    })
+}
+
+/// Auditoria do corpus: cada ficha tem de resolver **domínio público** nas duas
+/// jurisdições declaradas, e a letra tem de existir.
+///
+/// É o verificador do corpus, e roda no teste: ficha incompleta ou tradução sem
+/// data do tradutor **reprova** em vez de passar despercebida.
+///
+/// # Errors
+///
+/// Devolve a lista de problemas encontrados, um por linha.
+pub fn auditar_corpus(ano_corrente: u16) -> Result<Vec<String>, Vec<String>> {
+    let mut problemas: Vec<String> = Vec::new();
+    let mut relatorio: Vec<String> = Vec::new();
+    for obra in obras_do_corpus() {
+        if obra.base.is_empty() {
+            problemas.push(format!("{}: ficha sem base (procedência)", obra.titulo));
+        }
+        for jurisdicao in [Jurisdicao::Brasil, Jurisdicao::Eua] {
+            let veredito = veredito_pd(&obra, jurisdicao, ano_corrente);
+            if !veredito.eh_dominio_publico() {
+                problemas.push(format!(
+                    "{} ({}): {}",
+                    obra.titulo,
+                    jurisdicao.nome(),
+                    veredito.resumo()
+                ));
+            } else {
+                relatorio.push(format!(
+                    "{} ({}): {}",
+                    obra.titulo,
+                    jurisdicao.nome(),
+                    veredito.resumo()
+                ));
+            }
+        }
+        if verso_de(&obra.titulo).is_none() {
+            problemas.push(format!("{}: ficha sem letra", obra.titulo));
+        }
+    }
+    if problemas.is_empty() {
+        Ok(relatorio)
+    } else {
+        Err(problemas)
+    }
+}
+
+/// Fichas disponíveis no corpus embutido.
+#[must_use]
+pub fn fichas_do_corpus() -> Vec<Obra> {
+    obras_do_corpus()
 }
 
 /// Vogal — inclusive `y`, que em inglês faz núcleo de sílaba ("every", "my").

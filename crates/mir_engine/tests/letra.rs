@@ -6,8 +6,8 @@
 //! de terceiros não entra em fixture; a letra é do corpus de **domínio público**
 //! embutido (ADR-0012).
 
-use mir_engine::lyrics::{self, Origem};
-use mir_engine::sheet;
+use mir_engine::lyrics::{self, Escopo, Fonograma, Jurisdicao, Obra, Origem, Veredito};
+use mir_engine::sheet::{self, Ficha};
 use mir_engine::{Opts, analyze_com_letra};
 use notation_bundle::chordpro::{ChordProParser, write};
 
@@ -19,9 +19,12 @@ fn corpus_de_dominio_publico_tem_procedencia_e_recusa_o_que_nao_pode() {
     let letra = lyrics::do_corpus("amazing").expect("Amazing Grace está no corpus");
     assert_eq!(letra.linhas.len(), 4);
     match &letra.origem {
-        Origem::DominioPublico { autor, ano, .. } => {
-            assert_eq!(autor, "John Newton");
-            assert_eq!(*ano, 1779);
+        Origem::DominioPublico { obra } => {
+            assert_eq!(obra.autor, "John Newton");
+            assert_eq!(obra.ano, 1779);
+            // A ficha traz o que decide a regra — não só o título e o ano.
+            assert_eq!(obra.autor_morte, Some(1807));
+            assert!(!obra.base.is_empty());
         }
         outro => panic!("procedência errada: {outro:?}"),
     }
@@ -29,14 +32,116 @@ fn corpus_de_dominio_publico_tem_procedencia_e_recusa_o_que_nao_pode() {
     // entrou — provado no sentido negativo.
     assert!(lyrics::do_corpus("how great").is_none());
     assert!(lyrics::do_corpus("great is thy").is_none());
-    // Todo título do corpus tem autor e ano anteriores a 1900.
-    for (titulo, autor, ano) in lyrics::titulos_do_corpus() {
-        assert!(
-            ano < 1900,
-            "{titulo} ({autor}) com ano {ano} não é pré-1900"
-        );
-        assert!(!autor.is_empty());
-    }
+    // Toda ficha do corpus resolve domínio público nas duas jurisdições.
+    let relatorio = lyrics::auditar_corpus(2026).expect("corpus audita limpo");
+    assert!(!relatorio.is_empty());
+}
+
+#[test]
+fn ficha_incompleta_nao_vira_dominio_publico() {
+    // Sem ano de falecimento, vida+70 não se calcula: `Indeterminado`. E
+    // indeterminado **não** é domínio público — é o fail-loud da função.
+    let sem_morte = Obra {
+        titulo: "Hino antigo".to_owned(),
+        autor: "Autor Desconhecido".to_owned(),
+        ano: 1822,
+        autor_morte: None,
+        tradutor: None,
+        tradutor_morte: None,
+        base: "Harpa Cristã".to_owned(),
+    };
+    let veredito = lyrics::veredito_pd(&sem_morte, Jurisdicao::Brasil, 2026);
+    assert!(!veredito.eh_dominio_publico());
+    assert!(matches!(veredito, Veredito::Indeterminado { .. }));
+}
+
+#[test]
+fn obra_de_1822_com_gravacao_de_ontem_nao_vira_gravacao_livre() {
+    // O caso do dono: letra de 1822, gravação de 2024. A **obra** é de domínio
+    // público; a **gravação** não — é fonograma de quem gravou, e `Fonograma`
+    // não tem veredito de domínio público de propósito.
+    let obra = Obra {
+        titulo: "Hino de 1822".to_owned(),
+        autor: "Autor Falecido".to_owned(),
+        ano: 1822,
+        autor_morte: Some(1868),
+        tradutor: None,
+        tradutor_morte: None,
+        base: "edição de 1822".to_owned(),
+    };
+    assert_eq!(
+        lyrics::veredito_pd(&obra, Jurisdicao::Brasil, 2026),
+        Veredito::DominioPublico {
+            regra: "vida de Autor Falecido (1868) + 70 anos".to_owned()
+        }
+    );
+    assert_eq!(
+        lyrics::veredito_pd(&obra, Jurisdicao::Eua, 2026),
+        Veredito::DominioPublico {
+            regra: "publicado em 1822 (antes de 1930)".to_owned()
+        }
+    );
+
+    let gravacao = Fonograma {
+        descricao: "regravação publicada em vídeo".to_owned(),
+        ano: Some(2024),
+        titular: Some("canal que gravou".to_owned()),
+    };
+    assert_eq!(gravacao.ano, Some(2024));
+    assert!(gravacao.titular.is_some());
+
+    // Tradução recente da mesma obra: outra obra, protegida no Brasil.
+    let traduzida = Obra {
+        tradutor: Some("Tradutor Recente".to_owned()),
+        tradutor_morte: Some(1995),
+        ..obra
+    };
+    assert!(matches!(
+        lyrics::veredito_pd(&traduzida, Jurisdicao::Brasil, 2026),
+        Veredito::Protegido { .. }
+    ));
+    // E nos EUA a tradução é Indeterminada: falta o ano de publicação dela.
+    assert!(matches!(
+        lyrics::veredito_pd(&traduzida, Jurisdicao::Eua, 2026),
+        Veredito::Indeterminado { .. }
+    ));
+}
+
+#[test]
+fn extracao_pelo_usuario_nasce_privada_e_nao_publica() {
+    let origem = Origem::ExtraidaPeloUsuario {
+        responsavel: "o próprio músico".to_owned(),
+        obra: None,
+    };
+    assert_eq!(origem.escopo(), Escopo::Grupo);
+    assert!(origem.descricao().contains("circulação privada"));
+
+    let outro = Origem::DoUsuario { licenca: None };
+    assert_eq!(outro.escopo(), Escopo::Publico);
+    assert_eq!(
+        Origem::DoUsuario {
+            licenca: Some("licença coletiva da igreja".to_owned())
+        }
+        .descricao(),
+        "fornecida pelo usuário; licença declarada: licença coletiva da igreja"
+    );
+}
+
+#[test]
+fn obra_recente_nao_passa_por_dominio_publico() {
+    let recente = Obra {
+        titulo: "Obra recente".to_owned(),
+        autor: "Autor Vivo".to_owned(),
+        ano: 1980,
+        autor_morte: Some(2010),
+        tradutor: None,
+        tradutor_morte: None,
+        base: "edição recente".to_owned(),
+    };
+    assert!(matches!(
+        lyrics::veredito_pd(&recente, Jurisdicao::Brasil, 2026),
+        Veredito::Protegido { .. }
+    ));
 }
 
 #[test]
@@ -56,7 +161,7 @@ fn letra_do_usuario_perde_acorde_e_metadado() {
     let letra =
         lyrics::ler_do_usuario("{title: X}\n[C]Santo, [G]santo\n# comentário\n\n[Verse]\nDeus\n");
     assert_eq!(letra.linhas, vec!["Santo, santo", "Deus"]);
-    assert_eq!(letra.origem, Origem::DoUsuario);
+    assert_eq!(letra.origem, Origem::DoUsuario { licenca: None });
 }
 
 #[test]
@@ -102,7 +207,28 @@ fn alinha_a_letra_as_frases_e_poe_o_acorde_na_silaba() {
     );
 
     // 4. A cifra sai como objeto do domínio e volta pelo parser do app.
-    let musica = sheet::montar(&relatorio, &alinhadas, "prova", &letra.origem.descricao());
+    let ficha = Ficha {
+        titulo: "prova".to_owned(),
+        origem: letra.origem.clone(),
+        fonograma: None,
+        ano_corrente: 2026,
+    };
+    let musica = sheet::montar(&relatorio, &alinhadas, &ficha);
+    // Origem de corpus público circula; e a ficha diz por quê, com a regra.
+    assert!(sheet::pode_publicar(&musica).is_ok());
+    let veredito_na_cifra = musica
+        .metadata
+        .get("work_status")
+        .expect("a cifra carrega o veredito da obra");
+    assert!(
+        veredito_na_cifra.contains("domínio público"),
+        "{veredito_na_cifra}"
+    );
+    assert!(veredito_na_cifra.contains("1807"), "{veredito_na_cifra}");
+    assert_eq!(
+        musica.metadata.get("lyrics_scope").map(String::as_str),
+        Some("público")
+    );
     let texto = write(&musica);
     let devolta = ChordProParser::parse(&texto).expect("o app precisa entender o que saímos");
     assert_eq!(devolta, musica, "ida e volta de ChordPro mudou a música");

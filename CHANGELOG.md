@@ -2,6 +2,29 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [ADR-0012 aceita] Procedência em dois eixos e extração pelo usuário (2026-11-21)
+### Adicionado
+- **Proveniência em dois eixos.** `lyrics::Obra` (título, autor, ano, **ano de falecimento**, tradutor, base) e `lyrics::Fonograma` (descrição, ano, titular) agora são tipos separados: **gravação de ontem de obra de 1822 continua protegida**, e `Fonograma` **não tem veredito de domínio público** — a categoria não existe do lado da gravação.
+- **`lyrics::veredito_pd(obra, jurisdição, ano)`** com três estados — `DominioPublico`, `Protegido`, **`Indeterminado`** — e **a regra que produziu o veredito** no texto: no Brasil, vida do autor + 70 anos (Lei 9.610/98, art. 41, contados de 1º de janeiro do ano seguinte ao falecimento); nos EUA, publicado antes de 1930. Sem ano de falecimento, o resultado é `Indeterminado`: **ficha incompleta nunca vira "domínio público"**.
+- **Armadilha da tradução tratada como dado:** a ficha tem `tradutor`/`tradutor_morte`, e a obra traduzida é julgada **pelo tradutor** — hinário de 1922 pode conter tradução de 1980. Nos EUA, tradução sem o ano de publicação dela é `Indeterminado`.
+- **`lyrics::ExtraidaPeloUsuario`** — extração **pelo usuário**, com o ato no nome dele e **escopo privado do grupo**; `sheet::pode_publicar` **reprova** publicação de cifra com escopo `grupo`. Não existe variante para extração feita *pelo produto*: o enum não aceita, de propósito.
+- **`--licenca`** na letra do usuário (texto livre, formato a definir pelo dono) e **`--gravacao "descrição|ano|titular"`**; verbos novos: **`--auditar-corpus`** e **`--ficha "título|autor|ano|falecimento|tradutor|falecimento tradutor|base"`**, que imprime o veredito por jurisdição.
+- A cifra passa a carregar **`{work_status: …}`** (com a regra), **`{recording_source: …}`** (ou "não declarada", sem omitir) e **`{lyrics_scope: …}`**.
+
+### Decidido
+- **ADR-0012 aceita pelo dono** e emendada no mesmo dia. O argumento do crédito (crédito ≠ licença) e a resolução — **a licença que o usuário já tem** (licença coletiva de igreja/CCLI) — ficam registrados na ADR, junto com a ressalva de que não é parecer jurídico.
+- Extrair letra do áudio entra como **ato do usuário**, não do produto: quem fornece responde, a cifra nasce privada no grupo, e publicar continua dependendo da licença coletiva dele.
+
+### Verificado
+- **Rust: 15 testes** (2 unidade + 4 análise + 5 letra/ficha + 4 fixture). Novos: `obra_de_1822_com_gravacao_de_ontem_nao_vira_gravacao_livre` (obra livre nas **duas** jurisdições, gravação com titular próprio, tradução recente **protegida** no Brasil e `Indeterminada` nos EUA), `ficha_incompleta_nao_vira_domínio_público`, `obra_recente_nao_passa_por_domínio_público`, `extracao_pelo_usuario_nasce_privada_e_nao_publica` e `extracao_do_usuario_bloqueia_publicacao` (portão no sentido negativo).
+- **Corpus auditado em teste:** cada ficha resolve domínio público nas duas jurisdições — `auditar_corpus` reprova ficha sem base, sem letra ou sem falecimento.
+- Fixture dourada regenerada, agora com os dois eixos: `{work_status: domínio público (vida de John Newton (1807) + 70 anos)}` e `{recording_source: áudio sintetizado pelo próprio teste; 2026; titular: kentron (fixture)}`.
+
+### Ressalvas
+- **Corpus brasileiro (Harpa Cristã, Cantor Cristão) não foi incluído.** Esses hinários reúnem **traduções** que podem ter autor recente; entrar exige a ficha do tradutor, e a ficha é o que o `--ficha` calcula e o `--auditar-corpus` confere. É trabalho de conferência, não de heurística.
+- **Extrair de verdade ainda não existe** (exige peso no `models/MANIFEST.toml`). O que entrou é o **enquadramento**: responsabilidade declarada e escopo privado, que é o que faltava para o caminho ser previsto sem pôr o produto no lugar do titular.
+- O app ainda não honra `lyrics_scope` na exportação nem no link de projeção — hoje quem reprova é o motor.
+
 ## [ADR-0012] Crédito não é licença: o argumento do dono, registrado (2026-11-21)
 ### Decidido
 - **Emenda proposta à ADR-0012.** O dono perguntou, com razão de fato: se uma live sem crédito é derrubada, por que extrair o texto do áudio seria diferente de obtê-lo de arquivo ou link, **informando na tela quem detém o direito**? O argumento foi registrado com a resposta, em vez de descartado — para nenhuma sessão futura tratá-lo como exceção óbvia.

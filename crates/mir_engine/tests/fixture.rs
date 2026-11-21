@@ -25,8 +25,18 @@ fn fixture_dourada_da_cifra_com_letra() {
     let musica = sheet::montar(
         &relatorio,
         &alinhadas,
-        "Amazing Grace",
-        &letra.origem.descricao(),
+        &sheet::Ficha {
+            titulo: "Amazing Grace".to_owned(),
+            origem: letra.origem.clone(),
+            // A fixture declara a gravação: ela é sintética, e como toda gravação
+            // tem dono próprio — o eixo do fonograma existe para dizer isso.
+            fonograma: Some(lyrics::Fonograma {
+                descricao: "áudio sintetizado pelo próprio teste".to_owned(),
+                ano: Some(2026),
+                titular: Some("kentron (fixture)".to_owned()),
+            }),
+            ano_corrente: 2026,
+        },
     );
     let texto = write(&musica);
 
@@ -72,4 +82,41 @@ fn sem_letra_nao_ha_linha_nenhuma() {
     let audio = cantar_quatro_frases();
     let (_, alinhadas) = analyze_com_letra(&audio, &Opts::default(), None);
     assert!(alinhadas.is_empty(), "sem letra, nada de linha");
+}
+
+/// Cifra nascida de **extração pelo usuário** não publica (ADR-0012): é o
+/// portão, provado no sentido negativo.
+#[test]
+fn extracao_do_usuario_bloqueia_publicacao() {
+    let audio = cantar_quatro_frases();
+    let letra = lyrics::Letra {
+        origem: lyrics::Origem::ExtraidaPeloUsuario {
+            responsavel: "o próprio músico".to_owned(),
+            obra: None,
+        },
+        linhas: vec!["linha extraída do áudio".to_owned()],
+    };
+    let (relatorio, alinhadas) = analyze_com_letra(&audio, &Opts::default(), Some(&letra));
+    let musica = sheet::montar(
+        &relatorio,
+        &alinhadas,
+        &sheet::Ficha {
+            titulo: "extraída".to_owned(),
+            origem: letra.origem.clone(),
+            fonograma: None,
+            ano_corrente: 2026,
+        },
+    );
+    assert_eq!(
+        musica.metadata.get("lyrics_scope").map(String::as_str),
+        Some("grupo")
+    );
+    let erro = sheet::pode_publicar(&musica).expect_err("escopo grupo tem de reprovar");
+    assert!(erro.contains("escopo privado do grupo"), "{erro}");
+    // E a cifra diz de quem é o ato, para quem ler saber.
+    let origem = musica
+        .metadata
+        .get("lyrics_source")
+        .expect("procedência declarada");
+    assert!(origem.contains("o próprio músico"), "{origem}");
 }

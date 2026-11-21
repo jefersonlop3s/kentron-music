@@ -560,5 +560,34 @@ O dono está certo em um ponto que importa: **a diferença entre os caminhos nã
 - PENDING ganhou a proposta que operacionaliza a emenda: a cifra carregar `{lyrics_license: ...}` e um relatório de uso por música — que é justamente o que a licença coletiva exige de quem projeta e transmite. Formato é decisão do dono; o motor não arbitra licença.
 - Nada disso muda o que o ASR faria: ele continua atrás de decisão de peso **e** de licença, porque é o caminho em que o **produto** passa a ser quem reproduz.
 
+## ADR-0012 aceita e emendada: dois eixos de procedência e extração pelo usuário (2026-11-21)
+
+**Status:** 🟢 **Aceita pelo dono**, emendada no mesmo dia e implementada. 15 testes de Rust verdes e o app segue verde.
+
+### O que o dono decidiu
+1. **Aprovar a ADR-0012.**
+2. **Obra e gravação são eixos distintos:** louvor de domínio público (hinário, Cantor Cristão, Harpa Cristã, clássico, folclórico) tem a **obra** informada como tal — mesmo quando a gravação é de ontem e vem de link. "A música/letra é de 1822 e a gravação é de ontem."
+3. **Extrair letra do áudio é necessidade real**, e o que sustenta o uso é ficar claro que **quem fornece é o usuário** — a extração é ato dele —, com a cifra resultante **privada no grupo da banda**.
+
+### O que foi implementado
+- **`Obra` e `Fonograma` como tipos separados**, com a regra explícita de que **gravação não tem veredito de domínio público**: a categoria não existe do lado do fonograma. Uma gravação de 2024 de obra de 1822 é registrada com **titular** — é o que a cifra passa a dizer.
+- **`veredito_pd` com três estados e a regra no texto**, por jurisdição: Brasil por **vida do autor + 70 anos** (Lei 9.610/98, art. 41, contados de 1º de janeiro do ano seguinte ao falecimento); EUA por **publicado antes de 1930**. **Ficha incompleta devolve `Indeterminado`** — e indeterminado não é "pode".
+- **A armadilha da tradução virou dado:** a ficha carrega `tradutor`/`tradutor_morte`, e a obra traduzida é julgada **pelo tradutor**. É o que impede um hinário de 1922 de passar como se a tradução de 1980 fosse de 1922.
+- **Extração pelo usuário como origem própria** (`ExtraidaPeloUsuario`), com **escopo `grupo`** e **`pode_publicar` reprovando** a publicação. Não existe variante de origem para extração feita *pelo produto*: o enum não aceita — decisão de tipo, não de prosa.
+- **Como identificar**: `--ficha` calcula o veredito por jurisdição a partir dos campos que o usuário informa; `--auditar-corpus` confere cada ficha do corpus; `--listar-hinos` mostra as fichas com o veredito. O caminho é **ficha conferida**, nunca adivinhação.
+
+### Provas
+- `obra_de_1822_com_gravacao_de_ontem_nao_vira_gravacao_livre` — obra de domínio público **nas duas jurisdições** (vida de 1868 + 70; publicação anterior a 1930), gravação com ano e titular próprios, e **tradução recente protegida** no Brasil e `Indeterminada` nos EUA por falta do ano de publicação da tradução.
+- `ficha_incompleta_nao_vira_dominio_publico`, `obra_recente_nao_passa_por_dominio_publico` — o negativo do verificador.
+- `extracao_do_usuario_bloqueia_publicacao` — o portão reprova, e a cifra nomeia de quem é o ato.
+- Fixture regenerada com os dois eixos visíveis: `{work_status: domínio público (vida de John Newton (1807) + 70 anos)}`, `{recording_source: …; 2026; titular: …}`, `{lyrics_scope: público}`.
+- Corpus auditado em teste: todas as fichas resolvem domínio público nas duas jurisdições.
+
+### Ressalvas
+- **Hinários brasileiros não entraram**, e é deliberado: cada hino exige a **ficha do tradutor**. A ferramenta está pronta; o trabalho é de conferência.
+- **A extração em si ainda não existe** — falta o peso no `models/MANIFEST.toml`. O que foi entregue é o enquadramento (responsabilidade + escopo), que era o que faltava para o caminho ser previsto sem pôr o produto no lugar do titular.
+- **O app ainda não honra `lyrics_scope`** na exportação e no link de projeção: hoje o portão mora no motor.
+
+
 
 

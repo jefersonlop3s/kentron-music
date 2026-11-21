@@ -1,6 +1,6 @@
 # ADR-0012 · Letra: de onde vem, como casa com o áudio, e o que não entra
 
-- **Status:** proposto (2026-11-21) — aguarda aceite do dono
+- **Status:** **aceito pelo dono do projeto (2026-11-21)**, emendado no mesmo dia pela seção "Emenda · Proveniência em dois eixos e extração pelo usuário"
 - **Depende de:** [ADR-0011](0011-mir-primeiro-incremento-de-analise-de-audio.md) (motor de análise)
 
 ## Contexto
@@ -79,3 +79,36 @@ Consequência prática na ADR: a decisão não muda (`ASR` continua atrás de de
 ### Ressalva
 
 Isto é registro de decisão de produto e engenharia, **não parecer jurídico**. Quem confirma a operação para o caso concreto (igreja, transmissão, país) é a entidade de licenciamento e o contador/jurídico do dono. O que a ADR faz é não fingir que crédito resolve, e não colocar o produto no lugar do titular.
+
+
+## Emenda · Proveniência em dois eixos e extração pelo usuário (2026-11-21, aceita com a ADR)
+
+O dono aprovou a ADR e trouxe dois pontos operacionais que a fecham.
+
+### 1. A obra e a gravação são coisas diferentes — e o app precisa dizer as duas
+
+Caso do dono: **"a música/letra é de 1822 e a gravação é de ontem"**. Ele está certo, e o erro a evitar é tratar as duas como uma só:
+
+- **Obra** (letra e música): o que é protegido por si. Domínio público quando a regra da jurisdição o declarar — no Brasil, vida do autor **+ 70 anos**, contados de 1º de janeiro do ano seguinte ao falecimento.
+- **Fonograma** (a gravação): tem vida própria. **Uma gravação de ontem de obra de 1822 continua protegida**, e o titular é de quem gravou. Regravação em "outra roupagem", com link de YouTube, é fonograma de terceiro.
+
+Consequência de desenho: a procedência passa a ter **dois eixos declarados** — obra **e** fonograma —, cada um com seus campos, e **o app nunca dá veredito de domínio público sobre o fonograma**: não existe essa categoria. O que ele faz é dizer de quem é a gravação que está sendo analisada.
+
+**Como identificar** (não é adivinhação, é ficha):
+1. O usuário informa a ficha da obra: **título, autor, ano da obra, ano de falecimento do autor e a base** (hinário, partitura, edição). Sem esses campos, o veredito é **`Indeterminado`** — o motor não chuta (fail-loud, princípio do projeto).
+2. **Armadilha nomeada: tradução é obra própria.** Hinário antigo (Harpa Cristã, Cantor Cristão) reúne traduções que podem ser **muito mais novas** que o original. A ficha precisa do **tradutor** e da data dele; sem isso, `Indeterminado`.
+3. O veredito sai **com a regra que o produziu** (`vida do autor (1868) + 70 anos`) e **por jurisdição** (Brasil e EUA divergem: no Brasil vale vida+70; nos EUA, obra publicada antes de 1930).
+4. A ficha da obra e a origem da gravação viajam na cifra (`{work_status: ...}`, `{recording_source: ...}`), então quem projeta sabe **o que** está usando e **de onde veio o áudio**.
+
+### 2. Extração de letra pelo usuário entra — com o ato no nome dele e circulação privada
+
+O dono decidiu: extrair a letra do áudio é **necessidade real**, e o que sustenta o uso é ficar claro que **quem fornece é o usuário** — a extração é ato dele, não do produto —, com a cifra resultante **privada no grupo da banda**.
+
+Decisão registrada:
+- A origem passa a ter `ExtraidaPeloUsuario` (**ato do usuário**), separada de `ASR do produto` — esta última **continua proibida** sem licença, porque aí quem reproduz é o produto.
+- Cifra com essa origem nasce com **escopo `grupo`**: o motor marca e **recusa publicação** (`pode_publicar`), e a projeção/exportação pública é caminho bloqueado. Publicar é o que a licença coletiva cobre; o app não substitui a licença do usuário.
+- A ficha da obra continua obrigatória nesse caminho: extrair do áudio **não** torna a obra de domínio público nem transfere direito.
+- **Pesos:** implementar a extração de verdade exige modelo no `models/MANIFEST.toml` com licença, fonte e hash. O que esta emenda decide é o **enquadramento** — a responsabilidade e o escopo —, que é o que faltava para a extração ser prevista sem colocar o produto no lugar do titular.
+
+### Ressalva que se mantém
+Continua **não sendo parecer jurídico**. O que a ADR garante é que o app não afirme domínio público sem ficha, não trate gravação como obra, e não publique o que nasceu privado.
