@@ -35,6 +35,20 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/de6b0 — Kentron: Browser Source do OBS por URL
+- **Início:** 2026-11-21 03:10 (UTC) · **Última atualização:** 2026-11-21 03:35 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `feature/browser-source-obs` (de `main` `789dd4f`; integrada por merge `--ff-only`) · **Worktrees:** diretório principal
+- **Demanda:** transportar a projeção para fora do app; o próximo item do R1-B era o Browser Source do OBS.
+- **Paths sob edição:** nenhum (concluído).
+- **Status:** concluído — `main` = `origin/main` = `4bef4f3`, bateria verde no push.
+- **PRs:** nenhum (merge `--ff-only` local).
+
+**Feito:** `?projecao=<base64url do ChordPro>` abre o app direto na projeção; `chordproDaUrl`/`urlDaProjecao` fazem o round-trip; `ProjecaoApp` sobe sem tela inicial; o leitor oferece "Copiar link de projeção" no alvo web. Sem `obs-websocket`.
+
+**Provado:** 5 testes de URL + 2 de bootstrap; suíte do app com **29 testes**; `flutter analyze` limpo; `flutter build web --release` compilou (`✓ Built build/web`); push com todos os gates verdes.
+
+**Aberto:** o round-trip **dentro do OBS** não foi executado — o build prova compilação, não o Browser Source em uso. Tela secundária nativa segue sem transporte.
+
 ### cline/de6b0 — Kentron: modo projeção manual em tela cheia
 - **Início**: 2026-11-21 02:45 (UTC) · **Última atualização**: 2026-11-21 03:05 (UTC)
 - **Repositório**: `kentron-music` · **Branches**: `feature/modo-projecao` (de `main` `2e35d0c`; integrada por merge `--ff-only`) · **Worktrees**: diretório principal
