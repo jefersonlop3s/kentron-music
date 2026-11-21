@@ -336,3 +336,23 @@
 ### Ressalva
 - O alpha em ensaio **não substitui** evidência de produção: o risco de falha em culto é adiado, não eliminado. A R1 só fecha com o R1-D.
 
+## R1 · Leitor de cifras (Modo Palco) entregue (2026-11-21)
+
+**Status:** 🟢 Leitor utilizável e alcançável pela tela inicial; projeção e setlists ainda abertas.
+
+### O que foi entregue
+- `SongReaderPage` desenha a cifra inteira com acorde sobre a letra, transposição por tom e alternância de contraste. O erro do núcleo aparece na tela — não vira vazio.
+- `chordLine` alinha os acordes nas colunas devolvidas pelo núcleo; acorde que invadiria o anterior é empurrado para a direita.
+- Botão **Abrir cifra** na tela inicial, com chave `stageOpenReader` nos três ARBs-base; `pt_PT` e `es_ES` herdam.
+
+### Provas
+- `flutter analyze` sem achados; **16 testes** de app passam.
+- 5 testes herméticos do leitor (alinhamento, desenho, transposição, erro).
+- 3 provas reais na ponte: `readSong` (seção/linha/coluna), `transposeSong` (tom e acordes), `keyChoices` (doze tons).
+- O `cdylib` foi reconstruído antes dos testes: estava mais velho que `bridge.rs` e teria provado contra binário obsoleto.
+
+### O que falta para o alpha (R1-C)
+- Projeção manual (tela secundária ou janela do OBS) a partir do leitor.
+- Setlists utilizáveis no Modo Palco.
+- Ensaio assistido com dados sobrevivendo a fechar/reabrir.
+

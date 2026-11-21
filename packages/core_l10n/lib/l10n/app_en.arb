@@ -52,5 +52,21 @@
         "type": "int"
       }
     }
+  },
+  "stageContrast": "Contrast",
+  "@stageContrast": {
+    "description": "Toggle between the normal and the high-contrast theme in Stage Mode."
+  },
+  "stageKey": "Key",
+  "@stageKey": {
+    "description": "Label of the key selector in Stage Mode."
+  },
+  "stageLoadFailed": "Could not load the chord chart",
+  "@stageLoadFailed": {
+    "description": "Shown when the core fails to read a chord chart."
+  },
+  "stageOpenReader": "Open chord chart",
+  "@stageOpenReader": {
+    "description": "Button on the home screen that opens Stage Mode."
   }
 }

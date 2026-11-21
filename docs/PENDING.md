@@ -34,7 +34,8 @@ Parser ChordPro, transposição e testes dourados já integrados à `main`; o re
 - [x] **Persistência local do Song Bundle (ADR-0006 aceita):** bundle em diretório (`meta.json` + `song.cho`), índice da biblioteca, setlists, `schema_version` com cadeia de migração e exportação por cópia do diretório. `serde`/`serde_json` é a primeira dependência externa do workspace e passa no `cargo deny`.
 - [ ] Empacotar `score.musicxml` e `tabs/*.atex` no bundle: a ADR-0006 já os prevê, mas o v1 escreve só o `.cho`.
 - [ ] Contêiner de arquivo único (zip) para exportação: v1.1 da ADR-0006, se o piloto exigir compartilhar por arquivo.
-- [ ] Criar UI de leitor de cifras (Modo Palco) e setlists.
+- [x] **UI de leitor de cifras (Modo Palco):** `SongReaderPage` desenha a cifra inteira com acorde sobre a letra, transposta pelo tom, e alterna contraste; alcançável pela tela inicial. Provada por 5 testes herméticos e 3 provas reais na ponte (`readSong`, `transposeSong`, `keyChoices`).
+- [ ] Setlists utilizáveis no Modo Palco (navegar de uma música para a próxima sem voltar à biblioteca).
 - [ ] Implementar exportação OpenLyrics/Holyrics e validar XML.
 - [ ] Validar Browser Source para OBS sem `obs-websocket`.
 - [ ] **Alpha assistido (R1-C, ADR-0009):** um ensaio com o fluxo completo — leitor, projeção e transposição —, falhas registradas com diagnóstico e dados sobrevivendo a fechar/reabrir o app. É o portão inicial e não depende de calendário de culto.

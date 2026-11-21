@@ -1,6 +1,7 @@
 import 'package:core_l10n/core_l10n.dart';
 import 'package:kentron_app/src/rust/bridge.dart';
 import 'package:kentron_app/src/rust/frb_generated.dart';
+import 'package:kentron_app/src/stage/song_reader_page.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Sovereign Emerald, token visual do DESIGN.md.
@@ -122,6 +123,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
                 return _CartaoDaCifra(resumo: resumo);
               },
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => SongReaderPage(input: widget.cifra),
+                ),
+              ),
+              child: Text(CoreL10n.of(context).stageOpenReader),
             ),
           ],
         ),

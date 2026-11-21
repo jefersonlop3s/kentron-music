@@ -2,6 +2,19 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [R1-C] Leitor de cifras (Modo Palco) entregue e ligado à tela inicial
+### Adicionado
+- **`SongReaderPage`** (`apps/kentron_app/lib/src/stage/song_reader_page.dart`): desenha a cifra inteira, acorde sobre a letra, com transposição por tom, alternância de contraste e erro do núcleo visível (não engolido). Carregador, transpositor e tons são injetáveis para os testes herméticos.
+- **`chordLine`** (`.../stage/chord_line.dart`): alinha os acordes nas colunas que o núcleo devolve; acorde que invadiria o anterior é empurrado para a direita.
+- **Botão "Abrir cifra"** na tela inicial, com chave de tradução `stageOpenReader` nos três ARBs-base (`en`, `pt`, `es`); variantes regionais herdam.
+- **Chaves novas** `stageContrast`, `stageKey`, `stageLoadFailed`, `stageOpenReader` em `core_l10n`.
+### Verificado
+- `flutter analyze` sem achados; **16 testes** de app passam (5 novos do leitor, 3 provas reais na ponte, 8 anteriores).
+- Provas reais na ponte: `readSong` devolve seção/linha/coluna; `transposeSong` muda o tom e os acordes; `keyChoices` devolve os doze tons.
+### Nota
+- O `cdylib` estava mais velho que `bridge.rs` (21:09 vs 23:35); reconstruído antes dos testes para não provar contra binário obsoleto.
+- `gen-l10n` e `analyze` no mesmo lote disputaram o lock do Flutter: comandos dependentes precisam ser sequenciados.
+
 ## [processo] ROADMAP corrigido: portão da R1 em dois, alpha antes do piloto (ADR-0009)
 ### Adicionado
 - **`R1-0 · Fundação técnica (entregue)`** no ROADMAP: ponte FFI, alvos Android/iOS/Web, Native Assets e `HomeScreen` consumindo o núcleo — entregas que existiam só na CONCLUSION e não apareciam na direção.

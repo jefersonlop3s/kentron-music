@@ -96,4 +96,47 @@ void main() {
     }
     expect(find.textContaining('núcleo: kentron_ffi '), findsOneWidget);
   });
+
+  test('read_song devolve a estrutura linha a linha', () async {
+    final detail = await readSong(
+      input:
+          '{title: Santo}\n{key: C}\n\n[Verse]\n[C]Santo, [G]santo\n[Am]santo\n',
+    );
+
+    expect(detail.title, 'Santo');
+    expect(detail.key, 'C');
+    expect(detail.sections, hasLength(1));
+    final linha = detail.sections.first.lines.first;
+    expect(linha.text, 'Santo, santo');
+    expect(
+      linha.chords.map((ChordMark mark) => mark.chord).toList(),
+      <String>['C', 'G'],
+    );
+    expect(linha.chords.first.position, 0);
+    expect(linha.chords.last.position, 7);
+    expect(detail.core, startsWith('kentron_ffi '));
+  });
+
+  test('transpose_song muda o tom e os acordes', () async {
+    final detail = await transposeSong(
+      input:
+          '{title: Santo}\n{key: C}\n\n[Verse]\n[C]Santo, [G]santo\n[Am]santo\n',
+      toKey: 'D',
+    );
+
+    expect(detail.key, 'D');
+    expect(
+      detail.sections.first.lines.first.chords
+          .map((ChordMark mark) => mark.chord)
+          .toList(),
+      <String>['D', 'A'],
+    );
+  });
+
+  test('key_choices devolve os doze tons', () async {
+    final tons = await keyChoices();
+    expect(tons, hasLength(12));
+    expect(tons, contains('C'));
+    expect(tons, contains('Bb'));
+  });
 }

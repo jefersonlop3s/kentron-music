@@ -6,7 +6,8 @@
 import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `fmt`
+// These functions are ignored because they are not marked as `pub`: `detail`, `key_note`, `song_key`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Lê uma cifra ChordPro e devolve o resumo que a interface usa.
 ///
@@ -16,6 +17,149 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 /// devolver — o Dart recebe exceção, nunca um resultado parcial.
 Future<SongSummary> parseSong({required String input}) =>
     RustLib.instance.api.crateBridgeParseSong(input: input);
+
+/// Lê a cifra e devolve a estrutura completa, linha a linha.
+///
+/// É o que o Modo Palco precisa: o resumo de [`parse_song`] conta acordes, mas
+/// não diz onde cada um cai sobre a letra.
+///
+/// # Errors
+///
+/// Propaga o que o parser devolver — o Dart recebe exceção, nunca estrutura
+/// parcial.
+Future<SongDetail> readSong({required String input}) =>
+    RustLib.instance.api.crateBridgeReadSong(input: input);
+
+/// Transpõe a cifra para outro tom e devolve a estrutura completa.
+///
+/// O tom de origem vem do metadado `{key: ...}`. Sem ele não existe intervalo a
+/// aplicar, e a função recusa em vez de adivinhar.
+///
+/// # Errors
+///
+/// Recusa cifra sem tom, tom inválido e acorde que o parser não entenda.
+Future<SongDetail> transposeSong({
+  required String input,
+  required String toKey,
+}) => RustLib.instance.api.crateBridgeTransposeSong(input: input, toKey: toKey);
+
+/// Os doze tons que o Modo Palco oferece, na ordem em que a interface os mostra.
+///
+/// A grafia é convenção de tela: nas teclas pretas a interface escreve bemóis
+/// (`Db`, `Eb`, `Ab`, `Bb`), que é como a cifra popular costuma escrever.
+Future<List<String>> keyChoices() =>
+    RustLib.instance.api.crateBridgeKeyChoices();
+
+/// Onde um acorde cai sobre a letra: a coluna e o acorde.
+class ChordMark {
+  /// Coluna da letra onde o acorde começa (0 = primeiro caractere).
+  final int position;
+
+  /// O acorde em notação Common, como está escrito na cifra.
+  final String chord;
+
+  const ChordMark({required this.position, required this.chord});
+
+  @override
+  int get hashCode => position.hashCode ^ chord.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ChordMark &&
+          runtimeType == other.runtimeType &&
+          position == other.position &&
+          chord == other.chord;
+}
+
+/// A cifra inteira, pronta para o Modo Palco desenhar.
+class SongDetail {
+  /// Título vindo de `{title: ...}`.
+  final String title;
+
+  /// Tom corrente; muda quando a cifra é transposta.
+  final String? key;
+
+  /// Artista, quando declarado.
+  final String? artist;
+
+  /// As seções, na ordem do arquivo.
+  final List<SongSection> sections;
+
+  /// Qual núcleo respondeu, no formato `kentron_ffi <versão>`.
+  final String core;
+
+  const SongDetail({
+    required this.title,
+    this.key,
+    this.artist,
+    required this.sections,
+    required this.core,
+  });
+
+  @override
+  int get hashCode =>
+      title.hashCode ^
+      key.hashCode ^
+      artist.hashCode ^
+      sections.hashCode ^
+      core.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SongDetail &&
+          runtimeType == other.runtimeType &&
+          title == other.title &&
+          key == other.key &&
+          artist == other.artist &&
+          sections == other.sections &&
+          core == other.core;
+}
+
+/// Uma linha da cifra: a letra e os acordes sobre ela.
+class SongLine {
+  /// A letra, sem os acordes.
+  final String text;
+
+  /// Os acordes e suas colunas, na ordem em que aparecem.
+  final List<ChordMark> chords;
+
+  const SongLine({required this.text, required this.chords});
+
+  @override
+  int get hashCode => text.hashCode ^ chords.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SongLine &&
+          runtimeType == other.runtimeType &&
+          text == other.text &&
+          chords == other.chords;
+}
+
+/// Uma seção da cifra: estrofe, refrão, ponte.
+class SongSection {
+  /// O nome dado entre colchetes (`[Verse]`), quando existe.
+  final String? name;
+
+  /// As linhas da seção.
+  final List<SongLine> lines;
+
+  const SongSection({this.name, required this.lines});
+
+  @override
+  int get hashCode => name.hashCode ^ lines.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SongSection &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          lines == other.lines;
+}
 
 /// O resumo de uma cifra: o que a tela precisa para listar e abrir a música.
 class SongSummary {

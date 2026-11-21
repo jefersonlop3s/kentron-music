@@ -51,7 +51,8 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 
 ### R1-C · Alpha utilizável (portão inicial, ADR-0009)
 **Objetivo:** provar o fluxo completo em uso real de ensaio, sem depender de calendário de culto.
-- [ ] Leitor de cifras (Modo Palco) com transposição e setlist utilizáveis.
+- [x] Leitor de cifras (Modo Palco) com transposição por tom, acorde sobre a letra e alternância de contraste.
+- [ ] Setlist utilizável no Modo Palco.
 - [ ] Projeção manual em tela secundária (ou janela do OBS) a partir do leitor.
 - [ ] Alpha assistido: um ensaio com o fluxo completo, desenvolvedor presente, falhas registradas com diagnóstico.
 - [ ] Dados sobrevivem a fechar e reabrir o app (bundle restaurado).

@@ -22,13 +22,34 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  ChordMark dco_decode_chord_mark(dynamic raw);
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
+  List<ChordMark> dco_decode_list_chord_mark(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
   @protected
+  List<SongLine> dco_decode_list_song_line(dynamic raw);
+
+  @protected
+  List<SongSection> dco_decode_list_song_section(dynamic raw);
+
+  @protected
   String? dco_decode_opt_String(dynamic raw);
+
+  @protected
+  SongDetail dco_decode_song_detail(dynamic raw);
+
+  @protected
+  SongLine dco_decode_song_line(dynamic raw);
+
+  @protected
+  SongSection dco_decode_song_section(dynamic raw);
 
   @protected
   SongSummary dco_decode_song_summary(dynamic raw);
@@ -40,16 +61,40 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int dco_decode_u_8(dynamic raw);
 
   @protected
+  void dco_decode_unit(dynamic raw);
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer);
+
+  @protected
+  ChordMark sse_decode_chord_mark(SseDeserializer deserializer);
 
   @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
+  List<ChordMark> sse_decode_list_chord_mark(SseDeserializer deserializer);
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
   @protected
+  List<SongLine> sse_decode_list_song_line(SseDeserializer deserializer);
+
+  @protected
+  List<SongSection> sse_decode_list_song_section(SseDeserializer deserializer);
+
+  @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  SongDetail sse_decode_song_detail(SseDeserializer deserializer);
+
+  @protected
+  SongLine sse_decode_song_line(SseDeserializer deserializer);
+
+  @protected
+  SongSection sse_decode_song_section(SseDeserializer deserializer);
 
   @protected
   SongSummary sse_decode_song_summary(SseDeserializer deserializer);
@@ -61,6 +106,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int sse_decode_u_8(SseDeserializer deserializer);
 
   @protected
+  void sse_decode_unit(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
@@ -70,7 +118,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
+  void sse_encode_chord_mark(ChordMark self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_chord_mark(
+    List<ChordMark> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_prim_u_8_strict(
@@ -79,7 +136,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_song_line(List<SongLine> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_song_section(
+    List<SongSection> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_song_detail(SongDetail self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_song_line(SongLine self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_song_section(SongSection self, SseSerializer serializer);
 
   @protected
   void sse_encode_song_summary(SongSummary self, SseSerializer serializer);
@@ -89,6 +164,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_unit(void self, SseSerializer serializer);
 
   @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
