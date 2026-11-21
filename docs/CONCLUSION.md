@@ -819,8 +819,23 @@ O **Cantor Cristão Cifrado (2011)** imprime a ficha **em cada hino**: `Autoria:
 | 01 | Antífona | Maxwell Wright (1849-1931) | — | William H. Monk (1823-1889) | **domínio público** (BR: 1931+71 = 2002) |
 | 03 | Louvor ao Senhor | William E. Entzminger (1859-1930) | — | Robert Lowry (1826-1899) | **domínio público** (BR: 1930+71 = 2001) |
 | 09 | **Santo** | Reginald Heber (1783-1826) | **João Gomes da Rocha (1861-1947)** | J. B. Dykes (1823-1876) | **domínio público** (BR: 1947+71 = **2018**) |
+| 15 | **Exultação** | Fanny Jane Crosby (1820-1915) | Joseph Jones (1848-1927) | William Howard Doane (1832-1915) | **domínio público** (BR: 1927+71 = **1998**) |
+| 46 | **Jesus me transformou** | James Rowe (1865-1933) | Salomão Luiz Ginsburg (1867-1927) | Howard E. Smith (1863-1918) | **domínio público** (BR: 1933+71 = **2004**) |
+| 92 | **Substituição** ("Morri na cruz por ti") | Frances Ridley Havergal (1836-1879) | **D. M. Hazlett (1852-?)** | Philip Paul Bliss (1838-1876) | autoria e melodia PD; **tradutor sem data** → **GAP** |
+| 385 | **Louvor** | **Manuel Avelino de Souza (1886-1962)** | — | Charles Hutchison Gabriel (1856-1932) | ⚠️ **NÃO é domínio público** — só em **2033** (BR: 1962+71) |
 
 O hino **09** é um dos **10** do repertório do dono (a lista diz "Santo, Santo, Santo | 09 Cantor Cristão") — **a primeira ficha do repertório está resolvida**, e veio do livro dele. Consequência de método: a campanha de fichas deixa de ser pesquisa e passa a ser **fotografar a página do hino**.
+
+### Cinco dos dez do repertório, e as duas naturezas difíceis que o material real trouxe
+
+Tiradas as fotos direto do celular (via `adb`, de `DCIM/Camera`) — **cinco fichas do repertório**, com o número conferido contra a planilha do dono: **15 Exultação**, **46 Jesus me transformou**, **92 Substituição (Morri na cruz por ti)**, **385 Louvor** e **09 Santo**.
+
+**Nota de mapeamento (correção de um erro meu nesta sessão):** o campo da planilha diz "Exultação | Cantor Cristão **015**" e isso é o **hino 15** — não o hino 01. O hino **01 é *Antífona*** (Wright/Monk), outra obra, que eu havia juntado com a Exultação numa mensagem anterior sem que a foto tivesse sido lida; a foto do livro desfez o nó. Fica registrado porque é a diferença entre **ler a fonte** e **inferir do número**.
+
+Duas naturezas que o desenho tinha previsto como hipótese e que o repertório real trouxe:
+
+- **Obra protegida (385 *Louvor*):** **Manuel Avelino de Souza morreu em 1962** → domínio público só em **2033**. É o caso em que o app **não oferece a letra**: mostra a **ficha** (fato) e trabalha com a **letra e a cifra do próprio usuário**. Deixa de ser hipótese de ADR e passa a ser dado do repertório do dono — um dos hinos que ele canta no culto.
+- **Tradutor sem data (92 *Substituição*):** a própria ficha diz **"D. M. Hazlett (1852-?)"** — o livro **não traz o falecimento**. Havergal (1879) e Bliss (1876) são domínio público, mas **a tradução é obra do tradutor**, e sem a data não se pode afirmar a queda. O veredito é **GAP**, não "PD" — e essa distinção é a diferença entre **medir** e **supor**: assumir "PD" aqui seria o palpite silencioso que o ADR-0012 proíbe. A tabela precisa, portanto, de **três vereditos** (domínio público com ano, protegido, GAP), não dois.
 
 ### Achado legal que muda o que se pode ingerir do livro
 A ficha catalográfica do **Cantor Cristão Cifrado** (JUERP/EME, 2011) diz: **"Todos os direitos reservados"**, *"É proibida a reprodução total ou parcial deste livro… por quaisquer meios: eletrônicos, mecânicos, **fotográficos**, xerográficos, gravação…"*, e ainda que o livro **"contém o nosso sistema de cifragem"** (incluindo o "**SOLOS POR NÚMEROS**", o sistema de tablatura deles).
