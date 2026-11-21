@@ -14,6 +14,7 @@
 //! cargo run -p mir_engine -- --listar-hinos                             # fichas do corpus
 //! cargo run -p mir_engine -- --auditar-corpus                            # confere as fichas
 //! cargo run -p mir_engine -- --ficha "Título|Autor|1822|1868|||Harpa Cristã"
+//! cargo run -p mir_engine -- --relatorio-uso <pasta-do-bundle>   # uso + fichas
 //! ```
 //!
 //! O `ffmpeg` converte antes; este binário lê WAV.
@@ -100,6 +101,19 @@ fn main() -> ExitCode {
             "  (veredito de OBRA; a gravação analisada tem titular próprio — declarada com --gravacao)"
         );
         return ExitCode::SUCCESS;
+    }
+
+    if let Some(pasta) = valor_de("--relatorio-uso") {
+        return match mir_engine::uso::do_diretorio(std::path::Path::new(&pasta), ano_corrente) {
+            Ok(relatorio) => {
+                print!("{}", relatorio.texto());
+                ExitCode::SUCCESS
+            }
+            Err(erro) => {
+                eprintln!("erro: {erro}");
+                ExitCode::FAILURE
+            }
+        };
     }
 
     let json = args.iter().any(|a| a == "--json");
@@ -274,13 +288,14 @@ fn main() -> ExitCode {
 
 /// Diz se o argumento é o valor de uma bandeira (`--letra x`), não o arquivo.
 fn eh_valor_de(args: &[String], valor: &str) -> bool {
-    const VALORADAS: [&str; 6] = [
+    const VALORADAS: [&str; 7] = [
         "--letra",
         "--hino",
         "--licenca",
         "--gravacao",
         "--extraida-por",
         "--ficha",
+        "--relatorio-uso",
     ];
     args.iter().enumerate().any(|(i, argumento)| {
         VALORADAS.contains(&argumento.as_str()) && i + 1 < args.len() && args[i + 1] == valor

@@ -588,6 +588,46 @@ O dono está certo em um ponto que importa: **a diferença entre os caminhos nã
 - **A extração em si ainda não existe** — falta o peso no `models/MANIFEST.toml`. O que foi entregue é o enquadramento (responsabilidade + escopo), que era o que faltava para o caminho ser previsto sem pôr o produto no lugar do titular.
 - **O app ainda não honra `lyrics_scope`** na exportação e no link de projeção: hoje o portão mora no motor.
 
+## R1 · A agenda do culto vira o relatório de uso (ADR-0006 emendada, 2026-11-21)
+
+**Status:** 🟢 Emenda aceita, implementada e provada. 17 suítes de Rust verdes.
+
+### O que o dono respondeu — e por que isso redesenhou o pedido
+Eu pedi três formatos; ele respondeu com a realidade:
+
+- **Não existe relatório de uso.** O que existe é **agenda por culto/evento**, **uma playlist por evento**, músicas que **repetem** e, quando repetem, **nem sempre na mesma versão**.
+- **Não existe formato de licença** — e o repertório passa de **1000 músicas diferentes por ano** (Cantor Cristão e alguns da Harpa Cristã somados a Fernandinho, Projeto Sola, Aline Barros, Renascer Praise). **Enumerar é inviável.**
+
+Duas conclusões mudaram o desenho: o relatório **não pode pedir hábito novo** — tem de sair do que a equipe já mantém —, e o problema **não é listar o repertório**, é **classificar o que se canta**.
+
+### O que foi implementado
+- **A agenda é o registro**: `Setlist` deixou de ser uma lista e virou o **evento** — data, tipo (culto/ensaio/evento) e entradas com **versão** e **tom**.
+- **Versão como campo de primeira classe**: a obra se repete, a versão muda. Sem isso, duas execuções diferentes viravam a mesma linha — e o relatório mentiria sobre o que a banda tocou.
+- **`relatorio_de_uso`** por obra (execuções + versões) e **`--relatorio-uso <pasta>`**, que cruza a agenda com a **ficha** da obra e separa **domínio público por ficha** de **sem ficha**.
+- **`schema_version` 2 com passo de migração de verdade** — o primeiro passo real da cadeia que a ADR-0006 previu: agenda v1 (id solto) vira execução **sem versão inventada**.
+
+### A saída, medida em bundle real
+```
+eventos: 2 · execuções: 5 · obras distintas: 3
+
+  2×  Amazing Grace              2× (versão não declarada)
+  2×  Essência da Adoração       1× álbum · 1× acústica
+  1×  Santo, Santo, Santo        1× (versão não declarada)
+
+classificação (ADR-0012) — domínio público por ficha: 1 · sem ficha: 2
+```
+
+### O que isso resolve, concretamente
+- **A lista de fichas vira finita e priorizada pelo uso**: em vez de conferir os ~400 hinos do hinário, confere-se o que a igreja **de fato canta**, na ordem em que canta.
+- **A dúvida de licença ganha dado**: "das músicas deste culto, estas são de domínio público (com a regra) e estas estão sem ficha". Sem ficha, o motor **não afirma** nada — nem público nem protegido.
+- **A versão distingue o que se confundia**: a mesma obra em dois cultos, em arranjos diferentes, aparece como duas execuções — que é o que a licença coletiva exige registrar.
+
+### Ressalvas
+- **O app não tem tela de agenda**; o modelo, a persistência, a migração e o relatório existem e são provados.
+- O **formato de licença continua decisão do dono**, e o projeto não inventa um. O que ele recebeu é a informação para decidir, não uma decisão tomada por mim.
+- `load_refuses_a_newer_schema` precisou acompanhar o bump do schema — teste calibrado por constante, não por número solto.
+
+
 
 
 

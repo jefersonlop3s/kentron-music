@@ -4,6 +4,28 @@
 - **Decisão do plano:** R1-A (biblioteca local, setlists e Song Bundle versionado)
 - **Não substitui:** ADR-0002 (o layout `meta.json` / `.cho` / `.musicxml` / `tabs/*.atex` já vem de lá)
 
+## Emenda · A agenda vira o relatório de uso (2026-11-21)
+
+O dono respondeu como a igreja trabalha de verdade, e isso redesenha o pedido:
+
+- **Não existe relatório de uso** — o que existe é **agenda por culto/evento**, **uma playlist por evento**, músicas que **repetem entre eventos** e, quando repetem, **nem sempre na mesma versão**.
+- **Não há formato de licença** a respeitar, e o repertório passa de **1000 músicas diferentes por ano** (hinos do Cantor Cristão e alguns da Harpa Cristã somados a música contemporânea: Fernandinho, Projeto Sola, Aline Barros, Renascer Praise). Enumerar é inviável.
+
+### Decisão
+
+1. **A agenda é o registro.** `Setlist` deixa de ser só uma lista e passa a ser o **evento**: ganha `data`, `tipo` (culto, ensaio, evento) e entradas com **versão** e **tom**. O relatório de uso **não pede hábito novo** — ele é subproduto do que a equipe já mantém. Pressuposto nomeado: *a agenda do culto é preenchida de qualquer forma*.
+2. **Versão é campo de primeira classe** da execução: a mesma obra em dois cultos pode ser outra versão (outro arranjo, outra gravação, outro tom). Isso liga direto aos dois eixos da ADR-0012 — a **obra** se repete, a **versão** muda.
+3. **`schema_version` vai a 2**, com passo de migração: entrada antiga (id solto) vira execução sem versão declarada. **Não se adivinha versão:** ausente é ausente, e o relatório diz "versão não declarada".
+4. **O relatório classifica o que a equipe realmente toca**, em vez de exigir a enumeração do repertório: para cada obra, o veredito de domínio público **quando houver ficha** (ADR-0012) e, quando não houver, `sem ficha` — o que produz a **lista de fichas a conferir, ditada pela própria playlist**. É a resposta ao "impossível enumerar": não se enumera; classifica-se o que se canta.
+5. **Licença continua sendo decisão do dono.** Sem formato declarado, o app **não inventa** um: ele diz, por evento, quantas obras são de domínio público e quantas são **sem ficha** — que é a informação de que ele precisa para decidir sobre licença coletiva, sem eu arbitrar por ele.
+
+### Consequências
+
+- **Ganho:** o relatório sai do dado que já existe; a lista de fichas fica finita e priorizada pelo uso real (os hinos que a igreja de fato canta, não os 400 do hinário); a versão distingue execuções que antes se confundiriam.
+- **Custo:** mudança de formato persistido com migração — feita agora, enquanto não há dados de produção a converter.
+- **Limite declarado:** sem ficha da obra, o relatório **não** afirma domínio público nem protegido; afirma `sem ficha`. Mentir aqui seria pior que não responder.
+
+
 ## Contexto
 
 O [PENDING](../PENDING.md) pede "persistência local (Song Bundle), migrações e exportação/restauração", e o plano v2.6 lista o risco "Sem portão de persistência → Song Bundle v1, migrações e backup por arquivo antes do piloto". Nada disso existe ainda: não há modelo de bundle, I/O, versão de esquema nem teste.

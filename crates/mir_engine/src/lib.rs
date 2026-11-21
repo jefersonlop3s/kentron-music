@@ -19,6 +19,7 @@ pub mod report;
 pub mod sheet;
 pub mod spectrum;
 pub mod structure;
+pub mod uso;
 pub mod wav;
 
 use wav::Audio;

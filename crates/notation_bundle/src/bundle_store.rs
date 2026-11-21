@@ -28,17 +28,19 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::bundle::{BundleError, Library, Setlist, SetlistId, SongBundle, SongId};
+use crate::bundle::{BundleError, Execucao, Library, Setlist, SetlistId, SongBundle, SongId};
 use crate::chordpro::{self, ChordProParser};
 
 /// Schema version written by this build.
-pub const SCHEMA_VERSION: u32 = 1;
+pub const SCHEMA_VERSION: u32 = 2;
 /// Manifest file name inside a bundle directory.
 pub const MANIFEST_FILE: &str = "meta.json";
 /// ChordPro source file name inside a bundle directory.
 pub const SONG_FILE: &str = "song.cho";
 /// Library index file name, next to the bundle directories.
 pub const LIBRARY_FILE: &str = "library.json";
+/// Directory holding the agendas (one file per event), next to the library.
+pub const SETLISTS_DIR: &str = "setlists";
 
 /// Why a bundle, library or setlist could not be read or written.
 #[derive(Debug)]
@@ -143,13 +145,31 @@ struct LibraryFile {
     songs: Vec<String>,
 }
 
-/// Setlist file: identity, name and the ordered entries.
+/// Agenda file: identity, event (date, kind) and the ordered executions.
+///
+/// `entries` era lista de ids na v1; a v2 carrega a **execução** (obra + versão +
+/// tom), porque a mesma obra volta em outro evento e nem sempre na mesma versão
+/// (ADR-0006, emenda).
 #[derive(Debug, Serialize, Deserialize)]
 struct SetlistFile {
     schema_version: u32,
     id: String,
     name: String,
-    entries: Vec<String>,
+    #[serde(default)]
+    data: Option<String>,
+    #[serde(default)]
+    tipo: Option<String>,
+    entries: Vec<ExecucaoFile>,
+}
+
+/// Uma execução no arquivo da agenda.
+#[derive(Debug, Serialize, Deserialize)]
+struct ExecucaoFile {
+    song: String,
+    #[serde(default)]
+    versao: Option<String>,
+    #[serde(default)]
+    tom: Option<String>,
 }
 
 /// One migration step: upgrades the manifest of version `from` to `from + 1`.
@@ -157,10 +177,24 @@ type MigrationStep = fn(Value) -> Result<Value, StoreError>;
 
 /// Migration chain, indexed by the version each step upgrades **from**.
 ///
-/// Empty today: v1 is the first schema, so there is nothing below it to upgrade.
-/// The next breaking change adds its step here and the loop in [`migrate`] walks
-/// the chain one version at a time.
-const MIGRATIONS: &[(u32, MigrationStep)] = &[];
+/// v1 → v2: a entrada da agenda deixa de ser um id solto e passa a ser execução,
+/// com versão e tom. **Campo que não existe fica ausente**, nunca inventado: o
+/// relatório diz "versão não declarada" em vez de chutar um arranjo.
+const MIGRATIONS: &[(u32, MigrationStep)] = &[(1, migrar_1_para_2)];
+
+/// v1 → v2. Mexe só onde há `entries`: manifesto e índice da biblioteca passam
+/// sem alteração de forma, apenas com a versão carimbada.
+fn migrar_1_para_2(mut value: Value) -> Result<Value, StoreError> {
+    if let Some(entries) = value.get_mut("entries").and_then(Value::as_array_mut) {
+        for entry in entries.iter_mut() {
+            if let Some(id) = entry.as_str() {
+                *entry = serde_json::json!({ "song": id, "versao": null, "tom": null });
+            }
+        }
+    }
+    value["schema_version"] = Value::from(2);
+    Ok(value)
+}
 
 /// Reads `schema_version` out of an already-parsed file.
 fn version_of(value: &Value, path: &Path) -> Result<u32, StoreError> {
@@ -332,33 +366,87 @@ pub fn load_library(dir: &Path) -> Result<Library, StoreError> {
     Ok(library)
 }
 
-/// Writes a setlist file.
+/// Writes an agenda (event setlist) file.
 pub fn save_setlist(path: &Path, setlist: &Setlist) -> Result<(), StoreError> {
     let file = SetlistFile {
         schema_version: SCHEMA_VERSION,
         id: setlist.id().as_str().to_owned(),
         name: setlist.name().to_owned(),
+        data: setlist.data().map(str::to_owned),
+        tipo: setlist.tipo().map(str::to_owned),
         entries: setlist
             .entries()
             .iter()
-            .map(|id| id.as_str().to_owned())
+            .map(|entrada| ExecucaoFile {
+                song: entrada.song().as_str().to_owned(),
+                versao: entrada.versao().map(str::to_owned),
+                tom: entrada.tom().map(str::to_owned),
+            })
             .collect(),
     };
     write_json(path, &file)
 }
 
-/// Reads a setlist, rebuilding it through the validated constructors.
+/// Reads an agenda, rebuilding it through the validated constructors.
 ///
-/// Every entry goes back through `Setlist::push`, so a file referencing a song
-/// the library does not hold fails loudly instead of loading a setlist with
-/// dangling entries.
+/// Every entry goes back through `Setlist::push_execucao`, so a file referencing
+/// a song the library does not hold fails loudly instead of loading an agenda
+/// with dangling entries.
 pub fn load_setlist(path: &Path, library: &Library) -> Result<Setlist, StoreError> {
     let file: SetlistFile = parse_json(path)?;
     let mut setlist = Setlist::new(SetlistId::new(file.id)?, file.name)?;
-    for entry in file.entries {
-        setlist.push(library, SongId::new(entry)?)?;
+    if let Some(data) = file.data {
+        setlist = setlist.com_data(data);
+    }
+    if let Some(tipo) = file.tipo {
+        setlist = setlist.com_tipo(tipo);
+    }
+    for entrada in file.entries {
+        let mut execucao = Execucao::new(SongId::new(entrada.song)?);
+        if let Some(versao) = entrada.versao {
+            execucao = execucao.com_versao(versao);
+        }
+        if let Some(tom) = entrada.tom {
+            execucao = execucao.com_tom(tom);
+        }
+        setlist.push_execucao(library, execucao)?;
     }
     Ok(setlist)
+}
+
+/// Reads every agenda of a bundle directory (`<dir>/setlists/*.json`).
+///
+/// Order is by file name, so the usage report is comparable between runs.
+/// Absent directory means no agenda yet — not an error, and not a silent empty
+/// answer either: the caller sees zero events.
+///
+/// # Errors
+///
+/// Fails loudly on any agenda that cannot be read or that points at a song the
+/// library no longer holds.
+pub fn load_setlists(dir: &Path, library: &Library) -> Result<Vec<Setlist>, StoreError> {
+    let agenda_dir = dir.join(SETLISTS_DIR);
+    if !agenda_dir.exists() {
+        return Ok(Vec::new());
+    }
+    let mut caminhos: Vec<PathBuf> = fs::read_dir(&agenda_dir)
+        .map_err(|source| StoreError::Io {
+            path: agenda_dir.clone(),
+            source,
+        })?
+        .filter_map(Result::ok)
+        .map(|entrada| entrada.path())
+        .filter(|caminho| {
+            caminho
+                .extension()
+                .is_some_and(|extensao| extensao == "json")
+        })
+        .collect();
+    caminhos.sort();
+    caminhos
+        .iter()
+        .map(|caminho| load_setlist(caminho, library))
+        .collect()
 }
 
 /// Copies a bundle directory, file by file.

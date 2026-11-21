@@ -257,12 +257,85 @@ impl Library {
     }
 }
 
-/// An ordered selection of songs from the library.
+/// Uma execução da agenda: a obra **e a versão em que ela foi tocada naquele
+/// evento**.
+///
+/// A versão é campo de primeira classe (ADR-0006, emenda): a mesma obra volta em
+/// outro culto e **nem sempre na mesma versão** — outro arranjo, outra gravação,
+/// outro tom. Sem isso, duas execuções diferentes viram a mesma linha no
+/// relatório, e o relatório mente.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Execucao {
+    song: SongId,
+    versao: Option<String>,
+    tom: Option<String>,
+}
+
+impl Execucao {
+    /// Execução sem versão declarada — o caso da agenda preenchida só com a obra.
+    #[must_use]
+    pub fn new(song: SongId) -> Self {
+        Self {
+            song,
+            versao: None,
+            tom: None,
+        }
+    }
+
+    /// Declara a versão. Texto vazio é o mesmo que não declarar.
+    #[must_use]
+    pub fn com_versao(mut self, versao: impl Into<String>) -> Self {
+        let versao = versao.into();
+        let versao = versao.trim();
+        if !versao.is_empty() {
+            self.versao = Some(versao.to_owned());
+        }
+        self
+    }
+
+    /// Declara o tom em que a obra foi tocada naquele evento.
+    #[must_use]
+    pub fn com_tom(mut self, tom: impl Into<String>) -> Self {
+        let tom = tom.into();
+        let tom = tom.trim();
+        if !tom.is_empty() {
+            self.tom = Some(tom.to_owned());
+        }
+        self
+    }
+
+    /// A obra executada.
+    #[must_use]
+    pub fn song(&self) -> &SongId {
+        &self.song
+    }
+
+    /// Versão declarada, quando existe.
+    #[must_use]
+    pub fn versao(&self) -> Option<&str> {
+        self.versao.as_deref()
+    }
+
+    /// Tom declarado, quando existe.
+    #[must_use]
+    pub fn tom(&self) -> Option<&str> {
+        self.tom.as_deref()
+    }
+}
+
+/// A **agenda de um evento**: a playlist do culto, do ensaio ou do evento, com
+/// data e tipo.
+///
+/// Antes era só uma lista de músicas; a emenda da ADR-0006 a transformou no
+/// registro do que a equipe já mantém — agenda por evento, uma playlist por
+/// evento. O relatório de uso é subproduto disto, não hábito novo.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Setlist {
     id: SetlistId,
     name: String,
-    entries: Vec<SongId>,
+    data: Option<String>,
+    tipo: Option<String>,
+    entries: Vec<Execucao>,
 }
 
 impl Setlist {
@@ -275,8 +348,32 @@ impl Setlist {
         Ok(Self {
             id,
             name: name.trim().to_owned(),
+            data: None,
+            tipo: None,
             entries: Vec::new(),
         })
+    }
+
+    /// Declares the event date (`AAAA-MM-DD`).
+    #[must_use]
+    pub fn com_data(mut self, data: impl Into<String>) -> Self {
+        let data = data.into();
+        let data = data.trim();
+        if !data.is_empty() {
+            self.data = Some(data.to_owned());
+        }
+        self
+    }
+
+    /// Declares the event kind: `culto`, `ensaio`, `evento`.
+    #[must_use]
+    pub fn com_tipo(mut self, tipo: impl Into<String>) -> Self {
+        let tipo = tipo.into();
+        let tipo = tipo.trim();
+        if !tipo.is_empty() {
+            self.tipo = Some(tipo.to_owned());
+        }
+        self
     }
 
     /// Borrows the setlist identifier.
@@ -291,27 +388,60 @@ impl Setlist {
         &self.name
     }
 
-    /// Song identifiers in setlist order.
+    /// Event date, when declared.
     #[must_use]
-    pub fn entries(&self) -> &[SongId] {
+    pub fn data(&self) -> Option<&str> {
+        self.data.as_deref()
+    }
+
+    /// Event kind, when declared.
+    #[must_use]
+    pub fn tipo(&self) -> Option<&str> {
+        self.tipo.as_deref()
+    }
+
+    /// Executions in setlist order.
+    #[must_use]
+    pub fn entries(&self) -> &[Execucao] {
         &self.entries
     }
 
-    /// Appends a song, refusing duplicates and songs the library does not hold.
+    /// Appends a song without a declared version.
+    ///
+    /// # Errors
+    ///
+    /// Refuses duplicates and songs the library does not hold.
     pub fn push(&mut self, library: &Library, id: SongId) -> Result<(), BundleError> {
-        if library.get(&id).is_none() {
-            return Err(BundleError::MissingSong(id));
+        self.push_execucao(library, Execucao::new(id))
+    }
+
+    /// Appends an execution (obra + versão + tom).
+    ///
+    /// # Errors
+    ///
+    /// Refuses a song already in this event and songs the library does not hold.
+    pub fn push_execucao(
+        &mut self,
+        library: &Library,
+        execucao: Execucao,
+    ) -> Result<(), BundleError> {
+        if library.get(execucao.song()).is_none() {
+            return Err(BundleError::MissingSong(execucao.song().clone()));
         }
-        if self.entries.contains(&id) {
-            return Err(BundleError::DuplicateSetlistEntry(id));
+        if self
+            .entries
+            .iter()
+            .any(|existente| existente.song() == execucao.song())
+        {
+            return Err(BundleError::DuplicateSetlistEntry(execucao.song().clone()));
         }
-        self.entries.push(id);
+        self.entries.push(execucao);
         Ok(())
     }
 
     /// Removes the first occurrence of a song, returning whether it was present.
     pub fn remove(&mut self, id: &SongId) -> bool {
-        match self.entries.iter().position(|entry| entry == id) {
+        match self.entries.iter().position(|entry| entry.song() == id) {
             Some(index) => {
                 self.entries.remove(index);
                 true
@@ -327,13 +457,131 @@ impl Setlist {
     pub fn songs<'a>(&'a self, library: &'a Library) -> Result<Vec<&'a SongBundle>, BundleError> {
         self.entries
             .iter()
-            .map(|id| {
+            .map(|entry| {
                 library
-                    .get(id)
-                    .ok_or_else(|| BundleError::MissingSong(id.clone()))
+                    .get(entry.song())
+                    .ok_or_else(|| BundleError::MissingSong(entry.song().clone()))
             })
             .collect()
     }
+}
+
+/// Uso de uma obra no período: quantas vezes, e **em que versões**.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResumoObra {
+    pub song: SongId,
+    pub titulo: String,
+    /// Total de execuções no período.
+    pub execucoes: usize,
+    /// Versões usadas, na ordem da primeira aparição, com a contagem.
+    pub versoes: Vec<(String, usize)>,
+}
+
+/// Versão de quem não declarou versão. Texto fixo de propósito: o relatório diz
+/// "não declarada" em vez de inventar um rótulo.
+pub const VERSAO_NAO_DECLARADA: &str = "(versão não declarada)";
+
+/// Relatório de uso: **subproduto da agenda** (ADR-0006, emenda), não hábito novo.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RelatorioUso {
+    pub eventos: usize,
+    pub execucoes: usize,
+    pub por_obra: Vec<ResumoObra>,
+}
+
+impl RelatorioUso {
+    /// Quantas obras distintas foram tocadas no período.
+    #[must_use]
+    pub fn obras_distintas(&self) -> usize {
+        self.por_obra.len()
+    }
+
+    /// Quantas obras saíram em mais de uma versão no período.
+    #[must_use]
+    pub fn obras_com_mais_de_uma_versao(&self) -> usize {
+        self.por_obra
+            .iter()
+            .filter(|resumo| resumo.versoes.len() > 1)
+            .count()
+    }
+
+    /// Relatório legível, ordenado por uso (mais tocada primeiro) e depois por
+    /// título — ordem estável, para o texto poder ser comparado em teste.
+    #[must_use]
+    pub fn texto(&self) -> String {
+        let mut texto = format!(
+            "eventos: {} · execuções: {} · obras distintas: {}\n\n",
+            self.eventos,
+            self.execucoes,
+            self.obras_distintas()
+        );
+        let mut ordenado = self.por_obra.clone();
+        ordenado.sort_by(|a, b| {
+            b.execucoes
+                .cmp(&a.execucoes)
+                .then_with(|| a.titulo.cmp(&b.titulo))
+        });
+        for resumo in &ordenado {
+            texto.push_str(&format!(
+                "{:>3}×  {}  [{}]\n",
+                resumo.execucoes, resumo.titulo, resumo.song
+            ));
+            for (versao, vezes) in &resumo.versoes {
+                texto.push_str(&format!("        {vezes}× {versao}\n"));
+            }
+        }
+        texto
+    }
+}
+
+/// Monta o relatório de uso a partir das agendas.
+///
+/// # Errors
+///
+/// Falha alto quando uma agenda aponta para obra que a biblioteca não tem: um
+/// relatório com menos entradas do que a agenda teria é pior que erro.
+pub fn relatorio_de_uso(
+    setlists: &[Setlist],
+    library: &Library,
+) -> Result<RelatorioUso, BundleError> {
+    let mut por_obra: Vec<ResumoObra> = Vec::new();
+    let mut execucoes = 0usize;
+    for setlist in setlists {
+        for entrada in setlist.entries() {
+            let bundle = library
+                .get(entrada.song())
+                .ok_or_else(|| BundleError::MissingSong(entrada.song().clone()))?;
+            execucoes += 1;
+            let versao = entrada.versao().unwrap_or(VERSAO_NAO_DECLARADA).to_owned();
+            match por_obra
+                .iter_mut()
+                .find(|resumo| resumo.song == *entrada.song())
+            {
+                Some(resumo) => {
+                    resumo.execucoes += 1;
+                    match resumo
+                        .versoes
+                        .iter_mut()
+                        .find(|(existente, _)| *existente == versao)
+                    {
+                        Some((_, vezes)) => *vezes += 1,
+                        None => resumo.versoes.push((versao, 1)),
+                    }
+                }
+                None => por_obra.push(ResumoObra {
+                    song: entrada.song().clone(),
+                    titulo: bundle.title().to_owned(),
+                    execucoes: 1,
+                    versoes: vec![(versao, 1)],
+                }),
+            }
+        }
+    }
+    Ok(RelatorioUso {
+        eventos: setlists.len(),
+        execucoes,
+        por_obra,
+    })
 }
 
 #[cfg(test)]

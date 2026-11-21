@@ -2,6 +2,33 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [ADR-0006 emendada] A agenda vira o relatório de uso (2026-11-21)
+### Adicionado
+- **`Execucao`**: a obra **e a versão em que foi tocada** (versão + tom). A mesma obra volta em outro culto e **nem sempre na mesma versão** — sem isso duas execuções diferentes viram a mesma linha.
+- **`Setlist` é o evento**: ganhou `data`, `tipo` (culto, ensaio, evento) e entradas com versão/tom. A agenda do culto é o registro; o relatório é subproduto dela.
+- **`relatorio_de_uso`** com `RelatorioUso { eventos, execucoes, por_obra }` — por obra: quantas execuções e **em que versões** — e `texto()` em ordem estável (mais tocada primeiro).
+- **`schema_version` 2 com passo de migração real** (`migrar_1_para_2`): agenda v1 (entrada era id solto) vira execução **sem versão inventada** — ausente é ausente, e o relatório diz `(versão não declarada)`.
+- **`bundle_store::load_setlists(dir)`** lê `<dir>/setlists/*.json` em ordem de nome, para o relatório ser comparável entre execuções.
+- **`mir_engine::uso`** + CLI **`--relatorio-uso <pasta>`**: cruza a agenda (ADR-0006) com a **ficha da obra** (ADR-0012) e separa **domínio público por ficha** de **sem ficha** — a segunda é a lista de trabalho, ditada pelo uso real.
+
+### Decidido
+- **Emenda da ADR-0006**, pelo que o dono indicou do funcionamento real: **agenda por culto/evento**, **uma playlist por evento**, músicas que **repetem** e, quando repetem, **nem sempre na mesma versão**. Repertório acima de **1000 músicas por ano** — enumerar é inviável, então **classifica-se o que se canta**.
+- **Pressuposto nomeado na ADR:** a agenda do culto é preenchida de qualquer forma; o relatório não pede hábito novo.
+- **Não se inventa formato de licença.** O dono não tem um, e o app não arbitra: o relatório diz o que é domínio público por ficha e o que está **sem ficha** — que é a informação para ele decidir sobre licença coletiva.
+
+### Verificado
+- **`agenda_guarda_evento_e_versao_da_execucao`**: dois cultos, a mesma obra em versões diferentes → 1 obra, 2 versões, 2 execuções, e o texto traz o nome das versões.
+- **`agenda_v1_migra_para_v2_sem_inventar_versao`**: agenda v1 escrita à mão migra, `data`/`tipo`/`versao` ficam **ausentes**, e o relatório imprime `(versão não declarada)`.
+- **`relatorio_separa_dominio_publico_de_obra_sem_ficha`**: biblioteca e agendas reais em diretório próprio → 1 obra com ficha (corpus) e 1 **sem ficha**; `diretorio_sem_biblioteca_falha_alto_em_vez_de_mentir` cobre o negativo.
+- **`load_refuses_a_newer_schema`** atualizado para `SCHEMA_VERSION + 1`: o teste que usava "2" como versão futura deixou de valer com o bump, e passou a se calibrar pela constante em vez do número solto.
+- Demonstração real com bundle em disco: `2 eventos · 5 execuções · 3 obras distintas`, `Essência da Adoração` com **2 versões** (álbum, acústica) e `1 domínio público · 2 sem ficha`.
+- **Rust: 17 suítes verdes** (2 novas de uso, 3 novas de agenda/migração, 1 de relatório no domínio) e **32 testes do Flutter** inalterados.
+
+### Ressalvas
+- **O app ainda não tem tela de agenda.** O modelo, a persistência, a migração e o relatório existem; preencher agenda pelo app é trabalho de interface.
+- **Sem ficha, o relatório não afirma domínio público nem protegido** — diz `sem ficha`. É o limite declarado da ADR-0012.
+- O formato do campo de licença continua **decisão do dono**; hoje o que existe é `--licenca` como texto livre na origem da letra.
+
 ## [ADR-0012 aceita] Procedência em dois eixos e extração pelo usuário (2026-11-21)
 ### Adicionado
 - **Proveniência em dois eixos.** `lyrics::Obra` (título, autor, ano, **ano de falecimento**, tradutor, base) e `lyrics::Fonograma` (descrição, ano, titular) agora são tipos separados: **gravação de ontem de obra de 1822 continua protegida**, e `Fonograma` **não tem veredito de domínio público** — a categoria não existe do lado da gravação.
