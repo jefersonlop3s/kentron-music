@@ -35,6 +35,20 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/de6b0 — Kentron: dicionário de variantes (bloqueio + radar)
+- **Início:** 2026-11-21 11:00 (UTC) · **Última atualização:** 2026-11-21 11:35 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `feature/dicionario-variantes` (de `main` `3d322cb`; integrada por merge `--ff-only`) · **Worktrees:** diretório principal
+- **Demanda:** o dono perguntou se dá para ter variantes da mesma língua **sem duplicar texto**, com gate e dicionário, a custo mínimo.
+- **Paths sob edição:** nenhum (concluído).
+- **Status:** concluído — `main` = `origin/main` = `78e0e2a`, bateria verde no push.
+- **PRs:** nenhum (merge `--ff-only` local).
+
+**Feito:** `tools/variantes.tsv` (pares de formas equivalentes, dado e não código) + duas regras no gate `arb`: **bloqueia** forma da variante no arquivo base e **avisa** quando a variante não sobrescreve uma chave. `.githooks/pre-push` passou a chamar o gate direto para o aviso aparecer quando o push passa.
+
+**O radar pagou-se na primeira execução:** apontou que `pt_PT` não cobria `stageProjectNext`/`stageProjectPrevious` — em Portugal escreve-se "secção". Corrigido.
+
+**Provado:** regra 1 bloqueia ("Ecrã" no `pt` → `gate(s) reprovado(s): arb`, uma mensagem só); regra 2 avisa sem bloquear (overrides removidos → push autoriza e imprime os 2 avisos); 30 testes; analyze limpo; gate `arb` verde e visível no push.
+
 ### cline/de6b0 — Kentron: `pt` é pt-BR por gate
 - **Início:** 2026-11-21 10:30 (UTC) · **Última atualização:** 2026-11-21 10:45 (UTC)
 - **Repositório:** `kentron-music` · **Branches:** `feature/gate-pt-br` (de `main` `afe97f0`; integrada por merge `--ff-only`) · **Worktrees:** diretório principal
