@@ -2,6 +2,19 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [R4] Comparação medida contra uma cifra humana de referência (2026-11-21)
+### Medido
+- O dono trouxe uma **cifra feita à mão** (CifraClub) da mesma música analisada no incremento 1, como gabarito. A cifra e a letra **não entram no repositório** (conteúdo de terceiro); o que fica registrado são os números e o método.
+- **Cobertura de fundamental: 8/8.** Todas as classes de altura que o gabarito usa (`C, C#, D, E, F#, G, A, B`) aparecem na detecção — e o motor não forjou nenhuma fora delas que mudasse o quadro.
+- **Modulação encontrada:** o gabarito tem um Solo 2 em `Am C G D/F#`; o motor marca um trecho de área harmônica distinta em **264–294 s** com `Cmaj7, G, D, A, Em7` — três dos quatro acordes do gabarito ali, sem ninguém ter dito que havia modulação.
+- **Menores onde a terça aparece:** `F#m` → `Gbm7/Gbm`, `C#m7` → `Dbm7`, `Bm` → `Bm7`. O `E7M` do gabarito sai como `Emaj7` e o `B4` como `Bsus4`.
+- **Não entrega, por escopo declarado:** tablatura de solo, inversões (`E/G#`, `D/F#`, `B/D#` — o motor detecta conjunto de classes, não quem está no baixo), e a notação de tensão (`2`, `4`, `7M` sai como `sus4`/`maj7`/`5`).
+- **Erro que a comparação achou:** o `Am` do gabarito é lido como **A maior** (`Amaj7`/`A5`) nesse trecho — a terça menor do A não foi resolvida.
+- **Tom:** o gabarito declara `E`; o motor disse `B`. A área harmônica é a de E maior, o palpite de tom não (segue heurística de fundamental mais frequente).
+
+### Corrigido
+- **Terça descartada onde ela existia.** Medido nos 91 trechos que saíam como potência (`5`): a razão terça/fundamental tem mediana **0,28** e em **80%** deles a terça fica abaixo de 0,4 — ou seja, o `5` é a leitura honesta na maior parte. Nos 20% em que a terça **está** no áudio, o template de duas notas ganhava por diluição do croma. Agora, com terça acima de 0,4 da fundamental, o motor diz o acorde inteiro: **6 trechos** mudaram (potência 45% → 42%), sem inventar terça em nenhum outro.
+
 ## [R4] Letra na cifra: fonte declarada, alinhamento ao áudio e desenho no app (2026-11-21)
 ### Adicionado
 - **`mir_engine::lyrics`** — fonte da letra com **procedência obrigatória** (`do usuário`, `domínio público`, `ASR` declarado e não implementado), leitura de texto livre/ChordPro, **frases vocais** por energia na banda 200–3500 Hz e **alinhamento** das linhas ao tempo, com confiança por linha.

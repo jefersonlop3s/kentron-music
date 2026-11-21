@@ -118,7 +118,36 @@ fn melhor(croma: &[f32; 12]) -> (usize, Qualidade, f32) {
     pontuacoes.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
     let (tonica, qualidade, primeira) = pontuacoes[0];
     let segunda = pontuacoes[1].2;
-    (tonica, qualidade, (primeira - segunda).max(0.0))
+    (
+        tonica,
+        com_terca(croma, tonica, qualidade),
+        (primeira - segunda).max(0.0),
+    )
+}
+
+/// Diz o acorde inteiro quando a terça **está** no áudio; senão, fica em potência.
+///
+/// Medido na primeira música real (91 trechos rotulados `5`): em **80%** deles a
+/// terça não passa de 40% da fundamental — razão mediana 0,28. Inventar
+/// maior/menor ali seria mentira; `5` é o que se pode defender. Nos 20% em que a
+/// terça existe, o template de duas notas ganhava por diluição do croma, e aí o
+/// motor volta a dizer o acorde completo.
+fn com_terca(croma: &[f32; 12], tonica: usize, qualidade: Qualidade) -> Qualidade {
+    if qualidade != Qualidade::Potencia {
+        return qualidade;
+    }
+    let fundamental = croma[tonica].max(1e-6);
+    let terca_maior = croma[(tonica + 4) % 12];
+    let terca_menor = croma[(tonica + 3) % 12];
+    if terca_maior.max(terca_menor) > 0.4 * fundamental {
+        if terca_maior >= terca_menor {
+            Qualidade::Maior
+        } else {
+            Qualidade::Menor
+        }
+    } else {
+        Qualidade::Potencia
+    }
 }
 
 /// Detecta a sequência de acordes e agrupa em trechos.
@@ -181,4 +210,64 @@ pub fn detect(chroma: &Chroma) -> Vec<ChordSegment> {
         }
     }
     limpos
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Croma sintético: só as classes dadas têm energia.
+    fn croma(pares: &[(usize, f32)]) -> [f32; 12] {
+        let mut vetor = [0.0f32; 12];
+        for &(classe, valor) in pares {
+            vetor[classe] = valor;
+        }
+        vetor
+    }
+
+    #[test]
+    fn terca_presente_troca_potencia_por_acorde_completo() {
+        // Dó com terça maior em 0,45 e quinta forte: o casamento cru prefere a
+        // potência (é o caso que a medição na música real mostrou), e a regra da
+        // terça devolve o acorde inteiro.
+        let valor = croma(&[(0, 1.0), (4, 0.45), (7, 1.5)]);
+        assert_eq!(
+            com_terca(&valor, 0, Qualidade::Potencia),
+            Qualidade::Maior,
+            "terça acima de 0,4 da fundamental tem de virar acorde completo"
+        );
+        assert_eq!(melhor(&valor).1, Qualidade::Maior);
+    }
+
+    #[test]
+    fn terca_ausente_ou_fraca_fica_potencia_e_nao_inventa() {
+        // Sem terça nenhuma: potência é o que se pode defender.
+        assert_eq!(
+            com_terca(&croma(&[(0, 1.0), (7, 0.9)]), 0, Qualidade::Potencia),
+            Qualidade::Potencia
+        );
+        // 0,3 da fundamental fica abaixo do limiar medido (0,4): não vira menor.
+        assert_eq!(
+            com_terca(
+                &croma(&[(0, 1.0), (3, 0.3), (7, 0.9)]),
+                0,
+                Qualidade::Potencia
+            ),
+            Qualidade::Potencia
+        );
+        // Terça menor presente: escolhe menor, não maior.
+        assert_eq!(
+            com_terca(
+                &croma(&[(0, 1.0), (3, 0.6), (7, 0.9)]),
+                0,
+                Qualidade::Potencia
+            ),
+            Qualidade::Menor
+        );
+        // Qualidade já decidida não é mexida.
+        assert_eq!(
+            com_terca(&croma(&[(0, 1.0)]), 0, Qualidade::MaiorSete),
+            Qualidade::MaiorSete
+        );
+    }
 }

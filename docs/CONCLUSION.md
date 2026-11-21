@@ -509,3 +509,35 @@
 - Detector calibrado em **dois** casos; o repertório é medição pendente (PENDING).
 - O tom estimado continua heurístico (devolveu `Am` na fixture em Dó).
 
+## R4 · Comparação medida contra uma cifra humana (2026-11-21)
+
+**Status:** 🟢 Medição feita e registrada. Um erro real encontrado e corrigido por causa dela.
+
+### O que foi comparado
+O dono trouxe uma **cifra feita à mão** da mesma gravação analisada no incremento 1 — trabalho humano de audição e notação, com harmonia, estrutura e tablatura. A cifra e a letra **não entram no repositório** (conteúdo de terceiro); ficam o método e os números.
+
+A comparação precisa ser lida com o cuidado certo: a cifra humana descreve **o que o músico toca** (com nome de acorde, inversão e tensão); o motor descreve **o que está soando**. São verdades diferentes, e é por isso que as duas se completam em vez de uma corrigir a outra.
+
+### O que o motor achou e o gabarito confirma
+- **Cobertura de fundamental 8/8:** todos os centros que o gabarito usa (`C, C#, D, E, F#, G, A, B`) aparecem na detecção.
+- **A modulação:** o gabarito traz um Solo 2 em `Am C G D/F#`; o motor marca um trecho de área harmônica distinta em **264–294 s** com `Cmaj7, G, D, A, Em7`. Ninguém disse ao motor que havia modulação ali.
+- **Menores onde há evidência:** `F#m` → `Gbm7/Gbm`, `C#m7` → `Dbm7`, `Bm` → `Bm7`. E o `E7M` do gabarito aparece como `Emaj7`, o `B4` como `Bsus4`.
+
+### O que o motor não entrega — e por quê
+- **Tablatura de solo:** fora do escopo declarado (ADR-0011). Exige pitch tracking e casamento de corda/traste.
+- **Inversões** (`E/G#`, `D/F#`, `B/D#`): o motor detecta **conjunto de classes de altura**, não a nota do baixo. Estrutural — exige o baixo isolado (stems).
+- **Notação de tensão** (`2`, `4`, `7M`): sai como `sus4`/`maj7`/`5`. Os conjuntos se sobrepõem; o *nome* não.
+- **Tom:** o gabarito declara `E`, o motor disse `B`. A área harmônica é de E maior; o palpite de tom é heurística de fundamental mais frequente.
+- **`Am` lido como A maior** no trecho modulado: a terça menor do A não foi resolvida ali.
+
+### O erro que a comparação pagou
+O gabarito mostra que os acordes desse repertório **têm terça** (`E7M`, `F#m7`, `C#m7`, `Bm`). O motor estava entregando 45% dos trechos como potência (`5`). A pergunta certa não era "melhorar o detector", era **medir** se a terça está no áudio ou se está sendo descartada:
+
+- razão terça/fundamental nos 91 trechos rotulados `5`: **mediana 0,28**, e em **80%** deles abaixo de 0,4.
+
+Conclusão medida: na maior parte **a terça não está audível** — o `5` é a leitura honesta, e forçar maior/menor ali seria inventar. Nos 20% em que a terça existe, o template de duas notas ganhava por diluição do croma. A regra `chords::com_terca` passou a exigir **terça acima de 0,4 da fundamental** para dizer o acorde inteiro: **6 trechos** mudaram de potência para acorde completo, e nenhum outro ganhou terça que não tem.
+
+### Leitura honesta do conjunto
+Não é mágica: é DSP sem modelo, **0,77 s para 400 s**, acertando o esqueleto harmônico inteiro, a estrutura e uma modulação — e falhando exatamente onde a informação não está no áudio (terça mascarada, baixo, digitação). O que falta é o que exige mais que DSP: **separar instrumentos** (stems) para recuperar terça e baixo, e **pitch tracking** para tablatura. Isso é o portão da R4 que segue de pé (spike S1 + peso no `MANIFEST`).
+
+
