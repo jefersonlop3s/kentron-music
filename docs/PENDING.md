@@ -37,7 +37,8 @@ Parser ChordPro, transposição e testes dourados já integrados à `main`; o re
 - [ ] Criar UI de leitor de cifras (Modo Palco) e setlists.
 - [ ] Implementar exportação OpenLyrics/Holyrics e validar XML.
 - [ ] Validar Browser Source para OBS sem `obs-websocket`.
-- [ ] Executar piloto de dois cultos e fechar a R1.
+- [ ] **Alpha assistido (R1-C, ADR-0009):** um ensaio com o fluxo completo — leitor, projeção e transposição —, falhas registradas com diagnóstico e dados sobrevivendo a fechar/reabrir o app. É o portão inicial e não depende de calendário de culto.
+- [ ] Executar o piloto de dois cultos e fechar a R1 (R1-D, portão final, depois do R1.1 — ADR-0009).
 
 - [x] **Lições da sessão viram skills (2026-11-20):** `empacotamento-rust-flutter`, `higiene-de-dispositivos`, `lote-nao-e-sequencia` e `toolchain-unica` criadas em `.agents/skills/` e registradas na tabela do `/AGENTS.md`; `scripts/encerrar-dispositivos.sh` é o mecanismo da higiene de dispositivos. Branches mergeadas removidas com autorização do dono do projeto.
 - [x] **Perfil do projeto e shellcheck (2026-11-20):** `/AGENTS.md` sem placeholders (topologia, fronteiras, branch/remote, stack, comandos de validação, idiomas, aprovação e release) e `shellcheck` como gate em `scripts/ci-local.sh` e `.githooks/pre-push`; provado no sentido negativo com um `.sh` defeituoso.

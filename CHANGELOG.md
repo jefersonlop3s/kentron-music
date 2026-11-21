@@ -2,6 +2,16 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] ROADMAP corrigido: portão da R1 em dois, alpha antes do piloto (ADR-0009)
+### Adicionado
+- **`R1-0 · Fundação técnica (entregue)`** no ROADMAP: ponte FFI, alvos Android/iOS/Web, Native Assets e `HomeScreen` consumindo o núcleo — entregas que existiam só na CONCLUSION e não apareciam na direção.
+- **`R1-C · Alpha utilizável`** (portão inicial) e **`R1-D · Piloto e release`** (portão final) no ROADMAP e no plano v2.6.
+### Alterado
+- O piloto de dois cultos consecutivos, o zero-crash e a revisão por nativos saíram do portão inicial e passaram a ser o **último** marco da R1 (R1-D), depois do R1.1. O portão de release da ADR-0002 não muda.
+- "Portão de Entrada" da R1 deixou de ser o spike S5: ele dimensiona MusicXML/ATEX (R1.1) e não bloqueia alpha nem piloto, como a ADR-0005 já dizia.
+### Decisão
+- [ADR-0009](docs/adr/0009-portao-inicial-da-r1-alpha-antes-do-piloto.md) aceita: o portão caro não pode ser o primeiro, porque depende de calendário de igreja e trava o ciclo de feedback em duas semanas.
+
 ## [processo] `origin/HEAD` corrigido para `main` (2026-11-21)
 ### Alterado
 - `git remote set-head origin -a` no clone principal: `origin/HEAD` apontava para `master` e agora aponta para `main`. **O GitHub já estava certo** — `gh repo view` devolve `defaultBranchRef = main` e `git ls-remote --symref origin HEAD` devolve `refs/heads/main`; o desatualizado era o ref **local**, que não acompanha mudança de default no remoto.

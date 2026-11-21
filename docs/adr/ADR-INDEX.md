@@ -13,5 +13,6 @@ Status: Proposto → Aceito | Rejeitado | Descontinuado | Substituído. **O acei
 | ADR-0006 | Song Bundle v1: formato de persistência e primeira dependência externa | Aceito | 2026-11-20 | kentron-music |
 | ADR-0007 | Ponte Rust ↔ Flutter: mecanismo e alvo do primeiro incremento | Aceito | 2026-11-20 | kentron-music |
 | ADR-0008 | Empacotamento do Rust: Native Assets em vez de Cargokit | Aceito | 2026-11-20 | kentron-music |
+| ADR-0009 | Portão inicial da R1: alpha assistido antes do piloto de culto | Aceito | 2026-11-21 | kentron-music |
 
-**Próximo número livre**: ADR-0009.
+**Próximo número livre**: ADR-0010.

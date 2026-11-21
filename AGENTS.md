@@ -61,7 +61,7 @@
 3. **Autoria** segue a identidade Git configurada e a política de contribuição. Não alterar identidade global.
 4. **Gates locais**: configurar comandos reais em `.harness.toml` antes de ativar `git config core.hooksPath .githooks` em cada clone. Gate reprovou: corrija o código ou o gate (skill `gate-reprovou`). O runner portátil não oferece bypass por variável; escapes do guard e do perfil legado são mecanismos distintos e não certificam validação.
 5. **Merge** pelo mecanismo aprovado pelo projeto, com validação do resultado integrado. Adaptador GitHub só se aplica quando essa for a forge; repositório local não exige PR remoto. Não desativar os checks requeridos.
-6. **Release**: ainda não há release publicada — versão `0.0.0` em `Cargo.toml` e em `apps/kentron_app/pubspec.yaml`. A primeira é o piloto da R1 (R1-C em `docs/ROADMAP.md`); a versão semântica é conferida nos dois manifestos antes de qualquer push de versão.
+6. **Release**: ainda não há release publicada — versão `0.0.0` em `Cargo.toml` e em `apps/kentron_app/pubspec.yaml`. A primeira é o piloto da R1 (R1-D em `docs/ROADMAP.md`, depois do alpha da R1-C — ADR-0009); a versão semântica é conferida nos dois manifestos antes de qualquer push de versão.
 
 ## Documentação viva
 

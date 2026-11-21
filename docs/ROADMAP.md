@@ -28,7 +28,13 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 
 ## 🎸 R1 · Cifra, Palco Local e Projeção (parcialmente integrado à `main`)
 **Objetivo:** Resolver a dor imediata de leitura e projeção de cifras offline.
-**Portão de Entrada:** Spike S5 (Renderização de Partituras/Tabs).
+**Portão de Entrada:** o spike S5 dimensiona MusicXML/ATEX (R1.1) e **não** bloqueia o alpha nem o piloto (ADR-0005 rejeitada).
+
+### R1-0 · Fundação técnica (entregue)
+- [x] Ponte Rust ↔ Flutter por FFI (ADR-0007): `crates/kentron_ffi` expõe `parse_song` ao Dart, provada por teste de Flutter que carrega o cdylib.
+- [x] Alvos Android, iOS e Web gerados; iOS e Android buildam e rodam com o núcleo respondendo; o alvo web foi provado no navegador.
+- [x] Empacotamento do Rust por Native Assets (ADR-0008): build hooks no lugar do cargokit, sem CocoaPods e sem o aviso de SPM.
+- [x] Tela inicial consumindo o núcleo: `HomeScreen` chama `parse_song` e mostra o tom e os acordes.
 
 ### R1-A · Cifra local utilizável
 - [x] Parser ChordPro e modelo canônico com testes dourados.
@@ -43,13 +49,21 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 - [ ] Browser Source para OBS, sem `obs-websocket` neste marco.
 - [ ] Paginação, acentos, pseudolocalização e projeção bilíngue.
 
-### R1-C · Piloto e release
+### R1-C · Alpha utilizável (portão inicial, ADR-0009)
+**Objetivo:** provar o fluxo completo em uso real de ensaio, sem depender de calendário de culto.
+- [ ] Leitor de cifras (Modo Palco) com transposição e setlist utilizáveis.
+- [ ] Projeção manual em tela secundária (ou janela do OBS) a partir do leitor.
+- [ ] Alpha assistido: um ensaio com o fluxo completo, desenvolvedor presente, falhas registradas com diagnóstico.
+- [ ] Dados sobrevivem a fechar e reabrir o app (bundle restaurado).
+
+### R1-D · Piloto e release (portão final, depois do R1.1)
+**Objetivo:** provar o produto em produção de igreja — o portão caro, no fim da linha (ADR-0002 inalterada).
 - [ ] Dois cultos consecutivos sem assistência do desenvolvedor.
 - [ ] Nenhuma perda de dados, crash bloqueante ou falha de projeção.
-- [ ] pt-BR, en-US e es-419 revisados.
+- [ ] pt-BR, en-US e es-419 revisados por falantes nativos.
 - [ ] MusicXML e ATEX ficam para R1.1, depois do S5 — sequência de execução; o escopo de formatos da ADR-0002 permanece integral (ADR-0005 rejeitada).
 
-**Validação R1:** unitária, regressiva, exploratória, acessibilidade e E2E (piloto de igreja).
+**Validação R1:** unitária, regressiva, exploratória e acessibilidade em todo push; E2E por alpha assistido (R1-C) e, no fim, piloto de igreja (R1-D).
 
 ---
 

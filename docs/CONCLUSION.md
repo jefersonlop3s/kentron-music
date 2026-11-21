@@ -306,5 +306,33 @@
 - `git remote set-head origin -a` relê o default do remoto e reescreve o ref local: `origin/HEAD -> origin/main`. Sem mudança no GitHub, sem push de conteúdo.
 
 ### Pendente de decisão
-- `master` no remoto é branch **órfã**: 1 commit (`4b10a6d Initial commit`), raiz própria, não ancestral de `main`. Apagar é ação destrutiva no remoto e fica com o dono do projeto.
+- `master` no remoto é branch **órfã**: 1 commit (`4b10a6d Initial commit`), raiz própria, não ancestral de `main`. Apagar é ação destrutiva no remoto e fica com o dono do projeto. **Resolvido:** apagada pelo dono em 2026-11-21.
+
+## Processo · Portão da R1 em dois: alpha antes do piloto (ADR-0009, 2026-11-21)
+
+**Status:** 🟢 ROADMAP e plano v2.6 corrigidos; ADR-0009 aceita.
+
+### O que estava errado
+- O ROADMAP tinha **um único portão** para a R1: `R1-C · Piloto e release`, com dois cultos consecutivos sem assistência, zero perda de dados e traduções revisadas por nativos. Esse portão depende de calendário de igreja e só devolve resultado depois de duas semanas — e estava a três entregas de distância (não havia leitor nem projeção).
+- O ROADMAP também estava **atrás da realidade**: ponte FFI, alvos Android/iOS/Web, Native Assets e `HomeScreen` já estavam entregues e só apareciam na CONCLUSION.
+- O "Portão de Entrada" da R1 era o spike S5, contradizendo a ADR-0005 (rejeitada), que diz que o S5 dimensiona MusicXML/ATEX e **não** bloqueia o piloto.
+
+### O que mudou
+- **R1-C · Alpha utilizável** (portão inicial): leitor, projeção e transposição exercitados em **um ensaio assistido**, com falhas registradas e dados sobrevivendo a fechar/reabrir. Não depende de calendário de culto.
+- **R1-D · Piloto e release** (portão final): os critérios caros da ADR-0002 permanecem intactos e passam a ser o **último** marco da R1, depois do R1.1.
+- **R1-0 · Fundação técnica (entregue)** registrada no ROADMAP com as quatro entregas que faltavam na direção.
+- "Portão de Entrada" alinhado à ADR-0005: o S5 dimensiona R1.1 e não bloqueia alpha nem piloto.
+
+### Por que dois portões
+- O portão caro não pode ser o primeiro: ele transforma cada ajuste de UI numa espera de duas semanas. O alpha devolve feedback em um ensaio e deixa o produto ser corrigido antes de chegar a um culto.
+- O piloto não foi eliminado, só **reordenado**: a evidência de produção continua sendo exigida, no fim da linha.
+
+### Evidências
+- `adr/0009-portao-inicial-da-r1-alpha-antes-do-piloto.md` — decisão, custos e pressuposto de produto.
+- `ROADMAP.md` §R1 — R1-0, R1-C e R1-D.
+- `plans/plano-mestre-v2.6.md` §3 e §5 — sequência ajustada.
+- `PENDING.md` — alpha (R1-C) e piloto (R1-D) como itens separados.
+
+### Ressalva
+- O alpha em ensaio **não substitui** evidência de produção: o risco de falha em culto é adiado, não eliminado. A R1 só fecha com o R1-D.
 
