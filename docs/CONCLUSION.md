@@ -826,3 +826,15 @@ O hino **09** é um dos **10** do repertório do dono (a lista diz "Santo, Santo
 A ficha catalográfica do **Cantor Cristão Cifrado** (JUERP/EME, 2011) diz: **"Todos os direitos reservados"**, *"É proibida a reprodução total ou parcial deste livro… por quaisquer meios: eletrônicos, mecânicos, **fotográficos**, xerográficos, gravação…"*, e ainda que o livro **"contém o nosso sistema de cifragem"** (incluindo o "**SOLOS POR NÚMEROS**", o sistema de tablatura deles).
 
 Leitura honesta: **fato não é protegido** — autor, tradutor e datas eu posso ler e registrar (e é o que sustenta a ficha). Mas **a letra transcrita e a cifra daquela edição são do editor**, e o *sistema de cifragem* é reivindicado por eles. Nosso desenho não precisa de nada disso: **derivamos a cifra do áudio** e a letra vem do usuário. As fotos **não entram no repositório** e ficaram em `/tmp/hinario`.
+
+### Refinamento · o número do hino é convenção, não propriedade do editor
+
+O dono contestou — com razão — a leitura de que o livro inteiro seria "intocável": *"eles não são os únicos que imprimem um cantor cristão **e o número da canção é padrão nas igrejas** para o título e a música… se eu for em qualquer igreja batista no Brasil e falar 'Cantor Cristão hino 9', todos saberão que se trata do louvor 'Santo'"*.
+
+Ele está certo, e a "contradição" que ele percebe é **aparente**, não real: **direito exclusivo sobre uma EDIÇÃO convive com convenção denominacional compartilhada**. O que a edição cifrada de 2011 (JUERP/EME) reivindica é o **trabalho editorial dela** — o *sistema de cifragem*, a diagramação, os arranjos/transcrições, o "solos por números". O que ela **não** reivindica (nem poderia):
+
+- **a numeração e a identidade do hino** — convenção de igreja, como a numeração de versículos da Bíblia;
+- **fato de autoria** — quem escreveu, quem traduziu, quando morreu;
+- **texto em domínio público** — o que já caiu não volta a ser de alguém por aparecer numa edição nova.
+
+Correção que eu faço nos meus próprios registros: a frase "a letra transcrita e a cifra daquela edição são do editor" continua válida para **a cifra e a transcrição daquela edição**; passou a valer mal-entendido se lida como "o hinário inteiro é deles". O caminho do projeto — **fatos para a ficha, cifra derivada do áudio, letra do usuário** — não encosta em nada reivindicado pelo editor, e ainda ganha com o argumento dele: a **numeração compartilhada** é justamente o que liga "377 Cantor Cristão" da planilha ao hino do livro.
