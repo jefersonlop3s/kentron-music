@@ -706,6 +706,33 @@ A borda **Akamai** (`errors.edgesuite.net`) recusa clientes automatizados: **HTT
 - O caminho lícito para acervo de terceiro é **permissão pedida, concedida e creditada** — como no meio hinológico ("© Bill H. Ichter — **permissão concedida** à página Hinologia Cristã"; "dados **cedidos gentilmente** por D. Betty Antunes de Oliveira").
 - Raspar segue **proibido pelo próprio contrato** deles e desnecessário para nós: derivamos a cifra do áudio e recebemos a letra do usuário sob a licença dele.
 
+## ADR-0012 · Letras.mus.br é da Vignoli, e a assinatura proíbe exibição pública (2026-11-21)
+
+**Status:** 🟢 Investigação fechada com os dois documentos em mãos. Correção importante ao registro anterior.
+
+### O que o dono notou, e estava certo
+Ele não achou nada sobre o Letras nos termos que colou — porque **aqueles termos são do Cifra Club**. Fui ao rodapé do Letras e existe documento **próprio**: `/aviso-legal.html`, "Termos de uso e política de privacidade do LETRAS.MUS.BR", assinado por **Vignoli Comunicação Ltda.** — **empresa diferente da Studio Sol**.
+
+### A cláusula que fecha a discussão da projeção
+> *"O conteúdo da assinatura é protegido por direitos autorais e disponibilizado mediante **licença limitada, individual, intransferível e exclusivamente para uso pessoal e não comercial**. É vedada sua reprodução, distribuição, **exibição pública**, modificação ou uso comercial sem autorização expressa da Vignoli ou dos respectivos titulares de direitos."*
+
+E a blindagem de conteúdo de usuário, na mesma linha do Cifra Club: *"somos meros 'provedores de aplicativos'… A postagem de conteúdo é, portanto, uma faculdade exclusiva dos nossos usuários"*; *"Postagens devem conter apenas material próprio ou devidamente licenciado"*; *"Nossa responsabilidade se limita a retirar conteúdos do ar… ordem judicial… Marco Civil (art. 19)"*; e ainda removem sem ordem judicial em "violação grave de direitos".
+
+**Consequência dura e clara:** a assinatura do Letras **não cobre** — e **proíbe** — projetar a letra em culto ou transmissão. Não é zona cinzenta: está escrito. O modo teatro que eles oferecem serve para ouvir/ler no dispositivo, sob licença pessoal; a exibição pública é do usuário, com a licença dele.
+
+### Modelo de ASR: o que existe, e o que o `MANIFEST` barra
+O dono escolheu **`medium` por padrão com `large`/`turbo` opcional por dispositivo** — registrado — e perguntou por alternativas, citando **`lfm3-audio:2b`**.
+
+- **LFM3-Audio-2B (LiquidAI) existe** e é bem interessante: **2B** parâmetros, **any-to-any** (ASR + compreensão de áudio + **TTS**/voz), **português entre os idiomas**, feito para **rodar local em laptop/edge**, com builds **GGUF (incl. mmproj), ONNX, MLX, CoreML e LiteRT**, ~3,5 GB em BF16, e métricas de ASR publicadas (ESB/Open ASR em inglês; FLEURS multilíngue incluindo português).
+- **Mas o portão de licença é decisivo:** os pesos estão sob **"LFM Open License v1.0"** — licença **customizada** (`license: other`), com *Commercial Use* condicionado a **receita anual abaixo de US$ 10 milhões** e **exceção para organização sem fins lucrativos qualificada** em uso não comercial. O `models/MANIFEST.toml` hoje aceita **só** as licenças do `deny.toml` — logo o LFM3 **não entra sem decisão explícita do dono** (aceitar como provedor opcional do usuário, excluir, ou emendar a política de pesos por ADR). Isso é exatamente para o que o MANIFEST existe.
+- **Sinergia de desenho que reduz o requisito:** o transcritor **não precisa** devolver timestamps — o motor já acha as **frases vocais** por DSP e alinha as linhas nelas. Um modelo que só devolve texto serve; o tempo vem de nós.
+
+### Decisões e caminhos registrados
+- **Spike antes de adotar peso**: `medium` e `large/turbo` numa música com letra conhecida, medindo **WER em português cantado, tempo e memória**. Sem isso, é chute — e a alucinação (linha repetida, verso inventado, refrão em loop) só se revela na escuta.
+- **Longo prazo:** as correções do usuário **viram dataset** — e é o argumento mais forte para capturá-las desde o primeiro dia. Um ajuste fino sobre o repertório e as adaptações dele tende a superar qualquer modelo de prateleira, e os dados são **dele**.
+- **Hinário impresso confirmado** pelo dono (letra, cifra, partitura, tablatura): o **índice de autores/tradutores está nele**, e é a `base` da ficha. Regra de bolso: **tradutor falecido até 1955 → domínio público no Brasil hoje**.
+
+
 
 
 
