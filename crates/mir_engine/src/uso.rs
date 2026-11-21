@@ -8,6 +8,11 @@
 //!
 //! Limite declarado: sem ficha, o motor **não** afirma domínio público nem
 //! protegido. Afirma `sem ficha`.
+//!
+//! A classificação consulta a **ficha do hinário** (`crate::fichas`) antes do
+//! corpus de letras: é ela que carrega a tradução, a camada que manda. Título que
+//! casa com mais de uma ficha não vira veredito — vira `Indeterminado` nomeando
+//! as candidatas, porque o motor não escolhe qual "Louvor" a igreja cantou.
 
 use std::path::Path;
 
@@ -107,8 +112,44 @@ pub fn classificar(uso: &RelatorioUso, ano_corrente: u16) -> Vec<ObraClassificad
 ///
 /// Sem ficha no corpus, devolve `None` — e `None` é resposta, não falha: o motor
 /// não afirma domínio público do que não tem ficha.
+/// Veredito para um título: **ficha do hinário primeiro**, corpus de letras depois.
+///
+/// A ficha é a camada que carrega a tradução — que é a obra que manda. Título
+/// ambíguo **não** vira veredito: dois "Louvor" no repertório têm vereditos
+/// opostos (135, domínio público; 385, protegido), e escolher o primeiro seria
+/// mentir sobre o que a igreja canta.
 #[must_use]
 pub fn veredito_por_titulo(titulo: &str, ano_corrente: u16) -> Option<Veredito> {
+    match crate::fichas::resposta_por_titulo(titulo, ano_corrente) {
+        crate::fichas::RespostaLetra::Livre {
+            ano_dominio_publico,
+        } => {
+            return Some(Veredito::DominioPublico {
+                regra: format!("ficha do hinário: domínio público desde {ano_dominio_publico}"),
+            });
+        }
+        crate::fichas::RespostaLetra::RequerLetraDoUsuario {
+            ano_dominio_publico,
+        } => {
+            return Some(Veredito::Protegido {
+                regra: format!(
+                    "ficha do hinário: a camada que manda está protegida até {ano_dominio_publico}"
+                ),
+            });
+        }
+        crate::fichas::RespostaLetra::Gap { motivo } => {
+            return Some(Veredito::Indeterminado { motivo });
+        }
+        crate::fichas::RespostaLetra::Ambiguo { candidatas } => {
+            return Some(Veredito::Indeterminado {
+                motivo: format!(
+                    "título ambíguo entre fichas ({}) — use (hinário, número)",
+                    candidatas.join("; ")
+                ),
+            });
+        }
+        crate::fichas::RespostaLetra::SemFicha => {}
+    }
     let letra = lyrics::do_corpus(titulo)?;
     match &letra.origem {
         Origem::DominioPublico { obra } => {

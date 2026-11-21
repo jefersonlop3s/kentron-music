@@ -14,6 +14,7 @@
 
 pub mod chords;
 pub mod dynamics;
+pub mod fichas;
 pub mod lyrics;
 pub mod report;
 pub mod sheet;

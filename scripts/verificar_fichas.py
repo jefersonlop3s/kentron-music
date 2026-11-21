@@ -74,13 +74,20 @@ for n, linha in enumerate(linhas[1:], start=2):
     if veredito not in VEREDITOS:
         falhas.append(f'linha {n}: veredito inválido "{veredito}"')
     if veredito in ("pd", "protegido"):
-        if not reg.get("ano_relevante", "").strip().isdigit():
+        morte = reg.get("ano_relevante", "").strip()
+        pd_ano = reg.get("ano_dominio_publico", "").strip()
+        if not morte.isdigit():
             falhas.append(
                 f'linha {n}: veredito "{veredito}" sem ano de morte relevante'
             )
-        if not reg.get("ano_dominio_publico", "").strip().isdigit():
+        if not pd_ano.isdigit():
             falhas.append(
                 f'linha {n}: veredito "{veredito}" sem ano de domínio público'
+            )
+        if morte.isdigit() and pd_ano.isdigit() and int(pd_ano) != int(morte) + 71:
+            falhas.append(
+                f"linha {n}: ano de domínio público {pd_ano} não é morte {morte} + 71 "
+                f"({int(morte) + 71}) — Brasil: Lei 9.610/98, art. 41"
             )
     if veredito == "gap" and not reg.get("observacao", "").strip():
         falhas.append(f'linha {n}: veredito "gap" sem observação do dado que falta')

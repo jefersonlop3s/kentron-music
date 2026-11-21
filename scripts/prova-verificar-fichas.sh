@@ -66,6 +66,12 @@ variar('ocr-sem-observacao.tsv', ocr_sem_observacao)
 
 # 6) so comentarios e cabecalho
 (tmp / 'so-cabecalho.tsv').write_text('# so comentario\n' + dados[0] + '\n', encoding='utf-8')
+
+# 7) ano de dominio publico fora da aritmetica (Brasil: morte + 71)
+def ano_fora_da_aritmetica(c):
+    if c[col['veredito']] in ('pd', 'protegido') and c[col['ano_relevante']].strip():
+        c[col['ano_dominio_publico']] = str(int(c[col['ano_relevante']]) + 70)
+variar('ano-errado.tsv', ano_fora_da_aritmetica)
 PY
 
 prova 'registro pd sem ano de domínio público'     "$TMP/sem-ano.tsv"
@@ -74,9 +80,10 @@ prova 'fato sem procedência (fonte_autoria vazia)' "$TMP/fato-sem-fonte.tsv"
 prova 'procedência que cita OCR sem observação'    "$TMP/ocr-sem-observacao.tsv"
 prova 'coluna proibida de letra'                   "$TMP/com-letra.tsv"
 prova 'asset só com comentários e cabeçalho'       "$TMP/so-cabecalho.tsv"
+prova 'ano de domínio público fora de morte+71'    "$TMP/ano-errado.tsv"
 
 if [ "$falhas" -ne 0 ]; then
   echo "REPROVADO: $falhas caso(s) não reprovaram — o gate é fraco"
   exit 1
 fi
-echo "APROVADO: o gate reprovou os 6 casos negativos"
+echo "APROVADO: o gate reprovou os 7 casos negativos"

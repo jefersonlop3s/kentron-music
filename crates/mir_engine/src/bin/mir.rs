@@ -13,6 +13,9 @@
 //! cargo run -p mir_engine -- musica.wav --chordpro --letra l.txt --extraida-por "José"
 //! cargo run -p mir_engine -- --listar-hinos                             # fichas do corpus
 //! cargo run -p mir_engine -- --auditar-corpus                            # confere as fichas
+//! cargo run -p mir_engine -- --listar-fichas                             # fichas do hinário + resposta
+//! cargo run -p mir_engine -- --ficha-hino "Cantor Cristão|09"            # ficha por (hinário, número)
+//! cargo run -p mir_engine -- --auditar-fichas                            # aritmética morte+71, linha a linha
 //! cargo run -p mir_engine -- --ficha "Título|Autor|1822|1868|Adaptador|morte do adaptador|obra original|base"
 //! cargo run -p mir_engine -- --relatorio-uso <pasta-do-bundle>   # uso + fichas
 //! ```
@@ -69,10 +72,97 @@ fn main() -> ExitCode {
         };
     }
 
+    if args.iter().any(|a| a == "--auditar-fichas") {
+        return match mir_engine::fichas::auditar() {
+            Ok(linhas) => {
+                for linha in linhas {
+                    println!("✅ {linha}");
+                }
+                ExitCode::SUCCESS
+            }
+            Err(problemas) => {
+                for problema in problemas {
+                    eprintln!("❌ {problema}");
+                }
+                ExitCode::FAILURE
+            }
+        };
+    }
+
+    if args.iter().any(|a| a == "--listar-fichas") {
+        for ficha in mir_engine::fichas::fichas() {
+            println!(
+                "{} · {} · {} — {} · {}",
+                ficha.hinario,
+                ficha.numero,
+                ficha.titulo,
+                ficha.veredito.nome(),
+                mir_engine::fichas::resposta_para_letra(ficha, ano_corrente).resumo()
+            );
+        }
+        return ExitCode::SUCCESS;
+    }
+
     let valor_de = |bandeira: &str| -> Option<String> {
         let posicao = args.iter().position(|a| a == bandeira)?;
         args.get(posicao + 1).cloned()
     };
+
+    if let Some(bruto) = valor_de("--ficha-hino") {
+        let (hinario, numero) = bruto.split_once('|').unwrap_or((bruto.as_str(), ""));
+        let Some(ficha) = mir_engine::fichas::por_identidade(hinario, numero) else {
+            eprintln!(
+                "sem ficha para ({hinario}, {numero}) — veja --listar-fichas. \
+                 O motor não afirma domínio público nem proteção do que não tem ficha."
+            );
+            return ExitCode::FAILURE;
+        };
+        let vazio = "—";
+        println!("{}", ficha.rotulo());
+        println!("  autoria:  {}", ficha.autoria);
+        println!(
+            "  tradução: {}",
+            if ficha.traducao.is_empty() {
+                vazio
+            } else {
+                &ficha.traducao
+            }
+        );
+        println!(
+            "  melodia:  {}",
+            if ficha.melodia.is_empty() {
+                vazio
+            } else {
+                &ficha.melodia
+            }
+        );
+        println!(
+            "  ficha:    {} · morte relevante {} · domínio público {}",
+            ficha.veredito.nome(),
+            ficha.ano_relevante
+                .map_or_else(|| "?".to_owned(), |ano| ano.to_string()),
+            ficha
+                .ano_dominio_publico
+                .map_or_else(|| "?".to_owned(), |ano| ano.to_string())
+        );
+        for (campo, fonte) in [
+            ("autoria", &ficha.fonte_autoria),
+            ("tradução", &ficha.fonte_traducao),
+            ("melodia", &ficha.fonte_melodia),
+        ] {
+            if !fonte.trim().is_empty() {
+                println!("  fonte {campo}: {fonte}");
+            }
+        }
+        if !ficha.observacao.trim().is_empty() {
+            println!("  observação: {}", ficha.observacao);
+        }
+        println!(
+            "  resposta (letra): {}",
+            mir_engine::fichas::resposta_para_letra(ficha, ano_corrente).resumo()
+        );
+        return ExitCode::SUCCESS;
+    }
 
     if let Some(ficha_bruta) = valor_de("--ficha") {
         let campos: Vec<&str> = ficha_bruta.split('|').collect();
@@ -138,10 +228,16 @@ fn main() -> ExitCode {
     {
         Some(c) => PathBuf::from(c),
         None => {
+            // Sem áudio não há cifra, mas `--hino` sozinho ainda tem resposta:
+            // a ficha do hinário diz se aquela versão pode ter letra e por quê.
+            if let Some(titulo) = valor_de("--hino") {
+                return explicar_letra_por_ficha(&titulo, ano_corrente);
+            }
             eprintln!(
                 "uso: mir <arquivo.wav> [--json|--chordpro|--frases-vocais] \
                  [--letra arquivo | --hino titulo] [--licenca texto] [--gravacao \"desc|ano|titular\"] \
-                 [--extraida-por nome] | --listar-hinos | --auditar-corpus | --ficha \"campos\""
+                 [--extraida-por nome] | --listar-hinos | --auditar-corpus | --ficha \"campos\" | \
+                 --listar-fichas | --ficha-hino \"hinário|número\" | --auditar-fichas"
             );
             return ExitCode::FAILURE;
         }
@@ -175,11 +271,9 @@ fn main() -> ExitCode {
                 Some(letra)
             }
             None => {
-                eprintln!(
-                    "obra {titulo:?} não está no corpus (veja --listar-hinos). Se é domínio público, \
-                     monte a ficha com --ficha e acrescente a entrada com autor, falecimento e base."
-                );
-                return ExitCode::FAILURE;
+                // Sem letra no corpus, a ficha do hinário ainda responde o que
+                // importa: se aquela versão pode ter letra, e por quê.
+                return explicar_letra_por_ficha(&titulo, ano_corrente);
             }
         }
     } else {
@@ -299,15 +393,42 @@ fn main() -> ExitCode {
     ExitCode::SUCCESS
 }
 
+/// Explica a fonte da letra pela ficha do hinário, quando o corpus não tem o hino.
+///
+/// É o caminho que evita o pior desfecho: dizer "não está no corpus" e deixar o
+/// usuário sem saber se pode trazer a letra. A ficha responde — e quando o título
+/// é ambíguo, ela nomeia as candidatas em vez de escolher uma.
+fn explicar_letra_por_ficha(titulo: &str, ano_corrente: u16) -> ExitCode {
+    let resposta = mir_engine::fichas::resposta_por_titulo(titulo, ano_corrente);
+    match &resposta {
+        mir_engine::fichas::RespostaLetra::SemFicha => eprintln!(
+            "obra {titulo:?} não está no corpus nem nas fichas (veja --listar-hinos, \
+             --listar-fichas). Se é domínio público, monte a ficha com --ficha."
+        ),
+        mir_engine::fichas::RespostaLetra::Livre { .. } => eprintln!(
+            "obra {titulo:?} não tem letra no corpus — ficha do hinário: {}.\n\
+             A letra desta versão é livre: traga o texto com --letra (a cifra vem do áudio).",
+            resposta.resumo()
+        ),
+        _ => eprintln!(
+            "obra {titulo:?} não tem letra no corpus — ficha do hinário: {}.\n\
+             A letra é do usuário (--letra); a cifra continua vindo do áudio.",
+            resposta.resumo()
+        ),
+    }
+    ExitCode::FAILURE
+}
+
 /// Diz se o argumento é o valor de uma bandeira (`--letra x`), não o arquivo.
 fn eh_valor_de(args: &[String], valor: &str) -> bool {
-    const VALORADAS: [&str; 7] = [
+    const VALORADAS: [&str; 8] = [
         "--letra",
         "--hino",
         "--licenca",
         "--gravacao",
         "--extraida-por",
         "--ficha",
+        "--ficha-hino",
         "--relatorio-uso",
     ];
     args.iter().enumerate().any(|(i, argumento)| {
