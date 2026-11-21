@@ -35,6 +35,20 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/0caf3 — Fichas do hinário: asset com gate e prova negativa
+- **Início:** 2026-11-21 21:17 (UTC) · **Última atualização:** 2026-11-21 21:32 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `docs/fichas-hinario` (de `main` `a33598f`; integrada por merge `--ff-only`) · **Worktrees:** principal
+- **Demanda:** fechar o asset de fichas do hinário do ciclo anterior — dado em TSV, gate de consistência e do limite legal, skill e registro nos dois documentos centrais.
+- **Paths sob edição:** nenhum (concluído).
+- **Status:** concluído — os dois commits (`82b70d0`, `eb14537`) estão na `main`; bateria do pre-push roda de verdade neste push (antes, "nada a commitar" deixava `CHANGED_FILES` vazio).
+- **PRs:** nenhum (merge `--ff-only` local).
+
+**Feito:** `crates/mir_engine/assets/fichas_hinario.tsv` (12 fichas por par hinário+número: **8 pd, 3 protegidos, 1 gap**, procedência por linha), `scripts/verificar_fichas.py`, `scripts/prova-verificar-fichas.sh` e as skills `hinario-e-dominio-publico` e `ocr-em-digitalizacao`.
+
+**Provado:** o gate aprova as 12 fichas e reprova os **4 casos negativos** (pd sem ano, protegido sem ano de morte, fonte vazia, coluna de letra). Duas reprovações que só apareceram quando o commit passou a existir: `ruff format` em `verificar_fichas.py` e **shellcheck SC2164** no script de prova — corrigidas antes do commit. `documentation.py check` sem link quebrado.
+
+**Aberto:** o asset **não é lido por código** (`lyrics.rs` segue com `hinos_dominio_publico.tsv`, intacto) e o gate **não está no pre-push**; os dois ficam no PENDING com o próximo passo escrito.
+
 ### cline/de6b0 — Kentron: letra na cifra (fonte declarada + alinhamento ao áudio)
 - **Início:** 2026-11-21 14:30 (UTC) · **Última atualização:** 2026-11-21 14:55 (UTC)
 - **Repositório:** `kentron-music` · **Branches:** `feature/letra-na-cifra` (de `main` `d383eae`; integrada por merge `--ff-only`) · **Worktrees:** diretório principal
