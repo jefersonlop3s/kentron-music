@@ -5,7 +5,9 @@ Regras:
   * todo `app_*.arb` é JSON válido e o `@@locale` bate com o nome do arquivo;
   * idiomas da faixa 1 (en, pt, es) têm TODAS as chaves do template (app_en.arb);
   * variantes regionais (ex.: pt_PT, es_ES) só podem sobrescrever chaves existentes;
-  * toda mensagem usa exatamente os placeholders declarados no template.
+  * toda mensagem usa exatamente os placeholders declarados no template;
+  * `app_pt.arb` é **português do Brasil** (ADR-0002, faixa 1): grafia de português
+    europeu reprova o gate — a variante europeia vive em `app_pt_PT.arb`.
 
 Uso: python3 tools/check_arb.py [diretório-com-os-arb]
 """
@@ -18,6 +20,27 @@ from pathlib import Path
 TIER1 = {"en", "pt", "es"}
 TEMPLATE = "en"
 DEFAULT_DIR = Path(__file__).resolve().parent.parent / "packages/core_l10n/lib/l10n"
+
+# `pt` é português do Brasil (ADR-0002, faixa 1) — decisão do dono em
+# 2026-11-21, "não negociável". Marcas de português europeu não entram neste
+# arquivo; quem quiser a variante europeia sobrescreve em `app_pt_PT.arb`.
+# É gate, não prosa: sem ele, "ecrã" passa e o app fala português de Portugal
+# com o usuário brasileiro.
+PT_BR = "pt"
+MARCADORES_PT_PT = (
+    "ecrã",
+    "secção",
+    "utilizador",
+    "telemóvel",
+    "autocarro",
+    "connosco",
+    "receção",
+    "ficheiro",
+)
+MARCADOR_PT_PT = re.compile(
+    r"\b(" + "|".join(MARCADORES_PT_PT) + r")(s|es)?\b",
+    re.IGNORECASE,
+)
 
 # `{name}` simples; ignora ramos de plural/select como `=0{Nenhuma}` ou `other{...}`.
 SIMPLE_PLACEHOLDER = re.compile(r"([=\w]*)\{(\w+)\}")
@@ -68,6 +91,18 @@ def check(directory: Path) -> list[str]:
             missing = template_keys - keys
             if missing:
                 errors.append(f"app_{locale}.arb: faltam chaves da faixa 1: {sorted(missing)}")
+        if locale == PT_BR:
+            for key in sorted(keys & template_keys):
+                mensagem = data[key]
+                if not isinstance(mensagem, str):
+                    continue
+                achado = MARCADOR_PT_PT.search(mensagem)
+                if achado:
+                    errors.append(
+                        f"app_pt.arb: {key} usa grafia de português europeu "
+                        f"('{achado.group(0)}'); `pt` é pt-BR (ADR-0002) — "
+                        "a variante europeia vai em pt_PT"
+                    )
         for key in keys & template_keys:
             message = data[key]
             if not isinstance(message, str):

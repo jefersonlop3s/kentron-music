@@ -420,3 +420,20 @@
 - 30 testes de app; `flutter analyze` limpo; `flutter build web --release` verde.
 - Screenshots da prova em `/tmp/kentron-e2e/shots2` e `/tmp/kentron-e2e/shots3` (artefatos locais da sessão).
 
+## Processo · `pt` é pt-BR por gate (2026-11-21)
+
+**Status:** 🟢 Regra do dono virou mecanismo; gate provado nos dois sentidos.
+
+### A decisão
+- O dono do projeto fixou: **sem duplicação** de ARB, `pt` segue a ortografia do **português brasileiro**, e isso não é negociável. `en` e `es` ficam como estão.
+
+### Por que virou gate
+- Grafia não se defende com aviso. Sem verificação, um "Ecrã" ou um "ficheiro" entra no arquivo brasileiro e o app passa a falar português de Portugal com o usuário brasileiro — e ninguém nota até um usuário reclamar.
+
+### O mecanismo
+- `tools/check_arb.py` (o gate `arb` do `pre-push`) reprova marcas de português europeu em `app_pt.arb`: `ecrã`, `secção`, `ficheiro`, `utilizador`, `telemóvel`, `autocarro`, `connosco`, `receção`. `pt_PT` continua livre — é onde a variante europeia mora.
+
+### Provas
+- Positivo: verde com os cinco ARBs atuais, incluindo o "Ecrã" do `pt_PT`.
+- Negativo: com "Ecrã" injetado em `app_pt.arb`, o gate reprovou apontando a chave (`gearProjectionScreen`) e a palavra; restaurado o arquivo, voltou a passar.
+

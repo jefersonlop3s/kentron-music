@@ -2,6 +2,15 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] `pt` é pt-BR por gate, não por prosa (2026-11-21)
+### Adicionado
+- `tools/check_arb.py` reprova **grafia de português europeu** no `app_pt.arb` (`ecrã`, `secção`, `ficheiro`, `utilizador`, `telemóvel`, `autocarro`, `connosco`, `receção`). A variante europeia continua livre em `pt_PT`.
+### Decidido
+- O dono do projeto fixou em 2026-11-21: **sem duplicação** de ARB, `pt` segue a ortografia do português brasileiro e isso não é negociável. A prosa virou mecanismo porque a grafia não se defende com aviso.
+### Verificado
+- Sentido positivo: `check_arb.py` verde com os cinco ARBs atuais (`pt_PT` pode usar "Ecrã").
+- Sentido negativo: com "Ecrã" injetado em `app_pt.arb`, o gate **reprovou** (`gearProjectionScreen usa grafia de português europeu ('Ecrã')`); restaurado o arquivo, voltou a passar.
+
 ## [processo] Prova de navegador, locales e piloto automatizado (2026-11-21)
 ### Adicionado
 - **Prova de navegador** (Playwright + Chromium headless) sobre o build web: home, leitor, transposição, projeção, avanço/volta de seção, contraste, bootstrap por URL e cópia do link — com screenshots. Evidência do link: o clipboard passou de vazio para `…/?projecao=<base64 do ChordPro>`.

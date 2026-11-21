@@ -34,7 +34,9 @@
 - **Idiomas e locales**: documentação e comunicação em português (Brasil). Os ARBs são nomeados pelo
   **idioma-base** — `en` (en-US), `es` (es-419), `pt` (pt-BR) — porque o `gen-l10n` exige um arquivo
   base para cada idioma (um `pt_BR` sem `pt` faz o gerador abortar); `es_ES` e `pt_PT` sobrescrevem
-  as variantes europeias. A faixa 1 da ADR-0002 (pt-BR, en-US, es-419) é atendida por essa
+  as variantes europeias. O `pt` é **português do Brasil por gate**: `tools/check_arb.py` reprova
+  grafia europeia nesse arquivo (`ecrã`, `secção`, `ficheiro`, `utilizador`…) e manda a variante
+  europeia para `pt_PT`. A faixa 1 da ADR-0002 (pt-BR, en-US, es-419) é atendida por essa
   correspondência.
 - **Autoridades de aprovação**: o dono do projeto aprova decisão estrutural (ADR), remoção de
   branches e release.
