@@ -99,5 +99,7 @@ Transversais (carregar sempre): `vies-de-plausibilidade`, `disciplina-de-validac
 | `higiene-de-dispositivos` | ao terminar prova em emulador/simulador e ao liberar máquina |
 | `lote-nao-e-sequencia` | antes de agrupar comandos dependentes num mesmo lote |
 | `toolchain-unica` | ao ver aviso de duplicata no doctor ou gate que reprova só num contexto |
+| `hinario-e-dominio-publico` | ao ingerir ficha de hinário, ao decidir se um hino pode ter letra no app e ao avaliar a camada de tradução brasileira |
+| `ocr-em-digitalizacao` | quando o dado só existe em PDF escaneado (sem camada de texto) |
 
 Toda lição que custou uma sessão vira skill (julgamento) ou gate (mecanismo) — skill `prosa-vira-gate`.
