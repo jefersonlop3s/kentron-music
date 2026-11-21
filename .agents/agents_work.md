@@ -28,7 +28,7 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 ## 🔴 Em andamento
 
 ### cline/0caf3 — Retomada das fichas do hinário (wire do gate + consolidação do asset)
-- **Início:** 2026-11-21 21:42 (UTC) · **Última atualização:** 2026-11-21 21:48 (UTC)
+- **Início:** 2026-11-21 21:42 (UTC) · **Última atualização:** 2026-11-21 21:54 (UTC)
 - **Repositório:** `kentron-music` · **Branches:** `cline/0caf3`; unidade do gate em `feat/gate-fichas-bateria`, integrada na `main` por merge `--ff-only` · **Worktrees:** `~/.cline/worktrees/0caf3/app-music`
 - **Demanda:** a sessão anterior deixou o asset e o verificador **fora da bateria**; o wire foi feito e provado no negativo. Resta a relação fichas ↔ corpus de letras, que é decisão do dono.
 - **Paths sob edição:** nenhum (unidade concluída).
@@ -41,7 +41,9 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 **Provado:** com ficha `pd` sem ano, o próprio hook recusa (`PUSH BLOQUEADO — gate(s) reprovado(s): fichas`, log `linha 2: veredito "pd" sem ano de domínio público`); asset restaurado com md5 idêntico; `✅ fichas` no caminho positivo; `documentation.py check` sem link quebrado.
 
-**Aberto:** `hinos_dominio_publico.tsv` é **corpus de letras** (4 hinos, última coluna = texto), não fichas — fundir violaria o gate. Decisão do dono: ligar por título ou por (hinário, número).
+**Feito (21:54):** o desencontro sobre `hinos_dominio_publico.tsv` foi resolvido **no repositório**: ele existe desde `e9f388f`, tem 40 linhas (35 de comentário), 9 campos posicionais e é compilado em `lyrics.rs` por `include_str!` — sem ele o `clippy` reprovaria o push. O asset de fichas ganhou cabeçalho `#` documentando formato e relação (não se fundem: lá é letra, aqui é fato), o verificador passou a ignorar `#` e a prova ganhou o **5º caso negativo** (arquivo só com cabeçalho reprova).
+
+**Aberto (código):** a consulta que liga ficha e corpus — ficha por (hinário, número) e vínculo com a obra original (*Holy, Holy, Holy* ↔ CC 09, trad. de 1947 → PD 2018).
 
 ## 🟡 Interrompido / órfão
 
