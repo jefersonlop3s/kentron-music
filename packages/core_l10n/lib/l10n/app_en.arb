@@ -80,5 +80,13 @@
   "stageProjectPrevious": "Previous section",
   "@stageProjectPrevious": {
     "description": "Goes back to the previous section in the projection."
+  },
+  "stageCopyProjectionLink": "Copy projection link",
+  "@stageCopyProjectionLink": {
+    "description": "Copies the URL that opens this song in projection mode (OBS browser source)."
+  },
+  "stageProjectionLinkCopied": "Projection link copied",
+  "@stageProjectionLinkCopied": {
+    "description": "Confirmation shown after copying the projection link."
   }
 }

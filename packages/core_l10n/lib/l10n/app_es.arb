@@ -18,5 +18,7 @@
   "stageOpenReader": "Abrir cifrado",
   "stageProject": "Proyectar",
   "stageProjectNext": "Sección siguiente",
-  "stageProjectPrevious": "Sección anterior"
+  "stageProjectPrevious": "Sección anterior",
+  "stageCopyProjectionLink": "Copiar enlace de proyección",
+  "stageProjectionLinkCopied": "Enlace de proyección copiado"
 }

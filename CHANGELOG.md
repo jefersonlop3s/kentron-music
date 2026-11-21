@@ -2,6 +2,18 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [R1-B] Browser Source do OBS por URL
+### Adicionado
+- `projection_link.dart`: `chordproDaUrl` (lê `?projecao=<base64url do ChordPro>`) e `urlDaProjecao` (monta a URL preservando host, caminho e fragmento). Base64url evita escapes de `&`, `#` e acentos.
+- `projection_bootstrap.dart`: `ProjecaoApp` abre direto na projeção, sem tela inicial, com carregador injetável e falha visível.
+- `main.dart` detecta a URL de projeção e sobe o app mínimo; o leitor ganhou "Copiar link de projeção" (web).
+- Chaves `stageCopyProjectionLink` e `stageProjectionLinkCopied` nos três ARBs-base.
+### Verificado
+- 5 testes de URL (round-trip com acentos, URL inválida, preservação de host/caminho/fragmento, troca de query) e 2 de bootstrap (abre na projeção; falha do núcleo visível).
+- Suíte do app: **29 testes**; `flutter analyze` limpo; `flutter build web --release` compilou.
+### Nota
+- O round-trip **dentro do OBS** não foi executado; o build web prova compilação, não o Browser Source em uso. A prova no OBS segue pendente.
+
 ## [R1-C] Modo projeção manual em tela cheia
 ### Adicionado
 - `ProjectionPage` (`apps/kentron_app/lib/src/stage/projection_page.dart`): uma seção por vez, sem acorde, com avanço por toque (metade esquerda/direita), setas do teclado e rodapé com contador e botões anterior/próxima. Abre pelo botão **Projetar** no leitor.

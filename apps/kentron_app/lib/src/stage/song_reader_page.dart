@@ -1,6 +1,9 @@
 import 'package:core_l10n/core_l10n.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:kentron_app/src/rust/bridge.dart';
 import 'package:kentron_app/src/stage/chord_line.dart';
+import 'package:kentron_app/src/stage/projection_link.dart';
 import 'package:kentron_app/src/stage/projection_page.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -113,6 +116,15 @@ class _SongReaderPageState extends State<SongReaderPage> {
     );
   }
 
+  Future<void> _copiarLink() async {
+    final url = urlDaProjecao(widget.input);
+    await Clipboard.setData(ClipboardData(text: url.toString()));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(CoreL10n.of(context).stageProjectionLinkCopied)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = CoreL10n.of(context);
@@ -130,6 +142,12 @@ class _SongReaderPageState extends State<SongReaderPage> {
             onPressed: _cifra == null ? null : _abrirProjecao,
             icon: const Icon(Icons.slideshow),
           ),
+          if (kIsWeb)
+            IconButton(
+              tooltip: l10n.stageCopyProjectionLink,
+              onPressed: _cifra == null ? null : _copiarLink,
+              icon: const Icon(Icons.link),
+            ),
           IconButton(
             tooltip: l10n.stageContrast,
             onPressed: () => setState(() => _palco = !_palco),

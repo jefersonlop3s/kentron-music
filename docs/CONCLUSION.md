@@ -375,3 +375,23 @@
 - Setlists no Modo Palco.
 - Ensaio assistido do R1-C.
 
+## R1-B · Browser Source do OBS por URL (2026-11-21)
+
+**Status:** 🟢 Bootstrap e cópia de link entregues e compilados no alvo web; prova dentro do OBS pendente.
+
+### O que foi entregue
+- `?projecao=<base64url do ChordPro>` abre o app direto na projeção, sem passar pela tela inicial. Base64url evita escapes de `&`, `#` e acentos no caminho do navegador.
+- `chordproDaUrl` decodifica a URL e devolve `null` quando o parâmetro falta ou está estragado — URL inválida não vira projeção vazia.
+- `urlDaProjecao` monta a URL preservando host, caminho e fragmento; o leitor oferece **Copiar link de projeção** no alvo web.
+- `ProjecaoApp` lê a cifra pelo núcleo com carregador injetável; falha do núcleo aparece na tela.
+- Sem `obs-websocket`, como o marco exige.
+
+### Provas
+- 5 testes de URL: round-trip com acentos, URL inválida, preservação de host/caminho/fragmento e troca de query.
+- 2 testes de bootstrap: abre direto na projeção; falha do núcleo visível.
+- Suíte do app: **29 testes**; `flutter analyze` limpo; `flutter build web --release` compilou (`✓ Built build/web`).
+
+### O que continua aberto
+- O round-trip **dentro do OBS** não foi executado: o build web prova compilação, não o Browser Source em uso. Essa prova continua pendente.
+- Tela secundária nativa (fora do OBS) segue sem transporte.
+

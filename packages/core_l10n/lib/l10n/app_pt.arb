@@ -18,5 +18,7 @@
   "stageOpenReader": "Abrir cifra",
   "stageProject": "Projetar",
   "stageProjectNext": "Próxima seção",
-  "stageProjectPrevious": "Seção anterior"
+  "stageProjectPrevious": "Seção anterior",
+  "stageCopyProjectionLink": "Copiar link de projeção",
+  "stageProjectionLinkCopied": "Link de projeção copiado"
 }

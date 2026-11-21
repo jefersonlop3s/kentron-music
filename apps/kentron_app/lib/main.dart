@@ -1,6 +1,8 @@
 import 'package:core_l10n/core_l10n.dart';
 import 'package:kentron_app/src/rust/bridge.dart';
 import 'package:kentron_app/src/rust/frb_generated.dart';
+import 'package:kentron_app/src/stage/projection_bootstrap.dart';
+import 'package:kentron_app/src/stage/projection_link.dart';
 import 'package:kentron_app/src/stage/song_reader_page.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -31,6 +33,12 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // A tela inicial chama o núcleo Rust: sem isto a ponte não está carregada.
   await RustLib.init();
+  // Browser Source do OBS: a URL traz a cifra e o app abre direto na projeção.
+  final chordpro = chordproDaUrl(Uri.base);
+  if (chordpro != null) {
+    runApp(ProjecaoApp(chordpro: chordpro));
+    return;
+  }
   runApp(const KentronApp());
 }
 

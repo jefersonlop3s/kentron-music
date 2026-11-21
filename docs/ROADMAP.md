@@ -46,7 +46,8 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 ### R1-B · Projeção manual
 - [ ] Exportação OpenLyrics com validação XML e arquivos dourados.
 - [ ] Matriz de compatibilidade com versões fixadas de Holyrics e outros consumidores.
-- [ ] Browser Source para OBS, sem `obs-websocket` neste marco.
+- [x] Bootstrap de projeção por URL (`?projecao=<base64url do ChordPro>`) e botão "Copiar link de projeção" no leitor, sem `obs-websocket`.
+- [ ] Provar o Browser Source dentro do OBS: o bootstrap compila no alvo web, mas o round-trip no OBS não foi executado.
 - [ ] Paginação, acentos, pseudolocalização e projeção bilíngue.
 
 ### R1-C · Alpha utilizável (portão inicial, ADR-0009)

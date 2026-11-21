@@ -39,7 +39,8 @@ Parser ChordPro, transposição e testes dourados já integrados à `main`; o re
 - [ ] Projeção em tela secundária (ou janela do OBS): o modo em tela cheia é o conteúdo; falta o transporte para a segunda tela.
 - [ ] Setlists utilizáveis no Modo Palco (navegar de uma música para a próxima sem voltar à biblioteca).
 - [ ] Implementar exportação OpenLyrics/Holyrics e validar XML.
-- [ ] Validar Browser Source para OBS sem `obs-websocket`.
+- [x] **Bootstrap de projeção por URL:** `?projecao=<base64url do ChordPro>` abre o app direto na projeção; o leitor oferece "Copiar link de projeção" no alvo web. Sem `obs-websocket`. Provado por 5 testes de URL + 2 de bootstrap e pela compilação do build web.
+- [ ] Provar o Browser Source dentro do OBS: o bootstrap compila, mas o round-trip no OBS não foi executado.
 - [ ] **Alpha assistido (R1-C, ADR-0009):** um ensaio com o fluxo completo — leitor, projeção e transposição —, falhas registradas com diagnóstico e dados sobrevivendo a fechar/reabrir o app. É o portão inicial e não depende de calendário de culto.
 - [ ] Executar o piloto de dois cultos e fechar a R1 (R1-D, portão final, depois do R1.1 — ADR-0009).
 
