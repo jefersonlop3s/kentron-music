@@ -920,8 +920,9 @@ Autores e Tradutores"** do hinário oficial da CPAD (p.722) traz **`A.A. → Ant
 **Correção desta tabela (2026-11-21, ao auditar o registro da sessão):** a saída de OCR está no
 histórico e diz **`A.A. - Anlúniv Almeida`**. O nome **Antônio Almeida** é **correção de leitura**,
 sustentada apenas por fonte secundária (hinologia.org, 1879-1969) — **não** é o que está impresso, e a
-linha "primária" acima está **errada**. O que a fonte primária sustenta é a **sigla `AA.` no hino** e a
-**existência da entrada `A.A.` no índice**. O ano **2040 fica provisório** até a conferência a olho do
+linha "primária" acima está **errada**. O que a fonte primária sustenta, conferido nos arquivos de OCR
+ainda em `/tmp`: a **sigla `AA.` no pé do hino** (p.255, linha 6) e a **existência da entrada `A.A.` no
+índice** (p.722, linha 3) — nada além disso. O ano **2040 fica provisório** até a conferência a olho do
 índice impresso; o veredito permanece **protegido** porque é a direção segura, e o asset passou a
 registrar isso na própria linha (`fonte_traducao` + `observacao`).
 
