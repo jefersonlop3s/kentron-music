@@ -217,15 +217,31 @@ fn reconhece_a_progressao_o_andamento_e_a_estrutura() {
 #[test]
 fn contraprova_do_lufs_contra_o_ffmpeg() {
     let audio = sintetizar();
-    let caminho = std::env::temp_dir().join("kentron-mir-contraprova.wav");
+    // Hermeticidade (skill `hermeticidade-de-teste`): processo filho declara o
+    // próprio ambiente — herança implícita é o defeito. E o nome do arquivo leva
+    // o PID: nome fixo em `/tmp` colide se duas sessões rodarem o hook juntas.
+    let caminho = std::env::temp_dir().join(format!(
+        "kentron-mir-contraprova-{}.wav",
+        std::process::id()
+    ));
+    let caminho_str = caminho.to_str().expect("caminho utf-8");
+    // O `env` pode apontar `TMPDIR` para qualquer lugar; se o caminho começasse
+    // com `-`, o ffmpeg o leria como flag. Não começa, e o teste diz por quê.
+    assert!(
+        caminho.is_absolute() && !caminho_str.starts_with('-'),
+        "caminho de prova inadequado para argv: {caminho_str}"
+    );
     std::fs::write(&caminho, como_wav(&audio)).expect("escrever o WAV de prova");
 
     let saida = match std::process::Command::new("ffmpeg")
+        .env_clear()
+        .env("PATH", std::env::var_os("PATH").unwrap_or_default())
+        .env("LC_ALL", "C")
         .args([
             "-hide_banner",
             "-nostats",
             "-i",
-            caminho.to_str().expect("caminho utf-8"),
+            caminho_str,
             "-filter_complex",
             "ebur128",
             "-f",

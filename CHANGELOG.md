@@ -18,6 +18,7 @@ Todos os eventos notáveis do projeto Kentron Music Hub.
 - **C3 virava B** na detecção de acorde: o bin da FFT (10,8 Hz em 44,1 kHz/4096) é mais largo que um semitom abaixo de ~180 Hz e a classe de altura era truncada. Agora o croma sai de **picos com interpolação parabólica** e arredondamento de classe — achado pelo teste em áudio sintetizado.
 - **Estrutura degenerada no primeiro áudio real**: com mínimo de 4 s o motor cortava a cada troca de acorde e devolvia 30+ "trechos", todos rotulados refrão. Mínimo passou a 15 s, limiar de novidade a 1,5σ e o refrão é o rótulo **mais repetido** (os outros viram "seção repetida").
 - **`{key: B5}`** na primeira cifra gerada: o extrator de fundamental cortava na primeira minúscula, então `Db` devirava `D` e `B5` tinha o `5` como parte da fundamental. Corrigido com parse explícito de fundamental/qualidade.
+- **Teste de contraprova não era hermético** (apontado pelo radar de skills no push): o processo filho passou a declarar o próprio ambiente (`env_clear`, `PATH` explícito, `LC_ALL=C`) e o arquivo de prova leva o PID — nome fixo em `/tmp` colide se duas sessões rodarem o hook ao mesmo tempo. Conferido que a contraprova **roda** nesse desenho (sem o aviso de `ffmpeg` ausente, que também deixaria o teste verde).
 
 ### Verificado
 - **Áudio sintetizado** (progressão C–G–Am–F a 120 BPM, com final esmaecendo): 4 testes — leitura/escrita de WAV ida e volta, acordes e andamento reconhecidos, introdução/final e cauda mais baixa, e cifra sem dígito no tom nem acorde repetido em sequência.
