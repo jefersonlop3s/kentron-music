@@ -17,6 +17,7 @@ Este diretório é a fonte documental deste projeto ou do conjunto de repositór
 | [security-audit](security-audit/README.md) | Auditorias de segurança e evidências publicáveis |
 | [design-system](design-system/README.md) | Tokens, componentes, acessibilidade e linguagem visual, quando aplicável |
 | [runbooks](runbooks/README.md) | Procedimentos operacionais reproduzíveis |
+| [legal](legal/README.md) | Minutas legais do produto (termo de uso); aprovação e revisão são do dono |
 | [templates](templates/README.md) | Modelos para novos documentos |
 
 ## Relações e manutenção

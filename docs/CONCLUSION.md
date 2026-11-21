@@ -732,6 +732,36 @@ O dono escolheu **`medium` por padrão com `large`/`turbo` opcional por disposit
 - **Longo prazo:** as correções do usuário **viram dataset** — e é o argumento mais forte para capturá-las desde o primeiro dia. Um ajuste fino sobre o repertório e as adaptações dele tende a superar qualquer modelo de prateleira, e os dados são **dele**.
 - **Hinário impresso confirmado** pelo dono (letra, cifra, partitura, tablatura): o **índice de autores/tradutores está nele**, e é a `base` da ficha. Regra de bolso: **tradutor falecido até 1955 → domínio público no Brasil hoje**.
 
+## R4 · Spike de ASR medido e minuta do termo de uso (2026-11-21)
+
+**Status:** 🟢 Custo medido com número; **acurácia pendente** (falta áudio com letra conhecida) e **medição em smartphone pendente** — exigência do dono.
+
+### Moises: o concorrente mais próximo, e o que ele ensina
+- Ferramentas anunciadas: **Stem Separation** (até 27 tipos de stem), **Chord Finder**, **Lyric Transcription**, Speed Changer, Moises Studio. Ou seja: **ele monta cifra e transcreve letra a partir do áudio** — é o concorrente direto do nosso caminho.
+- **Postura de licenciamento, nas palavras dele:** *"we only train our models on licensed materials. We never train on any music without the owner's full approval. It's important to us that musicians and other rights holders are paid for their work"*, e no FAQ: *"Moises will never train on your data."*
+- **Declarações exigidas do usuário (§11.7):** *"you must not Submit User Content if you are not the owner of or are not fully authorized to grant rights in all of the elements… Moises disclaims any and all liability in connection with User Content. You are solely responsible for your User Content and the consequences of providing [it]"*.
+- **Propriedade:** o usuário **retém** direitos sobre o conteúdo **e sobre o "Output"** (incluindo stems, transcrições, análises), com a ressalva de que a lei varia para conteúdo assistido por IA.
+- **Cláusula §12.3 (Real-Time Stem Separation)** é o retrato mais claro do setor: uso **pessoal**, *"you may process only audio that you own or have all rights, licenses…"*, e **"Moises does not grant you any rights in third-party content nor authorize you to separate, reproduce, perform, route, record, distribute, or otherwise use any third-party content"** — e o processamento é **local no dispositivo**.
+- **Rede de segurança deles:** mantêm uma **coleção curada e licenciada** ("Moises Collection") para demonstração, proibindo usá-la para treinar modelos ou exportar.
+- **Leitura honesta:** eles resolvem isso sendo **grandes e pagando licença de treino**, e empurrando responsabilidade para o usuário no conteúdo. Nós resolvemos sendo **locais, sem catálogo e sem treino com dado de usuário** — mais barato e mais defensável, e a nossa ADR-0012 já era exatamente isso.
+
+### Spike de ASR: custo medido (música de 400 s, português cantado, Mac/Metal, `whisper.cpp`)
+
+| Modelo | Disco | Tempo | Memória máx |
+|---|---|---|---|
+| `tiny` | 78 MB | 11,5 s | 341 MB |
+| `base` | 148 MB | **2,6 s** | 485 MB |
+| `small` | 488 MB | 10,8 s | 935 MB |
+| `medium` | ~1,5 GB | em medição | em medição |
+
+**Dado que importa mais que a tabela: o modo de falha.** `tiny` e `base` marcaram os primeiros ~76 s como **"[música]"** (não transcreveram o canto), erraram palavras ("mais que uma **cansa** eu te dar**ém**") e então **entraram em loop inventando a mesma linha por minutos** — de 01:49 a 06:23 no `tiny`. Não é hipótese nem anedota: é medido no áudio real, e vira requisito — **detecção de repetição no fluxo** e **correção humana obrigatória**.
+
+Cuidado metodológico registrado: no mesmo modelo, **quanto mais ele alucina, mais tempo leva** (o `tiny` gastou mais que o `base` porque inventou minutos de texto).
+
+### Minuta do termo de uso
+Criada em [`docs/legal/termo-de-uso.md`](legal/termo-de-uso.md) com 14 cláusulas e **fundamento rastreável cláusula a cláusula** (quadro "Fundamentos"), incluindo: declarações e garantias do usuário, escopo privado por padrão, sem garantia de exatidão (§7.2 — ancorada na medição acima), isenção e indenidade, canal de notificação com prova de titularidade, registro do ato e a cláusula que não se omite: **"este termo não substitui licença de titular"**. Marcada como **minuta para revisão jurídica**, com `<...>` onde falta decisão do dono. Categoria nova declarada em `docs/README.md` (`legal/`).
+
+
 
 
 
