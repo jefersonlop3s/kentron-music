@@ -7,8 +7,12 @@
 2. veredito é um de: pd, protegido, gap, sem_ficha;
 3. pd e protegido exigem ano de morte relevante E ano de domínio público;
 4. gap exige observação explicando o dado que falta;
-5. procedência (fonte) não pode ser vazia;
-6. o asset não pode ter coluna de letra/cifra, nem campo longo (limite legal).
+5. PROCEDÊNCIA É POR CAMPO: autoria, tradução e melodia, quando preenchidas,
+   exigem a fonte correspondente (`fonte_autoria`, `fonte_traducao`, `fonte_melodia`);
+6. procedência que cita OCR exige `observacao` dizendo o que é leitura e o que é
+   inferência — lição de 2026-11-21: `Anlúniv Almeida` (OCR) foi promovido a
+   `Antônio Almeida` e declarado leitura do índice;
+7. o asset não pode ter coluna de letra/cifra, nem campo longo (limite legal).
 Uso: verificar_fichas.py [caminho do tsv]
 """
 
@@ -18,6 +22,11 @@ import sys
 VEREDITOS = {"pd", "protegido", "gap", "sem_ficha"}
 LIMITE_CARACTERES = 300
 PROIBIDOS = ("letra", "cifra", "tablatura")
+CAMPOS_COM_FONTE = (
+    ("autoria", "fonte_autoria"),
+    ("traducao", "fonte_traducao"),
+    ("melodia", "fonte_melodia"),
+)
 
 caminho = pathlib.Path(
     sys.argv[1] if len(sys.argv) > 1 else "crates/mir_engine/assets/fichas_hinario.tsv"
@@ -38,7 +47,14 @@ for proibido in PROIBIDOS:
         sys.exit(
             f'REPROVADO: coluna proibida "{proibido}" — letra e cifra da edição não entram'
         )
-obrigatorias = ("hinario", "numero", "veredito", "fonte")
+obrigatorias = (
+    "hinario",
+    "numero",
+    "veredito",
+    "fonte_autoria",
+    "fonte_traducao",
+    "fonte_melodia",
+)
 faltando = [c for c in obrigatorias if c not in colunas]
 if faltando:
     sys.exit(f"REPROVADO: colunas obrigatórias ausentes: {faltando}")
@@ -68,8 +84,15 @@ for n, linha in enumerate(linhas[1:], start=2):
             )
     if veredito == "gap" and not reg.get("observacao", "").strip():
         falhas.append(f'linha {n}: veredito "gap" sem observação do dado que falta')
-    if not reg["fonte"].strip():
-        falhas.append(f"linha {n}: procedência (fonte) vazia")
+    for campo, fonte in CAMPOS_COM_FONTE:
+        if reg.get(campo, "").strip() and not reg.get(fonte, "").strip():
+            falhas.append(f'linha {n}: "{campo}" sem procedência ("{fonte}" vazia)')
+    cita_ocr = any("ocr" in reg.get(fonte, "").lower() for _, fonte in CAMPOS_COM_FONTE)
+    if cita_ocr and not reg.get("observacao", "").strip():
+        falhas.append(
+            f"linha {n}: procedência cita OCR e a observação está vazia — "
+            "diga o que é leitura e o que é inferência"
+        )
     for c, v in reg.items():
         if len(v) > LIMITE_CARACTERES:
             falhas.append(
