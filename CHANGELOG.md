@@ -2,6 +2,13 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] `origin/HEAD` corrigido para `main` (2026-11-21)
+### Alterado
+- `git remote set-head origin -a` no clone principal: `origin/HEAD` apontava para `master` e agora aponta para `main`. **O GitHub já estava certo** — `gh repo view` devolve `defaultBranchRef = main` e `git ls-remote --symref origin HEAD` devolve `refs/heads/main`; o desatualizado era o ref **local**, que não acompanha mudança de default no remoto.
+### Achado
+- `origin/HEAD` é ref local (`refs/remotes/origin/HEAD`): trocar o default no GitHub não o atualiza. `git remote set-head origin -a` relê do remoto e corrige.
+- `master` no remoto é branch **órfã**: 1 commit (`4b10a6d Initial commit`), raiz própria, **não** ancestral de `main` (80 commits). Apagar é decisão separada.
+
 ## [processo] Contrato de validação declarado: gitleaks, não a bateria inteira (2026-11-21)
 ### Alterado
 - `.harness.toml` `[validation]`: `configured = true` com um gate explícito, `gitleaks` (mesmo argv do `gate_gitleaks` do pre-push). Antes o contrato estava vazio e o `.harness/validation.py` recusava rodar por desenho.

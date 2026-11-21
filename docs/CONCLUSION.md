@@ -295,3 +295,16 @@
 ### Ressalva
 - O argv do contrato é estático: se `.gitleaks.toml` ou `.gitleaks-baseline.json` forem criados, o hook os acrescenta e o contrato não. Anotado no próprio `.harness.toml`.
 
+## Processo · `origin/HEAD` apontando para `main` (2026-11-21)
+
+**Status:** 🟢 Corrigido no clone principal; nada mudou no GitHub, que já estava certo.
+
+### O que estava errado
+- `git branch -r` mostrava `origin/HEAD -> origin/master`, mas o default do repositório no GitHub **já era** `main` (`gh repo view` → `defaultBranchRef = main`; `git ls-remote --symref origin HEAD` → `refs/heads/main`). O sinal enganoso era o ref **local** `refs/remotes/origin/HEAD`, que não acompanha mudança de default no remoto.
+
+### Correção
+- `git remote set-head origin -a` relê o default do remoto e reescreve o ref local: `origin/HEAD -> origin/main`. Sem mudança no GitHub, sem push de conteúdo.
+
+### Pendente de decisão
+- `master` no remoto é branch **órfã**: 1 commit (`4b10a6d Initial commit`), raiz própria, não ancestral de `main`. Apagar é ação destrutiva no remoto e fica com o dono do projeto.
+
