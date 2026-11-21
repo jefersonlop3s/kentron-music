@@ -35,6 +35,25 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/de6b0 — Kentron: ROADMAP corrigido, portão da R1 em dois
+- **Início**: 2026-11-21 01:40 (UTC) · **Última atualização**: 2026-11-21 01:59 (UTC)
+- **Repositório**: `kentron-music` · **Branches**: `feature/roadmap-portao-r1` (de `main` `25edaad`; integrada por merge `--ff-only`) · **Worktrees**: diretório principal
+- **Demanda**: o dono pediu correção do ROADMAP e decidiu que o piloto pesado (dois cultos, zero perda, revisão por nativos) vai para o fim, para não travar o ciclo.
+- **Paths sob edição**: nenhum (concluído).
+- **Status**: concluído — `main` = `origin/main` = `c1c88ea`, bateria verde no push.
+- **PRs**: nenhum (merge `--ff-only` local).
+
+**Feito:**
+- **ROADMAP corrigido:** `R1-0 · Fundação técnica` registra as entregas que só existiam na CONCLUSION (ponte FFI, alvos Android/iOS/Web, Native Assets, `HomeScreen`).
+- **Portão em dois:** `R1-C · Alpha utilizável` (um ensaio assistido, feedback em dias) e `R1-D · Piloto e release` (dois cultos, no fim, depois do R1.1). Os critérios da ADR-0002 ficam intactos — o piloto foi reordenado, não removido.
+- **ADR-0009 aceita:** decisão, custo declarado (alpha não substitui evidência de produção) e pressuposto de produto.
+- **Plano v2.6 alinhado** (§3 e §5), `AGENTS.md` (release é R1-D), PENDING (alpha e piloto como itens separados), CHANGELOG e CONCLUSION.
+- **Portão de Entrada da R1 corrigido:** era o spike S5, contradizendo a ADR-0005; agora o S5 dimensiona R1.1 e não bloqueia alpha nem piloto.
+
+**Provado:** `verificar_refs.py`, `verificar_adr.py` e `documentation.py check` verdes; push com gitleaks, trivy, semgrep, types, test, lint, shell, deny, arb e flutter aprovados.
+
+**Próximo passo:** leitor de cifras (Modo Palco) e projeção manual — são o que falta para o alpha da R1-C.
+
 ### cline/de6b0 — Kentron: contrato de validação com gitleaks
 - **Início**: 2026-11-21 00:02 (UTC) · **Última atualização**: 2026-11-21 00:10 (UTC)
 - **Repositório**: `kentron-music` · **Branches**: `feature/contrato-validacao` + `fix/semgrep-canario` (de `main` `99012e3`; integradas por merge `--ff-only` → `3d6b826`) · **Worktrees**: diretório principal
