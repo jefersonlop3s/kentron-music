@@ -1,0 +1,20 @@
+[package]
+name = "mir_engine"
+description = "MIR: audio into chord chart, structure and dynamics (ADR-0011)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+# FFT madura e auditável (MIT/Apache-2.0). O resto do motor é DSP escrito aqui:
+# janela, croma, casamento de acorde, novidade espectral e R128.
+rustfft = "6.2"
+# O relatório sai em JSON; `serde` já é a primeira dependência externa do
+# workspace (ADR-0006), então não abre dependência nova.
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[lints]
+workspace = true

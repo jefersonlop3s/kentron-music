@@ -2,6 +2,34 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [R4] Motor MIR: cifra, estrutura e dinâmica a partir do áudio (2026-11-21)
+### Adicionado
+- **`crates/mir_engine`** — primeiro incremento do motor de análise (ADR-0011): lê WAV PCM, calcula **dinâmica** (EBU R128 por pesagem K, blocos de 400 ms, portão absoluto e relativo, LRA, pico de amostra), **andamento** (autocorrelação da novidade espectral) e **acordes** (croma por picos interpolados + casamento por template, com confiança por trecho).
+- **Estrutura**: cortes por pico de novidade, agrupamento por auto-similaridade do croma e rótulos por repetição (`A`/`B`/`C`) com papel **inferido** (introdução, refrão candidato, seção repetida, interlúdio candidato, final).
+- **CLI `mir`**: resumo legível, `--json` (relatório completo) e `--chordpro` (cifra por seção).
+- `Report::tom_estimado` e `Report::para_chordpro` — a cifra sai em ChordPro com `{key}`, `{tempo}` e `{duration}`.
+
+### Decidido
+- **ADR-0011 · MIR: primeiro incremento da análise de áudio.** O R4 foi antecipado como instrumento de trabalho (decisão do dono), **fora do portão da R1**: é DSP puro, **sem nenhum modelo** — nada a registrar no `models/MANIFEST.toml`. Letra (ASR) e tablatura (pitch tracking + corda/traste) ficam para incrementos próprios, cada um com o peso declarado antes de entrar.
+- R128 escrito à mão em vez do crate `ebur128` que o plano citava: menos dependência externa e a garantia vem de **contraprova independente** (o `ffmpeg` mede o mesmo arquivo), não de confiar no próprio código.
+- Saída é **candidata com confiança**, nunca verdade: em mixagem real o acorde detectado erra, e o relatório diz isso.
+
+### Corrigido
+- **C3 virava B** na detecção de acorde: o bin da FFT (10,8 Hz em 44,1 kHz/4096) é mais largo que um semitom abaixo de ~180 Hz e a classe de altura era truncada. Agora o croma sai de **picos com interpolação parabólica** e arredondamento de classe — achado pelo teste em áudio sintetizado.
+- **Estrutura degenerada no primeiro áudio real**: com mínimo de 4 s o motor cortava a cada troca de acorde e devolvia 30+ "trechos", todos rotulados refrão. Mínimo passou a 15 s, limiar de novidade a 1,5σ e o refrão é o rótulo **mais repetido** (os outros viram "seção repetida").
+- **`{key: B5}`** na primeira cifra gerada: o extrator de fundamental cortava na primeira minúscula, então `Db` devirava `D` e `B5` tinha o `5` como parte da fundamental. Corrigido com parse explícito de fundamental/qualidade.
+
+### Verificado
+- **Áudio sintetizado** (progressão C–G–Am–F a 120 BPM, com final esmaecendo): 4 testes — leitura/escrita de WAV ida e volta, acordes e andamento reconhecidos, introdução/final e cauda mais baixa, e cifra sem dígito no tom nem acorde repetido em sequência.
+- **Contraprova do LUFS contra o `ffmpeg`** (dois medidores independentes): sintético dentro de 1 LU; **no áudio real, −12,6 LUFS (motor) contra −12,0 LUFS (ffmpeg)** — 0,6 LU de diferença.
+- Áudio real de 400,4 s analisado em **0,77 s** (build release), com `cargo fmt`, `cargo clippy -D warnings` e `cargo test` verdes.
+- Achado musical: a sequência detectada (E, B, F#/Gb, C#m/Dbm, A e, num trecho, D, Cmaj7, G, Em7) é I–V–vi–IV em E maior — o motor acha a região harmônica certa, com a qualidade "5" (power chord) por a terça ficar mascarada na mixagem.
+
+### Ressalvas
+- **Letra e tablatura não estão entregues** — são os próximos incrementos; sem eles, "cifra completa com letra" não existe.
+- O tom estimado é a **fundamental mais frequente**, não análise de centro tonal: numa música em E maior o motor devolveu `B`.
+- O pico reportado é **pico de amostra**, não pico verdadeiro (exigiria sobreamostragem com filtro polifásico).
+
 ## [processo] Dicionário de variantes: uma língua, N variantes, sem duplicar texto (2026-11-21)
 ### Adicionado
 - `tools/variantes.tsv`: pares de formas equivalentes entre variantes da mesma língua (`pt`↔`pt_PT`, `es`↔`es_ES`). É dado, não código — acrescentar uma linha muda o gate.

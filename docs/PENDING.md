@@ -53,6 +53,20 @@ Parser ChordPro, transposição e testes dourados já integrados à `main`; o re
 - [x] **Contrato de validação no `.harness.toml` (2026-11-21):** `[validation]` passou a `configured = true` com um gate explícito, o **gitleaks** (mesmo argv do `gate_gitleaks` do pre-push). Decisão do dono do projeto: a bateria completa **não** entra no contrato — ela já é aplicada pelo `.githooks/pre-push` em cada push, e repeti-la dobraria o custo sem acrescentar cobertura. `python3 .harness/validation.py check` roda e aprova.
 - [x] **`origin/HEAD` para `main` (2026-11-21):** o GitHub já tinha `main` como default (`defaultBranchRef = main`); o desatualizado era o ref **local** `refs/remotes/origin/HEAD`, que apontava para `master`. Corrigido com `git remote set-head origin -a`. `master` no remoto é branch órfã (1 commit, raiz própria) e fica como decisão separada.
 
+## 🧠 R4 · Primeiro incremento entregue (instrumento de trabalho, ADR-0011)
+
+DSP puro, sem modelo: dinâmica (EBU R128), andamento, acordes e estrutura. O que falta:
+- [ ] **Letra por ASR** (transcrição de canto): exige peso declarado no `models/MANIFEST.toml` (licença, fonte, hash, ADR) e correção humana no fluxo — o resultado de ASR de canto não é confiável sozinho.
+- [ ] **Tablatura de solo**: pitch tracking + casamento de corda/traste. Ambíguo por natureza (a mesma altura tem várias posições); exige decisão de afinação e de digitação.
+- [ ] **Separação em stems** (htdemucs 6s, MIT): melhora acorde e dinâmica por instrumento e é pré-requisito realista da tablatura. Portão: spike S1 (MIR on-device) + entrada no `MANIFEST`.
+- [ ] **Centro tonal de verdade**: hoje `tom_estimado` devolve a fundamental mais frequente — numa música em E maior devolveu `B`. Falta perfil de tonalidade (Krumhansl) ou HMM de tom.
+- [ ] **Dinâmica por instrumento**: a curva de pressão sonora (LUFS por stem) que o plano v2.x previa — depende dos stems.
+- [ ] **Integração com o app**: o relatório e o ChordPro do `mir_engine` ainda não entram no bundle nem no leitor/projeção; hoje só a CLI consome.
+- [ ] **Pico verdadeiro** (true peak) em vez de pico de amostra: exige sobreamostragem com filtro polifásico.
+- [ ] Decidir entre R128 à mão (atual, contraprovado contra o `ffmpeg`) e o crate `ebur128` citado no plano.
+- [ ] Prova em lote: rodar o motor em N músicas do repertório e medir onde acerta e onde erra (o incremento provou em **uma** música).
+- [ ] Aquisição de áudio a partir de link não faz parte do repositório: não há `yt-dlp` nem downloader versionado — a decisão de como obter o áudio é do dono.
+
 ## 🌐 R2+ (backlog)
 - [ ] Spike S4 (Matrix/Push iOS).
 - [ ] Spike S2 (sincronia de tempo).

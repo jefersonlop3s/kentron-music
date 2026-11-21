@@ -445,3 +445,35 @@
 - **O radar pagou-se na primeira execução:** apontou que `pt_PT` não cobria `stageProjectNext`/`stageProjectPrevious` — em Portugal, "seção" escreve-se "secção". As duas chaves foram para o `app_pt_PT.arb` e o aviso desapareceu.
 - `.githooks/pre-push` passou a chamar o gate `arb` **direto**, não via `run_gate`: aquele guarda a saída e só a mostra quando o gate falha, então o aviso de quem passa nunca apareceria. Provado: com o override removido, o push **autoriza** e imprime os 2 avisos; com "Ecrã" no `pt`, bloqueia com `gate(s) reprovado(s): arb`.
 
+
+## R4 · Primeiro incremento do motor MIR: análise de áudio real (ADR-0011 aceita, 2026-11-21)
+
+**Status:** 🟢 Entregue como **instrumento de trabalho**, fora do portão da R1. DSP puro, sem modelo, provado em áudio sintetizado e em uma música real.
+
+### A decisão
+- O dono pediu o caminho curto: apontar uma música e obter cifra, estrutura e dinâmica **a partir do áudio**, sem consultar repositório de cifras. Como isso é o R4, a governança exigiu ADR antes do terminal — a [ADR-0011](adr/0011-mir-primeiro-incremento-de-analise-de-audio.md) separa o que é entregável agora (acordes, dinâmica, estrutura, todas por DSP) do que exige peso e incremento próprio (**letra** por ASR e **tablatura** por pitch tracking + corda/traste).
+- Consequência de escopo: "cifra completa com letra" **não** existe nesta entrega. O que existe é cifra por seção, em ChordPro, com confiança por trecho.
+
+### O que ficou de pé
+- `crates/mir_engine`: leitor de WAV PCM sem dependência; dinâmica EBU R128 (pesagem K, blocos de 400 ms com 75% de sobreposição, portão absoluto e relativo, LRA, pico de amostra); STFT com `rustfft`; croma por picos interpolados; acordes por casamento de template com suavização temporal; andamento por autocorrelação da novidade; estrutura por picos de novidade + auto-similaridade do croma com rótulos de repetição.
+- CLI `mir` com resumo legível, `--json` e `--chordpro`.
+- Segunda dependência externa do workspace: `rustfft` (MIT/Apache-2.0), coberta pelo `deny.toml`. Nenhum modelo, portanto nenhuma linha nova no `models/MANIFEST.toml`.
+
+### Provas
+- **Áudio sintetizado** (C–G–Am–F a 120 BPM, com final esmaecendo): 4 testes verdes — ida e volta de WAV, progressão e andamento reconhecidos, introdução/final e cauda mais baixa, cifra sem dígito no tom nem acorde repetido.
+- **Contraprova do LUFS contra o `ffmpeg`** — dois medidores independentes no mesmo arquivo: sintético dentro de 1 LU e, no áudio real, **−12,6 LUFS (motor) contra −12,0 LUFS (ffmpeg)**.
+- **Áudio real de 400,4 s analisado em 0,77 s** (release). `cargo fmt`, `cargo clippy --all-targets -D warnings` e `cargo test` verdes.
+- Sequência detectada na música real: E, B, F#/Gb, C#m/Dbm, A, com um trecho em D/C/G/Em — **I–V–vi–IV em E maior**, a região harmônica certa.
+
+### O que os testes acharam (e por que existem)
+- **C3 saía como B**: o bin da FFT (10,8 Hz em 44,1 kHz com janela de 4096) é mais largo que um semitom abaixo de ~180 Hz, e a classe de altura era **truncada** em vez de arredondada. O croma passou a sair de picos com interpolação parabólica.
+- **Estrutura degenerada no primeiro áudio real**: mínimo de 4 s cortava a cada troca de acorde (30+ "trechos", todos "refrão"). Mínimo para 15 s, limiar de novidade para 1,5σ e refrão passou a ser o rótulo mais repetido.
+- **`{key: B5}` na primeira cifra**: o extrator de fundamental cortava na primeira minúscula, então `Db` virava `D` e o `5` de `B5` entrava como fundamental. Cada um desses virou teste.
+
+### Ressalvas honestas
+- **Letra e tablatura não estão entregues.** São incrementos próprios, com peso declarado antes de entrar.
+- **Acurácia de acorde em mixagem é moderada e não medida em escala:** a prova foi em **uma** música. A qualidade "5" (power chord) pode ser a disposição real da guitarra ou a terça mascarada na mixagem — o motor não distingue, e o relatório diz "candidato" por isso.
+- **Tom estimado é heurística:** devolveu `B` numa música em E maior (é a fundamental mais frequente, não o centro tonal).
+- **Pico de amostra, não pico verdadeiro** — nomear diferente seria mentir no relatório.
+- O áudio usado na prova foi obtido **fora do repositório** (nenhum downloader foi versionado); o motor consome WAV, e a etapa de aquisição é decisão do dono.
+

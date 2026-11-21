@@ -101,11 +101,13 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 **Objetivo:** Automação de cifras e tablaturas via análise de áudio.
 **Portão de Entrada:** Spikes S1 (MIR on-device), S2 e S3 (Identidade da Obra).
 
+> **Primeiro incremento entregue (2026-11-21, ADR-0011):** dinâmica (EBU R128, contraprovada contra o `ffmpeg`), andamento, acordes e estrutura — **DSP puro, sem modelo**, aberto por decisão do dono como instrumento de trabalho e **fora do portão da R1**. O portão de entrada acima segue valendo para a parte com ML (stems, letra, tablatura).
+
 ### Etapas:
-1. **Análise Local:** Áudio $\rightarrow$ Acordes, Tom e Compasso (Desktop primeiro).
-2. **Geração Automática:** Tablaturas e partituras via inferência ONNX.
-3. **Auto-Maestro:** Sugestão de dinâmica e formação baseada no áudio.
-4. **Resolução de Links:** Link de streaming $\rightarrow$ Identidade da Obra $\rightarrow$ Cifra.
+1. **Análise Local:** Áudio $\rightarrow$ Acordes, Tom e Compasso (Desktop primeiro). *Acordes e andamento entregues; tom é estimativa simples (fundamental mais frequente).*
+2. **Geração Automática:** Tablaturas e partituras via inferência ONNX. *Pendente, com peso a declarar.*
+3. **Auto-Maestro:** Sugestão de dinâmica e formação baseada no áudio. *Curva de LUFS do áudio inteiro entregue; por instrumento depende dos stems.*
+4. **Resolução de Links:** Link de streaming $\rightarrow$ Identidade da Obra $\rightarrow$ Cifra. *Fora do repositório: o áudio é obtido fora do app, por decisão do dono.*
 
 ---
 

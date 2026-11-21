@@ -14,7 +14,7 @@ O Kentron utiliza uma **Arquitetura Hexagonal (Ports and Adapters)** para garant
 ### 1. Rust Core (`crates/`)
 - `notation_bundle`: Modelo canônico de música. Lida com transposição, notação e parsing de arquivos. É **domínio puro**: sem FFI e com `unsafe_code = "forbid"`.
 - `kentron_ffi`: **Adaptador** Rust ↔ Flutter (ADR-0007). Único `cdylib` e único a depender do `flutter_rust_bridge`; declara a API que o Dart enxerga (`bridge.rs`) e hospeda o código gerado.
-- `mir_engine`: Motor de análise de áudio (MIR) via modelos ONNX.
+- `mir_engine`: Motor de análise de áudio (MIR). **Primeiro incremento** (ADR-0011): DSP puro — dinâmica por EBU R128, andamento, acordes por croma e estrutura —, sem modelos. A parte de ONNX (stems, tablatura, letra) segue pendente.
 - `harmonic_index`: Gestão do índice de obras e busca global.
 - `band_mesh`: Implementação do protocolo Matrix e sincronia de estado.
 - `stage_clock`: Lógica de regência, tempo e sincronia de palco.
@@ -35,7 +35,7 @@ O dado musical nunca é armazenado como string localizada; ele vive como estrutu
 
 ## 📌 Estado atual (R0/R1)
 
-- O domínio é `notation_bundle`: `chord_naming`, parser ChordPro, `harmony`, o modelo de bundle/setlists com persistência (ADR-0006) e `musicxml` **como stub** — o módulo assina o contrato (`MusicXmlParser::parse`) e recusa com erro explícito; a implementação depende do spike S5 (R1.1). Os módulos `mir_*`, `band_*`, `stage_*` e `trust_*` ainda não existem.
+- O domínio é `notation_bundle`: `chord_naming`, parser ChordPro, `harmony`, o modelo de bundle/setlists com persistência (ADR-0006) e `musicxml` **como stub** — o módulo assina o contrato (`MusicXmlParser::parse`) e recusa com erro explícito; a implementação depende do spike S5 (R1.1). Entre os `mir_*`, `band_*`, `stage_*` e `trust_*`, só `mir_engine` existe: primeiro incremento de **DSP puro** (ADR-0011), sem modelo.
 - A fronteira FFI é `kentron_ffi` (ADR-0007): expõe `parse_song` ao Dart e é a única a carregar código gerado — o domínio segue sem FFI, com `unsafe_code = "forbid"`.
 - `core_l10n` e `flutter_rust_bridge` **estão integrados**; a ponte deixou de ser placeholder e é provada por um teste de Flutter que carrega o `cdylib` e chama o núcleo.
 - O app Flutter ainda **não tem diretórios de plataforma**: a ponte roda em teste, mas o app não abre em dispositivo até isso ser criado.
