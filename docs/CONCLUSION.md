@@ -752,9 +752,20 @@ O dono escolheu **`medium` por padrão com `large`/`turbo` opcional por disposit
 | `tiny` | 78 MB | 11,5 s | 341 MB |
 | `base` | 148 MB | **2,6 s** | 485 MB |
 | `small` | 488 MB | 10,8 s | 935 MB |
-| `medium` | ~1,5 GB | em medição | em medição |
+| `medium` | 1.463 MB | 17,1 s | **2,3 GB** |
 
-**Dado que importa mais que a tabela: o modo de falha.** `tiny` e `base` marcaram os primeiros ~76 s como **"[música]"** (não transcreveram o canto), erraram palavras ("mais que uma **cansa** eu te dar**ém**") e então **entraram em loop inventando a mesma linha por minutos** — de 01:49 a 06:23 no `tiny`. Não é hipótese nem anedota: é medido no áudio real, e vira requisito — **detecção de repetição no fluxo** e **correção humana obrigatória**.
+**Dado que importa mais que a tabela: o modo de falha, medido.** Duas métricas cruas por modelo — quantos segmentos foram rotulados como música (`[música]`, ou seja, **não transcritos**) e a **maior sequência de linhas idênticas seguidas** (loop de invenção):
+
+| Modelo | Segmentos | `[música]` | Loop máx (linhas) | Palavras |
+|---|---|---|---|---|
+| `tiny` | 95 | 3 | **82** | 555 |
+| `base` | 26 | **12** | 6 | 234 |
+| `small` | 90 | 0 | 13 | 515 |
+| `medium` | 95 | 0 | **4** | 322 |
+
+Leitura honesta: o `tiny` repetiu a **mesma linha inventada 82 vezes seguidas** (os 4,5 minutos medidos antes); o `base` **deixou 12 dos 26 segmentos como "[música]"** (não transcreveu metade); o `small` cobre o canto mas ainda **encadeia 13 repetições**; o **`medium` é o primeiro que não joga trecho em "[música]" nem entra em loop longo** — o que sustenta com dado a escolha dele como padrão. Ressalva: **isto é métrica de modo de falha, não de acurácia** — menos palavras pode significar verso pulado. A acurácia exige letra conhecida (WER), ainda pendente.
+
+**Falha do meu harness, registrada:** a primeira execução do `medium` abortou porque o gatilho de espera disparou **32 MB antes do download terminar** e o whisper carregou arquivo truncado. Corrigido e remedido — número acima é do arquivo íntegro (1.533.763.059 bytes).
 
 Cuidado metodológico registrado: no mesmo modelo, **quanto mais ele alucina, mais tempo leva** (o `tiny` gastou mais que o `base` porque inventou minutos de texto).
 
