@@ -139,7 +139,8 @@ fn main() -> ExitCode {
         println!(
             "  ficha:    {} · morte relevante {} · domínio público {}",
             ficha.veredito.nome(),
-            ficha.ano_relevante
+            ficha
+                .ano_relevante
                 .map_or_else(|| "?".to_owned(), |ano| ano.to_string()),
             ficha
                 .ano_dominio_publico

@@ -199,8 +199,7 @@ pub fn carregar_do_texto(texto: &str) -> Result<Vec<FichaHino>, String> {
 pub fn fichas() -> &'static [FichaHino] {
     static CACHE: OnceLock<Vec<FichaHino>> = OnceLock::new();
     CACHE.get_or_init(|| {
-        carregar_do_texto(ASSET)
-            .unwrap_or_else(|erro| panic!("asset de fichas malformado: {erro}"))
+        carregar_do_texto(ASSET).unwrap_or_else(|erro| panic!("asset de fichas malformado: {erro}"))
     })
 }
 

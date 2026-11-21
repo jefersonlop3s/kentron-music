@@ -63,11 +63,17 @@ fn resposta_deriva_do_ano_e_nao_da_coluna_veredito() {
     let santo = fichas::por_identidade("Cantor Cristão", "09").expect("09");
     assert_eq!(santo.veredito, VereditoFicha::DominioPublico);
     assert!(
-        matches!(fichas::resposta_para_letra(santo, 2017), RespostaLetra::RequerLetraDoUsuario { .. }),
+        matches!(
+            fichas::resposta_para_letra(santo, 2017),
+            RespostaLetra::RequerLetraDoUsuario { .. }
+        ),
         "em 2017 a tradução de 1947 ainda estava protegida"
     );
     assert!(
-        matches!(fichas::resposta_para_letra(santo, 2018), RespostaLetra::Livre { .. }),
+        matches!(
+            fichas::resposta_para_letra(santo, 2018),
+            RespostaLetra::Livre { .. }
+        ),
         "caiu em 2018, sem ninguém editar a ficha"
     );
 
