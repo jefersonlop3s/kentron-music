@@ -437,3 +437,11 @@
 - Positivo: verde com os cinco ARBs atuais, incluindo o "Ecrã" do `pt_PT`.
 - Negativo: com "Ecrã" injetado em `app_pt.arb`, o gate reprovou apontando a chave (`gearProjectionScreen`) e a palavra; restaurado o arquivo, voltou a passar.
 
+### O dicionário de variantes: uma língua, N variantes, sem duplicar texto
+- `tools/variantes.tsv` guarda pares de formas equivalentes (`pt`↔`pt_PT`, `es`↔`es_ES`). É **dado**, não código: acrescentar uma linha muda o gate, sem lista escondida no Python.
+- Regra 1 (**bloqueia**): forma da variante no arquivo base. É o que sustenta `pt` = pt-BR.
+- Regra 2 (**avisa**): a base carrega forma local e a variante não sobrescreve a chave — é o texto que o leitor da variante leria errado.
+- A regra 2 é radar, não gate: dicionário conhece palavras, não julga frases. Pelo método do projeto, verificação que não decide sintaticamente não bloqueia.
+- **O radar pagou-se na primeira execução:** apontou que `pt_PT` não cobria `stageProjectNext`/`stageProjectPrevious` — em Portugal, "seção" escreve-se "secção". As duas chaves foram para o `app_pt_PT.arb` e o aviso desapareceu.
+- `.githooks/pre-push` passou a chamar o gate `arb` **direto**, não via `run_gate`: aquele guarda a saída e só a mostra quando o gate falha, então o aviso de quem passa nunca apareceria. Provado: com o override removido, o push **autoriza** e imprime os 2 avisos; com "Ecrã" no `pt`, bloqueia com `gate(s) reprovado(s): arb`.
+

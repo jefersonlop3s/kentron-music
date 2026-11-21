@@ -2,5 +2,7 @@
   "@@locale": "pt_PT",
   "instrumentAcousticGuitar": "Viola / guitarra acústica",
   "gearMixingConsole": "Mesa de mistura",
-  "gearProjectionScreen": "Ecrã"
+  "gearProjectionScreen": "Ecrã",
+  "stageProjectNext": "Próxima secção",
+  "stageProjectPrevious": "Secção anterior"
 }

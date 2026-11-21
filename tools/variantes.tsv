@@ -1,0 +1,29 @@
+# Variantes da mesma língua — pares de formas equivalentes.
+#
+# Cada linha: <idioma-base> <variante> <forma-da-base> <forma-da-variante>
+# Separado por TAB. Linhas vazias e iniciadas por `#` são ignoradas.
+#
+# Como o gate usa isto (`tools/check_arb.py`):
+#   1. BLOQUEIA se a forma da VARIANTE aparecer no arquivo base — o arquivo base
+#      fala a variante dele, não a do vizinho.
+#   2. AVISA (radar) quando a forma da BASE aparece numa chave e a variante não
+#      sobrescreve essa chave — é o texto que o leitor da variante leria errado.
+#
+# A regra 2 é radar, não gate: um dicionário conhece palavras, não julga frases.
+#
+# Fonte das equivalências: uso corrente em software (pt-BR/pt-PT). Acrescentar
+# uma linha aqui muda o gate — não há lista escondida no Python.
+pt	pt_PT	seção	secção
+pt	pt_PT	usuário	utilizador
+pt	pt_PT	arquivo	ficheiro
+pt	pt_PT	celular	telemóvel
+pt	pt_PT	ônibus	autocarro
+pt	pt_PT	tela	ecrã
+pt	pt_PT	telão	ecrã
+pt	pt_PT	recepção	receção
+pt	pt_PT	conosco	connosco
+pt	pt_PT	time	equipa
+pt	pt_PT	violão	viola
+es	es_ES	computadora	ordenador
+es	es_ES	celular	móvil
+es	es_ES	carro	coche

@@ -21,26 +21,81 @@ TIER1 = {"en", "pt", "es"}
 TEMPLATE = "en"
 DEFAULT_DIR = Path(__file__).resolve().parent.parent / "packages/core_l10n/lib/l10n"
 
-# `pt` é português do Brasil (ADR-0002, faixa 1) — decisão do dono em
-# 2026-11-21, "não negociável". Marcas de português europeu não entram neste
-# arquivo; quem quiser a variante europeia sobrescreve em `app_pt_PT.arb`.
-# É gate, não prosa: sem ele, "ecrã" passa e o app fala português de Portugal
-# com o usuário brasileiro.
-PT_BR = "pt"
-MARCADORES_PT_PT = (
-    "ecrã",
-    "secção",
-    "utilizador",
-    "telemóvel",
-    "autocarro",
-    "connosco",
-    "receção",
-    "ficheiro",
-)
-MARCADOR_PT_PT = re.compile(
-    r"\b(" + "|".join(MARCADORES_PT_PT) + r")(s|es)?\b",
-    re.IGNORECASE,
-)
+# Dicionário de variantes da mesma língua (`tools/variantes.tsv`), que alimenta
+# as duas regras — não há lista escondida no Python:
+#   1. BLOQUEIA forma da variante no arquivo base (o base fala a variante dele);
+#   2. AVISA quando a forma da base não é sobrescrita na variante (radar).
+# A regra 1 defende a decisão do dono em 2026-11-21: `pt` é pt-BR, não negociável.
+VARIANTES_TSV = Path(__file__).resolve().parent / "variantes.tsv"
+
+
+def carregar_variantes(caminho: Path) -> list[tuple[str, str, str, str]]:
+    """Pares (base, variante, forma-base, forma-variante). Linha torta estoura."""
+    if not caminho.is_file():
+        return []
+    pares: list[tuple[str, str, str, str]] = []
+    for numero, linha in enumerate(caminho.read_text(encoding="utf-8").splitlines(), 1):
+        texto = linha.strip()
+        if not texto or texto.startswith("#"):
+            continue
+        campos = texto.split("\t")
+        if len(campos) != 4 or not all(campos):
+            raise ValueError(
+                f"{caminho.name}:{numero}: esperado <base> <variante> <forma-base> "
+                "<forma-variante>, separados por TAB"
+            )
+        pares.append((campos[0], campos[1], campos[2], campos[3]))
+    return pares
+
+
+def casar(mensagem: str, palavra: str) -> str | None:
+    """Devolve a forma encontrada, tolerando plural simples (`s`/`es`)."""
+    padrao = re.compile(rf"\b{re.escape(palavra)}(s|es)?\b", re.IGNORECASE)
+    achado = padrao.search(mensagem)
+    return achado.group(0) if achado else None
+
+
+def checar_variantes(
+    loaded: dict[str, dict],
+    template_keys: set[str],
+    pares: list[tuple[str, str, str, str]],
+) -> tuple[list[str], list[str]]:
+    """Regra 1 (bloqueia) e regra 2 (radar) do dicionário de variantes."""
+    erros: list[str] = []
+    avisos: list[str] = []
+    ja_erro: set[tuple[str, str]] = set()
+    ja_aviso: set[tuple[str, str]] = set()
+    for base, variante, forma_base, forma_variante in pares:
+        dados_base = loaded.get(base)
+        if dados_base is None:
+            continue
+        chaves_variante = set(message_keys(loaded.get(variante, {})))
+        for chave in sorted(set(message_keys(dados_base)) & template_keys):
+            mensagem = dados_base[chave]
+            if not isinstance(mensagem, str):
+                continue
+            estranha = casar(mensagem, forma_variante)
+            if estranha and (base, chave) not in ja_erro:
+                # Duas linhas do dicionário podem apontar para a mesma forma da
+                # variante (`tela` e `telão` -> `ecrã`): o erro sai uma vez.
+                ja_erro.add((base, chave))
+                erros.append(
+                    f"app_{base}.arb: {chave} usa a forma da variante `{variante}` "
+                    f"('{estranha}'); `{base}` fala a variante dele — o texto de "
+                    f"`{variante}` vai em app_{variante}.arb"
+                )
+            tem_forma_base = casar(mensagem, forma_base)
+            if (
+                tem_forma_base
+                and chave not in chaves_variante
+                and (base, chave) not in ja_aviso
+            ):
+                ja_aviso.add((base, chave))
+                avisos.append(
+                    f"app_{base}.arb: {chave} tem '{tem_forma_base}' e app_{variante}.arb "
+                    f"não sobrescreve essa chave (esperado conter '{forma_variante}')"
+                )
+    return erros, avisos
 
 # `{name}` simples; ignora ramos de plural/select como `=0{Nenhuma}` ou `other{...}`.
 SIMPLE_PLACEHOLDER = re.compile(r"([=\w]*)\{(\w+)\}")
@@ -59,11 +114,11 @@ def declared_placeholders(template: dict, key: str) -> set[str]:
     return set(meta.get("placeholders", {}))
 
 
-def check(directory: Path) -> list[str]:
+def check(directory: Path, variantes: Path | None = None) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     files = sorted(directory.glob("app_*.arb"))
     if not files:
-        return [f"nenhum app_*.arb em {directory}"]
+        return [f"nenhum app_*.arb em {directory}"], []
 
     loaded: dict[str, dict] = {}
     for path in files:
@@ -79,7 +134,7 @@ def check(directory: Path) -> list[str]:
 
     template = loaded.get(TEMPLATE)
     if template is None:
-        return errors + [f"template app_{TEMPLATE}.arb ausente ou inválido"]
+        return errors + [f"template app_{TEMPLATE}.arb ausente ou inválido"], []
     template_keys = set(message_keys(template))
 
     for locale, data in loaded.items():
@@ -91,18 +146,6 @@ def check(directory: Path) -> list[str]:
             missing = template_keys - keys
             if missing:
                 errors.append(f"app_{locale}.arb: faltam chaves da faixa 1: {sorted(missing)}")
-        if locale == PT_BR:
-            for key in sorted(keys & template_keys):
-                mensagem = data[key]
-                if not isinstance(mensagem, str):
-                    continue
-                achado = MARCADOR_PT_PT.search(mensagem)
-                if achado:
-                    errors.append(
-                        f"app_pt.arb: {key} usa grafia de português europeu "
-                        f"('{achado.group(0)}'); `pt` é pt-BR (ADR-0002) — "
-                        "a variante europeia vai em pt_PT"
-                    )
         for key in keys & template_keys:
             message = data[key]
             if not isinstance(message, str):
@@ -117,18 +160,30 @@ def check(directory: Path) -> list[str]:
             unexpected = found - expected
             if unexpected:
                 errors.append(f"app_{locale}.arb: {key} usa placeholder(s) não declarado(s) {sorted(unexpected)}")
-    return errors
+
+    erros_var, avisos = checar_variantes(
+        loaded, template_keys, carregar_variantes(VARIANTES_TSV if variantes is None else variantes)
+    )
+    return errors + erros_var, avisos
 
 
 def main() -> int:
     directory = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_DIR
-    errors = check(directory)
+    try:
+        errors, avisos = check(directory)
+    except ValueError as exc:
+        print(f"ERRO: {exc}")
+        return 1
     for error in errors:
         print(f"ERRO: {error}")
     if errors:
         return 1
     count = len(list(directory.glob("app_*.arb")))
     print(f"ok: {count} arquivos ARB consistentes em {directory}")
+    for aviso in avisos:
+        print(f"AVISO: {aviso}")
+    if avisos:
+        print(f"{len(avisos)} aviso(s) de variante — não reprova; é a chave que a variante ainda não cobre.")
     return 0
 
 

@@ -498,11 +498,19 @@ if [ -f "deny.toml" ]; then
 fi
 
 if [ -f "tools/check_arb.py" ]; then
-    gate_arb() {
-        precisa_de python3 "https://www.python.org/downloads/" || return 127
-        python3 tools/check_arb.py
-    }
-    run_gate arb gate_arb
+    # Chamado DIRETO, não via `run_gate`: aquele guarda a saída e só a mostra
+    # quando o gate FALHA, e este gate também emite AVISOS de variante quando
+    # passa (chave que a variante regional ainda não cobre). Radar invisível é
+    # radar nenhum — mesma razão do `skills-radar`. Medido em 2026-11-21.
+    if skipped arb; then
+        echo -e "${YELLOW}⏭  arb: pulado (HARNESS_SKIP)${NC}"
+    else
+        if ! precisa_de python3 "https://www.python.org/downloads/"; then
+            FAILED+=("arb")
+        elif ! python3 tools/check_arb.py; then
+            FAILED+=("arb")
+        fi
+    fi
 fi
 
 if [ -f "apps/kentron_app/pubspec.yaml" ]; then

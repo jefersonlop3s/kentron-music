@@ -2,6 +2,18 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] Dicionário de variantes: uma língua, N variantes, sem duplicar texto (2026-11-21)
+### Adicionado
+- `tools/variantes.tsv`: pares de formas equivalentes entre variantes da mesma língua (`pt`↔`pt_PT`, `es`↔`es_ES`). É dado, não código — acrescentar uma linha muda o gate.
+- Duas regras no gate `arb`: **bloqueia** forma da variante no arquivo base e **avisa** quando a variante não sobrescreve uma chave cuja base carrega forma local.
+### Corrigido
+- O radar achou sozinho um defeito real: `pt_PT` não cobria `stageProjectNext`/`stageProjectPrevious` — em Portugal escreve-se "secção". As duas chaves entraram no `app_pt_PT.arb`.
+- `.githooks/pre-push` chama o gate `arb` **direto**, não via `run_gate`: aquele guarda a saída e só a mostra quando o gate falha, e este gate também emite avisos quando passa. Radar invisível é radar nenhum (mesma razão do `skills-radar`).
+### Verificado
+- Regra 1 no negativo: "Ecrã" injetado em `app_pt.arb` → `❌ PUSH BLOQUEADO — gate(s) reprovado(s): arb`, uma única mensagem apesar de duas linhas do dicionário apontarem para "ecrã".
+- Regra 2 no negativo: removendo os dois overrides do `pt_PT`, o push **passa** e imprime os 2 avisos nomeando a chave e a forma esperada.
+- Positivo: gate e hook verdes com os cinco ARBs consistentes.
+
 ## [processo] `pt` é pt-BR por gate, não por prosa (2026-11-21)
 ### Adicionado
 - `tools/check_arb.py` reprova **grafia de português europeu** no `app_pt.arb` (`ecrã`, `secção`, `ficheiro`, `utilizador`, `telemóvel`, `autocarro`, `connosco`, `receção`). A variante europeia continua livre em `pt_PT`.
