@@ -43,12 +43,17 @@ topology = "repository"
 members = []
 
 [validation]
-# Habilitar só depois de declarar os gates reais e sua cobertura. Um projeto
-# recém-instalado recusa push enquanto este contrato não estiver preenchido.
-configured = false
-gates = []
-# Exemplo (remova gates=[] antes de usar tabelas):
-# [[validation.gates]]
-# id = "tests"
-# argv = ["python3", "-m", "unittest", "discover", "-s", "tests"]
-# cwd = "."
+# Decisão de 2026-11-21 (dono do projeto): o que roda em TODA invocação de
+# `.harness/validation.py` é o gitleaks. A bateria completa (cargo clippy/test,
+# flutter analyze/test) já é aplicada pelo `.githooks/pre-push` em cada push —
+# repeti-la aqui dobraria o custo sem acrescentar cobertura. Este contrato
+# declara a validação barata e real; a caríssima continua no hook.
+configured = true
+
+[[validation.gates]]
+id = "gitleaks"
+# Mesmo argv do `gate_gitleaks` do pre-push. Se `.gitleaks.toml` ou
+# `.gitleaks-baseline.json` forem criados, este argv precisa acompanhar o hook:
+# ele acrescenta `--config` e `--baseline-path` quando os arquivos existem.
+argv = ["gitleaks", "detect", "--source", ".", "--no-banner", "--redact", "-v", "--exit-code", "1"]
+cwd = "."

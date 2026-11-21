@@ -60,6 +60,7 @@ A janela do Simulator pode ficar aberta sem dispositivo: `osascript -e 'quit app
 - **Não apagar o AVD para "limpar".** `emulator -avd kentron` volta em segundos; apagar exige recriar a imagem. Encerrar ≠ apagar.
 - **Não confiar em `pgrep` para provar que encerrou.** Use `adb devices` e `simctl list devices booted`.
 - **Não encerrar durante prova em andamento** (instalação, `flutter run`, captura de tela).
+- **Não transformar em gate de `pre-push`.** Decidido em 2026-11-21 com o dono do projeto: derrubar dispositivo dentro de um comando de verificação é destrutivo — quem estiver com `flutter run` perde o aparelho no meio de um push. O mecanismo é o ritual abaixo, não o hook.
 
 ## Ritual
 

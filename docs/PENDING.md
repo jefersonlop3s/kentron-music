@@ -41,7 +41,7 @@ Parser ChordPro, transposição e testes dourados já integrados à `main`; o re
 
 - [x] **Lições da sessão viram skills (2026-11-20):** `empacotamento-rust-flutter`, `higiene-de-dispositivos`, `lote-nao-e-sequencia` e `toolchain-unica` criadas em `.agents/skills/` e registradas na tabela do `/AGENTS.md`; `scripts/encerrar-dispositivos.sh` é o mecanismo da higiene de dispositivos. Branches mergeadas removidas com autorização do dono do projeto.
 - [x] **Perfil do projeto e shellcheck (2026-11-20):** `/AGENTS.md` sem placeholders (topologia, fronteiras, branch/remote, stack, comandos de validação, idiomas, aprovação e release) e `shellcheck` como gate em `scripts/ci-local.sh` e `.githooks/pre-push`; provado no sentido negativo com um `.sh` defeituoso.
-- [ ] **Declarar o contrato de validação no `.harness.toml`:** `[validation]` continua com `configured = false` e `gates = []` enquanto o projeto tem gates reais, e `.harness/validation.py` recusa rodar nesse estado. Decidir com o dono se o contrato aponta para `scripts/ci-local.sh` (custo: a bateria completa roda de novo a cada invocação).
+- [x] **Contrato de validação no `.harness.toml` (2026-11-21):** `[validation]` passou a `configured = true` com um gate explícito, o **gitleaks** (mesmo argv do `gate_gitleaks` do pre-push). Decisão do dono do projeto: a bateria completa **não** entra no contrato — ela já é aplicada pelo `.githooks/pre-push` em cada push, e repeti-la dobraria o custo sem acrescentar cobertura. `python3 .harness/validation.py check` roda e aprova.
 
 ## 🌐 R2+ (backlog)
 - [ ] Spike S4 (Matrix/Push iOS).

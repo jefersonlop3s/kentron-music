@@ -273,5 +273,24 @@
 
 ### Ressalvas
 - O hook continua com 17 achados de `shellcheck`: SC2329 é falso positivo (função chamada por `run_gate`) e SC2001 é estilo. O gate cobre `scripts/*.sh`, não o hook, porque um erro no hook já aparece como falha de gate durante o push.
-- `.harness.toml` segue com `[validation] configured = false` e `gates = []` enquanto o projeto tem gates reais; `.harness/validation.py` recusa rodar nesse estado. Declarar o contrato é decisão do dono: apontar para `scripts/ci-local.sh` faz a bateria completa rodar de novo a cada invocação.
+- `.harness.toml` seguia com `[validation] configured = false` e `gates = []` enquanto o projeto tem gates reais; `.harness/validation.py` recusava rodar nesse estado. **Resolvido em 2026-11-21** na seção seguinte.
+
+## Processo · Contrato de validação: gitleaks, não a bateria inteira (2026-11-21)
+
+**Status:** 🟢 Integrado à `main`; o `.harness/validation.py` deixou de recusar rodar por contrato vazio.
+
+### Decisão
+- O contrato `[validation]` do `.harness.toml` declara **um** gate: `gitleaks`, com o mesmo argv do `gate_gitleaks` do pre-push. A bateria completa (Rust, Flutter, ARBs, licenças) **não** entra no contrato — ela já é aplicada pelo `.githooks/pre-push` em cada push, e repeti-la dobraria o custo sem acrescentar cobertura. Decisão do dono do projeto.
+- Higiene de dispositivos **não** vira gate de `pre-push`: derrubar dispositivo dentro de um comando de verificação é destrutivo para quem estiver com `flutter run`. Fica no ritual da skill `higiene-de-dispositivos`.
+
+### Evidências
+- `python3 .harness/validation.py check` → `gates aprovados: 1`, `EXIT=0` (80 commits, `no leaks found`).
+- Contrato no sentido negativo: gate trocado por `false` → `gates reprovados: gitleaks (exit 1)`, `EXIT=1`; arquivo restaurado depois.
+- Gitleaks no sentido negativo: repositório temporário com `AKIAQ5T7B2N8X4L9R3WZ` → `leaks found: 1`, `EXIT=1`.
+
+### Achado
+- `AKIAIOSFODNN7EXAMPLE` (a chave de exemplo da documentação da AWS) **não** é detectada: está na allowlist padrão do gitleaks. Canário com ela devolve `no leaks found` e daria falsa confiança — o teste precisa de chave plausível.
+
+### Ressalva
+- O argv do contrato é estático: se `.gitleaks.toml` ou `.gitleaks-baseline.json` forem criados, o hook os acrescenta e o contrato não. Anotado no próprio `.harness.toml`.
 

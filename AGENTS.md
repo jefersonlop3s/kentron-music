@@ -28,7 +28,9 @@
   compileSdk/targetSdk 36, minSdk 24.
 - **Comandos reais de validação**: `./scripts/ci-local.sh` (bateria completa, mesma matriz do
   workflow) e `.githooks/pre-push` (gates por push: gitleaks, trivy, semgrep, clippy, testes,
-  rustfmt, shellcheck, cargo-deny, ARBs, Flutter).
+  rustfmt, shellcheck, cargo-deny, ARBs, Flutter). O contrato `[validation]` do `.harness.toml`
+  declara o **gitleaks** como validação de toda invocação do `validation.py`; a bateria completa
+  fica no hook, não no contrato (decisão de 2026-11-21).
 - **Idiomas e locales**: documentação e comunicação em português (Brasil); o app tem ARBs `en`
   (template), `es`, `es_ES`, `pt` e `pt_PT`.
 - **Autoridades de aprovação**: o dono do projeto aprova decisão estrutural (ADR), remoção de

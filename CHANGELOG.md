@@ -2,6 +2,17 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] Contrato de validação declarado: gitleaks, não a bateria inteira (2026-11-21)
+### Alterado
+- `.harness.toml` `[validation]`: `configured = true` com um gate explícito, `gitleaks` (mesmo argv do `gate_gitleaks` do pre-push). Antes o contrato estava vazio e o `.harness/validation.py` recusava rodar por desenho.
+- Decisão do dono do projeto: a bateria completa **não** entra no contrato — ela já é aplicada pelo `.githooks/pre-push` em cada push; repeti-la dobraria o custo sem acrescentar cobertura. Higiene de dispositivos também não vira gate de `pre-push`: derrubar dispositivo dentro de um comando de verificação é destrutivo.
+### Verificado
+- `python3 .harness/validation.py check` → `gates aprovados: 1`, `EXIT=0` (80 commits, nenhum vazamento).
+- Sentido negativo do contrato: gate trocado por `false` → `gates reprovados: gitleaks (exit 1)`, `EXIT=1`.
+- Sentido negativo do gitleaks: repositório temporário com `AKIAQ5T7B2N8X4L9R3WZ` → `leaks found: 1`, `EXIT=1`.
+### Achado
+- A chave de exemplo canônica da AWS (`AKIAIOSFODNN7EXAMPLE`) **não** é detectada: está na allowlist padrão do gitleaks. Canário com ela passa em falso e não prova nada.
+
 ## [processo] Perfil do projeto preenchido e shellcheck vira gate (2026-11-20)
 ### Adicionado
 - `shellcheck` nos dois pontos onde a bateria roda: `scripts/ci-local.sh` (todos os `scripts/*.sh`) e `.githooks/pre-push` (só os `.sh` que o push toca, mesmo recorte dos gates de lint por stack). O workflow `.github/workflows/ci.yml` instala a ferramenta antes de chamar o script.
