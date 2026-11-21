@@ -10,7 +10,9 @@ CPAD** (724 páginas) vieram em PDF **sem camada de texto** (`get_text()` devolv
 páginas). Com OCR nativo saíram, do próprio livro, o crédito do hino 291 (`AA.`) e o **Índice de
 Autores e Tradutores** (CPAD p.722), cujo OCR trouxe **`A.A. - Anlúniv Almeida`**: o índice
 **localiza** a entrada, mas **não fecha o nome** — "Antônio Almeida" foi correção de leitura apoiada
-em fonte secundária, e chamar isso de leitura do impresso foi o erro de 2026-11-21.
+em fonte secundária, e chamar isso de leitura do impresso foi o erro de 2026-11-21. A conferência final
+veio da **imagem legível da mesma página**, enviada pelo dono: `A.A. - Antônio Almeida`. **OCR para
+localizar, olho para fechar** — e a data continua sendo de outra fonte, porque o índice não traz anos.
 
 ## Mecânica
 

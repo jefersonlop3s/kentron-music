@@ -926,6 +926,12 @@ ainda em `/tmp`: a **sigla `AA.` no pé do hino** (p.255, linha 6) e a **existê
 índice impresso; o veredito permanece **protegido** porque é a direção segura, e o asset passou a
 registrar isso na própria linha (`fonte_traducao` + `observacao`).
 
+**Confirmado (22:12):** o dono enviou a **imagem legível da p.722** e ela traz **`A.A. - Antônio Almeida`** —
+a identificação do nome está **fechada na fonte primária**, e a linha "sigla → nome" da tabela acima passa
+a valer por **leitura**, não por inferência. O que continua secundário é a **data** (1879-1969,
+hinologia.org): o índice dá nomes **sem anos**, então **2040 = 1969+71** é aritmética sobre fonte
+secundária. O registro do erro de método acima fica de pé — o que mudou foi a evidência.
+
 **Veredito: PROTEGIDO até 2040** (1969+71) — a versão em português é a camada que manda, e é a mais
 longa dos dez. A edição é **CPAD © 2007**, "todos os direitos reservados para a língua portuguesa":
 mesma regra do Cantor Cristão Cifrado — **só fatos**; PDF e fotos fora do repositório.
@@ -979,8 +985,9 @@ O repertório de dez hinos deixou de viver só como prosa no PENDING: virou
 **8 em domínio público, 3 protegidas e 1 GAP**. A procedência é **por campo** — `fonte_autoria`,
 `fonte_traducao` e `fonte_melodia` —, porque a ficha do 291 só se sustenta em três elos: sigla
 impressa (`AA.`) → índice de autores do próprio hinário (CPAD p.722, **lido por OCR** como
-`Anlúniv Almeida`) → biografia (hinologia.org, 1879-1969). O nome "Antônio Almeida" é **correção de
-OCR + fonte secundária**, e o gate passou a exigir `observacao` sempre que a procedência citar OCR.
+`Anlúniv Almeida`) → biografia (hinologia.org, 1879-1969), e o nome foi **depois confirmado a olho** na
+imagem legível do índice (`A.A. - Antônio Almeida`). O gate passou a exigir `observacao` sempre que a
+procedência citar OCR.
 
 **O limite legal virou mecanismo, não recomendação.** `scripts/verificar_fichas.py` reprova veredito
 fora de `pd|protegido|gap|sem_ficha`, `pd`/`protegido` sem ano, `gap` sem observação, `fonte` vazia,

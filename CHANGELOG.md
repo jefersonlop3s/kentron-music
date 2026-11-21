@@ -16,7 +16,7 @@ Todos os eventos notáveis do projeto Kentron Music Hub.
 
 ### Ressalvas
 - O asset **ainda não é lido por código** — `lyrics.rs` continua com `hinos_dominio_publico.tsv`, intacto. O gate **está na bateria** e o contrato `[validation]` do `.harness.toml` segue só com gitleaks (decisão de 2026-11-21). A relação entre ficha e corpus está documentada nos dois arquivos (não se fundem); falta a **consulta em código** — PENDING.
-- **O tradutor do 291 é identificação provisória:** a sigla `AA.` é leitura do hino; o nome no índice da CPAD foi lido por OCR como `Anlúniv Almeida`, e "Antônio Almeida (1879-1969)" é correção + fonte secundária. O veredito `protegido` é a direção segura; o ano **2040** só vira fato depois da conferência a olho do índice impresso.
+- **O tradutor do 291 foi identificado a olho:** a sigla `AA.` é leitura do hino e o índice da CPAD (p.722) foi conferido na **imagem legível** — `A.A. - Antônio Almeida`. O OCR tinha lido `Anlúniv Almeida`, e foi essa correção que ficou registrada como se leitura fosse, até a conferência. As **datas 1879-1969** seguem de fonte secundária (hinologia.org — o índice não traz anos), e o ano **2040** é calculado delas.
 - O hook chamava `avisa_base "$1"` e abortava fora do `git push` (`set -u`): passou a `"${1:-origin}"`, sem o que nenhum gate poderia ser provado manualmente.
 - **Duas reprovações reais só apareceram quando o commit existiu:** o push anterior dizia "nada a commitar" e deixava `CHANGED_FILES` vazio — `lint` e `shell` não tinham arquivo para olhar. `ruff format` e `shellcheck` (SC2164) reprovaram então, e foram corrigidos antes do commit.
 
