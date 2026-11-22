@@ -17,6 +17,7 @@ pub mod decode;
 pub mod dynamics;
 pub mod fichas;
 pub mod lyrics;
+pub mod melody;
 pub mod report;
 pub mod sheet;
 pub mod spectrum;
@@ -65,7 +66,10 @@ pub fn analyze(audio: &Audio, opts: &Opts) -> report::Report {
 #[must_use]
 pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) -> report::Report {
     let chroma = spectro.chroma(audio.taxa);
-    let chords = chords::detect(&chroma);
+    // A melodia é extraída antes dos acordes: ela arbitra a terça que o croma
+    // perdeu na mixagem (ADR-0014, bloco 3).
+    let melodia = melody::extrair(spectro, audio.taxa);
+    let chords = chords::detect_com_melodia(&chroma, Some(&melodia));
     let tempo = structure::estimate_tempo(spectro, audio.taxa);
     let sections = structure::segment(spectro, &chroma, audio.taxa, opts.trecho_minimo_s);
 

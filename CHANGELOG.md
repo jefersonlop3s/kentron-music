@@ -2,6 +2,33 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [feat] Terça pela melodia no motor (ADR-0014, bloco 3) (2026-11-22)
+### Adicionado
+- **`crates/mir_engine/src/melody.rs`** — `extrair(spectro, taxa)` devolve a **classe de altura da voz por quadro**, com `contagem`, `quadros_com_f0` e `dominante`. O método é soma harmônica sobre os picos do espectro (a fundamental da voz vem com 2f e 3f), na banda de 200–1000 Hz, com piso de 20% do maior pico do quadro.
+- **`chords::detect_com_melodia(chroma, Option<&Melodia>)`** — o detector guarda a **estrutura** (tônica e qualidade) até o fim e só monta o nome depois que a melodia opina. `com_a_melodia` **só promove `5` → maior/menor**, com mínimo de 3 quadros com F0 e 40% de fração.
+- **Fixture `power_chord_com_voz`** em `tests/common` — fundamental + quinta (sem terça) com a voz por cima, e a variante `power_chord_com_voz_em(terca, ganho)` para calibrar.
+- **7 testes** em `tests/melodia.rs`.
+
+### Medido — a janela de ganho da voz (2026-11-22)
+
+| Ganho da voz | Sem melodia | Com melodia |
+|---|---|---|
+| 0,30 | `C` | `C` — o croma decide sozinho; não prova nada |
+| **0,16** | **`C5`** | **`C`** — é aqui que o árbitro é a diferença |
+| 0,12 (default) | `C5` | `C` |
+| 0,09 | `C5` | `C5` — a melodia perde a voz e o motor **abstém** |
+
+A janela não foi escolhida: foi medida. E o caso de 0,09 é a **prova negativa** do árbitro — sem evidência suficiente, ele não inventa qualidade.
+
+### Verificado
+- **55 testes** em `mir_engine` (7 novos); `clippy -D warnings` e `fmt --check` limpos.
+- **A fixture dourada não mudou** — prova de que o árbitro não toca em acorde já decidido: `git status` da pasta de fixtures veio vazio depois da mudança.
+
+### Ressalvas
+- **O F0 erra oitava e isso é irrelevante:** a decisão é por **classe de altura**, e oitava não muda classe. É o que permite um método simples em vez de um rastreador de pitch completo.
+- **Mixagem real é mais difícil que a fixture:** separar voz de acompanhamento sem stems continua sendo o ponto frágil. O árbitro é estreito de propósito — se errar, o custo é um `5` que continua `5`.
+- **A janela de 0,12–0,16 é de áudio sintetizado.** No repertório real o número muda; medir é a próxima tarefa, não um ajuste de limiar no escuro.
+
 ## [feat] O motor lê mp3, m4a e flac — Symphonia no lugar do ffmpeg (ADR-0016) (2026-11-22)
 ### Adicionado
 - **`crates/mir_engine/src/decode.rs`** — `abrir(caminho)` e `decodificar(bytes, extensão)`. O dispatch é por **conteúdo** (`RIFF`/`WAVE`), não por extensão: extensão mente, e um `.wav` renomeado não pode virar erro de formato. WAV segue no leitor próprio (sem dependência e testável em memória); todo o resto vai pelo **Symphonia**.

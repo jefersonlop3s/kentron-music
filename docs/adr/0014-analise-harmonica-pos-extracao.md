@@ -71,6 +71,7 @@ A prosa é fiel ao que o ouvido faz; as lacunas abaixo não são musicais, são 
 - [ROADMAP](../ROADMAP.md) — R4, etapa 1 (Análise Local).
 - Perfis de tonalidade (Krumhansl–Schmuckler) e o eixo de quintas; transcrição de linha de baixo e melodia predominante como tarefas de MIR.
 - **Entrega do bloco 1:** `crates/mir_engine/src/tonality.rs` (2026-11-22) — ver CHANGELOG e CONCLUSION.
+- **Entrega do bloco 3:** `crates/mir_engine/src/melody.rs` + `chords::detect_com_melodia` (2026-11-22) — a janela de ganho da voz foi medida (0,12–0,16); ver CHANGELOG.
 
 ## Emenda · Bloco 1 aceito e a separação ritmo × baixo (2026-11-22)
 

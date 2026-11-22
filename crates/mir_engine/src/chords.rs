@@ -10,6 +10,7 @@
 
 use serde::Serialize;
 
+use crate::melody::Melodia;
 use crate::spectrum::Chroma;
 
 /// Qualidade do acorde reconhecida por este incremento.
@@ -162,6 +163,15 @@ fn com_terca(croma: &[f32; 12], tonica: usize, qualidade: Qualidade) -> Qualidad
 /// Detecta a sequência de acordes e agrupa em trechos.
 #[must_use]
 pub fn detect(chroma: &Chroma) -> Vec<ChordSegment> {
+    detect_com_melodia(chroma, None)
+}
+
+/// Detecta os acordes e deixa a **melodia** arbitrar a terça que o croma perdeu.
+///
+/// A melodia só é consultada para promover `5` (potência) a maior/menor; o que
+/// já foi decidido pelo croma não é sobrescrito.
+#[must_use]
+pub fn detect_com_melodia(chroma: &Chroma, melodia: Option<&Melodia>) -> Vec<ChordSegment> {
     if chroma.quadros.is_empty() || chroma.fps <= 0.0 {
         return Vec::new();
     }
@@ -187,8 +197,10 @@ pub fn detect(chroma: &Chroma) -> Vec<ChordSegment> {
         let (t, q, _) = contagem[0];
         suave[i] = (t, q, votos[i].2);
     }
-    // 3. Agrupa quadros iguais em trechos.
-    let mut trechos: Vec<ChordSegment> = Vec::new();
+    // 3. Agrupa quadros iguais em trechos, guardando a **estrutura** — tônica e
+    //    qualidade — até o fim. O nome é a última coisa montada, porque o
+    //    árbitro da melodia ainda pode mudar a qualidade.
+    let mut trechos: Vec<Bruto> = Vec::new();
     let mut inicio = 0usize;
     while inicio < suave.len() {
         let mut fim = inicio + 1;
@@ -199,10 +211,11 @@ pub fn detect(chroma: &Chroma) -> Vec<ChordSegment> {
             fim += 1;
         }
         let confianca = suave[inicio..fim].iter().map(|v| v.2).sum::<f32>() / (fim - inicio) as f32;
-        trechos.push(ChordSegment {
+        trechos.push(Bruto {
             inicio_s: inicio as f32 / chroma.fps,
             fim_s: fim as f32 / chroma.fps,
-            acorde: nome(suave[inicio].0, suave[inicio].1),
+            tonica: suave[inicio].0,
+            qualidade: suave[inicio].1,
             confianca,
         });
         inicio = fim;
@@ -210,7 +223,7 @@ pub fn detect(chroma: &Chroma) -> Vec<ChordSegment> {
     // 4. Trecho curto demais deixa de existir: absorve o anterior, porque
     //    detector não muda de acorde a cada 200 ms.
     let minimo = 0.6f32;
-    let mut limpos: Vec<ChordSegment> = Vec::with_capacity(trechos.len());
+    let mut limpos: Vec<Bruto> = Vec::with_capacity(trechos.len());
     for trecho in trechos {
         let curto = trecho.fim_s - trecho.inicio_s < minimo;
         match limpos.last_mut() {
@@ -218,7 +231,74 @@ pub fn detect(chroma: &Chroma) -> Vec<ChordSegment> {
             _ => limpos.push(trecho),
         }
     }
+    // 5. A melodia fecha a conta do que ficou em `5`.
     limpos
+        .into_iter()
+        .map(|trecho| {
+            let qualidade = melodia.map_or(trecho.qualidade, |melodia| {
+                com_a_melodia(
+                    trecho.tonica,
+                    trecho.qualidade,
+                    trecho.inicio_s,
+                    trecho.fim_s,
+                    melodia,
+                )
+            });
+            ChordSegment {
+                inicio_s: trecho.inicio_s,
+                fim_s: trecho.fim_s,
+                acorde: nome(trecho.tonica, qualidade),
+                confianca: trecho.confianca,
+            }
+        })
+        .collect()
+}
+
+/// Trecho antes de virar nome: a estrutura sobrevive até a última decisão.
+struct Bruto {
+    inicio_s: f32,
+    fim_s: f32,
+    tonica: usize,
+    qualidade: Qualidade,
+    confianca: f32,
+}
+
+/// Quantos quadros com F0 a melodia precisa ter no trecho para opinar.
+const MINIMO_DE_QUADROS: usize = 3;
+
+/// Fração dos quadros com F0 que a terça precisa somar para decidir.
+const FRACAO_DA_TERCA: f32 = 0.4;
+
+/// Promove `5` para maior/menor quando a melodia canta a terça.
+///
+/// Só toca em `Potencia`: qualidade já decidida não é sobrescrita. É o mesmo
+/// princípio do `com_terca` — na dúvida, dizer menos. Se a melodia errar, o
+/// custo é um `5` que continua `5`, não um acorde que vira o oposto.
+fn com_a_melodia(
+    tonica: usize,
+    qualidade: Qualidade,
+    inicio_s: f32,
+    fim_s: f32,
+    melodia: &Melodia,
+) -> Qualidade {
+    if qualidade != Qualidade::Potencia {
+        return qualidade;
+    }
+    let com_f0 = melodia.quadros_com_f0(inicio_s, fim_s);
+    if com_f0 < MINIMO_DE_QUADROS {
+        return qualidade;
+    }
+    let contagem = melodia.contagem(inicio_s, fim_s);
+    let maior = contagem[(tonica + 4) % 12];
+    let menor = contagem[(tonica + 3) % 12];
+    let limite = FRACAO_DA_TERCA * com_f0 as f32;
+    if maior as f32 >= limite && maior > menor {
+        Qualidade::Maior
+    } else if menor as f32 >= limite && menor > maior {
+        Qualidade::Menor
+    } else {
+        qualidade
+    }
 }
 
 #[cfg(test)]

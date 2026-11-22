@@ -15,7 +15,7 @@ use crate::wav::Audio;
 /// O croma e a medição de afinação leem os mesmos picos por esta função — se
 /// cada um interpolasse do seu jeito, as duas visões do mesmo espectro
 /// divergiriam e o desvio medido não corrigiria o croma que ele deveria corrigir.
-fn para_cada_pico(mags: &[f32], hz_por_bin: f32, mut f: impl FnMut(f32, f32)) {
+pub(crate) fn para_cada_pico(mags: &[f32], hz_por_bin: f32, mut f: impl FnMut(f32, f32)) {
     for i in 1..mags.len().saturating_sub(1) {
         let (anterior, pico, seguinte) = (mags[i - 1], mags[i], mags[i + 1]);
         if pico <= anterior || pico <= seguinte {

@@ -1236,3 +1236,35 @@ ganha vínculo por heurística.
 - **Vorbis compila e não foi exercido:** `symphonia-codec-vorbis` e `format-ogg` estão na árvore, mas esta máquina não tem codificador Vorbis para gerar a prova. Declarado, não fingido.
 - **HE-AAC** continua exigindo adaptador (`libfdk-aac`).
 - A matriz de formatos é a do upstream **filtrada** pelo que a versão compila — **não é cobertura nossa**. O teste prova o encanamento, não cada códec.
+
+## R4 · Terça pela melodia (ADR-0014, bloco 3) (2026-11-22)
+
+**Status:** 🟢 Entregue e provado em áudio sintetizado; mixagem real é a próxima medição.
+
+### O que foi entregue
+
+- **`crates/mir_engine/src/melody.rs`** — `extrair(spectro, taxa)` devolve a **classe de altura da voz por quadro** por soma harmônica sobre os picos do espectro (a fundamental vem com 2f e 3f), na banda de 200–1000 Hz, com piso de 20% do maior pico do quadro.
+- **`chords::detect_com_melodia`** — o detector passou a guardar a **estrutura** (tônica e qualidade) até o fim e só monta o nome depois que a melodia opina. `com_a_melodia` **só promove `5` → maior/menor**, com mínimo de 3 quadros com F0 e 40% de fração.
+- **Fixture `power_chord_com_voz`** — fundamental + quinta, **sem terça**, com a voz por cima. É o que faltava: a fixture dourada canta a fundamental de cada acorde e nunca traria a terça, então o teste passaria sem provar nada.
+
+### A janela foi medida, não escolhida
+
+| Ganho da voz | Sem melodia | Com melodia |
+|---|---|---|
+| 0,30 | `C` | `C` — o croma decide sozinho |
+| **0,16** | **`C5`** | **`C`** — o árbitro é a diferença |
+| 0,12 (default) | `C5` | `C` |
+| 0,09 | `C5` | `C5` — a melodia perde a voz |
+
+O caso de 0,09 é a **prova negativa**: sem evidência suficiente, o motor não inventa qualidade.
+
+### Provas
+
+- **7 testes** em `tests/melodia.rs`; **55** em `mir_engine`; `clippy -D warnings` e `fmt --check` limpos.
+- **A fixture dourada não mudou** — `git status` da pasta de fixtures veio **vazio** depois da mudança. É a prova de que o árbitro não sobrescreve qualidade já decidida.
+
+### Ressalvas
+
+- **O F0 erra oitava, e isso é de propósito irrelevante:** a decisão é por **classe de altura**, e oitava não muda classe. É o que permite um método simples em vez de um rastreador de pitch completo.
+- **Mixagem real é mais difícil que a fixture.** Separar voz de acompanhamento sem stems segue sendo o ponto frágil; o árbitro é estreito para o erro custar pouco.
+- **A janela de 0,12–0,16 é de áudio sintetizado.** No repertório o número muda — medir é a próxima tarefa, não ajustar limiar no escuro.
