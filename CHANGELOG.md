@@ -2,6 +2,18 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] Ritmo × baixo sem modelo, playlist nas APIs e alvos desktop (2026-11-22)
+### Adicionado
+- **ADR-0015** (proposta) — **alvos desktop** (Windows, macOS, Linux) com a **tela de palco por URL** (`?palco=<base64>&tom=`). A segunda tela é **janela web** apontando para a URL — navegador da TV, segunda janela do desktop ou Browser Source —, não multi-janela nativa: um caminho de renderização só, o que já está provado. Ordem recomendada **Windows → Linux → macOS** (notarização do macOS é o custo mais alto e o menor alcance no público-alvo) e execução **fora da R1**.
+- **ADR-0014, emenda** — bloco 1 (centro tonal por perfil) **aceito pelo dono**. Separação **ritmo × baixo sem modelo**, em duas etapas: **HPSS** (filtro de mediana no espectrograma — Fitzgerald 2010 —, sem pesos, cabe no `rustfft` que o crate já usa) remove o transiente do bumbo, e um **discriminador de harmonicidade** decide o resíduo (baixo = série harmônica sustentada e estável; corpo do bumbo = decaimento quase senoidal). Modelo de 4 stems vira melhoria, não pré-requisito.
+- **ADR-0013, emenda** — busca e playlist medidas: no YouTube, `search.list` tem **balde próprio de 100/dia** e `playlists.insert`/`playlistItems.insert` custam **50 unidades cada** num balde de **10.000/dia**; no Spotify, `Create Playlist` e `Add Items` existem (a rota antiga `/tracks` está **[DEPRECATED]**). O caminho barato **não usa busca**: o export do usuário já traz a coluna `Video`, então a playlist sai dos IDs que ele já tem.
+
+### Verificado
+- Demucs v4 e Open-Unmix declaram **MIT no repositório** e separam `drums`/`bass` (Demucs arquivado em 2025-01-01; Open-Unmix SDR `bass 5,23 / drums 5,73` em UMX). **Ressalva registrada:** nenhum dos dois declara a licença dos **pesos** — o `MANIFEST` exige confirmar na fonte dos pesos, e o madmom é **CC BY-NC**, proibido.
+
+### Aberto
+- Aceite das ADR-0013 (forma C) e ADR-0015 (alvos desktop), e dos blocos 2–6 da ADR-0014.
+
 ## [processo] Link, playlist e análise harmônica: duas ADRs propostas (2026-11-22)
 ### Adicionado
 - **ADR-0013** (proposta) — **link como referência**, **playlist como lista de referências** e a fronteira do áudio. Das três formas, **C** (o produto resolve o link até a *identidade* e pede o arquivo quando a análise precisa de áudio) é escolhida e **B** (o produto baixa) é rejeitada com motivo. Base em fonte primária: YouTube API Developer Policies proíbe *"separate, isolate, or modify the audio or video components"*; Spotify Developer Policy (15/05/2025) só trata áudio como streaming e clipe de prévia, sem endpoint de download, e a quota estendida só aceita organização desde 15/05/2025.

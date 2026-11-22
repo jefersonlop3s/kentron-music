@@ -445,6 +445,14 @@
 - Aceite das duas ADRs pelo dono.
 - Cifra em monitor de palco (TV): avaliada e **não é prioridade**. O conteúdo já existe (`SongReaderPage`); o custo é o transporte. Caminho barato (segundo bootstrap na URL, aberto pelo navegador da TV) fica registrado no PENDING.
 
+### Emenda (2026-11-22): aceite do bloco 1, separação ritmo × baixo e desktop
+
+- **Aceito:** o dono aceitou o **centro tonal por perfil** (bloco 1 da ADR-0014), primeiro item da ordem de execução.
+- **Separação ritmo × baixo, medida:** **HPSS** (Fitzgerald 2010) é filtro de **mediana no espectrograma** — mediana no tempo dá o harmônico, na frequência dá o percussivo — e **não usa modelo nem pesos**; cabe no `rustfft` que o crate já usa. **Demucs v4** e **Open-Unmix** separam `drums`/`bass` e declaram **MIT no repositório**, mas **não declaram a licença dos pesos** (o `MANIFEST` exige confirmar na fonte); **madmom** é **CC BY-NC**, proibido. Decisão: **HPSS + discriminador de harmonicidade** resolvem bumbo × baixo sem modelo; stems vira melhoria, não pré-requisito.
+- **Playlist nas APIs, medida:** YouTube `search.list` tem **100/dia** em balde próprio; `playlists.insert` e `playlistItems.insert` custam **50** cada, em balde de **10.000/dia**. Spotify tem `Create Playlist`/`Add Items` (a rota `/tracks` está **[DEPRECATED]**). O caminho barato **não usa busca** — a coluna `Video` do export já entrega os IDs.
+- **Desktop:** **ADR-0015** proposta — Windows, macOS, Linux, com a **tela de palco por URL** e a segunda tela como **janela web**, não multi-janela nativa. Ordem **Windows → Linux → macOS**, fora da R1. O desktop também é onde a análise (ADR-0014) e um eventual modelo de stems passam a caber.
+- **Risco novo registrado:** `?palco=` amplia a superfície do bootstrap e precisa do **mesmo portão de publicação** (`pode_publicar`) do link de projeção.
+
 ## Processo · Prova de navegador, locales e piloto automatizado (2026-11-21)
 
 **Status:** 🟢 Telas entregues provadas em navegador real; dois defeitos encontrados e corrigidos; portão da R1 passa a ser automatizado.

@@ -17,7 +17,8 @@ Status: Proposto → Aceito | Rejeitado | Descontinuado | Substituído. **O acei
 | ADR-0010 | Piloto automatizado antes do uso ao vivo | Aceito | 2026-11-21 | kentron-music |
 | ADR-0011 | MIR: primeiro incremento da análise de áudio | Aceito | 2026-11-21 | kentron-music |
 | ADR-0012 | Letra: fonte, alinhamento e limites | **Aceito, emendado** (proveniência em dois eixos e extração pelo usuário) | 2026-11-21 | kentron-music |
-| ADR-0013 | Link de música: referência, playlist e a fronteira do áudio | Proposto | 2026-11-22 | kentron-music |
-| ADR-0014 | Análise harmônica pós-extração: tonalidade, baixo e qualidade do acorde | Proposto | 2026-11-22 | kentron-music |
+| ADR-0013 | Link de música: referência, playlist e a fronteira do áudio | Proposto (emenda: busca e playlist nas APIs) | 2026-11-22 | kentron-music |
+| ADR-0014 | Análise harmônica pós-extração: tonalidade, baixo e qualidade do acorde | Proposto (bloco 1 aceito; emenda: ritmo × baixo) | 2026-11-22 | kentron-music |
+| ADR-0015 | Alvos desktop (Windows, macOS, Linux) e a tela de palco por URL | Proposto | 2026-11-22 | kentron-music |
 
-**Próximo número livre**: ADR-0015.
+**Próximo número livre**: ADR-0016.

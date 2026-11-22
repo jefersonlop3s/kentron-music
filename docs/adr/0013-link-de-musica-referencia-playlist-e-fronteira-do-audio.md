@@ -53,3 +53,17 @@ As três coisas que estavam fundidas no registro, e o que cada uma é de fato:
 - [PENDING](../PENDING.md) — aquisição de áudio e importação do export.
 - YouTube API Services – Developer Policies, "Additional Prohibitions" (última atualização 2026-11-06 UTC).
 - Spotify Developer Policy, efetiva 15/05/2025 (seções IV e V); Spotify Web API – Quota modes e referência.
+
+## Emenda · Busca e playlist nas APIs oficiais (2026-11-22)
+
+O dono perguntou se dá para **buscar nome de música no YouTube e no Spotify** para montar a playlist que o músico ouve nos apps oficiais ou no navegador. Resposta medida:
+
+- **YouTube Data API — quota (documentação atualizada em 2026-11-12):** `search.list` tem **balde próprio: 100 chamadas por dia**, 1 unidade cada; `playlists.list` e `playlistItems.list` custam 1; `playlists.insert` e `playlistItems.insert` custam **50 cada**; o balde geral é de **10.000 unidades por dia**. Escopos de escrita: `.../auth/youtube` ou `.../auth/youtube.force-ssl`.
+- **Spotify Web API:** existem `Search for Item`, `Create Playlist` (`POST /users/{id}/playlists`) e `Add Items to Playlist`. A rota antiga `POST /playlists/{id}/tracks` está **marcada [DEPRECATED]** — a atual é a de `/items`. Modificar playlist exige os escopos de modificação (`playlist-modify-private` / `playlist-modify-public`).
+
+**Decisão da emenda:**
+
+1. **É possível, e o caminho barato não usa busca.** O export do usuário **já traz a coluna `Video`** com os links (medido: 54–56 das 313 linhas, ADR-0012 §125). Com os IDs em mãos, montar a playlist custa 50 (criar) + 50 por item, tudo dentro do balde de 10.000/dia. **Busca é fallback**, não caminho principal: **100 buscas por dia** é teto baixo para produto multi-usuário.
+2. **A playlist é criada na conta do usuário** (OAuth), não em conta do produto: o músico ouve no app oficial, e o produto continua sem redistribuir áudio.
+3. **Piso sem API:** deep link de busca (`open.spotify.com/search/…`, `music.youtube.com/search?q=…`) funciona sem chave, sem quota e sem conta — para quando a API não estiver configurada.
+4. **Risco nomeado:** 100 buscas/dia no YouTube e 5 usuários no modo de desenvolvimento do Spotify são **tetos de plataforma**. A lista **local** de links (que não chama API) é o caminho sem teto.

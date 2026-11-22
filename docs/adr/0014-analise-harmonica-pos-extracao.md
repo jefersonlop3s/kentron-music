@@ -1,6 +1,6 @@
 # ADR-0014 · Análise harmônica pós-extração: tonalidade, baixo e qualidade do acorde
 
-- **Status:** proposto (2026-11-22) — aguarda aceite do dono
+- **Status:** proposto (2026-11-22) — **bloco 1 (centro tonal por perfil) aceito pelo dono**; os demais blocos seguem em proposta
 - **Especificação:** ditada pelo dono em prosa (2026-11-22). O texto dele é **a especificação**, não exemplo ilustrativo.
 - **Causa comum de:** três itens abertos do [PENDING](../PENDING.md) — inversões, terça fraca não resolvida e tensão sem adivinhação.
 
@@ -70,3 +70,23 @@ A prosa é fiel ao que o ouvido faz; as lacunas abaixo não são musicais, são 
 - [PENDING](../PENDING.md) — inversões, terça fraca, tensão, centro tonal e stems.
 - [ROADMAP](../ROADMAP.md) — R4, etapa 1 (Análise Local).
 - Perfis de tonalidade (Krumhansl–Schmuckler) e o eixo de quintas; transcrição de linha de baixo e melodia predominante como tarefas de MIR.
+
+## Emenda · Bloco 1 aceito e a separação ritmo × baixo (2026-11-22)
+
+O dono **aceitou o centro tonal por perfil** — primeiro item da ordem de execução — e acrescentou à prosa: a nota mais grave pode ser o bumbo, e isso se resolve **separando o kit de bateria do baixo/contrabaixo**. Pediu o que existe em open source.
+
+**Achados medidos (2026-11-22):**
+
+- **HPSS — harmonic-percussive source separation** (Fitzgerald, 2010): filtro de **mediana no espectrograma** — mediana ao longo do **tempo** dá o componente **harmônico** (sustentado), ao longo da **frequência** dá o **percussivo** (transiente), com máscaras suaves. A implementação de referência (`librosa.decompose.hpss`) tem `kernel_size=31`, `power=2` e `margin=1`. **Não usa modelo nem pesos** — o módulo se descreve como "HPSS, nearest-neighbor filtering e decomposição matricial (NMF)". Em Rust, cabe no `rustfft` que o crate já usa.
+- **Demucs v4 (`htdemucs`)** — 4 stems, incluindo `drums` e `bass`. O README declara **MIT** para o projeto; o repositório foi **arquivado em 2025-01-01** (fork ativo: `adefossez/demucs`). Pesado: PyTorch, ~7 GB de GPU nos argumentos padrão, ~1,5× a duração da faixa.
+- **Open-Unmix (UMX/UMXL)** — MIT no repositório; 4 stems; SDR no MUSDB18: `bass 5,23 / drums 5,73` (UMX) e `bass 6,02 / drums 7,15` (UMXL).
+- **madmom** — tem transcrição de baixo, mas os pesos são **CC BY-NC-SA**: **proibido** pelo `deny.toml` e pelo `MANIFEST`.
+- **Ressalva honesta:** o MIT do **repositório** não declara a licença dos **pesos** em nenhum dos dois primeiros. O `MANIFEST` exige confirmar na fonte dos pesos, não no repositório — então nenhum dos dois entra hoje.
+
+**Decisão da emenda — sem modelo primeiro, em duas etapas:**
+
+1. **HPSS** remove o ataque e a banda larga do bumbo da banda grave. Barato, sem modelo, sem `MANIFEST`.
+2. **Discriminador de harmonicidade** no resíduo: a nota do baixo é uma **série harmônica sustentada e estável** (2f, 3f…, contínua no tempo); o corpo do bumbo é decaimento quase senoidal, com harmônicos fracos e vida curta. Decide bumbo × baixo sem modelo.
+3. **Modelo de 4 stems só se 1 + 2 não bastarem** — e aí com spike S1, entrada no `MANIFEST` e a licença dos pesos confirmada na fonte.
+
+**Consequência:** o baixo deixa de depender de stems para existir. O ponto de partida é o `rustfft` que já está no workspace; stems viram **melhoria de acurácia**, definitivamente.
