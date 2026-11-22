@@ -35,6 +35,20 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/0caf3 — Piloto automatizado no OBS (R1-D, ADR-0010)
+- **Início:** 2026-11-22 02:40 (UTC) · **Última atualização:** 2026-11-22 03:34 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `cline/0caf3` · **Worktrees:** `~/.cline/worktrees/0caf3/app-music`
+- **Demanda:** destravar o SSH por chave do Mac para a VM `windows11` e, com ele, provar o Browser Source do OBS — o round-trip que a R1-B deixou em aberto e a ADR-0010 exige como piloto automatizado.
+- **Paths sob edição:** nenhum (concluído).
+- **Status:** concluído — projeção renderizada e navegada dentro do Browser Source, em duas rodadas; prova negativa reprovando a URL morta. **Aberto:** transposição dentro do OBS (a projeção não exibe acorde) e o app sobreviver a fechar/reabrir.
+- **PRs:** nenhum
+
+**Feito:** `scripts/piloto-obs.sh` (serve o build, dois túneis SSH, fonte de navegador, captura por `GetSourceScreenshot`, comparação de hash de pixel, duas rodadas, `--negativo` e `--construir`); `?secao=N` na URL de projeção (`secaoDaUrl`, `urlDaProjecao`, `ProjectionPage.initialSection`) e 8 testes novos (link + bootstrap).
+
+**Provado:** 2 rodadas aprovadas no OBS (353/354 cores, σ≈19,5; seção muda o hash do pixel); prova negativa reprovou as 6 verificações (rc=1); 42 testes Flutter e `flutter analyze` limpo; `bash -n` e `shellcheck` verdes; `documentation.py check` sem link quebrado.
+
+**Causa raiz de um falso negativo:** servir por IP de LAN deixa a fonte em branco porque o CEF ignora COOP/COEP fora de contexto seguro → fallback do frb reinjeta `wasm_bindgen` → panic. O túnel reverso (`ssh -R`) põe o servidor em `127.0.0.1` dentro da VM e resolve.
+
 ### cline/0caf3 — Retomada das fichas do hinário (wire do gate + consolidação do asset)
 - **Início:** 2026-11-21 21:42 (UTC) · **Última atualização:** 2026-11-22 01:29 (UTC)
 - **Repositório:** `kentron-music` · **Branches:** `cline/0caf3`; unidades em `feat/gate-fichas-bateria`, `feat/fichas-corpus-e-comentario`, `fix/fichas-procedencia-ocr`, `feat/fichas-no-motor` e `feat/fichas-vinculo-e-portao`, integradas na `main` por `--ff-only` · **Worktrees:** `~/.cline/worktrees/0caf3/app-music`
