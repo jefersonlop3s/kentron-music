@@ -452,6 +452,7 @@
 - **Playlist nas APIs, medida:** YouTube `search.list` tem **100/dia** em balde próprio; `playlists.insert` e `playlistItems.insert` custam **50** cada, em balde de **10.000/dia**. Spotify tem `Create Playlist`/`Add Items` (a rota `/tracks` está **[DEPRECATED]**). O caminho barato **não usa busca** — a coluna `Video` do export já entrega os IDs.
 - **Desktop:** **ADR-0015 aceita** — Windows, macOS, Linux, com a **tela de palco por URL** e a segunda tela como **janela web**, não multi-janela nativa. Ordem **Windows → Linux → macOS**, fora da R1. O desktop também é onde a análise (ADR-0014) e um eventual modelo de stems passam a caber.
 - **Risco novo registrado:** `?palco=` amplia a superfície do bootstrap e precisa do **mesmo portão de publicação** (`pode_publicar`) do link de projeção.
+- **Precedente externo, medido (insight de 2026-11-22):** o **Open Video Downloader** (`jely2002/youtube-dl-gui`) faz exatamente o caminho "ferramenta do usuário" — **Tauri (Rust) + Vue**, GUI fina sobre o **`yt-dlp`**, autenticação por **cookies do navegador**, **AGPL-3.0**, distribuído inclusive pela **Microsoft Store**, com disclaimer de que **a responsabilidade é do usuário**. **Nenhum código dele entra** (AGPL × Apache-2.0); o `yt-dlp` é **Unlicense**. O caso **reforça** a forma C e confirma que "ato do usuário com credencial do usuário" é padrão técnico.
 
 ## Processo · Prova de navegador, locales e piloto automatizado (2026-11-21)
 

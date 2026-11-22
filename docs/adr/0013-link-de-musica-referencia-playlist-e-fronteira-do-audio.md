@@ -45,12 +45,14 @@ As três coisas que estavam fundidas no registro, e o que cada uma é de fato:
 - **Risco nomeado:** pedir a **quota estendida** do Spotify é inviável para o dono hoje (só organização, ≥250k MAU). Se a playlist do Spotify for requisito, ela viverá no modo de desenvolvimento (5 usuários) até essa decisão mudar — e a lista **local** de links (que não depende de API) continua sendo o caminho sem esse teto.
 - **Dívida rastreável:** a cláusula de consumo do YouTube e a mudança de dev mode de fevereiro/2026 do Spotify ficam **não verificadas**, com a tentativa registrada acima. Quem retomar confere na fonte, não herda a hipótese.
 - **Pressuposto declarado:** "o áudio que o usuário traz é dele ou ele responde por ele" — nomeado, não implícito.
+- **Restrição de licença confirmada por precedente:** o **Open Video Downloader** (`jely2002/youtube-dl-gui`), que implementa justamente o caminho "ferramenta do usuário", é **AGPL-3.0** — incompatível com a Apache-2.0 deste projeto, então **nenhum código dele entra**; interoperar por arquivo é o que resta, e é o que a forma C já faz. O `yt-dlp` que ele supervisiona é **Unlicense** (domínio público).
 
 ## Referências
 
 - [ADR-0012](0012-letra-fonte-alinhamento-e-limites.md) — procedência em dois eixos e `ExtraidaPeloUsuario`.
 - [ROADMAP](../ROADMAP.md) — R4, etapa 4 (Resolução de Links).
 - [PENDING](../PENDING.md) — aquisição de áudio e importação do export.
+- [Insight — Open Video Downloader](../insights/2026-11-22-open-video-downloader.md) — o precedente da "ferramenta do usuário", a incompatibilidade AGPL e o que se aproveita de UX.
 - YouTube API Services – Developer Policies, "Additional Prohibitions" (última atualização 2026-11-06 UTC).
 - Spotify Developer Policy, efetiva 15/05/2025 (seções IV e V); Spotify Web API – Quota modes e referência.
 

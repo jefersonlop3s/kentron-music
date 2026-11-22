@@ -2,6 +2,18 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] Insight: Open Video Downloader e o padrão da ferramenta do usuário (2026-11-22)
+### Adicionado
+- **`docs/insights/2026-11-22-open-video-downloader.md`** — análise do `jely2002/youtube-dl-gui` (Open Video Downloader): **Tauri (Rust) + Vue 3/TypeScript**, GUI fina sobre o **`yt-dlp`** como subprocesso, com cookies do navegador para autenticação, fila em lote e template de nome. Licença **AGPL-3.0**, distribuído em exe/dmg/AppImage/deb/rpm, Homebrew, WinGet e **Microsoft Store**, com disclaimer de que **a responsabilidade é do usuário**.
+
+### Decidido
+- **Nenhum código do OVD entra no projeto:** AGPL-3.0 é incompatível com a Apache-2.0 (copiar tornaria o Kentron AGPL). O `yt-dlp` que ele supervisiona é **Unlicense**, então o impedimento é do *wrapper*, não do extrator.
+- A decisão da **ADR-0013 (forma C) fica reforçada, não alterada**: o caso é o precedente de que "ferramenta do usuário" é viável, e o uso de **cookies do usuário** mostra que "ato do usuário, com credencial do usuário" é padrão técnico, não retórica.
+
+### Aberto
+- Hipótese registrada no PENDING: aceitar **lote de arquivos** da ferramenta do usuário, casando por nome e duração, para a forma C ser usável no repertório de 313 linhas.
+- Permanece **não verificado**: a licença da build de `ffmpeg` que o OVD distribui, e a acurácia do casamento nome/duração num lote real.
+
 ## [processo] ADR-0013, ADR-0014 e ADR-0015 aceitas (2026-11-22)
 ### Decidido
 - **ADR-0013 — aceita na forma C:** o link resolve **sempre** a identidade da obra e do fonograma; o áudio vem do usuário. A forma B (o produto baixa) fica **rejeitada**. Playlist entra como **lista de referências**, criada na conta do usuário, sem o produto redistribuir áudio.
