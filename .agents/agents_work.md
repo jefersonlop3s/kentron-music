@@ -35,6 +35,20 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/0caf3 — ADR-0014: centro tonal por perfil e afinação medida (blocos 1 e 6 parcial)
+- **Início:** 2026-11-22 13:20 (UTC) · **Última atualização:** 2026-11-22 13:55 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `feat/centro-tonal-por-perfil` e `feat/afinacao-medida`, integradas na `main` por `--ff-only` · **Worktrees:** diretório principal
+- **Demanda:** o dono liberou seguir com o que **não** depende das APIs do YouTube/Spotify. Os dois primeiros blocos da ADR-0014 não dependem de modelo, de áudio novo nem de credencial.
+- **Paths sob edição:** nenhum (concluído).
+- **Status:** concluído — tonalidade por perfil e afinação medida; fixture dourada corrigida de `Am` para `C`.
+- **PRs:** nenhum
+
+**Feito:** `tonality::analisar` (24 tônicas, perfis de Krumhansl–Kessler, correlação de Pearson, resposta com **correlação + margem + regra** e `Indeterminada` fail-loud); `tom_estimado` e `raiz_e_qualidade` **removidos** (o defeito `{key: B5}` deixa de existir por construção); `Spectrogram::desvio_de_afinacao` medido e relatado em `afinacao_cents`; `para_cada_pico` deduplicando a leitura de pico entre croma e medição.
+
+**Provado:** **45 testes** em `mir_engine` (7 de tonalidade, 4 de afinação), `clippy -D warnings` e `fmt --check` limpos, **42 testes** de Flutter; fixture dourada com diff de **uma linha** (`{key: Am}` → `{key: C}`) — o defeito que a própria ADR-0014 cita. O teste de Flutter ficou mais preciso ao consertar o efeito colateral: o chip do tom no AppBar também mostra "C", então o finder passou a mirar o **estilo monoespaçado**.
+
+**Aberto:** terça pela melodia (F0), baixo/inversão por compasso e downbeat; margem baixa não bloqueia (é decisão de limiar); **Symphonia** segue bloqueada por ADR.
+
 ### cline/0caf3 — ADR-0013, ADR-0014 e ADR-0015: link, harmonia e desktop decididos
 - **Início:** 2026-11-22 04:10 (UTC) · **Última atualização:** 2026-11-22 13:12 (UTC)
 - **Repositório:** `kentron-music` · **Branches:** `docs/adr-link-e-harmonia`, `docs/adr-emendas-ritmo-baixo-playlist-desktop` e `docs/adr-aceites`, todas integradas na `main` por `--ff-only` · **Worktrees:** diretório principal
