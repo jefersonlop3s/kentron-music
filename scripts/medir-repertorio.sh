@@ -30,15 +30,15 @@ extensoes=(-iname '*.mp3' -o -iname '*.m4a' -o -iname '*.flac' -o -iname '*.wav'
 ARQUIVOS=()
 while IFS= read -r linha; do
   [ -n "$linha" ] && ARQUIVOS+=("$linha")
-done < <(find "$PASTA_IN" -maxdepth 2 -type f \( "${extensoes[@]}" \) | sort)
+done < <(find "$PASTA_IN" -type f \( "${extensoes[@]}" \) | sort)
 if [ "${#ARQUIVOS[@]}" -eq 0 ]; then
   echo "nenhum áudio em $PASTA_IN (procurei mp3, m4a, flac, wav, ogg)" >&2
   exit 1
 fi
 
-echo "==> compilando o motor"
-( cd "$RAIZ" && cargo build -q -p mir_engine )
-BIN="$RAIZ/target/debug/mir"
+echo "==> compilando o motor (release: medido 1,2 s/música contra 24 s em debug)"
+( cd "$RAIZ" && cargo build --release -q -p mir_engine )
+BIN="$RAIZ/target/release/mir"
 
 echo "==> ${#ARQUIVOS[@]} arquivo(s); resultado em $SAIDA"
 printf 'arquivo\tduracao_s\tafinacao_cents\tbpm\ttonalidade\tcorrelacao\tmargem\ttrechos_acorde\tsecoes\tregra\n' > "$SAIDA"
