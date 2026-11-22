@@ -35,6 +35,20 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/0caf3 — ADR-0014 bloco 3: terça pela melodia
+- **Início:** 2026-11-22 15:40 (UTC) · **Última atualização:** 2026-11-22 16:32 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `feat/terca-pela-melodia` (integrada na `main` por `--ff-only` e removida) · **Worktrees:** principal
+- **Demanda:** prosseguir com o bloco 3 da ADR-0014 — a terça decidida pela melodia — sem depender das APIs do YouTube/Spotify.
+- **Paths sob edição:** nenhum (concluído).
+- **Status:** concluído.
+- **PRs:** nenhum
+
+**Feito:** `crates/mir_engine/src/melody.rs` (`extrair`, `contagem`, `quadros_com_f0`, `dominante`); `chords::detect_com_melodia` com `com_a_melodia`, que **só promove `5` → maior/menor**; fixture `power_chord_com_voz` em `tests/common`; 7 testes em `tests/melodia.rs`.
+
+**Provado:** **janela de ganho medida** — em 0,16 o croma erra (`C5`) e o árbitro acerta (`C`); em 0,09 a melodia perde a voz e o motor **abstém** (`C5` dos dois jeitos), que é a prova negativa. **55 testes** em `mir_engine`, clippy e fmt limpos, e **a fixture dourada não mudou** (`git status` das fixtures vazio) — prova de que o árbitro não sobrescreve qualidade decidida.
+
+**Aberto:** F0 em **mixagem real** (o método foi provado em sintético; medir no repertório é a próxima tarefa); bloco 4 (baixo/inversão por compasso) e bloco 5 (downbeat) da ADR-0014.
+
 ### cline/0caf3 — ADR-0016 entregue (decodificação sem ffmpeg) e limpeza de branches
 - **Início:** 2026-11-22 14:30 (UTC) · **Última atualização:** 2026-11-22 15:18 (UTC)
 - **Repositório:** `kentron-music` · **Branches:** `feat/decode-symphonia` (integrada na `main` por `--ff-only`); **9 branches integradas removidas**, local e remoto · **Worktrees:** só o principal
