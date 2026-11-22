@@ -403,6 +403,7 @@
 - `scripts/piloto-obs.sh`: serve o build web, abre dois túneis SSH (4455 do `obs-websocket` e a porta do servidor de volta para a VM), cria uma fonte de navegador, aponta para a URL de projeção e captura a fonte por `GetSourceScreenshot`.
 - `?secao=N` na URL de projeção: o Browser Source não recebe clique nem teclado, então a URL é o único canal determinístico para navegar. `secaoDaUrl` lê o índice e `ProjectionPage` limita ao intervalo válido — índice fora da faixa não quebra.
 - O roteiro compara o hash do pixel entre seções e entre as duas rodadas, e reprova quando a tela fica chapada (1 cor, σ=0.0).
+- Skill **`ssh-no-windows`**: o que o servidor OpenSSH do Windows lê (`sshd -T`), o `authorized_keys` do usuário contra o `administrators_authorized_keys`, a ACL que o serviço (SYSTEM) precisa e as armadilhas de idioma (grupo `Administradores` em pt-BR) e de codificação (`Out-File` em UTF-16).
 
 ### Provas
 - Duas rodadas aprovadas: seção 0 com 353 cores (σ≈19,5) e seção 1 com 354 cores (σ≈19,2); o hash do pixel mudou entre as seções e repetiu entre as rodadas.

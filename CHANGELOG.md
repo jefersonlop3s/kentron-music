@@ -7,6 +7,7 @@ Todos os eventos notáveis do projeto Kentron Music Hub.
 - **`scripts/piloto-obs.sh`** — piloto da ADR-0010: serve o build web, abre dois túneis SSH (porta 4455 do `obs-websocket` e a do servidor de volta para a VM), cria uma fonte de navegador apontando para a URL de projeção, captura a fonte por `GetSourceScreenshot` e compara o hash do pixel entre seções e entre duas rodadas. Reprova quando a tela fica chapada (1 cor, σ=0.0). `--negativo` roda a prova negativa com URL morta; `--construir` reconstrói o build antes.
 - **`?secao=N` na URL de projeção** (`apps/kentron_app/lib/src/stage/projection_link.dart`) — o Browser Source do OBS não recebe clique nem teclado, então a URL é o único canal determinístico para navegar. `secaoDaUrl` lê o índice; `urlDaProjecao` aceita `secao`; `ProjecaoApp`/`ProjectionPage` abrem na seção pedida e limitam ao intervalo válido.
 - **Testes novos** — `secaoDaUrl` (ausente, presente, inválida) e bootstrap abrindo na seção pedida; 17 testes no app.
+- Skill **`ssh-no-windows`** — a chave que o servidor OpenSSH do Windows recebe e recusa, o `authorized_keys` do usuário contra o `administrators_authorized_keys`, a ACL que o serviço (SYSTEM) precisa, o grupo `Administradores` em pt-BR que não casa com o `administrators` do `sshd_config`, e o `sshd -T` que decide qual arquivo o servidor lê.
 
 ### Verificado
 - Duas rodadas aprovadas no OBS: seção 0 com 353 cores (σ≈19,5) e seção 1 com 354 cores (σ≈19,2); o hash do pixel mudou entre as seções e repetiu entre as rodadas.
