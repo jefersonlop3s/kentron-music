@@ -2,6 +2,21 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] Piloto automatizado no OBS e navegação por seção na URL (2026-11-21)
+### Adicionado
+- **`scripts/piloto-obs.sh`** — piloto da ADR-0010: serve o build web, abre dois túneis SSH (porta 4455 do `obs-websocket` e a do servidor de volta para a VM), cria uma fonte de navegador apontando para a URL de projeção, captura a fonte por `GetSourceScreenshot` e compara o hash do pixel entre seções e entre duas rodadas. Reprova quando a tela fica chapada (1 cor, σ=0.0). `--negativo` roda a prova negativa com URL morta; `--construir` reconstrói o build antes.
+- **`?secao=N` na URL de projeção** (`apps/kentron_app/lib/src/stage/projection_link.dart`) — o Browser Source do OBS não recebe clique nem teclado, então a URL é o único canal determinístico para navegar. `secaoDaUrl` lê o índice; `urlDaProjecao` aceita `secao`; `ProjecaoApp`/`ProjectionPage` abrem na seção pedida e limitam ao intervalo válido.
+- **Testes novos** — `secaoDaUrl` (ausente, presente, inválida) e bootstrap abrindo na seção pedida; 17 testes no app.
+
+### Verificado
+- Duas rodadas aprovadas no OBS: seção 0 com 353 cores (σ≈19,5) e seção 1 com 354 cores (σ≈19,2); o hash do pixel mudou entre as seções e repetiu entre as rodadas.
+- Prova negativa: URL morta reprovou nas 6 verificações e o roteiro saiu 0 — o verificador não é complacente.
+- `flutter analyze` limpo; `bash -n` e `shellcheck` verdes no roteiro.
+
+### Ressalvas
+- **Causa raiz de um falso negativo:** servir pelo IP da LAN deixa a fonte em branco — o CEF do OBS ignora COOP/COEP fora de contexto seguro, o fallback do frb reinjeta `pkg/kentron_ffi.js` e o wasm morre com `Identifier 'wasm_bindgen' has already been declared`. O roteiro contorna com túnel reverso (`ssh -R`) servindo por `localhost`; a dupla carga em si continua sem correção no código.
+- **O que o piloto não prova:** transposição dentro do OBS (a projeção não mostra acorde; é provada em `scripts/e2e-web.sh` e nos testes Rust) e o app sobreviver a fechar/reabrir (o roteiro não reinicia o app; fica no alpha assistido da R1-C).
+
 ## [processo] Vínculo ficha ↔ obra original e o portão de publicação no app (2026-11-21)
 ### Adicionado
 - **Coluna `obra_original` no asset de fichas** — `crates/mir_engine/assets/fichas_hinario.tsv` passou a declarar a obra do corpus de que a versão deriva (o 09 declara `Holy, Holy, Holy`). O vínculo é **declarado, não adivinhado**: vazio = sem vínculo. O cabeçalho `#` documenta que é vínculo de **referência**, não de identidade — a tradução é obra própria e responde pelo veredito dela; o original responde pelo dele.

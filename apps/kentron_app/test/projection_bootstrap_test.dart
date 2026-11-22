@@ -19,6 +19,28 @@ const _cifra = SongDetail(
 
 Future<SongDetail> _ler(String _) async => _cifra;
 
+/// Duas seções: a projeção abre na que `?secao=N` mandar.
+const _duasSecoes = SongDetail(
+  title: 'Santo',
+  sections: <SongSection>[
+    SongSection(
+      name: 'Verse',
+      lines: <SongLine>[
+        SongLine(text: 'Santo, santo', chords: <ChordMark>[]),
+      ],
+    ),
+    SongSection(
+      name: 'Chorus',
+      lines: <SongLine>[
+        SongLine(text: 'Santo é o Senhor', chords: <ChordMark>[]),
+      ],
+    ),
+  ],
+  core: 'falso',
+);
+
+Future<SongDetail> _lerDuas(String _) async => _duasSecoes;
+
 void main() {
   testWidgets('abre direto na projeção', (tester) async {
     await tester.pumpWidget(
@@ -32,6 +54,35 @@ void main() {
 
     expect(find.byType(ProjectionPage), findsOneWidget);
     expect(find.text('Santo, santo'), findsOneWidget);
+  });
+
+  testWidgets('abre na seção pedida pela URL', (tester) async {
+    await tester.pumpWidget(
+      const ProjecaoApp(
+        chordpro: 'ignorado',
+        ler: _lerDuas,
+        locale: Locale('en'),
+        initialSection: 1,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Santo é o Senhor'), findsOneWidget);
+    expect(find.text('Santo, santo'), findsNothing);
+  });
+
+  testWidgets('seção fora da faixa cai na última, sem quebrar', (tester) async {
+    await tester.pumpWidget(
+      const ProjecaoApp(
+        chordpro: 'ignorado',
+        ler: _lerDuas,
+        locale: Locale('en'),
+        initialSection: 99,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Santo é o Senhor'), findsOneWidget);
   });
 
   testWidgets('mostra a falha do núcleo em vez de tela vazia', (tester) async {

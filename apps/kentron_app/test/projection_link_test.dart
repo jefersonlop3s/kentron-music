@@ -24,6 +24,33 @@ void main() {
     });
   });
 
+  group('secaoDaUrl', () {
+    test('devolve null sem o parâmetro', () {
+      expect(secaoDaUrl(Uri.parse('https://exemplo.test/app/')), isNull);
+    });
+
+    test('devolve null quando não é numérico', () {
+      expect(
+        secaoDaUrl(Uri.parse('https://exemplo.test/app/?secao=dois')),
+        isNull,
+      );
+    });
+
+    test('devolve null quando negativo', () {
+      expect(
+        secaoDaUrl(Uri.parse('https://exemplo.test/app/?secao=-1')),
+        isNull,
+      );
+    });
+
+    test('devolve o índice pedido', () {
+      expect(
+        secaoDaUrl(Uri.parse('https://exemplo.test/app/?secao=2')),
+        2,
+      );
+    });
+  });
+
   group('urlDaProjecao', () {
     test('preserva host, caminho e fragmento', () {
       final url = urlDaProjecao(
@@ -42,6 +69,26 @@ void main() {
         base: Uri.parse('https://exemplo.test/app/?outro=1'),
       );
       expect(url.queryParameters.keys, <String>[projectionQueryParam]);
+    });
+
+    test('sem seção não acrescenta o parâmetro', () {
+      final url = urlDaProjecao(
+        '{title: X}',
+        base: Uri.parse('https://exemplo.test/app/'),
+      );
+      expect(url.queryParameters.containsKey(sectionQueryParam), isFalse);
+      expect(secaoDaUrl(url), isNull);
+    });
+
+    test('com seção leva o índice e faz round-trip', () {
+      final url = urlDaProjecao(
+        '{title: X}',
+        base: Uri.parse('https://exemplo.test/app/'),
+        secao: 2,
+      );
+      expect(url.queryParameters[sectionQueryParam], '2');
+      expect(secaoDaUrl(url), 2);
+      expect(chordproDaUrl(url), '{title: X}');
     });
   });
 

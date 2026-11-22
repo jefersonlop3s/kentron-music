@@ -395,6 +395,27 @@
 - O round-trip **dentro do OBS** não foi executado: o build web prova compilação, não o Browser Source em uso. Essa prova continua pendente.
 - Tela secundária nativa (fora do OBS) segue sem transporte.
 
+## R1-D · Piloto automatizado no OBS (2026-11-21)
+
+**Status:** 🟢 Projeção renderizada e navegada dentro do Browser Source do OBS, em duas rodadas; prova negativa reprovou a URL morta. Faltam transposição dentro do OBS e sobrevivência a fechar/reabrir.
+
+### O que foi entregue
+- `scripts/piloto-obs.sh`: serve o build web, abre dois túneis SSH (4455 do `obs-websocket` e a porta do servidor de volta para a VM), cria uma fonte de navegador, aponta para a URL de projeção e captura a fonte por `GetSourceScreenshot`.
+- `?secao=N` na URL de projeção: o Browser Source não recebe clique nem teclado, então a URL é o único canal determinístico para navegar. `secaoDaUrl` lê o índice e `ProjectionPage` limita ao intervalo válido — índice fora da faixa não quebra.
+- O roteiro compara o hash do pixel entre seções e entre as duas rodadas, e reprova quando a tela fica chapada (1 cor, σ=0.0).
+
+### Provas
+- Duas rodadas aprovadas: seção 0 com 353 cores (σ≈19,5) e seção 1 com 354 cores (σ≈19,2); o hash do pixel mudou entre as seções e repetiu entre as rodadas.
+- Prova negativa: URL morta (`http://127.0.0.1:9`) reprovou nas 6 verificações e o roteiro saiu 0 — o verificador não é complacente.
+- 17 testes de app (URL e bootstrap) e `flutter analyze` limpo.
+
+### Causa raiz de um falso negativo
+- Servir pelo IP da LAN (`http://192.168.6.129:8765`) deixava a fonte em branco: o CEF do OBS ignora COOP/COEP fora de contexto seguro, o fallback do frb reinjeta `pkg/kentron_ffi.js` e o wasm morre com `Identifier 'wasm_bindgen' has already been declared`. A correção é servir por `localhost` com túnel reverso (`ssh -R`), que põe o servidor do Mac em `127.0.0.1` dentro da VM.
+
+### O que continua aberto
+- **Transposição dentro do OBS:** a projeção não mostra acorde, então transpor não muda o pixel; a transposição é provada em `scripts/e2e-web.sh` e nos testes Rust.
+- **Sobreviver a fechar/reabrir:** o roteiro não reinicia o app; a restauração do bundle é provada no alpha assistido (R1-C).
+
 ## Processo · Prova de navegador, locales e piloto automatizado (2026-11-21)
 
 **Status:** 🟢 Telas entregues provadas em navegador real; dois defeitos encontrados e corrigidos; portão da R1 passa a ser automatizado.

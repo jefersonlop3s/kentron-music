@@ -47,7 +47,7 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 - [ ] Exportação OpenLyrics com validação XML e arquivos dourados.
 - [ ] Matriz de compatibilidade com versões fixadas de Holyrics e outros consumidores.
 - [x] Bootstrap de projeção por URL (`?projecao=<base64url do ChordPro>`) e botão "Copiar link de projeção" no leitor, sem `obs-websocket`.
-- [ ] Provar o Browser Source dentro do OBS: o bootstrap compila no alvo web, mas o round-trip no OBS não foi executado.
+- [x] Provar o Browser Source dentro do OBS: `scripts/piloto-obs.sh` abre a projeção no Browser Source por `obs-websocket`, captura a fonte e reprova quando a tela fica chapada. Aprovado em duas rodadas (353/354 cores, σ≈19,5) e a prova negativa reprovou a URL morta.
 - [ ] Paginação, acentos, pseudolocalização e projeção bilíngue.
 
 ### R1-C · Alpha utilizável (portão inicial, ADR-0009)
@@ -57,12 +57,12 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 - [x] Modo projeção manual em tela cheia a partir do leitor: uma seção por vez, letra grande, avanço por toque, teclado ou rodapé.
 - [ ] Projeção em tela secundária (ou janela do OBS) — o modo em tela cheia é o conteúdo; falta o transporte para a segunda tela.
 - [ ] Alpha assistido: um ensaio com o fluxo completo, desenvolvedor presente, falhas registradas com diagnóstico.
-- [ ] Dados sobrevivem a fechar e reabrir o app (bundle restaurado).
+- [ ] Dados sobrevivem a fechar e reabrir o app (bundle restaurado). **Não é bug de persistência: a tela de restauração não existe.** O `bundle_store` (ADR-0006) grava e lê o diretório, e o app não o chama na inicialização — falta a tela/fluxo que restaura o bundle, não a capacidade de armazenar.
 
 ### R1-D · Piloto automatizado e release (portão final, ADR-0010)
 **Objetivo:** provar a release em ambiente controlado, sem depender de calendário de igreja.
-- [ ] Piloto automatizado na VM Windows + OBS: projeção carregada por Browser Source, cifra aberta, transposta, projetada e navegada; app sobrevive a fechar/reabrir.
-- [ ] Duas rodadas consecutivas simuladas (substituem os "dois cultos" como espera).
+- [x] Piloto automatizado na VM Windows + OBS: projeção carregada por Browser Source, cifra aberta, projetada e navegada por seção — `scripts/piloto-obs.sh` prova o render dentro do OBS e a troca de seção mudando o pixel. **Aberto:** transposição dentro do OBS (a projeção não mostra acorde, então transpor não muda o pixel; é provada em `scripts/e2e-web.sh` e nos testes Rust) e o app sobreviver a fechar/reabrir.
+- [x] Duas rodadas consecutivas simuladas (substituem os "dois cultos" como espera) — o roteiro roda as duas e compara o hash do pixel entre elas.
 - [ ] Nenhuma perda de dados, crash bloqueante ou falha de projeção.
 - [ ] pt-BR, en-US e es-419 revisados por falantes nativos — em paralelo, não como portão de calendário.
 - [ ] MusicXML e ATEX ficam para R1.1, depois do S5 — sequência de execução; o escopo de formatos da ADR-0002 permanece integral (ADR-0005 rejeitada).
@@ -104,6 +104,8 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 > **Primeiro incremento entregue (2026-11-21, ADR-0011):** dinâmica (EBU R128, contraprovada contra o `ffmpeg`), andamento, acordes e estrutura — **DSP puro, sem modelo**, aberto por decisão do dono como instrumento de trabalho e **fora do portão da R1**. O portão de entrada acima segue valendo para a parte com ML (stems, letra, tablatura).
 >
 > **Segundo incremento (2026-11-21, ADR-0012 em proposta):** a **letra** entra na cifra por fonte declarada (texto do usuário ou corpus de domínio público) e é **alinhada ao áudio** por frases vocais; os acordes caem sobre a sílaba. O provedor "oficial" de letra é pago e proíbe armazenar o texto — decisão do dono pendente.
+>
+> **Camada de dados do corpus (2026-11-21, `scripts/verificar_fichas.py`):** as fichas do hinário carregam o **`lyrics_scope`** (se a letra pode ser exibida: `public_domain`, `licensed`, `none`) e o **vínculo `obra_original`** (ficha cujo texto é a fonte da tradução brasileira). O verificador valida as duas colunas contra o corpus de domínio público e o dicionário de variantes; o vínculo impede que uma tradução seja lida como obra independente. É o que sustenta a decisão de letra no app — sem `lyrics_scope` declarado, a ficha não pode exibir letra.
 
 ### Etapas:
 1. **Análise Local:** Áudio $\rightarrow$ Acordes, Tom e Compasso (Desktop primeiro). *Acordes e andamento entregues; tom é estimativa simples (fundamental mais frequente).*

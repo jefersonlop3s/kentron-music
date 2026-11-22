@@ -36,7 +36,14 @@ Future<void> main() async {
   // Browser Source do OBS: a URL traz a cifra e o app abre direto na projeção.
   final chordpro = chordproDaUrl(Uri.base);
   if (chordpro != null) {
-    runApp(ProjecaoApp(chordpro: chordpro));
+    // `?secao=N` abre a projeção na seção pedida; sem ele, na primeira. É o
+    // canal que o piloto automatizado do OBS usa para navegar (ADR-0010).
+    runApp(
+      ProjecaoApp(
+        chordpro: chordpro,
+        initialSection: secaoDaUrl(Uri.base) ?? 0,
+      ),
+    );
     return;
   }
   runApp(const KentronApp());

@@ -7,6 +7,28 @@ import 'dart:convert';
 /// soltos no caminho do navegador — o texto vira um token opaco.
 const projectionQueryParam = 'projecao';
 
+/// Parâmetro de URL que escolhe a seção inicial da projeção.
+///
+/// O Browser Source do OBS **não recebe clique nem teclado** — não há canal
+/// scriptável para o operador avançar a seção de fora do app. A URL é o único
+/// canal determinístico: `?secao=2` abre a projeção na terceira seção (índice
+/// zero-based), e o piloto automatizado da ADR-0010 navega trocando a URL.
+/// O mesmo link por seção serve ao operador, que pode salvar um por estrofe.
+const sectionQueryParam = 'secao';
+
+/// Lê a seção inicial da URL, quando existe.
+///
+/// Devolve `null` quando o parâmetro está ausente, não é numérico ou é
+/// negativo. A projeção limita o índice ao intervalo válido de qualquer forma;
+/// aqui a recusa é só para não confundir "sem seção" com "seção zero".
+int? secaoDaUrl(Uri url) {
+  final bruto = url.queryParameters[sectionQueryParam];
+  if (bruto == null || bruto.isEmpty) return null;
+  final indice = int.tryParse(bruto);
+  if (indice == null || indice < 0) return null;
+  return indice;
+}
+
 /// Lê a cifra embutida na URL, quando existe.
 ///
 /// Devolve `null` quando o parâmetro não existe ou não decodifica. URL
@@ -24,12 +46,14 @@ String? chordproDaUrl(Uri url) {
 /// Monta a URL de projeção a partir da base atual e da cifra.
 ///
 /// Preserva host, caminho e fragmento; troca só a query. A URL resultante é a
-/// que o operador cola no Browser Source do OBS.
-Uri urlDaProjecao(String chordpro, {Uri? base}) {
+/// que o operador cola no Browser Source do OBS. [secao] entra apenas quando
+/// informada: sem ela a projeção começa na primeira seção.
+Uri urlDaProjecao(String chordpro, {Uri? base, int? secao}) {
   final raiz = base ?? Uri.base;
   return raiz.replace(
     queryParameters: <String, String>{
       projectionQueryParam: base64Url.encode(utf8.encode(chordpro)),
+      if (secao != null) sectionQueryParam: '$secao',
     },
   );
 }
@@ -60,11 +84,12 @@ Future<Uri> linkDeProjecao(
   String chordpro, {
   required Future<void> Function(String) portao,
   Uri? base,
+  int? secao,
 }) async {
   try {
     await portao(chordpro);
   } on Object catch (erro) {
     throw PublicacaoBloqueada(erro.toString());
   }
-  return urlDaProjecao(chordpro, base: base);
+  return urlDaProjecao(chordpro, base: base, secao: secao);
 }

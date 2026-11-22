@@ -23,6 +23,7 @@ class ProjecaoApp extends StatelessWidget {
     required this.chordpro,
     this.ler = lerParaProjecao,
     this.locale,
+    this.initialSection = 0,
   });
 
   /// A cifra em ChordPro, como veio da URL.
@@ -33,6 +34,10 @@ class ProjecaoApp extends StatelessWidget {
 
   /// Força o locale; em produção fica nulo e o sistema decide.
   final Locale? locale;
+
+  /// Seção em que a projeção abre. Vem de `?secao=N` na URL; a projeção
+  /// limita ao intervalo válido, então índice fora da faixa não quebra.
+  final int initialSection;
 
   @override
   Widget build(BuildContext context) {
@@ -49,17 +54,26 @@ class ProjecaoApp extends StatelessWidget {
         ...GlobalMaterialLocalizations.delegates,
       ],
       supportedLocales: CoreL10n.supportedLocales,
-      home: _ProjecaoDoNucleo(chordpro: chordpro, ler: ler),
+      home: _ProjecaoDoNucleo(
+        chordpro: chordpro,
+        ler: ler,
+        initialSection: initialSection,
+      ),
     );
   }
 }
 
 /// Lê a cifra e entrega a projeção; falha aparece, não vira tela vazia.
 class _ProjecaoDoNucleo extends StatefulWidget {
-  const _ProjecaoDoNucleo({required this.chordpro, required this.ler});
+  const _ProjecaoDoNucleo({
+    required this.chordpro,
+    required this.ler,
+    required this.initialSection,
+  });
 
   final String chordpro;
   final Future<SongDetail> Function(String input) ler;
+  final int initialSection;
 
   @override
   State<_ProjecaoDoNucleo> createState() => _ProjecaoDoNucleoState();
@@ -95,7 +109,10 @@ class _ProjecaoDoNucleoState extends State<_ProjecaoDoNucleo> {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        return ProjectionPage(song: cifra);
+        return ProjectionPage(
+          song: cifra,
+          initialSection: widget.initialSection,
+        );
       },
     );
   }
