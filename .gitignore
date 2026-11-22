@@ -24,6 +24,8 @@ packages/core_l10n/lib/l10n/app_localizations*.dart
 *.mobileprovision
 .env
 .env.*
+# direnv carrega `.envrc`, que também pode ter segredo
+.envrc
 key.properties
 
 # Modelos de IA baixados (ver models/MANIFEST.toml)

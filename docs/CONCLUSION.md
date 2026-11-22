@@ -1207,4 +1207,32 @@ ganha vínculo por heurística.
 ### Continuação da ADR-0014
 
 - **Ordem restante:** ~~afinamento~~ (medido) → terça pela melodia (F0) → baixo/inversão por compasso → downbeat.
-- **Decodificação além de WAV** (Symphonia) segue bloqueada por ADR — sem ela, o usuário continua precisando converter para WAV antes de analisar.
+- **Decodificação além de WAV** — **entregue em 2026-11-22** pela ADR-0016 (seção seguinte): o usuário não precisa mais converter para WAV.
+
+## R4 · Decodificação sem ffmpeg: o motor lê o arquivo do usuário (ADR-0016) (2026-11-22)
+
+**Status:** 🟢 Entregue e provado em **MP3, M4A (AAC) e FLAC**; Opus fica declarado de fora.
+
+### O que foi entregue
+
+- **`crates/mir_engine/src/decode.rs`** — `abrir(caminho)` e `decodificar(bytes, extensão)`. O dispatch é por **conteúdo** (`RIFF`/`WAVE`), não por extensão: extensão mente, e um `.wav` renomeado não pode virar erro de formato. WAV continua no leitor próprio (sem dependência, testável em memória); o resto vai pelo **Symphonia**.
+- **`symphonia` 0.5.5**, Rust puro, **MPL-2.0** — licença que o `deny.toml` já aceitava para dependência sem modificação. As otimizações SIMD trazem o `rustfft`, que já estava no workspace.
+- **A CLI passou a usar `decode::abrir`** e deixou de dizer "o ffmpeg converte antes".
+
+### Provas
+
+- **De ponta a ponta na CLI:** MP3, **M4A (AAC)** e **FLAC** gerados na hora com `ffmpeg -f lavfi` e analisados — 4,0 s, 44 100 Hz, 1 canal, sem erro.
+- **3 testes novos:** WAV decodificado **pelo Symphonia** bate com o leitor próprio (taxa, canais e amostras, diferença máxima < 1e-3); buffer que não é áudio devolve "formato não reconhecido"; o reconhecimento de WAV é por conteúdo, não por nome.
+- **48 testes** em `mir_engine`; `clippy --all-targets -D warnings` e `fmt --check` limpos; **`cargo deny check licenses` → `licenses ok`**.
+
+### O que a entrega muda
+
+- O usuário deixa de converter à mão. E a pergunta de licença **desaparece**: o `ffmpeg` do Homebrew é **GPL-3.0-or-later**, e agora não entra no pacote — nada de GPL no produto, nenhum binário por SO.
+- Um caminho só para Android, iOS, web (wasm) e desktop, porque é Rust puro.
+
+### Ressalvas
+
+- **Opus e WavPack ficaram de fora:** o guarda-chuva do 0.5.5 **não** inclui `symphonia-codec-opus` nem `-wavpack` — Ogg/Opus falha com "códec não suportado". Pesa, porque o `yt-dlp` entrega Opus em WebM/Ogg. Fica no PENDING com o caminho (crate do códec + registro manual).
+- **Vorbis compila e não foi exercido:** `symphonia-codec-vorbis` e `format-ogg` estão na árvore, mas esta máquina não tem codificador Vorbis para gerar a prova. Declarado, não fingido.
+- **HE-AAC** continua exigindo adaptador (`libfdk-aac`).
+- A matriz de formatos é a do upstream **filtrada** pelo que a versão compila — **não é cobertura nossa**. O teste prova o encanamento, não cada códec.

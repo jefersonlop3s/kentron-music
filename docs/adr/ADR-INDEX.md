@@ -20,5 +20,6 @@ Status: Proposto → Aceito | Rejeitado | Descontinuado | Substituído. **O acei
 | ADR-0013 | Link de música: referência, playlist e a fronteira do áudio | **Aceito** (forma C; emenda: busca e playlist nas APIs) | 2026-11-22 | kentron-music |
 | ADR-0014 | Análise harmônica pós-extração: tonalidade, baixo e qualidade do acorde | **Aceito** (emenda: ritmo × baixo sem modelo) | 2026-11-22 | kentron-music |
 | ADR-0015 | Alvos desktop (Windows, macOS, Linux) e a tela de palco por URL | **Aceito** | 2026-11-22 | kentron-music |
+| ADR-0016 | Decodificação de áudio: o motor lê o arquivo do usuário, sem ffmpeg | **Aceito** | 2026-11-22 | kentron-music |
 
-**Próximo número livre**: ADR-0016.
+**Próximo número livre**: ADR-0017.

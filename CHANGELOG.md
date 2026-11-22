@@ -2,6 +2,27 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [feat] O motor lê mp3, m4a e flac — Symphonia no lugar do ffmpeg (ADR-0016) (2026-11-22)
+### Adicionado
+- **`crates/mir_engine/src/decode.rs`** — `abrir(caminho)` e `decodificar(bytes, extensão)`. O dispatch é por **conteúdo** (`RIFF`/`WAVE`), não por extensão: extensão mente, e um `.wav` renomeado não pode virar erro de formato. WAV segue no leitor próprio (sem dependência e testável em memória); todo o resto vai pelo **Symphonia**.
+- **Dependência `symphonia` 0.5.5** (Rust puro, **MPL-2.0** — licença que o `deny.toml` já aceita para dependência sem modificação). As otimizações SIMD trazem o `rustfft`, que já estava no workspace pelo croma.
+- **3 testes:** WAV decodificado **pelo Symphonia** bate com o leitor próprio (taxa, canais e amostras, diferença < 1e-3); buffer que não é áudio falha com "formato não reconhecido"; e o reconhecimento de WAV é por conteúdo.
+
+### Decidido
+- **O produto não embarca `ffmpeg`** (GPL-3.0-or-later, medido no insight). Formato fora da matriz vira erro explícito, e converter é decisão do usuário.
+- **Um caminho para todas as plataformas**: por ser Rust puro, serve Android, iOS, web (wasm) e desktop sem binário por SO.
+
+### Verificado
+- **Provado de ponta a ponta na CLI:** MP3, **M4A (AAC)** e **FLAC** gerados na hora (`ffmpeg -f lavfi`) e analisados — 4,0 s, 44 100 Hz, 1 canal, sem erro.
+- **48 testes** em `mir_engine`; `clippy -D warnings` e `fmt --check` limpos; **`cargo deny check licenses` → `licenses ok`** (MPL-2.0 aceito).
+- A CLI deixou de dizer "o ffmpeg converte antes".
+
+### Ressalvas
+- **Opus e WavPack ficaram de fora:** a versão 0.5.5 **não** inclui `symphonia-codec-opus` no guarda-chuva — Ogg/Opus falha com "códec não suportado". Pesa, porque o `yt-dlp` entrega Opus em WebM/Ogg.
+- **Vorbis compila mas não foi exercido:** `symphonia-codec-vorbis` e `format-ogg` estão na árvore, mas esta máquina não tem codificador Vorbis para gerar a prova.
+- **HE-AAC** continua exigindo adaptador (`libfdk-aac`).
+- A matriz de formatos é a do upstream **filtrada** pelo que a versão compila — não é cobertura nossa, e o teste prova o encanamento, não cada códec.
+
 ## [feat] Afinação global medida e relatada (ADR-0014, bloco 6, parte) (2026-11-22)
 ### Adicionado
 - **`Spectrogram::desvio_de_afinacao`** — mediana do desvio de cada pico espectral em relação ao semitom mais próximo, em semitons. Entram só picos com pelo menos **30% da magnitude máxima do quadro**, o que descarta lóbulo lateral e ruído sem limiar absoluto (que dependeria de normalização do arquivo). `Report.audio.afinacao_cents` leva o valor em cents, e o `resumo()` só o imprime quando passa de **5 cents** — abaixo disso é ruído de medição.

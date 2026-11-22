@@ -13,6 +13,7 @@
 //! confirmar.
 
 pub mod chords;
+pub mod decode;
 pub mod dynamics;
 pub mod fichas;
 pub mod lyrics;

@@ -24,6 +24,11 @@ serde_json = "1.0"
 # gate `deny` reprovou o push até isto entrar (mesma armadilha documentada no
 # `kentron_ffi`).
 notation_bundle = { path = "../notation_bundle", version = "0.0.0" }
+# Decodificação de mp3/AAC/FLAC/Vorbis/Opus/ADPCM/WavPack sem `ffmpeg`
+# (ADR-0016). Rust puro, MPL-2.0 — licença que o `deny.toml` já aceita para
+# dependência sem modificação. As otimizações SIMD trazem o `rustfft`, que já
+# está aqui pelo croma.
+symphonia = { version = "0.5", features = ["all"] }
 
 [lints]
 workspace = true

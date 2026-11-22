@@ -20,7 +20,8 @@
 //! cargo run -p mir_engine -- --relatorio-uso <pasta-do-bundle>   # uso + fichas
 //! ```
 //!
-//! O `ffmpeg` converte antes; este binário lê WAV.
+//! O arquivo entra direto: WAV PCM pelo leitor próprio, mp3/AAC/FLAC/Vorbis/
+//! Opus/ADPCM/WavPack pelo Symphonia (ADR-0016). `ffmpeg` não é necessário.
 //!
 //! **Procedência em dois eixos (ADR-0012):** a *obra* (letra e música) e o
 //! *fonograma* (a gravação analisada) são declarados separadamente. Gravação de
@@ -33,7 +34,7 @@ use std::process::ExitCode;
 
 use mir_engine::lyrics::{self, Fonograma, Jurisdicao, Letra, Obra, Origem};
 use mir_engine::sheet::{self, Ficha};
-use mir_engine::{Opts, wav};
+use mir_engine::{Opts, decode};
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -303,7 +304,7 @@ fn main() -> ExitCode {
         }
     });
 
-    let audio = match wav::ler_arquivo(&caminho) {
+    let audio = match decode::abrir(&caminho) {
         Ok(audio) => audio,
         Err(erro) => {
             eprintln!("erro ao ler {caminho:?}: {erro}");
