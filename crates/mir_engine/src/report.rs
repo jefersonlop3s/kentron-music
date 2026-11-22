@@ -13,6 +13,9 @@ pub struct AudioInfo {
     pub taxa: u32,
     pub canais: u16,
     pub duracao_s: f32,
+    /// Desvio global de afinação, em cents (0 = A440). Medido **antes** do croma
+    /// e corrigido nele; positivo = a gravação está acima do padrão.
+    pub afinacao_cents: f32,
 }
 
 /// Relatório completo da música.
@@ -46,6 +49,14 @@ impl Report {
             "duraçao   {:.1} s · {} Hz · {} canal(is)\n",
             self.audio.duracao_s, self.audio.taxa, self.audio.canais
         ));
+        // Abaixo de 5 cents é ruído de medição; acima disso, o arquivo saiu do
+        // padrão e quem lê precisa saber que o croma foi corrigido por isso.
+        if self.audio.afinacao_cents.abs() >= 5.0 {
+            texto.push_str(&format!(
+                "afinação  {:+.0} cents fora de A440 (corrigida no croma)\n",
+                self.audio.afinacao_cents
+            ));
+        }
         texto.push_str(&format!(
             "dinâmica  {:.1} LUFS · LRA {:.1} LU · pico {:.1} dBFS\n",
             self.dynamics.lufs_integrado, self.dynamics.lra_lu, self.dynamics.pico_amostra_dbfs

@@ -73,6 +73,7 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
             taxa: audio.taxa,
             canais: audio.canais,
             duracao_s: audio.duracao(),
+            afinacao_cents: spectro.desvio_de_afinacao(audio.taxa) * 100.0,
         },
         dynamics: dynamics::analyze(&audio.amostras, audio.taxa),
         tempo,

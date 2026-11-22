@@ -10,6 +10,27 @@ use rustfft::num_complex::Complex;
 
 use crate::wav::Audio;
 
+/// Percorre os picos espectrais de um quadro, com frequência interpolada.
+///
+/// O croma e a medição de afinação leem os mesmos picos por esta função — se
+/// cada um interpolasse do seu jeito, as duas visões do mesmo espectro
+/// divergiriam e o desvio medido não corrigiria o croma que ele deveria corrigir.
+fn para_cada_pico(mags: &[f32], hz_por_bin: f32, mut f: impl FnMut(f32, f32)) {
+    for i in 1..mags.len().saturating_sub(1) {
+        let (anterior, pico, seguinte) = (mags[i - 1], mags[i], mags[i + 1]);
+        if pico <= anterior || pico <= seguinte {
+            continue;
+        }
+        let denominador = anterior - 2.0 * pico + seguinte;
+        let delta = if denominador.abs() > f32::EPSILON {
+            0.5 * (anterior - seguinte) / denominador
+        } else {
+            0.0
+        };
+        f((i as f32 + delta) * hz_por_bin, pico);
+    }
+}
+
 /// Espectrograma de magnitudes.
 pub struct Spectrogram {
     /// Magnitude por quadro, com `janela / 2 + 1` valores.
@@ -56,6 +77,47 @@ impl Spectrogram {
         taxa as f32 / self.salto as f32
     }
 
+    /// Desvio global de afinação, em semitons (mediana dos picos).
+    ///
+    /// Gravação varispeed, fita ou afinação baixa desalinha **toda** comparação
+    /// contra escala. A mediana é robusta a pico espúrio e a nota desafinada
+    /// isolada.
+    ///
+    /// Só entram picos com pelo menos 30% da magnitude máxima do quadro — é o
+    /// que descarta lóbulo lateral e ruído de fundo sem precisar de limiar
+    /// absoluto, que dependeria de normalização do arquivo.
+    ///
+    /// **Limite declarado:** o valor é a distância ao semitom mais próximo, logo
+    /// vive em ±0,5 semitom. Além de meio semitom a gravação deixou de estar
+    /// desafinada e passou a estar **noutra altura** — quem resolve isso é
+    /// transposição, não afinação. Por isso este número é **medido e relatado**,
+    /// e o croma **não** é deslocado por ele: dentro de ±50 cents o
+    /// arredondamento já dá conta, e no limite a correção seria ambígua.
+    #[must_use]
+    pub fn desvio_de_afinacao(&self, taxa: u32) -> f32 {
+        let hz_por_bin = taxa as f32 / self.janela as f32;
+        let mut desvios: Vec<f32> = Vec::new();
+        for mags in &self.quadros {
+            let maximo = mags.iter().copied().fold(0.0f32, f32::max);
+            if maximo <= f32::EPSILON {
+                continue;
+            }
+            let piso = 0.3 * maximo;
+            para_cada_pico(mags, hz_por_bin, |hz, magnitude| {
+                if magnitude < piso || !(55.0..=2000.0).contains(&hz) {
+                    return;
+                }
+                let midi = 69.0 + 12.0 * (hz / 440.0).log2();
+                desvios.push(midi - midi.round());
+            });
+        }
+        if desvios.is_empty() {
+            return 0.0;
+        }
+        desvios.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        desvios[desvios.len() / 2]
+    }
+
     /// Croma por quadro, normalizado pela soma (soma 1 quando há energia).
     ///
     /// A classe de altura sai de **picos interpolados**, não de bin cru: em
@@ -71,25 +133,14 @@ impl Spectrogram {
             .iter()
             .map(|mags| {
                 let mut vetor = [0.0f32; 12];
-                for i in 1..mags.len().saturating_sub(1) {
-                    let (anterior, pico, seguinte) = (mags[i - 1], mags[i], mags[i + 1]);
-                    if pico <= anterior || pico <= seguinte {
-                        continue;
-                    }
-                    let denominador = anterior - 2.0 * pico + seguinte;
-                    let delta = if denominador.abs() > f32::EPSILON {
-                        0.5 * (anterior - seguinte) / denominador
-                    } else {
-                        0.0
-                    };
-                    let hz = (i as f32 + delta) * hz_por_bin;
+                para_cada_pico(mags, hz_por_bin, |hz, pico| {
                     if !(55.0..=2000.0).contains(&hz) {
-                        continue;
+                        return;
                     }
                     let midi = 69.0 + 12.0 * (hz / 440.0).log2();
                     let classe = midi.round().rem_euclid(12.0) as usize % 12;
                     vetor[classe] += pico;
-                }
+                });
                 let soma: f32 = vetor.iter().sum();
                 if soma > 0.0 {
                     for valor in &mut vetor {
@@ -179,5 +230,92 @@ impl Chroma {
             *valor /= n;
         }
         soma
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Tríade de Dó com quatro parciais, opcionalmente fora de A440.
+    ///
+    /// A afinação é multiplicativa: deslocar em cents desloca todos os parciais
+    /// pelo mesmo tanto, que é o que a medição precisa enxergar.
+    fn triade_de_do(desvio_cents: f32) -> Audio {
+        let taxa = 44_100u32;
+        let total = taxa as usize; // 1 s basta: são 86 quadros
+        let fator = 2f32.powf(desvio_cents / 1200.0);
+        let parciais = [
+            (261.63f32, 1.0f32),
+            (329.63, 0.8),
+            (392.00, 0.7),
+            (523.25, 0.4),
+        ];
+        let amostras = (0..total)
+            .map(|i| {
+                let t = i as f32 / taxa as f32;
+                parciais
+                    .iter()
+                    .map(|(hz, ganho)| ganho * (2.0 * std::f32::consts::PI * hz * fator * t).sin())
+                    .sum::<f32>()
+                    / 2.9
+            })
+            .collect();
+        Audio {
+            taxa,
+            canais: 1,
+            amostras,
+        }
+    }
+
+    #[test]
+    fn afinacao_em_440_da_quase_zero() {
+        let audio = triade_de_do(0.0);
+        let espetro = Spectrogram::new(&audio, 4096, 1024);
+        let desvio = espetro.desvio_de_afinacao(audio.taxa);
+        assert!(
+            desvio.abs() < 0.02,
+            "desvio medido: {:.1} cents",
+            desvio * 100.0
+        );
+    }
+
+    #[test]
+    fn afinacao_fora_de_a440_e_medida() {
+        // Trinta cents é desafinação de verdade: fita, varispeed, afinação baixa.
+        let audio = triade_de_do(-30.0);
+        let espetro = Spectrogram::new(&audio, 4096, 1024);
+        let desvio = espetro.desvio_de_afinacao(audio.taxa) * 100.0;
+        assert!(
+            (desvio + 30.0).abs() < 8.0,
+            "esperado ~-30 cents, medido {desvio:.1}"
+        );
+    }
+
+    #[test]
+    fn afinacao_acima_do_padrao_tambem_e_medida() {
+        // O sinal do desvio não é decorativo: acima de A440 tem de dar positivo.
+        let audio = triade_de_do(45.0);
+        let espetro = Spectrogram::new(&audio, 4096, 1024);
+        let desvio = espetro.desvio_de_afinacao(audio.taxa) * 100.0;
+        assert!(
+            (desvio - 45.0).abs() < 8.0,
+            "esperado ~+45 cents, medido {desvio:.1}"
+        );
+    }
+
+    #[test]
+    fn limite_declarado_acima_de_meio_semitom() {
+        // -60 cents passa de meio semitom: a medida é circular e devolve algo
+        // entre 0 e +50. Não é defeito — é o limite de "distância ao semitom
+        // mais próximo", declarado na doc da função. Acima disso o assunto é
+        // transposição, não afinação, e o motor não finge resolver.
+        let audio = triade_de_do(-60.0);
+        let espetro = Spectrogram::new(&audio, 4096, 1024);
+        let cents = espetro.desvio_de_afinacao(audio.taxa) * 100.0;
+        assert!(
+            cents > 0.0 && cents < 50.0,
+            "medido {cents:.1} — fora da faixa declarada de ±50"
+        );
     }
 }

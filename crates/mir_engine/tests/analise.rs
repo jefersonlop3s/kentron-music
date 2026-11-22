@@ -117,6 +117,13 @@ fn cifra_sai_em_chordpro_com_tonalidade_e_sem_acorde_repetido() {
     assert_eq!(tom, "C", "regra: {}", relatorio.tonalidade.regra);
     // `Db` é bem (D + b); o nome tem no máximo três caracteres.
     assert!(tom.len() <= 3, "tom: {tom}");
+    // O resumo legível também carrega a tonalidade: é a superfície que a CLI
+    // imprime (`bin/mir.rs`), e sem teste ela poderia sumir sem ninguém notar.
+    assert!(
+        relatorio.resumo().contains("tonalidade C"),
+        "resumo sem tonalidade: {}",
+        relatorio.resumo()
+    );
 
     // Acorde não repete vizinho na mesma seção.
     for linha in chordpro.lines().filter(|l| l.starts_with('[')) {

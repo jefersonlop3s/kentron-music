@@ -2,6 +2,18 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [feat] Afinação global medida e relatada (ADR-0014, bloco 6, parte) (2026-11-22)
+### Adicionado
+- **`Spectrogram::desvio_de_afinacao`** — mediana do desvio de cada pico espectral em relação ao semitom mais próximo, em semitons. Entram só picos com pelo menos **30% da magnitude máxima do quadro**, o que descarta lóbulo lateral e ruído sem limiar absoluto (que dependeria de normalização do arquivo). `Report.audio.afinacao_cents` leva o valor em cents, e o `resumo()` só o imprime quando passa de **5 cents** — abaixo disso é ruído de medição.
+- **`para_cada_pico`** — a leitura de pico com interpolação parabólica saiu do `chroma` para uma função única, usada pelo croma **e** pela medição. Se cada uma interpolasse do seu jeito, as duas visões do mesmo espectro divergiriam — e o número medido não descreveria o croma que ele deveria descrever.
+- **4 testes:** em A440 dá quase zero; **−30 cents** mede −30; **+45 cents** mede +45; e o **limite declarado** — acima de meio semitom a medida é circular (−60 lê como +40), porque "distância ao semitom mais próximo" vive em ±50 cents.
+
+### Decidido
+- **O croma não é deslocado pelo desvio.** Dentro de ±50 cents o arredondamento para a classe já dá conta; no limite a correção é ambígua e poderia piorar o resultado. O número é **medido e relatado** — que é o que a ADR-0014 pede ("estimar o desvio de A440 antes de casar contra escalas") —, não aplicado por cima do croma sem prova. Acima de meio semitom o assunto é **transposição**, não afinação, e o motor não finge resolver.
+
+### Verificado
+- **45 testes** em `mir_engine`; `clippy --all-targets -D warnings` e `fmt --check` limpos; e a **fixture dourada não mudou** — que é justamente a prova de que o croma seguiu idêntico.
+
 ## [feat] Centro tonal por perfil no motor (ADR-0014, bloco 1) (2026-11-22)
 ### Adicionado
 - **`crates/mir_engine/src/tonality.rs`** — `analisar(&Chroma) -> Tonalidade`: croma médio (só quadros com energia) contra os perfis de **Krumhansl–Kessler** nas **24 tônicas** (12 × maior/menor), por **correlação de Pearson**, devolvendo a **regra que produziu** o resultado (correlação e margem sobre a segunda) e `classes_presentes`. Sem energia, ou com menos de **quatro** classes de altura, a resposta é **indeterminada com o motivo** — fail-loud, não palpite.

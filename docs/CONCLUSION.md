@@ -1196,5 +1196,15 @@ ganha vínculo por heurística.
 
 - **Margem baixa não bloqueia:** a margem aparece no relatório, mas o motor não recusa tonalidade duvidosa por ela. Qual limiar usar é **decisão**, não execução.
 - **Empréstimo modal:** perfil maior/menor só — Mixolídio, Dórico e afins ficam para o bloco 6.
-- **Ordem restante da ADR-0014:** afinamento global → terça pela melodia (F0) → baixo/inversão por compasso → downbeat.
+
+### Afinação medida (mesma data, bloco 6 parcial)
+
+- **`Spectrogram::desvio_de_afinacao`** mede a mediana do desvio de cada pico em relação ao semitom mais próximo, e `Report.audio.afinacao_cents` leva o valor ao relatório; o `resumo()` só o mostra acima de **5 cents**. Só entram picos com ≥30% da magnitude máxima do quadro.
+- **O croma não é deslocado.** Dentro de ±50 cents o arredondamento já resolve; no limite a correção é ambígua. O número é **medido e relatado**, não aplicado — e a fixture dourada não mudou, o que prova que o croma ficou idêntico.
+- **Limite declarado em teste:** acima de meio semitom a medida é circular (−60 cents lê como +40), porque o assunto passou a ser transposição, não afinação.
+- **4 testes** novos; **45** no total em `mir_engine`.
+
+### Continuação da ADR-0014
+
+- **Ordem restante:** ~~afinamento~~ (medido) → terça pela melodia (F0) → baixo/inversão por compasso → downbeat.
 - **Decodificação além de WAV** (Symphonia) segue bloqueada por ADR — sem ela, o usuário continua precisando converter para WAV antes de analisar.
