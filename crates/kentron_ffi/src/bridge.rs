@@ -133,6 +133,23 @@ pub fn transpose_song(input: String, to_key: String) -> Result<SongDetail, Strin
     Ok(detail(&transposed))
 }
 
+/// O portão de publicação da letra: o motor decide, o app obedece.
+///
+/// A regra mora em `mir_engine::sheet::pode_publicar` — não é copiada aqui. O
+/// app pergunta antes de exportar ou de gerar um link de projeção: cifra cuja
+/// letra nasceu de extração pelo usuário circula no grupo, não em publicação.
+///
+/// # Errors
+///
+/// Devolve o motivo do bloqueio, pronto para a tela mostrar.
+pub fn pode_publicar(input: String) -> Result<(), String> {
+    if input.trim().is_empty() {
+        return Err("cifra vazia: nada a publicar".to_owned());
+    }
+    let song = ChordProParser::parse(&input)?;
+    mir_engine::sheet::pode_publicar(&song)
+}
+
 /// Os doze tons que o Modo Palco oferece, na ordem em que a interface os mostra.
 ///
 /// A grafia é convenção de tela: nas teclas pretas a interface escreve bemóis
@@ -196,6 +213,20 @@ fn key_note(key: &str) -> Result<Note, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn blocks_publication_of_private_scope_lyrics() {
+        // Escopo `grupo` é a letra extraída pelo usuário: privada por desenho.
+        let privada = "{title: X}\n{lyrics_scope: grupo}\n[C]texto\n";
+        let erro = pode_publicar(privada.to_owned()).expect_err("escopo privado deve bloquear");
+        assert!(erro.contains("privado"), "o motivo nomeia o escopo: {erro}");
+    }
+
+    #[test]
+    fn allows_publication_of_public_scope_lyrics() {
+        let publica = "{title: X}\n{lyrics_scope: público}\n[C]texto\n";
+        assert!(pode_publicar(publica.to_owned()).is_ok());
+    }
 
     #[test]
     fn summarizes_a_chordpro_song() {

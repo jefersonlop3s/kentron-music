@@ -88,5 +88,14 @@
   "stageProjectionLinkCopied": "Projection link copied",
   "@stageProjectionLinkCopied": {
     "description": "Confirmation shown after copying the projection link."
+  },
+  "stageProjectionBlocked": "Publication blocked: {reason}",
+  "@stageProjectionBlocked": {
+    "description": "Shown when the engine refuses to publish the lyrics because the chord chart's lyrics scope is private to the group.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
   }
 }

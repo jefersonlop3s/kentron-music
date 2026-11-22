@@ -30,6 +30,10 @@ Future<SongDetail> lerDoNucleo(String input) => readSong(input: input);
 Future<SongDetail> transposeToKey(String input, String toKey) =>
     transposeSong(input: input, toKey: toKey);
 
+/// Portão de publicação do motor, exposto à tela. Existe como função de topo
+/// para o widget poder receber uma versão de mentira nos testes, sem tocar em FFI.
+Future<void> conferirPublicacao(String cifra) => podePublicar(input: cifra);
+
 /// Modo Palco: a cifra inteira na tela, acorde sobre a letra, transposição por tom.
 ///
 /// Carrega do núcleo Rust por injeção (`ler`), não por chamada direta: o widget
@@ -41,6 +45,7 @@ class SongReaderPage extends StatefulWidget {
     this.ler = lerDoNucleo,
     this.transpor = transposeToKey,
     this.tons = keyChoices,
+    this.portaoDePublicacao = conferirPublicacao,
   });
 
   /// A cifra em ChordPro, como veio do arquivo ou do exemplo.
@@ -54,6 +59,10 @@ class SongReaderPage extends StatefulWidget {
 
   /// Os tons oferecidos ao músico. Default: núcleo Rust.
   final Future<List<String>> Function() tons;
+
+  /// O portão de publicação do motor. Default: núcleo Rust. É ele que decide
+  /// se a letra pode virar link público; a tela não copia a regra.
+  final Future<void> Function(String cifra) portaoDePublicacao;
 
   @override
   State<SongReaderPage> createState() => _SongReaderPageState();
@@ -117,12 +126,25 @@ class _SongReaderPageState extends State<SongReaderPage> {
   }
 
   Future<void> _copiarLink() async {
-    final url = urlDaProjecao(widget.input);
-    await Clipboard.setData(ClipboardData(text: url.toString()));
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(CoreL10n.of(context).stageProjectionLinkCopied)),
-    );
+    final l10n = CoreL10n.of(context);
+    try {
+      // O motor decide se a letra pode circular; a tela só monta o link
+      // depois do portão. Escopo privado do grupo não vira link público.
+      final link = await linkDeProjecao(
+        widget.input,
+        portao: widget.portaoDePublicacao,
+      );
+      await Clipboard.setData(ClipboardData(text: link.toString()));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.stageProjectionLinkCopied)),
+      );
+    } on PublicacaoBloqueada catch (bloqueio) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.stageProjectionBlocked(bloqueio.motivo))),
+      );
+    }
   }
 
   @override

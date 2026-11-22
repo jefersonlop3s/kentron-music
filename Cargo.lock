@@ -407,6 +407,7 @@ name = "kentron_ffi"
 version = "0.0.0"
 dependencies = [
  "flutter_rust_bridge",
+ "mir_engine",
  "notation_bundle",
 ]
 

@@ -44,4 +44,32 @@ void main() {
       expect(url.queryParameters.keys, <String>[projectionQueryParam]);
     });
   });
+
+  group('linkDeProjecao', () {
+    test('motor libera → monta o link', () async {
+      final link = await linkDeProjecao(
+        '{title: Livre}',
+        portao: (_) async {},
+        base: Uri.parse('https://exemplo.test/app/'),
+      );
+      expect(link.queryParameters, contains(projectionQueryParam));
+      expect(chordproDaUrl(link), '{title: Livre}');
+    });
+
+    test('motor bloqueia → lança PublicacaoBloqueada e não monta link', () async {
+      await expectLater(
+        linkDeProjecao(
+          '{title: Privada}',
+          portao: (_) async => throw StateError('escopo privado do grupo'),
+        ),
+        throwsA(
+          isA<PublicacaoBloqueada>().having(
+            (bloqueio) => bloqueio.motivo,
+            'motivo',
+            contains('privado'),
+          ),
+        ),
+      );
+    });
+  });
 }

@@ -4,6 +4,7 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import 'frb_generated.dart';
+
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `detail`, `key_note`, `song_key`
@@ -42,6 +43,18 @@ Future<SongDetail> transposeSong({
   required String input,
   required String toKey,
 }) => RustLib.instance.api.crateBridgeTransposeSong(input: input, toKey: toKey);
+
+/// O portão de publicação da letra: o motor decide, o app obedece.
+///
+/// A regra mora em `mir_engine::sheet::pode_publicar` — não é copiada aqui. O
+/// app pergunta antes de exportar ou de gerar um link de projeção: cifra cuja
+/// letra nasceu de extração pelo usuário circula no grupo, não em publicação.
+///
+/// # Errors
+///
+/// Devolve o motivo do bloqueio, pronto para a tela mostrar.
+Future<void> podePublicar({required String input}) =>
+    RustLib.instance.api.crateBridgePodePublicar(input: input);
 
 /// Os doze tons que o Modo Palco oferece, na ordem em que a interface os mostra.
 ///

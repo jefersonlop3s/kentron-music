@@ -20,6 +20,9 @@ crate-type = ["lib", "cdylib", "staticlib"]
 # A `version` aqui não é enfeite: `deny.toml` usa `wildcards = "deny"`, e uma
 # dependência de caminho sem versão é lida como wildcard pelo cargo-deny.
 notation_bundle = { path = "../notation_bundle", version = "0.0.0" }
+# O portão de publicação (`sheet::pode_publicar`) mora no motor: a ponte expõe
+# a regra em vez de copiá-la — o app pergunta, o motor decide.
+mir_engine = { path = "../mir_engine", version = "0.0.0" }
 # Versão fixada igual à do gerador instalado: `flutter_rust_bridge_codegen`
 # 2.13.0 gera código casado com o crate 2.13.0.
 flutter_rust_bridge = "=2.13.0"

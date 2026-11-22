@@ -33,3 +33,38 @@ Uri urlDaProjecao(String chordpro, {Uri? base}) {
     },
   );
 }
+
+/// A recusa do portão de publicação do motor.
+///
+/// O motor responde `podePublicar`; quando ele bloqueia, a tela não gera link.
+/// A exceção carrega o motivo que o motor deu, para a interface mostrá-lo.
+class PublicacaoBloqueada implements Exception {
+  const PublicacaoBloqueada(this.motivo);
+
+  final String motivo;
+
+  @override
+  String toString() => motivo;
+}
+
+/// Monta o link de projeção **depois** do portão do motor.
+///
+/// `portao` é a função da ponte (`podePublicar`): ela lança quando a letra não
+/// pode circular. O app não copia a regra de licença — pergunta ao motor e
+/// obedece. Sem portão aprovado não há link: é o que faz o escopo privado do
+/// grupo valer também no app, e não só no motor.
+///
+/// Lança [PublicacaoBloqueada] com o motivo do motor quando a publicação é
+/// recusada.
+Future<Uri> linkDeProjecao(
+  String chordpro, {
+  required Future<void> Function(String) portao,
+  Uri? base,
+}) async {
+  try {
+    await portao(chordpro);
+  } on Object catch (erro) {
+    throw PublicacaoBloqueada(erro.toString());
+  }
+  return urlDaProjecao(chordpro, base: base);
+}
