@@ -18,6 +18,22 @@ pub struct AudioInfo {
     pub afinacao_cents: f32,
 }
 
+/// O baixo estimado num trecho de acorde.
+///
+/// Existe separado do croma de propósito: o croma descarta o registro, e é o
+/// registro que separa `C` de `C/E`. Ver `crate::baixo`.
+#[derive(Debug, Clone, Serialize)]
+pub struct BaixoSegment {
+    pub inicio_s: f32,
+    pub fim_s: f32,
+    /// Nota MIDI do baixo (`28` = E1).
+    pub midi: u8,
+    /// Nome com oitava, como o músico lê (`E2`).
+    pub nota: String,
+    /// Fração dos quadros do trecho que sustentam esta nota.
+    pub confianca: f32,
+}
+
 /// Relatório completo da música.
 #[derive(Debug, Clone, Serialize)]
 pub struct Report {
@@ -28,6 +44,9 @@ pub struct Report {
     /// fundamental de acorde, que devolvia `B` numa música em E maior.
     pub tonalidade: Tonalidade,
     pub chords: Vec<ChordSegment>,
+    /// Baixo por trecho de acorde (ADR-0014, bloco 4). Vazio quando a banda do
+    /// baixo não tem evidência — o motor não inventa inversão.
+    pub baixo: Vec<BaixoSegment>,
     pub sections: Vec<Section>,
 }
 

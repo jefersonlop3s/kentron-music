@@ -12,6 +12,7 @@
 //! pode errar, e o relatório carrega a confiança por trecho para o músico
 //! confirmar.
 
+pub mod baixo;
 pub mod chords;
 pub mod decode;
 pub mod dynamics;
@@ -72,6 +73,24 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
     let chords = chords::detect_com_melodia(&chroma, Some(&melodia));
     let tempo = structure::estimate_tempo(spectro, audio.taxa);
     let sections = structure::segment(spectro, &chroma, audio.taxa, opts.trecho_minimo_s);
+    // O baixo é lido **fora** do croma: o croma dobrou o registro, e é o
+    // registro que separa `C` de `C/E` (ADR-0014, bloco 4). Os trechos usam
+    // os mesmos limites dos acordes, para a inversão ser comparável.
+    let baixo = baixo::extrair(spectro, audio.taxa);
+    let baixo_trechos: Vec<report::BaixoSegment> = chords
+        .iter()
+        .filter_map(|trecho| {
+            baixo
+                .do_trecho(trecho.inicio_s, trecho.fim_s)
+                .map(|(midi, confianca)| report::BaixoSegment {
+                    inicio_s: trecho.inicio_s,
+                    fim_s: trecho.fim_s,
+                    midi,
+                    nota: baixo::nome(midi),
+                    confianca,
+                })
+        })
+        .collect();
 
     report::Report {
         audio: report::AudioInfo {
@@ -84,6 +103,7 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
         tempo,
         tonalidade: tonality::analisar(&chroma),
         chords,
+        baixo: baixo_trechos,
         sections,
     }
 }
