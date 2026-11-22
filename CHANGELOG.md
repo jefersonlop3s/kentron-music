@@ -2,6 +2,20 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] Link, playlist e análise harmônica: duas ADRs propostas (2026-11-22)
+### Adicionado
+- **ADR-0013** (proposta) — **link como referência**, **playlist como lista de referências** e a fronteira do áudio. Das três formas, **C** (o produto resolve o link até a *identidade* e pede o arquivo quando a análise precisa de áudio) é escolhida e **B** (o produto baixa) é rejeitada com motivo. Base em fonte primária: YouTube API Developer Policies proíbe *"separate, isolate, or modify the audio or video components"*; Spotify Developer Policy (15/05/2025) só trata áudio como streaming e clipe de prévia, sem endpoint de download, e a quota estendida só aceita organização desde 15/05/2025.
+- **ADR-0014** (proposta) — **análise harmônica pós-extração**: centro tonal por perfil no eixo de quintas, afinamento global, terça decidida pela **melodia** (F0), baixo por compasso para a **inversão** e **região harmônica** separada da seção timbrística. Registra a causa mecânica do viés para maior — o **5º harmônico da fundamental coincide com a terça maior** (razão 5/4) — e nomeia **onze lacunas de sinal** no processo ditado pelo dono (compasso/downbeat, bumbo × baixo, modo sem sensível, empréstimo modal, peso dos graus, janela harmônica).
+- **`docs/PENDING.md`** — itens novos: link → identidade da obra; playlist como referências; análise pós-extração; compasso e downbeat. Cifra em monitor de palco (TV) avaliada e **não priorizada**, com o caminho barato registrado.
+- **`docs/ROADMAP.md`** — R4 ganhou as duas notas (link/áudio e análise harmônica).
+
+### Retificado
+- A nota do PENDING que afirmava que a inversão "exige baixo isolado (stems)" era **hipótese, não medição**: linha de baixo e melodia predominante são tarefas de MIR **sem** separação de fontes; stems fica como melhoria de acurácia.
+
+### Verificado
+- `python3 .harness/documentation.py check` sem link quebrado após as duas ADRs e o índice.
+- **Não verificado** (declarado nas ADRs): a cláusula de consumo do YouTube (a página volta truncada nesse ponto) e o bloqueio de `audio-features` citado no plano v2.5 (changelog devolve 404).
+
 ## [processo] Piloto automatizado no OBS e navegação por seção na URL (2026-11-21)
 ### Adicionado
 - **`scripts/piloto-obs.sh`** — piloto da ADR-0010: serve o build web, abre dois túneis SSH (porta 4455 do `obs-websocket` e a do servidor de volta para a VM), cria uma fonte de navegador apontando para a URL de projeção, captura a fonte por `GetSourceScreenshot` e compara o hash do pixel entre seções e entre duas rodadas. Reprova quando a tela fica chapada (1 cor, σ=0.0). `--negativo` roda a prova negativa com URL morta; `--construir` reconstrói o build antes.

@@ -417,6 +417,34 @@
 - **Transposição dentro do OBS:** a projeção não mostra acorde, então transpor não muda o pixel; a transposição é provada em `scripts/e2e-web.sh` e nos testes Rust.
 - **Sobreviver a fechar/reabrir:** o roteiro não reinicia o app; a restauração do bundle é provada no alpha assistido (R1-C).
 
+## Processo · Link, playlist e análise harmônica: duas ADRs propostas (2026-11-22)
+
+**Status:** 🟡 Duas ADRs em proposta; o aceite é do dono.
+
+### O que motivou
+
+- O dono corrigiu uma premissa registrada: o projeto **nunca** decidiu "não usar link". O que existia eram três coisas distintas — o app não **raspa site de letra/cifra** (ADR-0012 §126), o **áudio** é obtido fora do app (ROADMAP R4 etapa 4, aberta) e não há downloader versionado (PENDING). As três foram lidas como uma só.
+- E ditou, em prosa, o processo que usa em palco para resolver terça fraca, tonalidade e baixo — que passou a ser a **especificação** da ADR-0014.
+
+### O que foi medido (fonte primária)
+
+- **YouTube API Services – Developer Policies** (2026-11-06): proíbe *"separate, isolate, or modify the audio or video components"* e proíbe *"features that play content … from a background player"*. Pela via oficial, isolar o áudio não é permitido.
+- **Spotify Developer Policy** (efetiva 15/05/2025): o áudio aparece só como *Streaming* e *Audio Preview Clips* — **sem cláusula nem endpoint de download**.
+- **Spotify Web API – Quota modes:** desde 15/05/2025 a quota estendida **só aceita organizações** (≥250 mil MAU); o modo de desenvolvimento limita a 5 usuários.
+- **Spotify Web API:** há endpoints de **playlist** (ler/criar) e de **Player**; **não há** endpoint de áudio.
+- **Não verificado** (declarado, não usado como base): a cláusula de "Permissions and Restrictions" dos Termos de Uso de consumo do YouTube — a página volta truncada nesse ponto em três tentativas — e o bloqueio de `audio-features` citado no plano v2.5 (a URL do changelog devolve 404).
+
+### As propostas
+
+- **ADR-0013** — das três formas (A: áudio vem de fora; B: o produto baixa; C: o produto resolve o link até a identidade e pede o arquivo quando precisa de áudio), **C é escolhida** e **B é rejeitada com motivo**: colidiria com a ADR-0012 §108 (ato do usuário × ato do produto) e não sobrevive ao ToS de nenhum dos dois provedores.
+- **ADR-0014** — camada de análise pós-extração em seis blocos, com ordem de execução (tonalidade → afinamento → melodia → baixo → compasso). Nomeia **onze lacunas** da prosa que são de sinal, não de música, e registra a causa mecânica do viés para maior: o **5º harmônico da fundamental coincide com a terça maior** (razão 5/4), então o template "maior" vence por construção.
+- **Retificação:** o PENDING dizia que inversão "exige baixo isolado (stems)". É hipótese, não medição — linha de baixo e melodia predominante são tarefas de MIR sem separação de fontes; stems fica como melhoria de acurácia.
+
+### O que ficou aberto
+
+- Aceite das duas ADRs pelo dono.
+- Cifra em monitor de palco (TV): avaliada e **não é prioridade**. O conteúdo já existe (`SongReaderPage`); o custo é o transporte. Caminho barato (segundo bootstrap na URL, aberto pelo navegador da TV) fica registrado no PENDING.
+
 ## Processo · Prova de navegador, locales e piloto automatizado (2026-11-21)
 
 **Status:** 🟢 Telas entregues provadas em navegador real; dois defeitos encontrados e corrigidos; portão da R1 passa a ser automatizado.
