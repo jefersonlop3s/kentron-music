@@ -69,6 +69,8 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 
 **Depois da release:** o uso ao vivo em culto acontece e realimenta a próxima release; **não** bloqueia a publicação.
 
+**Depois da release · alvos desktop (2026-11-22, [ADR-0015](adr/0015-alvos-desktop-e-tela-de-palco-por-url.md) aceita):** Windows, macOS e Linux, porque tecladista usa notebook. A tela de palco é **view por URL** (`?palco=`) — o mesmo endereço serve navegador da TV, segunda janela do desktop e Browser Source —, então a segunda tela não exige multi-janela. Ordem: Windows → Linux → macOS (notarização do macOS é o custo mais alto e o menor alcance). Não entra na R1.
+
 **Validação R1:** unitária, regressiva, exploratória e acessibilidade em todo push; E2E por alpha assistido (R1-C) e, no fim, piloto automatizado (R1-D).
 
 ---
@@ -107,9 +109,9 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 >
 > **Camada de dados do corpus (2026-11-21, `scripts/verificar_fichas.py`):** as fichas do hinário carregam o **`lyrics_scope`** (se a letra pode ser exibida: `public_domain`, `licensed`, `none`) e o **vínculo `obra_original`** (ficha cujo texto é a fonte da tradução brasileira). O verificador valida as duas colunas contra o corpus de domínio público e o dicionário de variantes; o vínculo impede que uma tradução seja lida como obra independente. É o que sustenta a decisão de letra no app — sem `lyrics_scope` declarado, a ficha não pode exibir letra.
 >
-> **Link, playlist e áudio (2026-11-22, [ADR-0013](adr/0013-link-de-musica-referencia-playlist-e-fronteira-do-audio.md) em proposta):** o link entra como **referência** (identidade da obra e do fonograma) e a playlist como **lista de referências**; o áudio continua vindo do usuário. Spotify não tem caminho de áudio — sem endpoint, e a quota estendida só aceita organização desde 15/05/2025 — e o YouTube proíbe isolar o áudio pela via oficial ("separate, isolate, or modify the audio or video components", Developer Policies). O produto **não baixa de provedor nenhum**. A etapa 4 fica dividida: **link → identidade da obra** é implementável agora; **→ cifra** exige o áudio do usuário.
+> **Link, playlist e áudio (2026-11-22, [ADR-0013](adr/0013-link-de-musica-referencia-playlist-e-fronteira-do-audio.md) aceita):** o link entra como **referência** (identidade da obra e do fonograma) e a playlist como **lista de referências**; o áudio continua vindo do usuário. Spotify não tem caminho de áudio — sem endpoint, e a quota estendida só aceita organização desde 15/05/2025 — e o YouTube proíbe isolar o áudio pela via oficial ("separate, isolate, or modify the audio or video components", Developer Policies). O produto **não baixa de provedor nenhum**. A etapa 4 fica dividida: **link → identidade da obra** é implementável agora; **→ cifra** exige o áudio do usuário.
 >
-> **Análise harmônica (2026-11-22, [ADR-0014](adr/0014-analise-harmonica-pos-extracao.md) em proposta):** centro tonal por perfil no eixo de quintas, afinamento global, terça decidida pela **melodia** (F0), baixo por compasso para a **inversão** e região harmônica separada da seção timbrística. Resolve como causa comum a inversão, a terça fraca e a tensão — e **não** depende de stems: a nota anterior, que exigia baixo isolado, era hipótese, não medição.
+> **Análise harmônica (2026-11-22, [ADR-0014](adr/0014-analise-harmonica-pos-extracao.md) aceita):** centro tonal por perfil no eixo de quintas, afinamento global, terça decidida pela **melodia** (F0), baixo por compasso para a **inversão** e região harmônica separada da seção timbrística. Resolve como causa comum a inversão, a terça fraca e a tensão — e **não** depende de stems: a nota anterior, que exigia baixo isolado, era hipótese, não medição.
 
 ### Etapas:
 1. **Análise Local:** Áudio $\rightarrow$ Acordes, Tom e Compasso (Desktop primeiro). *Acordes e andamento entregues; tom é estimativa simples (fundamental mais frequente).*

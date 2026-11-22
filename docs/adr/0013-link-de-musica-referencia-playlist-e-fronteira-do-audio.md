@@ -1,6 +1,6 @@
 # ADR-0013 · Link de música: referência, playlist e a fronteira do áudio
 
-- **Status:** proposto (2026-11-22) — aguarda aceite do dono
+- **Status:** aceito (2026-11-22) — decisão do dono: **forma C** (o link resolve até a identidade e o áudio vem do usuário); a forma B fica rejeitada
 - **Relaciona-se:** emenda a [ADR-0012](0012-letra-fonte-alinhamento-e-limites.md) §2 e §108 e destrava a etapa 4 da R4 do [ROADMAP](../ROADMAP.md)
 - **Contexto de origem:** o dono corrigiu uma premissa registrada — o registro **não** dizia "não usar link"; dizia que *o app não busca letra em site de terceiro* e que *o áudio é obtido fora do app*. As duas coisas foram lidas como uma só.
 

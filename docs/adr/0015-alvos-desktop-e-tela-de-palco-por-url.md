@@ -1,6 +1,6 @@
 # ADR-0015 · Alvos desktop (Windows, macOS, Linux) e a tela de palco por URL
 
-- **Status:** proposto (2026-11-22) — aguarda aceite do dono; sequência recomendada: **depois da release da R1**
+- **Status:** aceito (2026-11-22) — decisão do dono; execução **depois da release da R1**
 - **Relaciona-se:** [ADR-0008](0008-native-assets-em-vez-de-cargokit.md) (empacotamento), [ADR-0013](0013-link-de-musica-referencia-playlist-e-fronteira-do-audio.md) e [ADR-0014](0014-analise-harmonica-pos-extracao.md) (o que o desktop destrava)
 
 ## Contexto

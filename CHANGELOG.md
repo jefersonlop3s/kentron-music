@@ -2,6 +2,18 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] ADR-0013, ADR-0014 e ADR-0015 aceitas (2026-11-22)
+### Decidido
+- **ADR-0013 — aceita na forma C:** o link resolve **sempre** a identidade da obra e do fonograma; o áudio vem do usuário. A forma B (o produto baixa) fica **rejeitada**. Playlist entra como **lista de referências**, criada na conta do usuário, sem o produto redistribuir áudio.
+- **ADR-0014 — aceita nos blocos 1–6:** centro tonal por perfil no eixo de quintas, afinamento global, terça pela **melodia** (F0), baixo por compasso para a inversão, região harmônica separada da seção timbrística e empréstimos modais como conjunto permitido. A separação **ritmo × baixo** vai por **HPSS + harmonicidade**, sem modelo.
+- **ADR-0015 — aceita:** alvos **desktop** (Windows, macOS, Linux) com a tela de palco por **URL** (`?palco=`); segunda tela é janela web, não multi-janela. Execução **depois da release da R1**, ordem Windows → Linux → macOS.
+
+### Verificado
+- `python3 .harness/documentation.py check` sem link quebrado; `ADR-INDEX` com os três status e o próximo número livre em ADR-0016; ROADMAP, PENDING e CONCLUSION alinhados ao aceite.
+
+### Aberto
+- Implementação: o **centro tonal por perfil** é o primeiro código (aceito em separado, não precisa de modelo nem de áudio novo) e troca "nota mais frequente" por "tonalidade com a razão".
+
 ## [processo] Ritmo × baixo sem modelo, playlist nas APIs e alvos desktop (2026-11-22)
 ### Adicionado
 - **ADR-0015** (proposta) — **alvos desktop** (Windows, macOS, Linux) com a **tela de palco por URL** (`?palco=<base64>&tom=`). A segunda tela é **janela web** apontando para a URL — navegador da TV, segunda janela do desktop ou Browser Source —, não multi-janela nativa: um caminho de renderização só, o que já está provado. Ordem recomendada **Windows → Linux → macOS** (notarização do macOS é o custo mais alto e o menor alcance no público-alvo) e execução **fora da R1**.

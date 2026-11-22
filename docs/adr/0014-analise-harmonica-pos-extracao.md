@@ -1,6 +1,6 @@
 # ADR-0014 · Análise harmônica pós-extração: tonalidade, baixo e qualidade do acorde
 
-- **Status:** proposto (2026-11-22) — **bloco 1 (centro tonal por perfil) aceito pelo dono**; os demais blocos seguem em proposta
+- **Status:** aceito (2026-11-22) — decisão do dono: bloco 1 aceito em separado e os blocos 2–6 aceitos na sequência
 - **Especificação:** ditada pelo dono em prosa (2026-11-22). O texto dele é **a especificação**, não exemplo ilustrativo.
 - **Causa comum de:** três itens abertos do [PENDING](../PENDING.md) — inversões, terça fraca não resolvida e tensão sem adivinhação.
 
