@@ -119,6 +119,7 @@ Inversões por qualidade: `sus4` 2.485 · maior 1.706 · `m7` 834 · `5` 662 · 
 | **baixo fora do tom, sem vizinho** | **5,5%** |
 
 Ou seja: **40 trechos em 23.558 (0,17%, um em 590) ficam sem explicação.** **Não existe população de "acorde errado por uma quinta"** — a hipótese que motivou a análise foi refutada: o agrupamento de quarta acima era (a) `sus4` com a quarta no baixo, que é nota do acorde, e (b) movimento do baixo, não erro de detecção. **Limite:** o intervalo é medido contra a fundamental **detectada**; um erro de acorde apareceria como baixo fora do acorde, e é isso que os 0,17% delimitam.
+- [x] **Cifra com inversão (2026-11-22):** `chords::com_baixo` escreve `C/E`, `C/G`, `G7/F` quando o baixo é **terça, quinta ou sétima** do acorde, e **não escreve** quando a barra não informa: baixo fora do acorde, quarta/segunda (adição, não inversão) e acordes **sem terça** (`sus4`, `5`) — onde `Csus4/F` e `Fsus2` são o mesmo conjunto de notas. A qualidade **nunca muda**: a barra só acrescenta o registro que o croma descartou. Barra condicionada a `baixo::CONFIANCA_MINIMA = 0,40` — inversão inventada é pior que inversão omitida. **Taxa esperada no repertório: ~15% dos trechos** (3.509 dos 23.558 com confiança ≥ 0,40 são inversões de acordes com terça; `sus4` e potência ficam de fora por decisão de nomenclatura).
 - [ ] **Compasso e downbeat:** o motor tem batida, não barra. É pré-requisito do baixo por compasso, da leitura nos tempos 1 e 3 (ADR-0014) e do discriminador de relativa maior/menor — croma idêntico não desempata tônica.
 
 ## 🌐 R2+ (backlog)

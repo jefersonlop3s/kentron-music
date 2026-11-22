@@ -31,6 +31,13 @@ const BANDA_HZ: (f32, f32) = (40.0, 250.0);
 const HARMONICOS: u32 = 4;
 /// Candidatos a 85% ou mais do melhor vencem se forem mais graves.
 const MARGEM_GRAVE: f32 = 0.85;
+/// Fração mínima de quadros que precisam concordar com a nota do baixo para
+/// que ela seja usada na cifra.
+///
+/// **Medido no repertório (2026-11-22):** abaixo de 0,40 o quadro discorda de
+/// si mesmo na maior parte do tempo e a barra vira ruído — a nota sai da
+/// maioria, mas por pouco. Acima disso a inversão é estável.
+pub const CONFIANCA_MINIMA: f32 = 0.40;
 /// Tolerância, em semitons, para casar um pico ao harmônico esperado.
 const TOLERANCIA_SEMITONS: f32 = 0.5;
 

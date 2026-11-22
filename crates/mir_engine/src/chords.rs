@@ -52,6 +52,34 @@ impl Qualidade {
             Self::Potencia => &[0, 7],
         }
     }
+
+    /// Qualidades com terça definida.
+    ///
+    /// Só nelas a inversão não muda a identidade: em `sus4` e em potência a
+    /// "fundamental" é convenção, e `Csus4/F` e `Fsus2` são o mesmo conjunto
+    /// de notas — escrever a barra ali seria decidir nomenclatura, não medir.
+    fn tem_terca(self) -> bool {
+        !matches!(self, Self::SusQuatro | Self::Potencia)
+    }
+}
+
+/// Cifra com o baixo quando ele é **terça, quinta ou sétima** do acorde.
+///
+/// Devolve `None` quando a barra não informa nada: baixo que não é nota do
+/// acorde (passagem, pedal, erro), quarta ou segunda (que são adição, não
+/// inversão) e acordes sem terça. O nome da qualidade nunca muda — a barra só
+/// acrescenta registro, que é o que o croma descartou.
+#[must_use]
+pub fn com_baixo(tonica: usize, qualidade: Qualidade, baixo_midi: u8) -> Option<String> {
+    if !qualidade.tem_terca() {
+        return None;
+    }
+    let classe = usize::from(baixo_midi) % 12;
+    let intervalo = (classe + 12 - tonica) % 12;
+    if intervalo == 0 || !qualidade.intervalos().contains(&intervalo) {
+        return None;
+    }
+    Some(format!("{}/{}", nome(tonica, qualidade), TONICAS[classe]))
 }
 
 const QUALIDADES: [Qualidade; 8] = [
@@ -78,6 +106,12 @@ pub struct ChordSegment {
     pub acorde: String,
     /// Margem sobre o segundo colocado, média do trecho. Baixa = incerto.
     pub confianca: f32,
+    /// Tônica e qualidade ficam fora do JSON: existem para a inversão ser
+    /// montada sem reparsear o nome (`crate::chords::com_baixo`).
+    #[serde(skip)]
+    pub tonica: usize,
+    #[serde(skip)]
+    pub qualidade: Qualidade,
 }
 
 /// Vetor do template: 1.0 nas classes do acorde, 0.0 no resto (normalizado).
@@ -249,6 +283,8 @@ pub fn detect_com_melodia(chroma: &Chroma, melodia: Option<&Melodia>) -> Vec<Cho
                 fim_s: trecho.fim_s,
                 acorde: nome(trecho.tonica, qualidade),
                 confianca: trecho.confianca,
+                tonica: trecho.tonica,
+                qualidade,
             }
         })
         .collect()
@@ -304,6 +340,37 @@ fn com_a_melodia(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_barra_entra_so_quando_o_baixo_informa() {
+        // C2=36, E2=40, F2=41, G2=43
+        assert_eq!(
+            com_baixo(0, Qualidade::Maior, 40).as_deref(),
+            Some("C/E"),
+            "terça no baixo é 1ª inversão"
+        );
+        assert_eq!(
+            com_baixo(0, Qualidade::Maior, 43).as_deref(),
+            Some("C/G"),
+            "quinta no baixo é 2ª inversão"
+        );
+        assert_eq!(
+            com_baixo(7, Qualidade::Sete, 41).as_deref(),
+            Some("G7/F"),
+            "sétima no baixo"
+        );
+        assert_eq!(
+            com_baixo(9, Qualidade::Menor, 48).as_deref(),
+            Some("Am/C"),
+            "terça menor no baixo"
+        );
+        // Sem barra: fundamental, nota estranha ao acorde, e acordes sem terça,
+        // onde a inversão é decisão de nome (Csus4/F = Fsus2).
+        assert_eq!(com_baixo(0, Qualidade::Maior, 36), None, "fundamental");
+        assert_eq!(com_baixo(0, Qualidade::Maior, 41), None, "F não é de C");
+        assert_eq!(com_baixo(0, Qualidade::SusQuatro, 41), None, "sus4");
+        assert_eq!(com_baixo(0, Qualidade::Potencia, 43), None, "potência");
+    }
 
     /// Croma sintético: só as classes dadas têm energia.
     fn croma(pares: &[(usize, f32)]) -> [f32; 12] {

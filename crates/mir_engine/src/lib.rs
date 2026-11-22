@@ -88,6 +88,13 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
                     midi,
                     nota: baixo::nome(midi),
                     confianca,
+                    cifra: if confianca >= baixo::CONFIANCA_MINIMA {
+                        chords::com_baixo(trecho.tonica, trecho.qualidade, midi)
+                    } else {
+                        // Sem evidência estável o motor não escreve a barra:
+                        // inversão inventada é pior que inversão omitida.
+                        None
+                    },
                 })
         })
         .collect();

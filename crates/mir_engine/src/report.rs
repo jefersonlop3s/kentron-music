@@ -32,6 +32,10 @@ pub struct BaixoSegment {
     pub nota: String,
     /// Fração dos quadros do trecho que sustentam esta nota.
     pub confianca: f32,
+    /// Cifra com a barra quando o baixo é terça, quinta ou sétima do acorde
+    /// (`C/E`). `None` quando a barra não informaria nada — ver
+    /// `crate::chords::com_baixo`.
+    pub cifra: Option<String>,
 }
 
 /// Relatório completo da música.
