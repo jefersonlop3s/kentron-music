@@ -1083,3 +1083,32 @@ está no corpus".
 
 **Fora desta entrega:** o vínculo explícito entre a ficha e a **obra original** do corpus (*Holy, Holy,
 Holy* ↔ CC 09) e o app honrar a resposta (`lyrics_scope`).
+
+## R4 · O vínculo ficha ↔ corpus e o portão de publicação no app (2026-11-21)
+
+As duas pendências que a entrega anterior nomeou — e que não eram dado faltando, eram **capacidade**
+faltando — foram fechadas no mesmo dia.
+
+**1. O vínculo é declarado, não adivinhado.** A coluna `obra_original` nomeia a obra do corpus de que a
+versão deriva: o 09 declara `Holy, Holy, Holy`. O vínculo é de **referência**, não de identidade — a
+tradução de João Gomes da Rocha (1947) é obra própria e responde pelo veredito dela; Heber (1826)
+responde pelo dele. `fichas::obra_original_no_corpus` resolve o título no corpus e devolve a `Obra`, e
+`obra_da_ficha` carrega o vínculo na `Obra` que reconstrói. O gate ganhou duas provas: **obra original
+que não está no corpus** e **autor que não confere** — ambas reprovam. Semelhança de título não vira
+vínculo: quem declara é a ficha.
+
+**2. O portão de publicação chegou ao app, sem duplicar a regra.** A ponte (`kentron_ffi::pode_publicar`)
+expõe `mir_engine::sheet::pode_publicar` — o app pergunta, o motor decide. `linkDeProjecao` só monta o
+link de projeção depois do portão; escopo privado do grupo lança `PublicacaoBloqueada` e a tela mostra o
+motivo (`stageProjectionBlocked`), em vez de copiar a regra de licença para o Dart. O widget recebe o
+portão por injeção (`portaoDePublicacao`), como já fazia com `ler` e `transpor` — os testes não tocam em
+FFI.
+
+**O que a entrega mostra de desenho:** a regra de licença mora **num lugar só**. O motor já reprovava
+publicação; o app passou a **obedecer** em vez de reimplementar. E o vínculo entre ficha e corpus
+continua **dado**, não código: o motor lê a coluna e confere no corpus, mas não infere vínculo por
+semelhança de título.
+
+**Limite declarado:** a exportação não existe no app ainda — o portão cobre o link de projeção hoje e
+serve à exportação quando ela nascer. E o vínculo é declarado à mão: ficha nova sem `obra_original` não
+ganha vínculo por heurística.

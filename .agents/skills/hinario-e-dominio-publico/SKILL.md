@@ -44,6 +44,8 @@ Placar medido dos 10: **6 domínio público** (09, 15, 46, 135, 295, 377), **3 p
    1852-?*) ⇒ **não se afirma** queda de domínio.
 9. **Consequência no app:** hino protegido ou gap ⇒ **ficha + letra/cifra do próprio usuário**;
    domínio público ⇒ letra livre. A cifra continua vindo do áudio (o outro eixo do ADR-0012).
+   O portão de publicação mora no motor (`sheet::pode_publicar`) e o app o consulta pela ponte
+   (`kentron_ffi::pode_publicar`) antes de gerar o link de projeção — **não copiar a regra para o Dart**.
 
 ## O que NÃO fazer
 
@@ -58,5 +60,8 @@ Placar medido dos 10: **6 domínio público** (09, 15, 46, 135, 295, 377), **3 p
   própria (regra 2 do corpus), e é a ficha do tradutor que o corpus cobra para aceitar a versão.
 - **Não reimplementar a consulta.** O motor já tem `mir_engine::fichas` (identidade, ambiguidade,
   derivação pelo ano, auditoria) e a CLI tem `--ficha-hino`, `--listar-fichas` e `--auditar-fichas`.
-  Consulta nova **usa** isso; o que ele não faz ainda é ligar a ficha à **obra original** do corpus.
+  Consulta nova **usa** isso. O vínculo com a **obra original** do corpus é **declarado** na coluna
+  `obra_original` (o 09 declara `Holy, Holy, Holy`) e resolvido por `fichas::obra_original_no_corpus`;
+  o gate confere que o título existe no corpus e que o autor confere. **Não inferir vínculo por
+  semelhança de título** — quem declara é a ficha.
 - **Não confundir as camadas**: o hino pode ser livre e a **tradução** que se canta não ser.

@@ -2,6 +2,22 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] Vínculo ficha ↔ obra original e o portão de publicação no app (2026-11-21)
+### Adicionado
+- **Coluna `obra_original` no asset de fichas** — `crates/mir_engine/assets/fichas_hinario.tsv` passou a declarar a obra do corpus de que a versão deriva (o 09 declara `Holy, Holy, Holy`). O vínculo é **declarado, não adivinhado**: vazio = sem vínculo. O cabeçalho `#` documenta que é vínculo de **referência**, não de identidade — a tradução é obra própria e responde pelo veredito dela; o original responde pelo dele.
+- **`fichas::obra_original_no_corpus`** — resolve o título declarado no corpus de letras (`hinos_dominio_publico.tsv`) e devolve a `Obra`; `obra_da_ficha` passa a carregar o vínculo na `Obra` que reconstrói. `--ficha-hino` imprime a obra original quando existe.
+- **`scripts/verificar_fichas.py`** — o vínculo declarado tem de existir no corpus e o autor do corpus tem de conferir com a `autoria` da ficha. `scripts/prova-verificar-fichas.sh` foi a **9 casos negativos** (novos: obra original inexistente; autor que não confere).
+- **`kentron_ffi::pode_publicar`** — a ponte expõe o portão do motor (`mir_engine::sheet::pode_publicar`) em vez de copiar a regra: o app pergunta, o motor decide. Dependência `mir_engine` na ponte e bindings regenerados.
+- **`linkDeProjecao` / `PublicacaoBloqueada`** (`apps/kentron_app/lib/src/stage/projection_link.dart`) — o link de projeção só é montado depois do portão; escopo privado do grupo lança e a tela mostra o motivo (`stageProjectionBlocked`, nos três ARBs base). `song_reader_page.dart` usa o portão injetável (`portaoDePublicacao`), com default no núcleo Rust.
+
+### Verificado
+- Gate aprovando as 12 fichas e reprovando os **9 casos negativos**; `cargo fmt --check`, `clippy -D warnings` no workspace, **102 testes Rust** (novos: vínculo resolvido no corpus, ficha sem vínculo, `Obra` carregando o vínculo, e o portão da ponte bloqueando/liberando por escopo), **34 testes Flutter** e `flutter analyze` limpo.
+- `--ficha-hino "Cantor Cristão|09"` imprime `obra original no corpus: Holy, Holy, Holy — Reginald Heber (1826)`.
+
+### Ressalvas
+- O vínculo é **declarado à mão** por título: ficha nova sem `obra_original` não ganha vínculo por heurística, e o gate só confere o que foi declarado — semelhança de título não vira vínculo.
+- **A exportação não existe no app ainda** — o portão cobre o link de projeção hoje; quando a exportação nascer, usa o mesmo `pode_publicar`.
+
 ## [processo] Fichas do hinário: dado em TSV, gate e prova negativa (2026-11-21)
 ### Adicionado
 - **`crates/mir_engine/assets/fichas_hinario.tsv`** — **12 fichas** chaveadas pelo par **(hinário, número)**: **8 em domínio público, 3 protegidas e 1 GAP**, com **procedência por campo** (`fonte_autoria`, `fonte_traducao`, `fonte_melodia`). Só fatos: letra e cifra da edição não entram. Cabeçalho `#` documenta o formato e por que ele **não se funde** com `hinos_dominio_publico.tsv` (lá é corpus de letras, lido por `include_str!`; aqui é ficha). A linha do 291 registra que a sigla→nome saiu de OCR (`Anlúniv Almeida`) corrigido por fonte secundária.
