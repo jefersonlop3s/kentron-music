@@ -24,6 +24,8 @@ packages/core_l10n/lib/l10n/app_localizations*.dart
 *.mobileprovision
 .env
 .env.*
+# o modelo versionado é o único `.env*` que pode entrar
+!.env.example
 # direnv carrega `.envrc`, que também pode ter segredo
 .envrc
 key.properties
