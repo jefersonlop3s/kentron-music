@@ -27,12 +27,20 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
+Nenhum.
+
+## 🟡 Interrompido / órfão
+
+Nenhum.
+
+## 🟢 Concluído recentemente
+
 ### cline/0caf3 — Retomada das fichas do hinário (wire do gate + consolidação do asset)
-- **Início:** 2026-11-21 21:42 (UTC) · **Última atualização:** 2026-11-21 22:21 (UTC)
-- **Repositório:** `kentron-music` · **Branches:** `cline/0caf3`; unidades em `feat/gate-fichas-bateria`, `feat/fichas-corpus-e-comentario`, `fix/fichas-procedencia-ocr` e `feat/fichas-no-motor`, integradas na `main` por `--ff-only` · **Worktrees:** `~/.cline/worktrees/0caf3/app-music`
-- **Demanda:** a sessão anterior deixou o asset e o verificador **fora da bateria** e uma **leitura de OCR promovida a fato** — corrigida e confirmada na imagem do índice; e a ficha, que era dado inerte, **virou mecanismo no motor**.
-- **Paths sob edição:** nenhum (unidades concluídas).
-- **Status:** aguardando o dono (vínculo ficha ↔ obra original do corpus e o app honrar `lyrics_scope`)
+- **Início:** 2026-11-21 21:42 (UTC) · **Última atualização:** 2026-11-22 01:29 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `cline/0caf3`; unidades em `feat/gate-fichas-bateria`, `feat/fichas-corpus-e-comentario`, `fix/fichas-procedencia-ocr`, `feat/fichas-no-motor` e `feat/fichas-vinculo-e-portao`, integradas na `main` por `--ff-only` · **Worktrees:** `~/.cline/worktrees/0caf3/app-music`
+- **Demanda:** a sessão anterior deixou o asset e o verificador **fora da bateria** e uma **leitura de OCR promovida a fato** — corrigida e confirmada na imagem do índice; a ficha, que era dado inerte, **virou mecanismo no motor**; e as duas pendências que sobraram (vínculo ficha ↔ obra original e o app honrando `lyrics_scope`) foram fechadas.
+- **Paths sob edição:** nenhum (concluído).
+- **Status:** concluído — vínculo `obra_original` no asset/motor/gate e portão de publicação no app, com tudo provado.
 - **PRs:** nenhum
 
 **Estado assumido (21:42):** worktree `de6b0` removido com prova (detached, **0 commits à frente**, árvore limpa, 8,1 GB só de build ignorado); diretórios órfãos `40e55`/`b5088` apagados; **nenhum stash**; resta o principal e este worktree, ambos em `846f4c1` = `origin/main`.
@@ -45,17 +53,13 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 **Corrigido (22:02) — auditoria do registro da sessão anterior:** em `#5451` o assistente escreveu, como leitura do índice da CPAD, `A.A. - Antônio Almeida`; a saída de OCR colada pelo dono (`#5450` e, de novo, `#5456`) diz `A.A. - Anlúniv Almeida`. A correção de leitura virou "fonte primária" em 6 lugares. Feito: asset reescrito com **procedência por campo** (`fonte_autoria`/`fonte_traducao`/`fonte_melodia`) e `observacao` no 291 dizendo que o nome é correção + fonte secundária e o ano é provisório; gate passou a reprovar **fato sem procedência** e **procedência que cita OCR sem observação** (6 casos negativos); `CONCLUSION`, `PENDING`, `CHANGELOG` e as duas skills corrigidos com nota datada. No mesmo push, o registro histórico da ficha do 291 recebeu a correção no lugar onde afirmava o elo "na fonte primária".
 
-**Aberto (código):** o vínculo explícito entre a ficha e a **obra original** do corpus (*Holy, Holy, Holy* ↔ CC 09) e o app honrar a resposta (`lyrics_scope`).
+**Aberto (código, 22:21):** o vínculo explícito entre a ficha e a **obra original** do corpus (*Holy, Holy, Holy* ↔ CC 09) e o app honrar a resposta (`lyrics_scope`) — **fechados em 01:29** (abaixo).
 
 **Feito (22:21) — a ficha virou mecanismo:** `mir_engine::fichas` (identidade por (hinário, número); `Ambiguo` para título repetido — são **três** "Louvor", não dois: 03, 135 e 385; resposta **derivada do ano**; `auditar()` provando `morte+71` com `veredito_pd`, na fronteira e sem depender da data de hoje); CLI `--ficha-hino`, `--listar-fichas`, `--auditar-fichas`; `--hino` explica pela ficha quando não há letra no corpus; `uso::veredito_por_titulo` consulta a ficha antes do corpus. Gate ganhou a aritmética: **7 casos negativos**; **31 testes** e clippy limpo.
 
 **Fechado (22:12):** o dono enviou a **imagem legível da p.722** — `A.A. - Antônio Almeida`. A identificação do tradutor do 291 está **confirmada no impresso**; o que resta secundário é a **data** (1879-1969, hinologia.org), e o ano 2040 é aritmética sobre ela.
 
-## 🟡 Interrompido / órfão
-
-Nenhum.
-
-## 🟢 Concluído recentemente
+**Feito (01:29) — vínculo e portão de publicação:** a coluna `obra_original` entrou no asset (o 09 declara `Holy, Holy, Holy`), `fichas::obra_original_no_corpus` resolve o título no corpus e `obra_da_ficha` carrega o vínculo; o gate passou a conferir **título existente** e **autor que confere** (prova em **9 casos negativos**). A ponte expôs `kentron_ffi::pode_publicar` (regra do motor, não cópia) e o app passou a **obedecer** no link de projeção: `linkDeProjecao` + `PublicacaoBloqueada`, com `stageProjectionBlocked` nos três ARBs. **Provado:** `cargo fmt --check`, `clippy -D warnings` no workspace, **102 testes** Rust (inclui vínculo resolvido, ficha sem vínculo, `Obra` com vínculo e o portão da ponte bloqueando/liberando), **34 testes** Flutter e `flutter analyze` limpo; `--ficha-hino "Cantor Cristão|09"` imprime `obra original no corpus: Holy, Holy, Holy — Reginald Heber (1826)`.
 
 ### cline/0caf3 — Fichas do hinário: asset com gate e prova negativa
 - **Início:** 2026-11-21 21:17 (UTC) · **Última atualização:** 2026-11-21 21:33 (UTC)
