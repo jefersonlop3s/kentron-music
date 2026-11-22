@@ -35,6 +35,22 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/0caf3 — ADR-0016 entregue (decodificação sem ffmpeg) e limpeza de branches
+- **Início:** 2026-11-22 14:30 (UTC) · **Última atualização:** 2026-11-22 15:18 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `feat/decode-symphonia` (integrada na `main` por `--ff-only`); **9 branches integradas removidas**, local e remoto · **Worktrees:** só o principal
+- **Demanda:** o dono aceitou a **ADR-0016**, autorizou a limpeza das branches já integradas, mandou descartar o worktree sem trabalho exclusivo e pediu para seguir com o que não depende das APIs do YouTube/Spotify.
+- **Paths sob edição:** nenhum (concluído).
+- **Status:** concluído.
+- **PRs:** nenhum
+
+**Feito:** `crates/mir_engine/src/decode.rs` — `abrir(caminho)` e `decodificar(bytes, extensão)` despacham por **conteúdo** (`RIFF`/`WAVE` → leitor próprio; resto → **Symphonia 0.5.5**, MPL-2.0, já aceito no `deny.toml`). A CLI usa `decode::abrir` e deixou de exigir `ffmpeg`. `.gitignore` ganhou `.envrc`.
+
+**Provado:** **MP3, M4A (AAC) e FLAC** gerados na hora e analisados pela CLI (4,0 s, 44 100 Hz, 1 canal); **48 testes** em `mir_engine` (3 novos de decodificação); `clippy -D warnings`, `fmt --check`, **`cargo deny check` (licenses ok)** e `test --workspace` verdes.
+
+**Limpeza:** worktree `~/.cline/worktrees/0caf3` removido com prova (0 commits à frente, árvore limpa) e 9 branches integradas apagadas — `cline/0caf3`, `docs/adr-aceites`, `docs/adr-emendas-ritmo-baixo-playlist-desktop`, `docs/adr-link-e-harmonia`, `docs/insight-ffmpeg`, `docs/insight-ovd`, `docs/skill-ssh-no-windows`, `feat/afinacao-medida`, `feat/centro-tonal-por-perfil`. O diretório do worktree era o **cwd desta sessão** e foi recriado vazio com um `.keep` para o shell não morrer — pode ser apagado quando a sessão fechar.
+
+**Aberto:** **Opus e WavPack** não vêm no guarda-chuva do 0.5.5 (Ogg/Opus falha) — exige `symphonia-codec-opus` + registro manual; **Vorbis** compila e não foi exercido (sem codificador na máquina); HE-AAC precisa de adaptador.
+
 ### cline/0caf3 — ADR-0014: centro tonal por perfil e afinação medida (blocos 1 e 6 parcial)
 - **Início:** 2026-11-22 13:20 (UTC) · **Última atualização:** 2026-11-22 13:55 (UTC)
 - **Repositório:** `kentron-music` · **Branches:** `feat/centro-tonal-por-perfil` e `feat/afinacao-medida`, integradas na `main` por `--ff-only` · **Worktrees:** diretório principal
