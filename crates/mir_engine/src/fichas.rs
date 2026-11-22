@@ -19,6 +19,12 @@
 //!    século XX, não a letra original. `ano_relevante` já é o falecimento dessa
 //!    camada, e `auditar` reconstrói a `Obra` para a regra única
 //!    (`lyrics::veredito_pd`) provar a fronteira `morte + 71` linha a linha.
+//!
+//! A ligação com o corpus é **declarada, não adivinhada**: a coluna
+//! `obra_original` nomeia a obra do corpus de que esta versão deriva (o
+//! "Holy, Holy, Holy" do 09). O vínculo é de **referência**, não de identidade:
+//! a tradução é obra própria e responde pelo veredito dela; o original responde
+//! pelo dele. O gate confere que o título existe no corpus e que o autor confere.
 
 use std::sync::OnceLock;
 
@@ -30,13 +36,14 @@ use crate::lyrics::{self, Jurisdicao, Obra, Veredito};
 const ASSET: &str = include_str!("../assets/fichas_hinario.tsv");
 
 /// As colunas obrigatórias do asset.
-const COLUNAS: [&str; 14] = [
+const COLUNAS: [&str; 15] = [
     "hinario",
     "numero",
     "titulo",
     "autoria",
     "traducao",
     "melodia",
+    "obra_original",
     "ano_relevante",
     "veredito",
     "ano_dominio_publico",
@@ -79,6 +86,9 @@ pub struct FichaHino {
     pub autoria: String,
     pub traducao: String,
     pub melodia: String,
+    /// Obra do corpus de que esta versão deriva, declarada pelo título como
+    /// está lá (o "Holy, Holy, Holy" do 09). `None` = sem vínculo declarado.
+    pub obra_original: Option<String>,
     /// Falecimento da camada que manda (autoria, ou a tradução quando há).
     /// Ausente em `gap`: é justamente o dado que falta.
     pub ano_relevante: Option<u16>,
@@ -175,6 +185,7 @@ pub fn carregar_do_texto(texto: &str) -> Result<Vec<FichaHino>, String> {
             autoria: campo("autoria").to_owned(),
             traducao: campo("traducao").to_owned(),
             melodia: campo("melodia").to_owned(),
+            obra_original: Some(campo("obra_original").to_owned()).filter(|t| !t.is_empty()),
             ano_relevante: ano("ano_relevante")?,
             veredito,
             ano_dominio_publico: ano("ano_dominio_publico")?,
@@ -390,7 +401,9 @@ fn nome_e_morte(campo: &str) -> (String, Option<u16>) {
 ///
 /// A ficha não carrega ano de publicação (o hinário não imprime), então `ano` é
 /// `0` — e o veredito brasileiro não depende dele. A camada que manda é a
-/// tradução, quando há: é ela que vira `adaptador` aqui.
+/// tradução, quando há: é ela que vira `adaptador` aqui. O vínculo declarado
+/// (`obra_original`) viaja como referência: a `Obra` continua sendo a da versão,
+/// e o veredito não empresta entre original e derivada.
 #[must_use]
 pub fn obra_da_ficha(ficha: &FichaHino) -> Obra {
     let (autor, _) = nome_e_morte(&ficha.autoria);
@@ -402,7 +415,7 @@ pub fn obra_da_ficha(ficha: &FichaHino) -> Obra {
         autor_morte: ficha.ano_relevante,
         adaptador: Some(adaptador).filter(|nome| !nome.is_empty()),
         adaptador_morte: ficha.ano_relevante,
-        obra_original: None,
+        obra_original: ficha.obra_original.clone(),
         base: [
             ficha.fonte_autoria.as_str(),
             ficha.fonte_traducao.as_str(),
@@ -414,6 +427,23 @@ pub fn obra_da_ficha(ficha: &FichaHino) -> Obra {
         .collect::<Vec<_>>()
         .join(" · "),
     }
+}
+
+/// A obra original declarada pela ficha, resolvida no corpus de letras.
+///
+/// O vínculo é **declarado** (coluna `obra_original`) e **conferido** no corpus
+/// pelo título. Devolve `None` quando a ficha não declara vínculo; quando o
+/// título declarado não existe no corpus, o gate `fichas` reprova o push — o
+/// motor não transforma um vínculo quebrado em silêncio.
+///
+/// O vínculo é de referência, não de veredito: a tradução continua sendo obra
+/// própria (o veredito dela é o da ficha) e o original responde pelo dele.
+#[must_use]
+pub fn obra_original_no_corpus(ficha: &FichaHino) -> Option<Obra> {
+    let alvo = normalizar(ficha.obra_original.as_deref()?);
+    lyrics::fichas_do_corpus()
+        .into_iter()
+        .find(|obra| normalizar(&obra.titulo) == alvo)
 }
 
 /// Auditoria da ficha: a aritmética tem de fechar e a fronteira tem de valer.

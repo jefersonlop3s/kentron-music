@@ -158,6 +158,13 @@ fn main() -> ExitCode {
         if !ficha.observacao.trim().is_empty() {
             println!("  observação: {}", ficha.observacao);
         }
+        if let Some(original) = mir_engine::fichas::obra_original_no_corpus(ficha) {
+            println!(
+                "  obra original no corpus: {} — {} ({}) [vínculo de referência: a letra do \
+                 corpus é a original; esta ficha é a tradução]",
+                original.titulo, original.autor, original.ano
+            );
+        }
         println!(
             "  resposta (letra): {}",
             mir_engine::fichas::resposta_para_letra(ficha, ano_corrente).resumo()

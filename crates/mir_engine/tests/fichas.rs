@@ -119,7 +119,7 @@ fn sem_ficha_e_resposta_explicita() {
 
 #[test]
 fn asset_malformado_falha_alto_em_vez_de_ignorar_linha() {
-    let cabecalho = "hinario\tnumero\ttitulo\tautoria\ttraducao\tmelodia\tano_relevante\tveredito\tano_dominio_publico\tfonte_autoria\tfonte_traducao\tfonte_melodia\tno_repertorio\tobservacao";
+    let cabecalho = "hinario\tnumero\ttitulo\tautoria\ttraducao\tmelodia\tobra_original\tano_relevante\tveredito\tano_dominio_publico\tfonte_autoria\tfonte_traducao\tfonte_melodia\tno_repertorio\tobservacao";
     let torto = format!("{cabecalho}\nCantor Cristão\t09\n");
     let erro = fichas::carregar_do_texto(&torto).expect_err("linha torta tem de falhar");
     assert!(erro.contains("linha 2"), "o erro nomeia a linha: {erro}");
@@ -153,6 +153,37 @@ fn obra_da_ficha_usa_a_traducao_como_camada_que_manda() {
     );
     let em_2036 = lyrics::veredito_pd(&obra, Jurisdicao::Brasil, 2036);
     assert!(em_2036.eh_dominio_publico(), "2036: {em_2036:?}");
+}
+
+#[test]
+fn vinculo_resolve_a_obra_original_no_corpus() {
+    let santo = fichas::por_identidade("Cantor Cristão", "09").expect("ficha do 09");
+    let original = fichas::obra_original_no_corpus(santo).expect("Holy, Holy, Holy no corpus");
+    assert_eq!(original.titulo, "Holy, Holy, Holy");
+    assert_eq!(original.autor, "Reginald Heber");
+
+    // O vínculo é de referência: a obra original responde pelo veredito dela.
+    let veredito = mir_engine::uso::veredito_por_titulo(&original.titulo, ANO)
+        .expect("o corpus responde pelo título original");
+    assert!(
+        veredito.eh_dominio_publico(),
+        "Holy, Holy, Holy é domínio público: {veredito:?}"
+    );
+}
+
+#[test]
+fn ficha_sem_vinculo_nao_resolve_obra_original() {
+    let louvamos = fichas::por_identidade("Cantor Cristão", "135").expect("ficha do 135");
+    assert!(fichas::obra_original_no_corpus(louvamos).is_none());
+}
+
+#[test]
+fn obra_da_ficha_carrega_o_vinculo_declarado() {
+    let santo = fichas::por_identidade("Cantor Cristão", "09").expect("ficha do 09");
+    let obra = fichas::obra_da_ficha(santo);
+    assert_eq!(obra.obra_original.as_deref(), Some("Holy, Holy, Holy"));
+    // A camada que manda continua sendo a tradução (Rocha), não o original (Heber).
+    assert_eq!(obra.adaptador.as_deref(), Some("João Gomes da Rocha"));
 }
 
 #[test]

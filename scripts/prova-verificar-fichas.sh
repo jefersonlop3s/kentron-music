@@ -3,14 +3,26 @@
 set -u
 cd "$(dirname "$0")/.." || exit 1
 BASE=crates/mir_engine/assets/fichas_hinario.tsv
+CORPUS=crates/mir_engine/assets/hinos_dominio_publico.tsv
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 falhas=0
+# O verificador resolve o corpus ao lado do asset. Sem esta cópia, as variações
+# em $TMP reprovariam por "corpus ausente" e não pelo motivo que dizem provar.
+cp "$CORPUS" "$TMP/"
 
+# prova <nome> <arquivo> [motivo esperado na saída]
+# O terceiro argumento é opcional: quando dado, o caso só passa se a reprovação
+# citar o motivo — senão a prova estaria aprovando pelo motivo errado.
 prova() {
-  local nome="$1" arquivo="$2"
-  if python3 scripts/verificar_fichas.py "$arquivo" >/dev/null 2>&1; then
+  local nome="$1" arquivo="$2" esperado="${3:-}" saida
+  if saida=$(python3 scripts/verificar_fichas.py "$arquivo" 2>&1); then
     echo "PROVA FALHOU: $nome — o gate APROVOU o que devia reprovar"
+    falhas=$((falhas + 1))
+  elif [ -n "$esperado" ] && ! grep -qF -- "$esperado" <<<"$saida"; then
+    echo "PROVA FALHOU: $nome — reprovou, mas não pelo motivo esperado"
+    echo "  esperado: $esperado"
+    echo "  saída:    $(head -1 <<<"$saida")"
     falhas=$((falhas + 1))
   else
     echo "ok: $nome reprovou como esperado"
@@ -72,6 +84,18 @@ def ano_fora_da_aritmetica(c):
     if c[col['veredito']] in ('pd', 'protegido') and c[col['ano_relevante']].strip():
         c[col['ano_dominio_publico']] = str(int(c[col['ano_relevante']]) + 70)
 variar('ano-errado.tsv', ano_fora_da_aritmetica)
+
+# 8) vinculo declarado para obra que nao existe no corpus
+def vinculo_inexistente(c):
+    if c[col['numero']] == '09':
+        c[col['obra_original']] = 'Obra Que Nao Existe'
+variar('vinculo-inexistente.tsv', vinculo_inexistente)
+
+# 9) vinculo cujo autor nao confere com o do corpus
+def vinculo_autor_errado(c):
+    if c[col['numero']] == '03':
+        c[col['obra_original']] = 'Holy, Holy, Holy'
+variar('vinculo-autor-errado.tsv', vinculo_autor_errado)
 PY
 
 prova 'registro pd sem ano de domínio público'     "$TMP/sem-ano.tsv"
@@ -81,9 +105,11 @@ prova 'procedência que cita OCR sem observação'    "$TMP/ocr-sem-observacao.t
 prova 'coluna proibida de letra'                   "$TMP/com-letra.tsv"
 prova 'asset só com comentários e cabeçalho'       "$TMP/so-cabecalho.tsv"
 prova 'ano de domínio público fora de morte+71'    "$TMP/ano-errado.tsv"
+prova 'obra original que não está no corpus'       "$TMP/vinculo-inexistente.tsv" 'não está no corpus de letras'
+prova 'obra original com autor que não confere'    "$TMP/vinculo-autor-errado.tsv" 'mas a ficha declara'
 
 if [ "$falhas" -ne 0 ]; then
   echo "REPROVADO: $falhas caso(s) não reprovaram — o gate é fraco"
   exit 1
 fi
-echo "APROVADO: o gate reprovou os 7 casos negativos"
+echo "APROVADO: o gate reprovou os 9 casos negativos"

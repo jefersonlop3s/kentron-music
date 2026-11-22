@@ -12,7 +12,10 @@
 6. procedência que cita OCR exige `observacao` dizendo o que é leitura e o que é
    inferência — lição de 2026-11-21: `Anlúniv Almeida` (OCR) foi promovido a
    `Antônio Almeida` e declarado leitura do índice;
-7. o asset não pode ter coluna de letra/cifra, nem campo longo (limite legal).
+7. o asset não pode ter coluna de letra/cifra, nem campo longo (limite legal);
+8. `obra_original`, quando declarada, tem de existir no corpus de letras
+   (`hinos_dominio_publico.tsv`) e o autor do corpus tem de conferir com a
+   autoria da ficha — o vínculo é declarado, não adivinhado.
 Uso: verificar_fichas.py [caminho do tsv]
 """
 
@@ -60,6 +63,26 @@ if faltando:
     sys.exit(f"REPROVADO: colunas obrigatórias ausentes: {faltando}")
 
 idx = {c: i for i, c in enumerate(colunas)}
+
+CORPUS = caminho.parent / "hinos_dominio_publico.tsv"
+
+
+def obras_do_corpus():
+    """Título normalizado -> campos posicionais do corpus de letras."""
+    if not CORPUS.exists():
+        return {}
+    obras = {}
+    for linha in CORPUS.read_text(encoding="utf-8").splitlines():
+        if not linha.strip() or linha.lstrip().startswith("#"):
+            continue
+        campos = linha.split("\t")
+        if len(campos) < 9:
+            continue
+        obras[campos[0].strip().lower()] = campos
+    return obras
+
+
+corpus = obras_do_corpus()
 falhas, contagem = [], {}
 for n, linha in enumerate(linhas[1:], start=2):
     campos = linha.split("\t")
@@ -106,6 +129,24 @@ for n, linha in enumerate(linhas[1:], start=2):
                 f'linha {n}: campo "{c}" com {len(v)} caracteres '
                 f"(limite {LIMITE_CARACTERES}) — texto longo sugere letra colada"
             )
+    vinculo = reg.get("obra_original", "").strip()
+    if vinculo:
+        if not corpus:
+            falhas.append(
+                f'linha {n}: "obra_original" declarada, mas o corpus não está em {CORPUS}'
+            )
+        elif vinculo.lower() not in corpus:
+            falhas.append(
+                f'linha {n}: obra original "{vinculo}" não está no corpus de letras'
+            )
+        else:
+            autor_corpus = corpus[vinculo.lower()][1].strip()
+            autor_ficha = reg.get("autoria", "").split(" (")[0].strip()
+            if autor_corpus.lower() != autor_ficha.lower():
+                falhas.append(
+                    f'linha {n}: obra original "{vinculo}" tem autor "{autor_corpus}" '
+                    f'no corpus, mas a ficha declara "{autor_ficha}"'
+                )
 
 if falhas:
     print(f"REPROVADO — {len(falhas)} falha(s):")
