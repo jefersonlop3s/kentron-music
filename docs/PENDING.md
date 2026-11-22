@@ -100,7 +100,19 @@ DSP puro, sem modelo: dinâmica (EBU R128), andamento, acordes e estrutura. O qu
 - [ ] **Análise harmônica pós-extração (ADR-0014):** centro tonal por perfil no eixo de quintas (**bloco 1 entregue em 2026-11-22**), **afinamento global medido e relatado** (2026-11-22 — o croma **não** é deslocado: dentro de ±50 cents o arredondamento já resolve, e acima disso é transposição), **terça pela melodia entregue** (bloco 3, 2026-11-22), baixo por compasso para a inversão, e **região harmônica** separada da seção por novidade timbrística. Ordem: ~~tonalidade~~ → ~~afinamento~~ → ~~melodia~~ → baixo → compasso/downbeat.
 - [x] **Terça pela melodia (ADR-0014, bloco 3, 2026-11-22):** `melody::extrair` dá a **classe de altura da voz por quadro** e `chords::detect_com_melodia` promove `5` → maior/menor. **A janela de ganho foi medida**, não escolhida: em 0,16 o croma erra (`C5`) e o árbitro acerta (`C`); em 0,09 a melodia perde a voz e o motor **abstém** — é a prova negativa. Fixture própria (`power_chord_com_voz`), 7 testes, e a fixture dourada **não mudou**, o que prova que o árbitro não sobrescreve qualidade já decidida.
 - [ ] **F0 em mixagem real:** o método foi provado em **áudio sintetizado**; separar voz de acompanhamento sem stems segue sendo o ponto frágil. Próximo passo é medir a janela no repertório, não ajustar limiar no escuro. O erro de oitava é irrelevante de propósito — a decisão é por **classe de altura**, e oitava não muda classe.
-- [ ] **Compasso e downbeat:** o motor tem batida, não barra. É pré-requisito do baixo por compasso e da leitura nos tempos 1 e 3 (ADR-0014).
+- [x] **Baixo por trecho — detector e medição (ADR-0014, bloco 4, 2026-11-22):** `baixo::extrair` lê a banda **40–250 Hz** por **soma harmônica** (o baixo costuma ter fundamental fraca; o 2º e o 3º harmônicos a revelam), **fora do croma** — o croma dobrou o registro, e é o registro que separa `C` de `C/E`. Viés **declarado** para a nota mais grave (0,85 da melhor evidência). `Report` ganhou `baixo` por trecho, com os mesmos limites dos acordes. **6 testes**, entre eles as **três posições do mesmo acorde** (C, C/E, C/G) saindo certas, e fundamental fraca não enganando. **Medido em 263 músicas do repertório, 24.079 trechos com confiança ≥ 0,40:**
+
+| Posição do baixo | Fatia |
+|---|---|
+| **fundamental (sem inversão)** | **67,8%** |
+| 2ª inversão (quinta no baixo) | 8,6% |
+| 1ª inversão (terça maior) | 5,7% |
+| 1ª inversão (terça menor) | 3,6% |
+| baixo a 4ª acima da fundamental | 9,8% |
+| outros intervalos | 4,5% |
+
+**Inversão de verdade (terça ou quinta no baixo) = 17,9%** — quase um em cada cinco trechos. O bloco 4 não é refinamento: é um quinto da cifra saindo com o baixo errado. Os 9,8% de **4ª acima** ficam nomeados como suspeita (antecipação do baixo ou confusão de quinta na detecção de acorde), a investigar. **Limite:** o intervalo é medido contra a fundamental **detectada**, então erro de acorde conta como erro de baixo — os dois não estão separados nesta medição.
+- [ ] **Compasso e downbeat:** o motor tem batida, não barra. É pré-requisito do baixo por compasso, da leitura nos tempos 1 e 3 (ADR-0014) e do discriminador de relativa maior/menor — croma idêntico não desempata tônica.
 
 ## 🌐 R2+ (backlog)
 - [ ] Spike S4 (Matrix/Push iOS).
