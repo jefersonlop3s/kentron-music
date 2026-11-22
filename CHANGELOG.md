@@ -2,6 +2,23 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] Insight: decodificação de áudio por plataforma — o ffmpeg do brew é GPL (2026-11-22)
+### Adicionado
+- **`docs/insights/2026-11-22-decodificacao-de-audio-por-plataforma.md`** — mapeamento local do `ffmpeg`, rotas por plataforma e a candidata que dispensa o problema.
+
+### Medido
+- **Máquina:** **um** ffmpeg — `/opt/homebrew/bin/ffmpeg` → `Cellar/ffmpeg/9.0.2_1`; `/usr/local/bin/ffmpeg` e `/usr/bin/ffmpeg` **não existem** (sem duplicata, o teste da skill `toolchain-unica` passa). `brew info` declara **License: GPL-3.0-or-later**; `ffmpeg -version` confirma `--enable-gpl --enable-version3 --enable-shared` com `libx264`/`libx265`/`libsvtav1`/`libvmaf`; `otool -L` mostra link **dinâmico** às dylibs do Cellar.
+- **`arthenica/ffmpeg-kit`** — repositório **arquivado em 2026-07-02**, *"FFmpegKit has been officially retired"*; a continuação é o **FFmpegKitNext**, **só código-fonte**. Licença **LGPL-3.0** por padrão, **GPL-3.0** com `--enable-gpl`.
+- **`pdeljanov/Symphonia`** — **Rust puro**, **MPL-2.0**; lê mp3/mp2, AAC-LC, ALAC, FLAC, Vorbis, Opus, PCM, ADPCM e WavPack; as otimizações SIMD **puxam o `rustfft`**, que o workspace já usa; desempenho declarado "geralmente ±15% do FFmpeg".
+
+### Decidido
+- **Dívida fechada:** "ffmpeg é LGPL" não vale para a build padrão do Homebrew — ela é **GPL-3.0-or-later**, por causa de x264/x265/svt-av1/vmaf.
+- **Onboarding com gerenciador de pacotes** (detectar → aceite → instalar via brew/winget/apt) é o padrão de desktop **e a saída de licença**: o binário GPL é distribuído pelo gerenciador do usuário, não por nós.
+- **Symphonia no `mir_engine` exige ADR** antes de executar: muda o contrato de entrada (hoje `wav.rs` só aceita RIFF/WAVE).
+
+### Aberto
+- ADR da decodificação de áudio. Segue **não verificado**: o texto da regra 2.5.2 das Diretrizes da App Store e a build de `ffmpeg` embarcada pelo OVD.
+
 ## [processo] Insight: Open Video Downloader e o padrão da ferramenta do usuário (2026-11-22)
 ### Adicionado
 - **`docs/insights/2026-11-22-open-video-downloader.md`** — análise do `jely2002/youtube-dl-gui` (Open Video Downloader): **Tauri (Rust) + Vue 3/TypeScript**, GUI fina sobre o **`yt-dlp`** como subprocesso, com cookies do navegador para autenticação, fila em lote e template de nome. Licença **AGPL-3.0**, distribuído em exe/dmg/AppImage/deb/rpm, Homebrew, WinGet e **Microsoft Store**, com disclaimer de que **a responsabilidade é do usuário**.

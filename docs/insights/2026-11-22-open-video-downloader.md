@@ -42,4 +42,4 @@
 - **Nada muda na decisão da ADR-0013** (forma C, aceita): o OVD **reforça**, não contradiz.
 - **Restrição registrada:** nenhum código do OVD entra no projeto — **AGPL-3.0 é incompatível com Apache-2.0**. Interoperar por arquivo ou binário externo é permitido; copiar, não.
 - **Hipótese para o produto:** aceitar **lote de arquivos** produzidos pela ferramenta do usuário, casando com a ficha por nome e duração, e declarando a origem `ExtraidaPeloUsuario`.
-- **Permanece hipótese:** a licença da build de `ffmpeg` distribuída pelo OVD; e a acurácia do casamento nome/duração num lote real.
+- **Permanece hipótese:** a licença da build de `ffmpeg` distribuída pelo OVD; e a acurácia do casamento nome/duração num lote real. **A build do Homebrew desta máquina foi medida** em [Decodificação de áudio por plataforma](2026-11-22-decodificacao-de-audio-por-plataforma.md): **GPL-3.0-or-later**.
