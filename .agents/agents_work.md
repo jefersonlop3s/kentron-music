@@ -35,6 +35,20 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
+### cline/0caf3 — ADR-0013, ADR-0014 e ADR-0015: link, harmonia e desktop decididos
+- **Início:** 2026-11-22 04:10 (UTC) · **Última atualização:** 2026-11-22 13:12 (UTC)
+- **Repositório:** `kentron-music` · **Branches:** `docs/adr-link-e-harmonia`, `docs/adr-emendas-ritmo-baixo-playlist-desktop` e `docs/adr-aceites`, todas integradas na `main` por `--ff-only` · **Worktrees:** diretório principal
+- **Demanda:** o dono corrigiu a premissa do link, ditou em prosa o processo harmônico que usa em palco, pediu o que existe em open source para separar ritmo de baixo, perguntou se dá para montar playlist pelas APIs oficiais e exigiu desktop para tecladista.
+- **Paths sob edição:** nenhum (concluído).
+- **Status:** concluído — três ADRs **aceitas**; implementação aberta.
+- **PRs:** nenhum
+
+**Feito:** **ADR-0013** aceita na **forma C** (o link resolve a identidade da obra e do fonograma; o áudio vem do usuário; a forma B, "o produto baixa", fica rejeitada com motivo) + emenda com busca e playlist medidas. **ADR-0014** aceita nos blocos 1–6, com a separação **ritmo × baixo por HPSS + discriminador de harmonicidade, sem modelo**. **ADR-0015** aceita: alvos **desktop** com a tela de palco por **URL** e a segunda tela como janela web, depois da release da R1.
+
+**Provado:** `documentation.py check` sem link quebrado; `ADR-INDEX` com os três status e próximo livre em ADR-0016; bateria verde em cada push (`85f4d15` → `3727aa9`). Fontes primárias registradas nas ADRs: YouTube API Developer Policies, Spotify Developer Policy/Quota modes, quota da YouTube Data API (`search.list` 100/dia, `playlists.insert` 50, balde de 10.000/dia), HPSS (Fitzgerald 2010), Demucs/Open-Unmix (MIT no repo, **pesos não declarados**), madmom (CC BY-NC, proibido).
+
+**Aberto:** implementação — o **centro tonal por perfil** é o primeiro código (não precisa de modelo nem de áudio novo).
+
 ### cline/0caf3 — Piloto automatizado no OBS (R1-D, ADR-0010)
 - **Início:** 2026-11-22 02:40 (UTC) · **Última atualização:** 2026-11-22 03:34 (UTC)
 - **Repositório:** `kentron-music` · **Branches:** `cline/0caf3` · **Worktrees:** `~/.cline/worktrees/0caf3/app-music`
