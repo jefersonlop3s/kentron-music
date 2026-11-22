@@ -141,8 +141,19 @@ void main() {
     // A letra está na tela, inteira e legível.
     expect(find.text('Amazing grace! how sweet the sound'), findsOneWidget);
     expect(find.text('Was blind, but now I see.'), findsOneWidget);
-    // E o acorde está **sobre** ela: a linha desenhada é a que o núcleo mandou.
-    expect(find.text(linhaDeAcordes), findsOneWidget);
+    // E o acorde está **sobre** ela, na fonte monoespaçada que faz a coluna
+    // coincidir com a letra — é o que o `chordLine` promete. O finder é por
+    // estilo, não por texto solto: com `{key: C}` o chip do tom no AppBar
+    // também mostra "C", e `find.text` acharia dois.
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is Text &&
+            widget.data == linhaDeAcordes &&
+            widget.style?.fontFamily == 'monospace',
+      ),
+      findsOneWidget,
+    );
     // A seção carrega o papel inferido do áudio — nuance, não decoração.
     expect(find.textContaining('introducao'), findsWidgets);
   });

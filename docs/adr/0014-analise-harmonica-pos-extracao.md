@@ -70,6 +70,7 @@ A prosa é fiel ao que o ouvido faz; as lacunas abaixo não são musicais, são 
 - [PENDING](../PENDING.md) — inversões, terça fraca, tensão, centro tonal e stems.
 - [ROADMAP](../ROADMAP.md) — R4, etapa 1 (Análise Local).
 - Perfis de tonalidade (Krumhansl–Schmuckler) e o eixo de quintas; transcrição de linha de baixo e melodia predominante como tarefas de MIR.
+- **Entrega do bloco 1:** `crates/mir_engine/src/tonality.rs` (2026-11-22) — ver CHANGELOG e CONCLUSION.
 
 ## Emenda · Bloco 1 aceito e a separação ritmo × baixo (2026-11-22)
 

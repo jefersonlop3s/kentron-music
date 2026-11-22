@@ -94,7 +94,7 @@ fn como_wav(audio: &Audio) -> Vec<u8> {
 }
 
 #[test]
-fn cifra_sai_em_chordpro_com_tom_limpo_e_sem_acorde_repetido() {
+fn cifra_sai_em_chordpro_com_tonalidade_e_sem_acorde_repetido() {
     let audio = sintetizar();
     let opts = Opts {
         trecho_minimo_s: 4.0,
@@ -103,7 +103,7 @@ fn cifra_sai_em_chordpro_com_tom_limpo_e_sem_acorde_repetido() {
     let relatorio = analyze(&audio, &opts);
 
     // O tom é nome de nota: nenhum dígito. `{key: B5}` era o defeito medido.
-    let tom = relatorio.tom_estimado();
+    let tom = relatorio.tonalidade.rotulo().to_owned();
     assert!(
         !tom.chars().any(|c| c.is_ascii_digit()),
         "tom com dígito: {tom}"
@@ -112,8 +112,11 @@ fn cifra_sai_em_chordpro_com_tom_limpo_e_sem_acorde_repetido() {
     let chordpro = relatorio.para_chordpro("prova");
     assert!(chordpro.starts_with("{title: prova}"));
     assert!(chordpro.contains(&format!("{{key: {tom}}}")));
-    // `Db` é bem (D + b); o extrator tem de manter o b e não engolir a qualidade.
-    assert!(relatorio.tom_estimado().len() <= 3, "tom: {tom}");
+    // C–G–Am–F é Dó maior: a progressão I–V–vi–IV não deixa dúvida de centro
+    // tonal, e a contagem antiga de fundamental de acorde não dava isso.
+    assert_eq!(tom, "C", "regra: {}", relatorio.tonalidade.regra);
+    // `Db` é bem (D + b); o nome tem no máximo três caracteres.
+    assert!(tom.len() <= 3, "tom: {tom}");
 
     // Acorde não repete vizinho na mesma seção.
     for linha in chordpro.lines().filter(|l| l.starts_with('[')) {

@@ -1172,3 +1172,29 @@ semelhança de título.
 **Limite declarado:** a exportação não existe no app ainda — o portão cobre o link de projeção hoje e
 serve à exportação quando ela nascer. E o vínculo é declarado à mão: ficha nova sem `obra_original` não
 ganha vínculo por heurística.
+
+## R4 · Centro tonal por perfil (ADR-0014, bloco 1) (2026-11-22)
+
+**Status:** 🟢 Entregue e provado — o primeiro código da ADR-0014, e o único dos seis blocos que não depende de modelo, de áudio novo nem de credencial.
+
+### O que foi entregue
+
+- **`crates/mir_engine/src/tonality.rs`** — `analisar(&Chroma) -> Tonalidade`: croma médio (contando só quadros com energia) contra os perfis de **Krumhansl–Kessler**, rotacionados nas **24 tônicas** (12 × maior/menor), por **correlação de Pearson**.
+- **A resposta carrega a razão** — `correlacao`, `margem` sobre a segunda colocada, `classes_presentes` e `regra` em texto. Quem lê sabe *por que* o motor escolheu aquela tonalidade, como a ADR-0012 exige de veredito.
+- **Fail-loud:** sem quadro com energia, ou com menos de quatro classes de altura, a resposta é **`Indeterminada` com o motivo** — um intervalo não vira tonalidade.
+- **`tom_estimado` foi removido** junto com o `raiz_e_qualidade` que ele usava: o defeito `{key: B5}` (nome de acorde virando tom) deixa de existir por construção, porque não há mais parsing de acorde para adivinhar tom.
+- **`chords::nome_da_classe`** — tonalidade e acorde nomeiam a classe de altura pela **mesma** convenção, para um `Db` não virar `C#` de um lado só.
+
+### Provas
+
+- **7 testes de unidade:** Dó maior; Lá menor natural; **E maior não vira Si** (o defeito medido); **A maior com D natural não vira Mi** — o par de discriminadores de grau 4 que a ADR-0014 nomeia; sem energia; duas notas; e quadro silencioso que não dilui a média.
+- **Fixture dourada corrigida:** `{key: Am}` → `{key: C}`, com diff de **uma linha**. O valor antigo era exatamente o defeito que a ADR cita; o teste dourado de Rust e o teste de Flutter que desenha a mesma cifra continuam casando.
+- **41 testes** em `mir_engine`; `clippy --workspace --all-targets -- -D warnings` limpo; `fmt --all --check` limpo; **42 testes de Flutter** verdes.
+- Um teste de Flutter ficou **mais preciso** ao consertar o efeito colateral: com `{key: C}`, o chip do tom no AppBar também mostra "C", e `find.text` passou a achar dois. O finder agora mira o **estilo monoespaçado** — que é o que faz a coluna do acorde coincidir com a letra.
+
+### O que ficou aberto
+
+- **Margem baixa não bloqueia:** a margem aparece no relatório, mas o motor não recusa tonalidade duvidosa por ela. Qual limiar usar é **decisão**, não execução.
+- **Empréstimo modal:** perfil maior/menor só — Mixolídio, Dórico e afins ficam para o bloco 6.
+- **Ordem restante da ADR-0014:** afinamento global → terça pela melodia (F0) → baixo/inversão por compasso → downbeat.
+- **Decodificação além de WAV** (Symphonia) segue bloqueada por ADR — sem ela, o usuário continua precisando converter para WAV antes de analisar.

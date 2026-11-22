@@ -97,7 +97,16 @@ fn template(tonica: usize, qualidade: Qualidade) -> [f32; 12] {
 /// Nome do acorde como a tela escreve.
 #[must_use]
 pub fn nome(tonica: usize, qualidade: Qualidade) -> String {
-    format!("{}{}", TONICAS[tonica % 12], qualidade.sufixo())
+    format!("{}{}", nome_da_classe(tonica), qualidade.sufixo())
+}
+
+/// Nome da classe de altura na convenção da tela: bemóis nas teclas pretas.
+///
+/// É a mesma convenção que o acorde usa — quem nomeia tonalidade e quem nomeia
+/// acorde não podem divergir num `Db` que virou `C#`.
+#[must_use]
+pub fn nome_da_classe(classe: usize) -> &'static str {
+    TONICAS[classe % 12]
 }
 
 /// Melhor acorde para um croma, com a margem sobre o segundo colocado.

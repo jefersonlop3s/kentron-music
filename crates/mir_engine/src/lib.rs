@@ -20,6 +20,7 @@ pub mod report;
 pub mod sheet;
 pub mod spectrum;
 pub mod structure;
+pub mod tonality;
 pub mod uso;
 pub mod wav;
 
@@ -75,6 +76,7 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
         },
         dynamics: dynamics::analyze(&audio.amostras, audio.taxa),
         tempo,
+        tonalidade: tonality::analisar(&chroma),
         chords,
         sections,
     }

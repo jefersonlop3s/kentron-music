@@ -114,7 +114,7 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 > **Análise harmônica (2026-11-22, [ADR-0014](adr/0014-analise-harmonica-pos-extracao.md) aceita):** centro tonal por perfil no eixo de quintas, afinamento global, terça decidida pela **melodia** (F0), baixo por compasso para a **inversão** e região harmônica separada da seção timbrística. Resolve como causa comum a inversão, a terça fraca e a tensão — e **não** depende de stems: a nota anterior, que exigia baixo isolado, era hipótese, não medição.
 
 ### Etapas:
-1. **Análise Local:** Áudio $\rightarrow$ Acordes, Tom e Compasso (Desktop primeiro). *Acordes e andamento entregues; tom é estimativa simples (fundamental mais frequente).*
+1. **Análise Local:** Áudio $\rightarrow$ Acordes, Tom e Compasso (Desktop primeiro). *Acordes e andamento entregues; **tom por perfil de tonalidade** desde 2026-11-22 (ADR-0014, bloco 1). Falta compasso/downbeat.*
 2. **Geração Automática:** Tablaturas e partituras via inferência ONNX. *Pendente, com peso a declarar.*
 3. **Auto-Maestro:** Sugestão de dinâmica e formação baseada no áudio. *Curva de LUFS do áudio inteiro entregue; por instrumento depende dos stems.*
 4. **Resolução de Links:** Link de streaming $\rightarrow$ Identidade da Obra $\rightarrow$ Cifra. *Fora do repositório: o áudio é obtido fora do app, por decisão do dono.*

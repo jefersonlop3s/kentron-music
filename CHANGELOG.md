@@ -2,6 +2,25 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [feat] Centro tonal por perfil no motor (ADR-0014, bloco 1) (2026-11-22)
+### Adicionado
+- **`crates/mir_engine/src/tonality.rs`** — `analisar(&Chroma) -> Tonalidade`: croma médio (só quadros com energia) contra os perfis de **Krumhansl–Kessler** nas **24 tônicas** (12 × maior/menor), por **correlação de Pearson**, devolvendo a **regra que produziu** o resultado (correlação e margem sobre a segunda) e `classes_presentes`. Sem energia, ou com menos de **quatro** classes de altura, a resposta é **indeterminada com o motivo** — fail-loud, não palpite.
+- **`chords::nome_da_classe`** — tonalidade e acorde passam a nomear a classe de altura pela **mesma** convenção (bemóis nas teclas pretas), para um `Db` não virar `C#` de um lado só.
+- **7 testes de unidade:** Dó maior, Lá menor natural, **E maior não vira Si**, **A maior com D natural não vira Mi** (o par de discriminadores do grau 4 que a ADR nomeia), sem energia, duas notas (intervalo não sustenta tonalidade) e quadro silencioso que não dilui a média.
+
+### Mudado
+- **`Report`** ganhou `tonalidade: Tonalidade`; ela entra no `resumo()` com correlação e margem, e o `{key:}` da cifra passou a sair dela. **`tom_estimado` foi removido**, junto com o `raiz_e_qualidade` que ele usava — o defeito `{key: B5}` desaparece por construção, porque não há mais parsing de nome de acorde para adivinhar tom.
+- **Fixture dourada:** `crates/mir_engine/tests/fixtures/cifra-com-letra.cho` passou de `{key: Am}` para `{key: C}`. É a correção do defeito que a própria ADR-0014 cita ("na fixture em Dó devolveu `Am`"); o diff é **uma linha**.
+- **`apps/kentron_app/test/cifra_com_letra_test.dart`:** a linha de acordes passou a ser encontrada por **estilo monoespaçado**, não por texto solto — com `{key: C}` o chip do tom no AppBar também mostra "C" e `find.text` achava dois. O teste ficou mais preciso: agora prova que a linha é monoespaçada, que é o que faz a coluna coincidir com a letra.
+
+### Verificado
+- **41 testes** em `mir_engine`; `cargo clippy --workspace --all-targets -- -D warnings` limpo; `cargo fmt --all --check` limpo; suíte de Flutter verde.
+
+### Ressalvas
+- **Margem baixa não bloqueia:** a resposta sai com `margem` no relatório, mas o motor não recusa tonalidade duvidosa nem marca `Indeterminado` por margem — só por falta de energia ou de classes. Endurecer isso é **decisão** (qual limiar), não execução.
+- **Empréstimo modal:** o perfil é maior/menor; Mixolídio, Dórico e afins ainda não têm perfil próprio (bloco 6 da ADR-0014).
+- **O que não mudou:** a acurácia continua **candidata**. O ganho não é acertar sempre — é a resposta vir com a razão.
+
 ## [processo] Insight: decodificação de áudio por plataforma — o ffmpeg do brew é GPL (2026-11-22)
 ### Adicionado
 - **`docs/insights/2026-11-22-decodificacao-de-audio-por-plataforma.md`** — mapeamento local do `ffmpeg`, rotas por plataforma e a candidata que dispensa o problema.

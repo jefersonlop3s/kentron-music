@@ -5,6 +5,7 @@ use serde::Serialize;
 use crate::chords::ChordSegment;
 use crate::dynamics::Dynamics;
 use crate::structure::{Section, Tempo};
+use crate::tonality::Tonalidade;
 
 /// O que se sabe do arquivo analisado.
 #[derive(Debug, Clone, Serialize)]
@@ -20,6 +21,9 @@ pub struct Report {
     pub audio: AudioInfo,
     pub dynamics: Dynamics,
     pub tempo: Tempo,
+    /// Centro tonal por perfil (ADR-0014, bloco 1). Substitui a contagem de
+    /// fundamental de acorde, que devolvia `B` numa música em E maior.
+    pub tonalidade: Tonalidade,
     pub chords: Vec<ChordSegment>,
     pub sections: Vec<Section>,
 }
@@ -55,6 +59,14 @@ impl Report {
             self.tempo.bpm,
             self.tempo.batidas_s.len()
         ));
+        // A razão vem junto: correlação alta com margem baixa é decisão frágil,
+        // e quem lê precisa saber disso para não tratar como certeza.
+        texto.push_str(&format!(
+            "tonalidade {} · correlação {:.2} · margem {:.2}\n",
+            self.tonalidade.rotulo(),
+            self.tonalidade.correlacao,
+            self.tonalidade.margem
+        ));
         texto.push_str("\nestrutura (rótulo é repetição; papel é inferência):\n");
         for secao in &self.sections {
             let acordes = self.acordes_do_trecho(secao.inicio_s, secao.fim_s);
@@ -86,40 +98,6 @@ impl Report {
         nomes.join(" ")
     }
 
-    /// Tom **estimado**: a fundamental mais frequente e a qualidade dominante
-    /// dela. É palpite fundamentado, não análise de centro tonal.
-    #[must_use]
-    pub fn tom_estimado(&self) -> String {
-        let mut contagem: Vec<(String, usize, usize)> = Vec::new(); // raiz, maior, menor
-        for trecho in &self.chords {
-            let (raiz, qualidade) = raiz_e_qualidade(&trecho.acorde);
-            let menor = qualidade.starts_with('m') && !qualidade.starts_with("maj");
-            match contagem.iter_mut().find(|(r, _, _)| *r == raiz) {
-                Some((_, maior, menor_cont)) => {
-                    if menor {
-                        *menor_cont += 1;
-                    } else {
-                        *maior += 1;
-                    }
-                }
-                None => contagem.push((raiz, (!menor) as usize, menor as usize)),
-            }
-        }
-        contagem
-            .iter()
-            .max_by_key(|(_, maior, menor)| maior + menor)
-            .map_or_else(
-                || "C".to_owned(),
-                |(raiz, maior, menor)| {
-                    if menor > maior {
-                        format!("{raiz}m")
-                    } else {
-                        raiz.clone()
-                    }
-                },
-            )
-    }
-
     /// Cifra em ChordPro: uma seção por trecho, acordes na linha.
     ///
     /// A letra **não** entra — vem de ASR, que é outro incremento (ADR-0011).
@@ -127,7 +105,7 @@ impl Report {
     pub fn para_chordpro(&self, titulo: &str) -> String {
         let mut texto = format!(
             "{{title: {titulo}}}\n{{key: {}}}\n{{tempo: {:.0}}}\n{{duration: {:.0}}}\n{{source: mir_engine}}\n",
-            self.tom_estimado(),
+            self.tonalidade.rotulo(),
             self.tempo.bpm,
             self.audio.duracao_s
         );
@@ -150,24 +128,4 @@ impl Report {
         }
         texto
     }
-}
-
-/// Separa o nome do acorde em fundamental e qualidade.
-///
-/// "Db" tem `b` minúsculo: cortar na primeira minúscula devolvia `D`, e "B5"
-/// devolvia `B5` como se o `5` fosse da fundamental — medido na primeira cifra
-/// gerada (`{key: B5}`).
-fn raiz_e_qualidade(acorde: &str) -> (String, String) {
-    let mut chars = acorde.chars();
-    let mut raiz = match chars.next() {
-        Some(letra) => letra.to_string(),
-        None => return (String::new(), String::new()),
-    };
-    if let Some(segundo) = chars.clone().next()
-        && (segundo == 'b' || segundo == '#')
-    {
-        raiz.push(segundo);
-        chars.next();
-    }
-    (raiz, chars.collect())
 }

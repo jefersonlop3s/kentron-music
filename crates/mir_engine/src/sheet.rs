@@ -38,7 +38,7 @@ pub struct Ficha {
 pub fn montar(relatorio: &Report, alinhadas: &[LinhaAlinhada], ficha: &Ficha) -> Song {
     let mut metadata: HashMap<String, String> = HashMap::new();
     metadata.insert("title".to_owned(), ficha.titulo.clone());
-    metadata.insert("key".to_owned(), relatorio.tom_estimado());
+    metadata.insert("key".to_owned(), relatorio.tonalidade.rotulo().to_owned());
     metadata.insert("tempo".to_owned(), format!("{:.0}", relatorio.tempo.bpm));
     metadata.insert(
         "duration".to_owned(),
