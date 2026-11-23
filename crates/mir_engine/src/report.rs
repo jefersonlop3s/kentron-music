@@ -36,6 +36,10 @@ pub struct BaixoSegment {
     /// (`C/E`). `None` quando a barra não informaria nada — ver
     /// `crate::chords::com_baixo`.
     pub cifra: Option<String>,
+    /// RMS da banda do baixo (40–250 Hz) no trecho, relativo à mediana da
+    /// música. **Perto de zero = não há baixo tocando ali**, e a abstenção está
+    /// certa: nem toda introdução tem grave, e nem sempre o baixo fala.
+    pub energia: f32,
 }
 
 /// Relatório completo da música.

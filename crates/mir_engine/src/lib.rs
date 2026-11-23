@@ -54,6 +54,22 @@ impl Default for Opts {
     }
 }
 
+/// RMS da banda do baixo num trecho, dividido pela mediana da música.
+///
+/// Devolve 0 quando não há mediana (música sem grave nenhum) — e aí a abstenção
+/// do detector está certa por definição.
+fn energia_do_trecho(banda: &[f32], mediana: f32, fps: f32, inicio_s: f32, fim_s: f32) -> f32 {
+    if mediana <= f32::EPSILON || banda.is_empty() {
+        return 0.0;
+    }
+    let inicio = ((inicio_s * fps) as usize).min(banda.len());
+    let fim = ((fim_s * fps) as usize).min(banda.len());
+    if inicio >= fim {
+        return 0.0;
+    }
+    banda[inicio..fim].iter().sum::<f32>() / (fim - inicio) as f32 / mediana
+}
+
 /// Analisa o áudio e devolve o relatório completo.
 #[must_use]
 pub fn analyze(audio: &Audio, opts: &Opts) -> report::Report {
@@ -81,6 +97,13 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
     // registro que separa `C` de `C/E` (ADR-0014, bloco 4). Os trechos usam
     // os mesmos limites dos acordes, para a inversão ser comparável.
     let baixo = baixo::extrair(spectro, audio.taxa);
+    // Energia da banda do baixo, relativa à mediana da música: é o que separa
+    // "não há baixo tocando" de "há baixo e não consegui resolver". Nem toda
+    // introdução tem grave, e nem sempre o baixo fala — abster ali é acerto.
+    let banda_baixo = spectro.energia_banda(audio.taxa, 40.0, 250.0);
+    let mut ordenada = banda_baixo.clone();
+    ordenada.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let mediana_banda = ordenada.get(ordenada.len() / 2).copied().unwrap_or(0.0);
     let mut baixo_trechos: Vec<report::BaixoSegment> = Vec::new();
     for trecho in &mut chords {
         if let Some((midi, confianca)) = baixo.do_trecho(trecho.inicio_s, trecho.fim_s) {
@@ -110,6 +133,13 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
                     // inversão inventada é pior que inversão omitida.
                     None
                 },
+                energia: energia_do_trecho(
+                    &banda_baixo,
+                    mediana_banda,
+                    baixo.fps,
+                    trecho.inicio_s,
+                    trecho.fim_s,
+                ),
             });
         }
     }
