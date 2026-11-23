@@ -40,6 +40,11 @@ pub struct BaixoSegment {
     /// música. **Perto de zero = não há baixo tocando ali**, e a abstenção está
     /// certa: nem toda introdução tem grave, e nem sempre o baixo fala.
     pub energia: f32,
+    /// Fração da energia da banda que está sobre os harmônicos da nota (0 a 1).
+    ///
+    /// **Baixa = o que há ali é percussivo** (bumbo), não nota. É o que julga a
+    /// abstenção: energia no grave não distingue baixo de bumbo.
+    pub tonalidade: f32,
 }
 
 /// Relatório completo da música.

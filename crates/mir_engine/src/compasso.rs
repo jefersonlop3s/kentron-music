@@ -98,6 +98,101 @@ fn grade(periodo: f32, novidade: &[f32], fps: f32) -> (f32, Vec<f32>) {
     (melhor.0, batidas)
 }
 
+/// Faixa plausível de batida, em BPM. Fora dela a "batida" é subdivisão ou
+/// compasso inteiro, não pulso.
+const BPM_MIN: f32 = 50.0;
+const BPM_MAX: f32 = 200.0;
+
+/// Um compasso candidato: (batidas por compasso, fase do tempo 1, escore,
+/// acento relativo).
+type Candidato = (u8, u8, f32, f32);
+
+/// Resultado da avaliação de **uma** oitava de tempo.
+struct Avaliacao {
+    periodo: f32,
+    fase: f32,
+    batidas: Vec<f32>,
+    indices: Vec<usize>,
+    combos: Vec<Candidato>,
+}
+
+/// Avalia uma oitava de tempo: grade, âncoras de acorde e todos os compassos.
+///
+/// Devolve `None` quando a oitava não sustenta grade ou não tem âncora suficiente
+/// — e aí ela simplesmente não concorre, em vez de concorrer mal.
+fn avaliar(periodo: f32, novidade: &[f32], fps: f32, chords: &[ChordSegment]) -> Option<Avaliacao> {
+    let (fase, batidas) = grade(periodo, novidade, fps);
+    if batidas.len() < 8 {
+        return None;
+    }
+    // A troca de acorde é a âncora: acorde troca no tempo 1. Só conta a troca que
+    // cai **perto** de uma batida — troca fora da grade não ancora nada.
+    let indices: Vec<usize> = chords
+        .iter()
+        .skip(1)
+        .filter_map(|c| {
+            let k = ((c.inicio_s - fase) / periodo).round();
+            if k < 0.0 {
+                return None;
+            }
+            let i = k as usize;
+            if i >= batidas.len() || (batidas[i] - c.inicio_s).abs() > TOLERANCIA_TROCA_S {
+                return None;
+            }
+            Some(i)
+        })
+        .collect();
+    if indices.len() < 8 {
+        return None;
+    }
+    let acentos: Vec<f32> = batidas.iter().map(|&t| acento(novidade, fps, t)).collect();
+    let media: f32 = acentos.iter().sum::<f32>() / acentos.len() as f32;
+    if media <= f32::EPSILON {
+        return None;
+    }
+    let trocas_total = chords.len().saturating_sub(1);
+    let mut combos = Vec::new();
+    for m in COMPASSOS {
+        for p in 0..m {
+            let (mut no_um, mut fora) = (0.0f32, 0.0f32);
+            let (mut n_um, mut n_fora) = (0usize, 0usize);
+            for (i, &a) in acentos.iter().enumerate() {
+                if (i as u8) % m == p {
+                    no_um += a;
+                    n_um += 1;
+                } else {
+                    fora += a;
+                    n_fora += 1;
+                }
+            }
+            if n_um == 0 || n_fora == 0 {
+                continue;
+            }
+            let acento_rel = no_um / n_um as f32 / media - fora / n_fora as f32 / media;
+            // A fração é sobre **todas** as trocas de acorde, não só as que caem
+            // na grade: um candidato que ignora a maior parte da evidência
+            // harmônica não pode empatar com o que explica toda ela. Sem isso, a
+            // valsa em 3/4 empata com a leitura em meio tempo (bug medido).
+            let alinhadas = indices
+                .iter()
+                .filter(|&&i| (i % usize::from(m)) == usize::from(p))
+                .count();
+            let troca_rel = alinhadas as f32 / trocas_total as f32 - 1.0 / f32::from(m);
+            combos.push((m, p, acento_rel + troca_rel, acento_rel));
+        }
+    }
+    if combos.is_empty() {
+        return None;
+    }
+    Some(Avaliacao {
+        periodo,
+        fase,
+        batidas,
+        indices,
+        combos,
+    })
+}
+
 /// Mede o compasso e o tempo 1.
 ///
 /// Devolve indeterminado (sem inventar) quando não há batida, quando a margem é
@@ -126,105 +221,78 @@ pub fn analisar(
     if novidade.len() < 8 {
         return indeterminado("indeterminado: áudio curto demais para grade".into(), 0.0);
     }
-    let periodo = 60.0 / tempo.bpm;
-    let (fase, batidas) = grade(periodo, &novidade, fps);
-    if batidas.len() < 8 {
-        return indeterminado(
-            "indeterminado: menos de oito batidas na grade".into(),
-            periodo,
-        );
-    }
-    // A troca de acorde é a âncora: acorde troca no tempo 1. Só conta a troca que
-    // cai **perto** de uma batida — troca fora da grade não ancora nada.
-    let indices: Vec<usize> = chords
-        .iter()
-        .skip(1)
-        .filter_map(|c| {
-            let k = ((c.inicio_s - fase) / periodo).round();
-            if k < 0.0 {
-                return None;
+    // A **oitava do tempo** é convenção, não verdade: 4/4 a 78 BPM é 2/4 a 156, e
+    // o `estimate_tempo` já dobrou o BPM para a faixa 70–190. Medido no
+    // repertório: 31% das músicas divergem da planilha numa oitava. Em vez de
+    // escolher uma, o motor testa as três e deixa a evidência decidir.
+    let mut avaliados: Vec<Avaliacao> = Vec::new();
+    for fator in [1.0f32, 2.0, 0.5] {
+        let bpm = tempo.bpm * fator;
+        if (BPM_MIN..=BPM_MAX).contains(&bpm) {
+            if let Some(a) = avaliar(60.0 / bpm, &novidade, fps, chords) {
+                avaliados.push(a);
             }
-            let i = k as usize;
-            if i >= batidas.len() || (batidas[i] - c.inicio_s).abs() > TOLERANCIA_TROCA_S {
-                return None;
-            }
-            Some(i)
-        })
-        .collect();
-    if indices.len() < 8 {
-        return indeterminado(
-            format!(
-                "indeterminado: só {} trocas de acorde caem na grade — pouco para ancorar o tempo 1",
-                indices.len()
-            ),
-            periodo,
-        );
-    }
-    let acentos: Vec<f32> = batidas.iter().map(|&t| acento(&novidade, fps, t)).collect();
-    let media: f32 = acentos.iter().sum::<f32>() / acentos.len() as f32;
-    if media <= f32::EPSILON {
-        return indeterminado("indeterminado: nenhum ataque cai na grade".into(), periodo);
-    }
-    let mut colocados: Vec<(u8, u8, f32, f32)> = Vec::new();
-    for m in COMPASSOS {
-        for p in 0..m {
-            let (mut no_um, mut fora) = (0.0f32, 0.0f32);
-            let (mut n_um, mut n_fora) = (0usize, 0usize);
-            for (i, &a) in acentos.iter().enumerate() {
-                if (i as u8) % m == p {
-                    no_um += a;
-                    n_um += 1;
-                } else {
-                    fora += a;
-                    n_fora += 1;
-                }
-            }
-            if n_um == 0 || n_fora == 0 {
-                continue;
-            }
-            let acento_rel = no_um / n_um as f32 / media - fora / n_fora as f32 / media;
-            let alinhadas = indices
-                .iter()
-                .filter(|&&i| (i % usize::from(m)) == usize::from(p))
-                .count();
-            let troca_rel = alinhadas as f32 / indices.len() as f32 - 1.0 / f32::from(m);
-            colocados.push((m, p, acento_rel + troca_rel, acento_rel));
         }
     }
-    if colocados.is_empty() {
-        return indeterminado(
-            "indeterminado: nenhum compasso caberia na grade".into(),
-            periodo,
-        );
+    let mut melhor: Option<(&Avaliacao, Candidato)> = None;
+    for a in &avaliados {
+        if let Some(c) = a
+            .combos
+            .iter()
+            .max_by(|x, y| x.2.partial_cmp(&y.2).unwrap_or(std::cmp::Ordering::Equal))
+        {
+            if melhor.is_none_or(|(_, m)| c.2 > m.2) {
+                melhor = Some((a, *c));
+            }
+        }
     }
-    colocados.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
-    let (melhor_m, melhor_p, escore, acento_rel) = colocados[0];
-    // A margem é contra o melhor de **outro** compasso: escolher entre fases do
-    // mesmo compasso não decide a barra, decide onde ela começa.
-    let rival = colocados.iter().find(|(m, _, _, _)| *m != melhor_m);
-    let margem = escore - rival.map_or(0.0, |(_, _, e, _)| *e);
+    let vencedor = match melhor {
+        Some(v) => v,
+        None => {
+            return indeterminado(
+                "indeterminado: nenhuma oitava de tempo sustenta grade e âncora".into(),
+                60.0 / tempo.bpm,
+            );
+        }
+    };
+    let (vencedor, (melhor_m, melhor_p, escore, acento_rel)) = vencedor;
+    // A margem é contra o melhor de **outro** compasso ou de **outra** oitava:
+    // escolher entre fases do mesmo compasso não decide a barra, decide onde ela
+    // começa.
+    let mut rival = 0.0f32;
+    let mut rival_m = 0u8;
+    for a in &avaliados {
+        for &(m, _, e, _) in &a.combos {
+            let outra_oitava = (a.periodo - vencedor.periodo).abs() > 1e-6;
+            if (m != melhor_m || outra_oitava) && e > rival {
+                rival = e;
+                rival_m = m;
+            }
+        }
+    }
+    let margem = escore - rival;
     if margem < MARGEM_MINIMA {
         return Compasso {
             batidas_por_compasso: 0,
             inicio_s: 0.0,
-            periodo_s: periodo,
+            periodo_s: vencedor.periodo,
             confianca: acento_rel,
             margem,
             entrada_no_tempo: 0,
             regra: format!(
-                "indeterminado: margem {margem:.3} abaixo de {MARGEM_MINIMA} entre {} e {} batidas",
-                melhor_m,
-                rival.map_or(0, |(m, _, _, _)| *m)
+                "indeterminado: margem {margem:.3} abaixo de {MARGEM_MINIMA} entre {melhor_m} e {rival_m} batidas"
             ),
         };
     }
-    let alinhadas = indices
+    let alinhadas = vencedor
+        .indices
         .iter()
         .filter(|&&i| (i % usize::from(melhor_m)) == usize::from(melhor_p))
         .count();
     // O tempo 1 do primeiro compasso **com música**. E onde a música entra: o
     // primeiro som pode cair no tempo 3 ou 4 de um compasso **fantasma**, cujo
     // tempo 1 ninguém tocou — a banda entra no tempo 1 do compasso seguinte.
+    let (fase, periodo) = (vencedor.fase, vencedor.periodo);
     let primeiro_ataque = tempo.batidas_s.first().copied().unwrap_or(fase);
     let k = ((primeiro_ataque - fase) / periodo).floor();
     let pos = (k as isize - isize::from(melhor_p)).rem_euclid(isize::from(melhor_m));
@@ -235,7 +303,8 @@ pub fn analisar(
     } else {
         // O compasso fantasma começa **antes do áudio**: a introdução foi
         // cortada. O tempo 1 que existe é o do compasso seguinte.
-        batidas
+        vencedor
+            .batidas
             .iter()
             .enumerate()
             .filter(|(i, _)| (i % usize::from(melhor_m)) == usize::from(melhor_p))
@@ -254,7 +323,7 @@ pub fn analisar(
             "{melhor_m} batidas por compasso: acento do tempo 1 {acento_rel:+.3} acima da média, \
              {:.0}% das trocas de acorde alinhadas, margem {margem:.3}; a música entra no tempo \
              {entrada}{}",
-            100.0 * alinhadas as f32 / indices.len() as f32,
+            100.0 * alinhadas as f32 / vencedor.indices.len() as f32,
             if entrada == 1 {
                 ""
             } else {

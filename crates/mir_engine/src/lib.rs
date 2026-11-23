@@ -140,6 +140,7 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
                     trecho.inicio_s,
                     trecho.fim_s,
                 ),
+                tonalidade: baixo.tonalidade_do_trecho(trecho.inicio_s, trecho.fim_s),
             });
         }
     }

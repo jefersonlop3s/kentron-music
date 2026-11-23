@@ -50,6 +50,13 @@ const NOMES: [&str; 12] = [
 pub struct Baixo {
     /// `None` quando o quadro não tem evidência suficiente na banda.
     pub quadros: Vec<Option<u8>>,
+    /// Fração da energia da banda que está sobre os harmônicos da nota escolhida.
+    ///
+    /// **Perto de zero = o que há ali é percussivo, não é nota.** É o que separa
+    /// o baixo do **bumbo**, que vive na mesma faixa e não tem altura. Sem isso,
+    /// "tem energia no grave" não distingue "o baixo está tocando" de "o bumbo
+    /// bateu" — e a abstenção do detector fica sem julgamento.
+    pub tonalidade: Vec<f32>,
     pub fps: f32,
 }
 
@@ -72,6 +79,7 @@ pub fn extrair(spectro: &Spectrogram, taxa: u32) -> Baixo {
     let primeira = (69.0 + 12.0 * (de_hz / 440.0).log2()).ceil() as u8;
     let ultima = (69.0 + 12.0 * (ate_hz / 440.0).log2()).floor() as u8;
     let mut quadros = Vec::with_capacity(spectro.quadros.len());
+    let mut tonalidades: Vec<f32> = Vec::with_capacity(spectro.quadros.len());
     for mags in &spectro.quadros {
         let mut picos: Vec<(f32, f32)> = Vec::new();
         para_cada_pico(mags, hz_por_bin, |hz, magnitude| {
@@ -83,6 +91,7 @@ pub fn extrair(spectro: &Spectrogram, taxa: u32) -> Baixo {
         });
         if picos.is_empty() {
             quadros.push(None);
+            tonalidades.push(0.0);
             continue;
         }
         let mut notas: Vec<(u8, f32)> = Vec::new();
@@ -103,6 +112,7 @@ pub fn extrair(spectro: &Spectrogram, taxa: u32) -> Baixo {
         }
         if notas.is_empty() {
             quadros.push(None);
+            tonalidades.push(0.0);
             continue;
         }
         let melhor = notas.iter().map(|&(_, e)| e).fold(0.0f32, f32::max);
@@ -113,14 +123,69 @@ pub fn extrair(spectro: &Spectrogram, taxa: u32) -> Baixo {
             .map(|&(m, _)| m)
             .min();
         quadros.push(escolhido);
+        tonalidades.push(escolhido.map_or(0.0, |nota| tonalidade(mags, &picos, hz_por_bin, nota)));
     }
     Baixo {
         quadros,
+        tonalidade: tonalidades,
         fps: spectro.quadros_por_segundo(taxa),
     }
 }
 
+/// Fração da energia da banda (40–250 Hz) que cai sobre os harmônicos da nota.
+///
+/// Um baixo emite série harmônica: quase toda a energia da banda fica sobre os
+/// harmônicos dela. Um **bumbo** tem energia na mesma faixa e **não tem altura**
+/// — a energia se espalha e sobra pouco sobre qualquer série. É o que distingue
+/// "o baixo está tocando" de "o bumbo bateu", e sem isso a abstenção do detector
+/// fica sem julgamento: energia no grave não é o mesmo que nota no grave.
+fn tonalidade(mags: &[f32], picos: &[(f32, f32)], hz_por_bin: f32, nota: u8) -> f32 {
+    let (de_hz, ate_hz) = BANDA_HZ;
+    if mags.is_empty() {
+        return 0.0;
+    }
+    let lo = (de_hz / hz_por_bin).ceil() as usize;
+    let hi = ((ate_hz / hz_por_bin).floor() as usize).min(mags.len() - 1);
+    if lo >= hi {
+        return 0.0;
+    }
+    let total: f32 = mags[lo..=hi].iter().sum();
+    if total <= f32::EPSILON {
+        return 0.0;
+    }
+    let midi_lo = 69.0 + 12.0 * (de_hz / 440.0).log2();
+    let midi_hi = 69.0 + 12.0 * (ate_hz / 440.0).log2();
+    let mut harmonica = 0.0f32;
+    for &(midi_pico, magnitude) in picos {
+        if !(midi_lo..=midi_hi).contains(&midi_pico) {
+            continue;
+        }
+        for h in 1..=HARMONICOS {
+            let alvo = f32::from(nota) + 12.0 * (h as f32).log2();
+            if (midi_pico - alvo).abs() <= TOLERANCIA_SEMITONS {
+                harmonica += magnitude;
+                break;
+            }
+        }
+    }
+    (harmonica / total).min(1.0)
+}
+
 impl Baixo {
+    /// Tonalidade média num intervalo, de 0 a 1.
+    #[must_use]
+    pub fn tonalidade_do_trecho(&self, inicio_s: f32, fim_s: f32) -> f32 {
+        if self.tonalidade.is_empty() || self.fps <= 0.0 {
+            return 0.0;
+        }
+        let inicio = ((inicio_s * self.fps) as usize).min(self.tonalidade.len());
+        let fim = ((fim_s * self.fps) as usize).min(self.tonalidade.len());
+        if inicio >= fim {
+            return 0.0;
+        }
+        self.tonalidade[inicio..fim].iter().sum::<f32>() / (fim - inicio) as f32
+    }
+
     /// Nota mais frequente num intervalo, e a fração de quadros que a sustenta.
     ///
     /// `None` quando não há um único quadro com evidência no intervalo.
@@ -281,6 +346,31 @@ mod tests {
         assert!(
             confianca > 0.85,
             "alternar oitavas não pode derrubar a confiança: {confianca}"
+        );
+    }
+
+    #[test]
+    fn tonalidade_separa_nota_de_ruido() {
+        // Série harmônica: quase toda a energia da banda cai sobre os harmônicos.
+        let com_nota = analisar(tom(82.41, 2.0, 8));
+        let t_nota = com_nota.tonalidade_do_trecho(0.4, 1.6);
+        // Ruído de banda larga: energia espalhada, sobra pouco sobre qualquer série.
+        // É o que um bumbo faz na mesma faixa — energia sem altura.
+        let ruido: Vec<f32> = (0..(44_100 * 2))
+            .map(|i| {
+                let x = (i as f32 * 12.9898).sin() * 43_758.547;
+                x - x.floor() - 0.5
+            })
+            .collect();
+        let t_ruido = analisar(ruido).tonalidade_do_trecho(0.4, 1.6);
+        assert!(t_nota > 0.40, "nota tonal devia passar de 0,40: {t_nota}");
+        assert!(
+            t_ruido < 0.30,
+            "ruído não pode parecer nota, veio {t_ruido}"
+        );
+        assert!(
+            t_nota > t_ruido * 1.5,
+            "separação pequena: nota {t_nota} vs ruído {t_ruido}"
         );
     }
 
