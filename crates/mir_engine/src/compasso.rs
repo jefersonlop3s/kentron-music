@@ -45,6 +45,14 @@ pub struct Compasso {
     pub confianca: f32,
     /// Distância para o segundo colocado. Baixa = decisão frágil.
     pub margem: f32,
+    /// Tempo em que a música **entra**, de 1 a `batidas_por_compasso`; 0 quando
+    /// indeterminado.
+    ///
+    /// Não é sempre 1: o primeiro som pode cair no **tempo 3 ou 4 de um compasso
+    /// fantasma** — a banda entra no tempo 1 do compasso seguinte e o tempo 1 do
+    /// primeiro nunca foi tocado. Contar a barra a partir da primeira nota erra
+    /// a contagem por dois ou três tempos, e o músico percebe na hora.
+    pub entrada_no_tempo: u8,
     /// Por que este compasso — ou por que não houve decisão.
     pub regra: String,
 }
@@ -107,6 +115,7 @@ pub fn analisar(
         periodo_s: periodo,
         confianca: 0.0,
         margem: 0.0,
+        entrada_no_tempo: 0,
         regra,
     };
     if tempo.bpm <= 0.0 || tempo.batidas_s.is_empty() {
@@ -201,6 +210,7 @@ pub fn analisar(
             periodo_s: periodo,
             confianca: acento_rel,
             margem,
+            entrada_no_tempo: 0,
             regra: format!(
                 "indeterminado: margem {margem:.3} abaixo de {MARGEM_MINIMA} entre {} e {} batidas",
                 melhor_m,
@@ -212,26 +222,44 @@ pub fn analisar(
         .iter()
         .filter(|&&i| (i % usize::from(melhor_m)) == usize::from(melhor_p))
         .count();
-    // O tempo 1 do primeiro compasso **com música**: a primeira batida de posição
-    // `melhor_p` que não fica antes do primeiro ataque.
+    // O tempo 1 do primeiro compasso **com música**. E onde a música entra: o
+    // primeiro som pode cair no tempo 3 ou 4 de um compasso **fantasma**, cujo
+    // tempo 1 ninguém tocou — a banda entra no tempo 1 do compasso seguinte.
     let primeiro_ataque = tempo.batidas_s.first().copied().unwrap_or(fase);
-    let inicio = batidas
-        .iter()
-        .enumerate()
-        .filter(|(i, _)| (i % usize::from(melhor_m)) == usize::from(melhor_p))
-        .map(|(_, &b)| b)
-        .find(|&b| b >= primeiro_ataque - periodo * 0.5)
-        .unwrap_or(fase);
+    let k = ((primeiro_ataque - fase) / periodo).floor();
+    let pos = (k as isize - isize::from(melhor_p)).rem_euclid(isize::from(melhor_m));
+    let entrada = (pos + 1) as u8;
+    let tempo1 = fase + (k - pos as f32) * periodo;
+    let inicio = if tempo1 >= 0.0 {
+        tempo1
+    } else {
+        // O compasso fantasma começa **antes do áudio**: a introdução foi
+        // cortada. O tempo 1 que existe é o do compasso seguinte.
+        batidas
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| (i % usize::from(melhor_m)) == usize::from(melhor_p))
+            .map(|(_, &b)| b)
+            .find(|&b| b >= primeiro_ataque)
+            .unwrap_or(fase)
+    };
     Compasso {
         batidas_por_compasso: melhor_m,
         inicio_s: inicio,
         periodo_s: periodo,
         confianca: acento_rel,
         margem,
+        entrada_no_tempo: entrada,
         regra: format!(
             "{melhor_m} batidas por compasso: acento do tempo 1 {acento_rel:+.3} acima da média, \
-             {:.0}% das trocas de acorde alinhadas, margem {margem:.3}",
-            100.0 * alinhadas as f32 / indices.len() as f32
+             {:.0}% das trocas de acorde alinhadas, margem {margem:.3}; a música entra no tempo \
+             {entrada}{}",
+            100.0 * alinhadas as f32 / indices.len() as f32,
+            if entrada == 1 {
+                ""
+            } else {
+                " — compasso fantasma, o tempo 1 do primeiro não foi tocado"
+            }
         ),
     }
 }
@@ -301,6 +329,22 @@ mod tests {
         }
     }
 
+    /// Ataques que só começam em `de_s` — o que `estimate_tempo` devolveria numa
+    /// gravação cuja introdução começa depois.
+    fn ataques_de(bpm: f32, de_s: f32, duracao_s: f32) -> Tempo {
+        let periodo = 60.0 / bpm;
+        let mut batidas = Vec::new();
+        let mut t = de_s;
+        while t < duracao_s {
+            batidas.push(t);
+            t += periodo;
+        }
+        Tempo {
+            bpm,
+            batidas_s: batidas,
+        }
+    }
+
     fn medir(amostras: Vec<f32>, tempo: &Tempo, chords: &[ChordSegment]) -> Compasso {
         let audio = Audio {
             amostras,
@@ -331,6 +375,39 @@ mod tests {
         assert_eq!(
             compasso.batidas_por_compasso, 3,
             "regra: {}",
+            compasso.regra
+        );
+    }
+
+    #[test]
+    fn ve_o_compasso_fantasma_e_conta_a_entrada() {
+        // 4/4 a 120 BPM: compasso de 2 s, batida de 0,5 s. O primeiro som só
+        // aparece em 1,0 s — o **tempo 3** do primeiro compasso. O tempo 1 e o
+        // tempo 2 desse compasso ninguém tocou: é o compasso fantasma. Contar a
+        // barra a partir da primeira nota erraria por dois tempos.
+        let mut audio = cliques(120.0, 4, 40.0);
+        let corte = (1.0 * TAXA as f32) as usize;
+        for a in audio.iter_mut().take(corte) {
+            *a = 0.0;
+        }
+        let compasso = medir(
+            audio,
+            &ataques_de(120.0, 1.0, 40.0),
+            &trechos(0.0, 40.0, 2.0),
+        );
+        assert_eq!(
+            compasso.batidas_por_compasso, 4,
+            "regra: {}",
+            compasso.regra
+        );
+        assert_eq!(
+            compasso.entrada_no_tempo, 3,
+            "esperava entrada no tempo 3, regra: {}",
+            compasso.regra
+        );
+        assert!(
+            compasso.regra.contains("fantasma"),
+            "a regra tem de nomear o compasso fantasma: {}",
             compasso.regra
         );
     }
