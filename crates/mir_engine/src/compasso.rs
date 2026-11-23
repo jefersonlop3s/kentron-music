@@ -55,6 +55,16 @@ pub struct Compasso {
     /// primeiro nunca foi tocado. Contar a barra a partir da primeira nota erra
     /// a contagem por dois ou três tempos, e o músico percebe na hora.
     pub entrada_no_tempo: u8,
+    /// Acento médio de cada posição do compasso, relativo à média do compasso.
+    ///
+    /// **É a evidência da decisão** e o que separa compasso simples de composto:
+    /// em `6/8` o tempo **4 também é forte** — dois acentos por compasso — e em
+    /// `3/4` só o tempo 1 é. Sem isso o motor não tem como preferir 6 a 3.
+    pub perfil: Vec<f32>,
+    /// O mesmo perfil, medido na **mudança de harmonia** em vez do acento
+    /// espectral. É onde a informação de metro costuma estar: acorde troca no
+    /// tempo forte, e o bumbo/címbalo espalha o acento espectral.
+    pub perfil_harmonico: Vec<f32>,
     /// Por que este compasso — ou por que não houve decisão.
     pub regra: String,
 }
@@ -119,6 +129,10 @@ struct Avaliacao {
     /// subdivisão, não pulso. Separar isto do escore do compasso é o que impede
     /// um grid esparso de ganhar por contraste inflado.
     com_ataque: f32,
+    /// Acento de cada batida da grade (novidade em volta da batida).
+    acentos: Vec<f32>,
+    /// Novidade de croma de cada batida: quanto a harmonia mudou ali.
+    harmonicos: Vec<f32>,
     combos: Vec<Candidato>,
 }
 
@@ -221,6 +235,8 @@ fn avaliar(periodo: f32, novidade: &[f32], novidade_croma: &[f32], fps: f32) -> 
         fase,
         batidas,
         com_ataque,
+        acentos,
+        harmonicos,
         combos,
     })
 }
@@ -238,6 +254,8 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
         confianca: 0.0,
         margem: 0.0,
         entrada_no_tempo: 0,
+        perfil: Vec::new(),
+        perfil_harmonico: Vec::new(),
         regra,
     };
     if tempo.bpm <= 0.0 || tempo.batidas_s.is_empty() {
@@ -347,6 +365,33 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
         .take(3)
         .map(|(m, e)| format!("{m} ({e:.3})"))
         .collect();
+    // Perfil de acento por posição do compasso, relativo à média. É a evidência
+    // da decisão: em compasso composto há **dois** acentos por compasso.
+    let m_usize = usize::from(melhor_m);
+    let p_usize = usize::from(melhor_p);
+    let mut perfil = vec![0.0f32; m_usize];
+    let mut perfil_h = vec![0.0f32; m_usize];
+    let mut contagem = vec![0usize; m_usize];
+    for i in 0..vencedor.acentos.len() {
+        let posicao = (i + m_usize - p_usize) % m_usize;
+        perfil[posicao] += vencedor.acentos[i];
+        perfil_h[posicao] += vencedor.harmonicos[i];
+        contagem[posicao] += 1;
+    }
+    for i in 0..m_usize {
+        if contagem[i] > 0 {
+            perfil[i] /= contagem[i] as f32;
+            perfil_h[i] /= contagem[i] as f32;
+        }
+    }
+    for v in [&mut perfil, &mut perfil_h] {
+        let media: f32 = v.iter().sum::<f32>() / v.len() as f32;
+        if media > f32::EPSILON {
+            for x in v.iter_mut() {
+                *x /= media;
+            }
+        }
+    }
     // O tempo 1 do primeiro compasso **com música**. E onde a música entra: o
     // primeiro som pode cair no tempo 3 ou 4 de um compasso **fantasma**, cujo
     // tempo 1 ninguém tocou — a banda entra no tempo 1 do compasso seguinte.
@@ -377,6 +422,8 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
         confianca: acento_rel,
         margem,
         entrada_no_tempo: entrada,
+        perfil,
+        perfil_harmonico: perfil_h,
         regra: format!(
             "{melhor_m} batidas por compasso: acento do tempo 1 {acento_rel:+.3} acima da média, \
              mudança de harmonia concentrada no tempo 1, margem {margem:.3} contra {rival_m} \
