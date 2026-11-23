@@ -29,7 +29,12 @@ const COMPASSOS: [u8; 3] = [2, 3, 4];
 const JANELA_ACENTO_S: f32 = 0.05;
 /// Distância máxima entre troca de acorde e batida para contar como alinhada.
 const TOLERANCIA_TROCA_S: f32 = 0.07;
-/// Margem mínima entre o melhor compasso e o segundo para decidir.
+/// Margem abaixo da qual a leitura é **frágil** — não é limiar de abstenção.
+///
+/// O histograma de margem decai monotonicamente, **sem vale** onde cortar
+/// (medido em 263 músicas, 2026-11-22). Então este número não separa "sei" de
+/// "não sei": só marca quando as alternativas empatam, e quem decide o que fazer
+/// com isso é quem consome.
 const MARGEM_MINIMA: f32 = 0.06;
 
 /// O compasso medido.
@@ -259,7 +264,7 @@ pub fn analisar(
     // A margem é contra o melhor de **outro** compasso ou de **outra** oitava:
     // escolher entre fases do mesmo compasso não decide a barra, decide onde ela
     // começa.
-    let mut rival = 0.0f32;
+    let mut rival = f32::NEG_INFINITY;
     let mut rival_m = 0u8;
     for a in &avaliados {
         for &(m, _, e, _) in &a.combos {
@@ -270,20 +275,18 @@ pub fn analisar(
             }
         }
     }
-    let margem = escore - rival;
-    if margem < MARGEM_MINIMA {
-        return Compasso {
-            batidas_por_compasso: 0,
-            inicio_s: 0.0,
-            periodo_s: vencedor.periodo,
-            confianca: acento_rel,
-            margem,
-            entrada_no_tempo: 0,
-            regra: format!(
-                "indeterminado: margem {margem:.3} abaixo de {MARGEM_MINIMA} entre {melhor_m} e {rival_m} batidas"
-            ),
-        };
-    }
+    let margem = if rival.is_finite() {
+        escore - rival
+    } else {
+        // Sem rival não há margem a medir: só uma leitura caberia na grade.
+        1.0
+    };
+    // O limiar de margem **não existe nos dados**: a distribuição decai
+    // monotonicamente, sem vale onde cortar (medido em 263 músicas). Por isso o
+    // motor **não abstém por margem** — devolve a melhor leitura com a margem e
+    // diz quando ela é frágil, como faz o centro tonal. Abster fica reservado ao
+    // que é estrutural: sem batida, sem âncora de acorde, sem grade.
+    let fragil = margem < MARGEM_MINIMA;
     let alinhadas = vencedor
         .indices
         .iter()
@@ -321,9 +324,14 @@ pub fn analisar(
         entrada_no_tempo: entrada,
         regra: format!(
             "{melhor_m} batidas por compasso: acento do tempo 1 {acento_rel:+.3} acima da média, \
-             {:.0}% das trocas de acorde alinhadas, margem {margem:.3}; a música entra no tempo \
-             {entrada}{}",
+             {:.0}% das trocas de acorde alinhadas, margem {margem:.3} contra {rival_m} batidas{}; \
+             a música entra no tempo {entrada}{}",
             100.0 * alinhadas as f32 / vencedor.indices.len() as f32,
+            if fragil {
+                " — leitura frágil, as alternativas empatam"
+            } else {
+                ""
+            },
             if entrada == 1 {
                 ""
             } else {
