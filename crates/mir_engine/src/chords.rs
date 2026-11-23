@@ -24,6 +24,14 @@ pub enum Qualidade {
     SusQuatro,
     Diminuto,
     Potencia,
+    /// `6` e `sus2` **não são detectados** — não estão em `QUALIDADES`. Existem
+    /// como nome porque o mesmo conjunto de notas tem dois nomes legítimos e
+    /// **o baixo decide qual**: `Dm7` com o baixo na terça é `F6` em estado
+    /// fundamental, e `Bbsus4` com o baixo na quarta é `Ebsus2`. Medido no
+    /// repertório (2026-11-22): 39,5% das inversões são esse par de nomes, não
+    /// inversão.
+    Seis,
+    SusDois,
 }
 
 impl Qualidade {
@@ -37,6 +45,8 @@ impl Qualidade {
             Self::SusQuatro => "sus4",
             Self::Diminuto => "dim",
             Self::Potencia => "5",
+            Self::Seis => "6",
+            Self::SusDois => "sus2",
         }
     }
 
@@ -50,6 +60,8 @@ impl Qualidade {
             Self::SusQuatro => &[0, 5, 7],
             Self::Diminuto => &[0, 3, 6],
             Self::Potencia => &[0, 7],
+            Self::Seis => &[0, 4, 7, 9],
+            Self::SusDois => &[0, 2, 7],
         }
     }
 
@@ -63,20 +75,71 @@ impl Qualidade {
     }
 }
 
-/// Cifra com o baixo quando ele é **terça, quinta ou sétima** do acorde.
+/// Qualidades que podem **nomear** o conjunto quando o baixo vira a raiz.
 ///
-/// Devolve `None` quando a barra não informa nada: baixo que não é nota do
-/// acorde (passagem, pedal, erro), quarta ou segunda (que são adição, não
-/// inversão) e acordes sem terça. O nome da qualidade nunca muda — a barra só
-/// acrescenta registro, que é o que o croma descartou.
+/// Inclui `6` e `sus2`, que não são detectados mas são o outro nome legítimo do
+/// mesmo conjunto de notas.
+const QUALIDADES_NOME: [Qualidade; 10] = [
+    Qualidade::Maior,
+    Qualidade::Menor,
+    Qualidade::Sete,
+    Qualidade::MenorSete,
+    Qualidade::MaiorSete,
+    Qualidade::SusQuatro,
+    Qualidade::SusDois,
+    Qualidade::Diminuto,
+    Qualidade::Potencia,
+    Qualidade::Seis,
+];
+
+/// O mesmo conjunto de notas lido com o **baixo como raiz**, se isso for um
+/// acorde conhecido.
+///
+/// É a decisão que o croma não pode tomar: `Dm7` e `F6` têm as mesmas quatro
+/// classes de altura, então a correlação é idêntica e a escolha seria arbitrária.
+/// O baixo desempata — e só ele.
 #[must_use]
-pub fn com_baixo(tonica: usize, qualidade: Qualidade, baixo_midi: u8) -> Option<String> {
-    if !qualidade.tem_terca() {
+pub fn nome_pelo_baixo(
+    tonica: usize,
+    qualidade: Qualidade,
+    baixo_midi: u8,
+) -> Option<(usize, Qualidade)> {
+    let classe = usize::from(baixo_midi) % 12;
+    let notas: Vec<usize> = qualidade
+        .intervalos()
+        .iter()
+        .map(|i| (tonica + i) % 12)
+        .collect();
+    if classe == tonica || !notas.contains(&classe) {
         return None;
     }
+    let mut reordenado: Vec<usize> = notas.iter().map(|n| (n + 12 - classe) % 12).collect();
+    reordenado.sort_unstable();
+    QUALIDADES_NOME
+        .iter()
+        .find(|q| {
+            let mut ivs = q.intervalos().to_vec();
+            ivs.sort_unstable();
+            ivs == reordenado
+        })
+        .map(|&q| (classe, q))
+}
+
+/// Cifra com o baixo: **renomeia** quando o conjunto tem outro nome, e escreve
+/// a barra quando é inversão de verdade.
+///
+/// `None` quando o baixo não informa nada: fora do acorde, igual à fundamental,
+/// quarta ou segunda (que são adição, não inversão) e acordes sem terça.
+#[must_use]
+pub fn com_baixo(tonica: usize, qualidade: Qualidade, baixo_midi: u8) -> Option<String> {
     let classe = usize::from(baixo_midi) % 12;
+    // 1. O conjunto lido pelo baixo é acorde conhecido: o baixo é a raiz.
+    if let Some((t, q)) = nome_pelo_baixo(tonica, qualidade, baixo_midi) {
+        return Some(nome(t, q));
+    }
+    // 2. Senão é inversão — e a barra só entra onde a identidade não muda.
     let intervalo = (classe + 12 - tonica) % 12;
-    if intervalo == 0 || !qualidade.intervalos().contains(&intervalo) {
+    if intervalo == 0 || !qualidade.tem_terca() || !qualidade.intervalos().contains(&intervalo) {
         return None;
     }
     Some(format!("{}/{}", nome(tonica, qualidade), TONICAS[classe]))
@@ -364,11 +427,28 @@ mod tests {
             Some("Am/C"),
             "terça menor no baixo"
         );
-        // Sem barra: fundamental, nota estranha ao acorde, e acordes sem terça,
-        // onde a inversão é decisão de nome (Csus4/F = Fsus2).
+        // O baixo **renomeia** quando o conjunto tem dois nomes legítimos:
+        // Dm7 (D-F-A-C) com o baixo na terça é F6 (F-A-C-D) em fundamental, e
+        // Bbsus4 com o baixo na quarta é Ebsus2. O croma empata nos dois.
+        assert_eq!(
+            com_baixo(2, Qualidade::MenorSete, 41).as_deref(),
+            Some("F6"),
+            "Dm7 com F no baixo é F6"
+        );
+        assert_eq!(
+            com_baixo(10, Qualidade::SusQuatro, 51).as_deref(),
+            Some("Ebsus2"),
+            "Bbsus4 com Eb no baixo é Ebsus2"
+        );
+        assert_eq!(
+            nome_pelo_baixo(2, Qualidade::MenorSete, 41),
+            Some((5, Qualidade::Seis)),
+            "a leitura pelo baixo devolve Fá com sexta"
+        );
+        // Sem barra e sem renome: fundamental, nota estranha ao acorde, e
+        // potência (que não tem outro nome nem terça).
         assert_eq!(com_baixo(0, Qualidade::Maior, 36), None, "fundamental");
         assert_eq!(com_baixo(0, Qualidade::Maior, 41), None, "F não é de C");
-        assert_eq!(com_baixo(0, Qualidade::SusQuatro, 41), None, "sus4");
         assert_eq!(com_baixo(0, Qualidade::Potencia, 43), None, "potência");
     }
 

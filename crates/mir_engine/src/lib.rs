@@ -70,34 +70,45 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
     // A melodia é extraída antes dos acordes: ela arbitra a terça que o croma
     // perdeu na mixagem (ADR-0014, bloco 3).
     let melodia = melody::extrair(spectro, audio.taxa);
-    let chords = chords::detect_com_melodia(&chroma, Some(&melodia));
+    let mut chords = chords::detect_com_melodia(&chroma, Some(&melodia));
     let tempo = structure::estimate_tempo(spectro, audio.taxa);
     let sections = structure::segment(spectro, &chroma, audio.taxa, opts.trecho_minimo_s);
     // O baixo é lido **fora** do croma: o croma dobrou o registro, e é o
     // registro que separa `C` de `C/E` (ADR-0014, bloco 4). Os trechos usam
     // os mesmos limites dos acordes, para a inversão ser comparável.
     let baixo = baixo::extrair(spectro, audio.taxa);
-    let baixo_trechos: Vec<report::BaixoSegment> = chords
-        .iter()
-        .filter_map(|trecho| {
-            baixo
-                .do_trecho(trecho.inicio_s, trecho.fim_s)
-                .map(|(midi, confianca)| report::BaixoSegment {
-                    inicio_s: trecho.inicio_s,
-                    fim_s: trecho.fim_s,
-                    midi,
-                    nota: baixo::nome(midi),
-                    confianca,
-                    cifra: if confianca >= baixo::CONFIANCA_MINIMA {
-                        chords::com_baixo(trecho.tonica, trecho.qualidade, midi)
-                    } else {
-                        // Sem evidência estável o motor não escreve a barra:
-                        // inversão inventada é pior que inversão omitida.
-                        None
-                    },
-                })
-        })
-        .collect();
+    let mut baixo_trechos: Vec<report::BaixoSegment> = Vec::new();
+    for trecho in &mut chords {
+        if let Some((midi, confianca)) = baixo.do_trecho(trecho.inicio_s, trecho.fim_s) {
+            let firme = confianca >= baixo::CONFIANCA_MINIMA;
+            // O baixo decide o nome quando o conjunto tem **dois nomes
+            // legítimos** — `Dm7`/`F6`, `sus4`/`sus2`. O croma não pode
+            // decidir: as classes de altura são as mesmas e a correlação
+            // empata. Medido no repertório: 39,5% das inversões eram isso.
+            if firme {
+                if let Some((t, q)) = chords::nome_pelo_baixo(trecho.tonica, trecho.qualidade, midi)
+                {
+                    trecho.tonica = t;
+                    trecho.qualidade = q;
+                    trecho.acorde = chords::nome(t, q);
+                }
+            }
+            baixo_trechos.push(report::BaixoSegment {
+                inicio_s: trecho.inicio_s,
+                fim_s: trecho.fim_s,
+                midi,
+                nota: baixo::nome(midi),
+                confianca,
+                cifra: if firme {
+                    chords::com_baixo(trecho.tonica, trecho.qualidade, midi)
+                } else {
+                    // Sem evidência estável o motor não escreve a barra:
+                    // inversão inventada é pior que inversão omitida.
+                    None
+                },
+            });
+        }
+    }
 
     report::Report {
         audio: report::AudioInfo {
