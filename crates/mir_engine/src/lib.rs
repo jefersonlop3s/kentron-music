@@ -89,9 +89,10 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
     let melodia = melody::extrair(spectro, audio.taxa);
     let mut chords = chords::detect_com_melodia(&chroma, Some(&melodia));
     let tempo = structure::estimate_tempo(spectro, audio.taxa);
-    // O compasso vem **depois** dos acordes: a troca de acorde é a âncora do
-    // tempo 1, e sem barra não existe "o baixo chegou antes" (ADR-0014, bloco 5).
-    let compasso = compasso::analisar(spectro, audio.taxa, &tempo, &chords);
+    // O compasso é medido **no espectro**, não nos trechos de acorde: a âncora é a
+    // mudança de harmonia medida no croma, e assim o compasso não depende do
+    // detector de acorde — sem circularidade entre os dois (ADR-0014, bloco 5).
+    let compasso = compasso::analisar(spectro, audio.taxa, &tempo);
     let sections = structure::segment(spectro, &chroma, audio.taxa, opts.trecho_minimo_s);
     // O baixo é lido **fora** do croma: o croma dobrou o registro, e é o
     // registro que separa `C` de `C/E` (ADR-0014, bloco 4). Os trechos usam
