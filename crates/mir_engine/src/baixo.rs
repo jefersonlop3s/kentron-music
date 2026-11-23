@@ -134,21 +134,38 @@ impl Baixo {
         if inicio >= fim {
             return None;
         }
-        let mut contagem: Vec<(u8, usize)> = Vec::new();
+        // Conta por **classe de altura**, não por nota MIDI: o baixo alternando
+        // E1 e E2 é a mesma nota para a harmonia, e contar MIDI exato dividia a
+        // confiança pela metade — erro medido no repertório em 2026-11-22. A
+        // oitava continua sendo devolvida (é registro), mas não decide a nota.
+        let mut classes: Vec<(u8, Vec<(u8, usize)>)> = Vec::new();
         let mut com_evidencia = 0usize;
         for nota in self.quadros[inicio..fim].iter().flatten() {
             com_evidencia += 1;
-            match contagem.iter_mut().find(|(m, _)| m == nota) {
+            let classe = nota % 12;
+            let i = match classes.iter().position(|(c, _)| *c == classe) {
+                Some(i) => i,
+                None => {
+                    classes.push((classe, Vec::new()));
+                    classes.len() - 1
+                }
+            };
+            let midis = &mut classes[i].1;
+            match midis.iter_mut().find(|(m, _)| m == nota) {
                 Some((_, n)) => *n += 1,
-                None => contagem.push((*nota, 1)),
+                None => midis.push((*nota, 1)),
             }
         }
         if com_evidencia == 0 {
             return None;
         }
-        contagem.sort_by_key(|&(_, n)| std::cmp::Reverse(n));
-        let (nota, n) = contagem[0];
-        Some((nota, n as f32 / com_evidencia as f32))
+        classes.sort_by_key(|(_, midis)| {
+            std::cmp::Reverse(midis.iter().map(|(_, n)| n).sum::<usize>())
+        });
+        let (_, midis) = &mut classes[0];
+        let total: usize = midis.iter().map(|(_, n)| n).sum();
+        midis.sort_by_key(|(_, n)| std::cmp::Reverse(*n));
+        Some((midis[0].0, total as f32 / com_evidencia as f32))
     }
 }
 
@@ -249,6 +266,22 @@ mod tests {
                 nome(midi)
             );
         }
+    }
+
+    #[test]
+    fn alternar_oitava_nao_derruba_a_confianca() {
+        // E1 (41,20) e E2 (82,41) são a mesma nota para a harmonia. Contar nota
+        // MIDI exata dividia a confiança pela metade; contar classe de altura
+        // não. A oitava devolvida é a mais frequente.
+        let mut amostras = tom(41.20, 2.0, 6);
+        amostras.extend(tom(82.41, 2.0, 6));
+        let baixo = analisar(amostras);
+        let (midi, confianca) = baixo.do_trecho(0.4, 3.6).expect("sem baixo");
+        assert_eq!(midi % 12, 4, "esperava a classe de Mi, veio {}", nome(midi));
+        assert!(
+            confianca > 0.85,
+            "alternar oitavas não pode derrubar a confiança: {confianca}"
+        );
     }
 
     #[test]
