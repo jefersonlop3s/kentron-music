@@ -51,6 +51,9 @@ pub struct Report {
     /// Baixo por trecho de acorde (ADR-0014, bloco 4). Vazio quando a banda do
     /// baixo não tem evidência — o motor não inventa inversão.
     pub baixo: Vec<BaixoSegment>,
+    /// Compasso e tempo 1 (ADR-0014, bloco 5). `batidas_por_compasso = 0` quando
+    /// não há evidência para decidir — ver `crate::compasso`.
+    pub compasso: crate::compasso::Compasso,
     pub sections: Vec<Section>,
 }
 
