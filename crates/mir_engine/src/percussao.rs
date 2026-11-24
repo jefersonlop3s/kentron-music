@@ -45,8 +45,24 @@ pub struct BumboCaixa {
     pub caixas: usize,
     /// Onde cada caixa cai no ciclo do bumbo, em [`FATIAS`] fatias normalizadas.
     pub caixa_no_ciclo: [f32; FATIAS],
+    /// Contraste da hipótese **`6/8`**: polos em `s1` e `s4` (a metade) contra o
+    /// resto, normalizado. Ver [`BumboCaixa::dobra`].
+    pub escore_68: f32,
+    /// Contraste da hipótese **`3/4`**: polos em `s1`, `s3` e `s5` (os terços)
+    /// contra o resto, normalizado.
+    pub escore_34: f32,
     /// Em quantas partes a caixa dobra o ciclo do bumbo: **2** (metade, `6/8`),
     /// **3** (terços, `3/4`) ou **0** quando não há evidência.
+    ///
+    /// **Competição de hipóteses, não limiar.** Medido em 2026-11-24, no gabarito
+    /// independente: a comparação anterior (`fatia 3` contra `fatias 2+4`) dava
+    /// **4 de 6**; esta dá **5 de 6**. A diferença é usar **as seis fatias
+    /// normalizadas** em vez de duas posições soltas — o limiar local confundia
+    /// ruído com contraste.
+    ///
+    /// A **rotação circular** foi testada e **piorou** (5 → 4): a origem do ciclo
+    /// é o último bumbo, que **já é um polo** nos dois metros, então rotacionar só
+    /// deixa a hipótese errada encontrar alinhamento espúrio.
     pub dobra: u8,
     /// Por que esta leitura.
     pub regra: String,
@@ -206,20 +222,35 @@ pub fn medir(spectro: &Spectrogram, taxa: u32) -> BumboCaixa {
     for (i, fatia) in contagem.iter().enumerate() {
         saida.caixa_no_ciclo[i] = *fatia as f32 / total as f32;
     }
-    // A dobra: a **metade** do ciclo contra os **terços**. É a leitura que os
-    // músicos descrevem — dividir o seis por dois (`6/8`) ou por três (`3/4`).
-    let metade = saida.caixa_no_ciclo[3];
-    let tercos = saida.caixa_no_ciclo[2] + saida.caixa_no_ciclo[4];
-    saida.dobra = if metade > tercos {
+    // A leitura: **competição de hipóteses**, não limiar. O `6/8` tem os polos em
+    // `s1` e `s4`; o `3/4` em `s1`, `s3` e `s5`. Cada hipótese é o contraste dos
+    // seus polos contra o resto do ciclo, normalizado — e ganha a maior.
+    //
+    // Usar **as seis fatias** é o que separa esta leitura da anterior: comparar
+    // duas posições soltas confundia ruído com contraste (4 de 6); o contraste
+    // normalizado sobre o ciclo inteiro acerta 5 de 6 no gabarito.
+    let media = |idx: [usize; 4], n: usize| -> f32 {
+        idx[..n]
+            .iter()
+            .map(|&i| saida.caixa_no_ciclo[i])
+            .sum::<f32>()
+            / n as f32
+    };
+    saida.escore_68 =
+        (saida.caixa_no_ciclo[0] + saida.caixa_no_ciclo[3]) / 2.0 / (media([1, 2, 4, 5], 4) + 1e-9);
+    saida.escore_34 = (saida.caixa_no_ciclo[0] + saida.caixa_no_ciclo[2] + saida.caixa_no_ciclo[4])
+        / 3.0
+        / (media([1, 3, 5, 0], 3) + 1e-9);
+    saida.dobra = if saida.escore_68 > saida.escore_34 {
         2
-    } else if tercos > metade {
+    } else if saida.escore_34 > saida.escore_68 {
         3
     } else {
         0
     };
     saida.regra = format!(
         "período do bumbo {periodo:.2} s · {} bumbo(s) e {} caixa(s) · caixa no ciclo {} · \
-         metade {metade:.2} contra terços {tercos:.2} → dobra em {}",
+         contraste 6/8 {:.2} contra 3/4 {:.2} → dobra em {}",
         ataques_bumbo.len(),
         ataques_caixa.len(),
         saida
@@ -228,6 +259,8 @@ pub fn medir(spectro: &Spectrogram, taxa: u32) -> BumboCaixa {
             .map(|v| format!("{:.0}%", v * 100.0))
             .collect::<Vec<_>>()
             .join(" "),
+        saida.escore_68,
+        saida.escore_34,
         saida.dobra
     );
     saida

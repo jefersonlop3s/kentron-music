@@ -2,6 +2,39 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [feat] A decisão era o gargalo: competição de hipóteses leva o motor de 4 para 5 de 6 (2026-11-24)
+
+### O diagnóstico que destravou
+
+Oito hipóteses de **front-end acústico** falharam sem regredir o placar — banda mais larga, fluxo em log, espectrograma mais fino, âncora por amplitude, gate de entropia, `D_harm` a 30 ms, âncora harmônica, croma de ataque. **O sinal já chega limpo; o que faltava era modelagem temporal no nível do compasso.** Diagnóstico do dono, e ele acertou.
+
+### O que mudou
+
+A leitura da `percussao` deixou de ser um **limiar local** e passou a ser **competição de hipóteses** sobre as seis fatias normalizadas:
+
+```
+contraste 6/8 = (P0 + P3) / 2       ÷  média(P1, P2, P4, P5)    <- polos em s1 e s4
+contraste 3/4 = (P0 + P2 + P4) / 3  ÷  média(P1, P3, P5)        <- polos em s1, s3 e s5
+```
+
+### Medido — no mesmo histograma do motor, no gabarito independente
+
+| regra | acertos | erros |
+|---|---|---|
+| `fatia 3` vs `fatias 2+4` (a anterior) | 4 de 6 | `say-something`, `binky` |
+| **competição de hipóteses** | **5 de 6** | `binky` |
+| competição **com rotação circular** | 4 de 6 | `fallin`, `binky` |
+
+**A rotação circular foi testada e piorou** — e o motivo é estrutural: a origem do ciclo é o **último bumbo**, que **já é um polo** nos dois metros. Rotacionar não corrige nada e deixa a hipótese errada achar alinhamento espúrio.
+
+### A lição
+
+**O limiar local comparava duas posições soltas e confundia ruído com contraste.** O contraste normalizado sobre o ciclo inteiro é o que separa — a mesma correção de forma que a `dobra` precisou: **normalizar antes de comparar**.
+
+### O que falta
+
+`binky`: o período do bumbo sai 0,93 s (dois tempos, não a barra de ~1,4 s) e o pico da caixa cai em **s2**, onde nenhuma hipótese tem polo. **É o ciclo de novo** — o mesmo fantasma que resistiu às quatro hipóteses de detector.
+
 ## [processo] A âncora por croma: uma peça é ouro, o gate é no-op por matemática (2026-11-24)
 
 O dono propôs ancorar o ataque no **croma** em vez da energia — croma ponderado por transiente, gate por entropia, e `D_harm` separado de `D_reart`. Analisei e medi cada um dos quatro passos. **O motor não foi tocado: 4 de 6 intacto.**

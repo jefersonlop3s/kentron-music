@@ -232,6 +232,19 @@ Ou seja: **40 trechos em 23.558 (0,17%, um em 590) ficam sem explicação.** **N
   - **Conclusão honesta: é pendência com causa nomeada, não ajuste de limiar.** O que falta é **detector de ataque que modele o decaimento** — limiar adaptativo com período refratário proporcional à peça, ou casamento por molde do bumbo —, e não um parâmetro a mais. Mesma lição do resto da campanha: quando dois parâmetros não movem o número, o problema é o instrumento.
   - **O que fica de pé:** 4 de 6 no motor, 5 de 6 no experimento em Python — a diferença entre os dois é o detector, e é ali que o trabalho continua.
 - [ ] **Detector de ataque por peça da bateria — o próximo (2026-11-24).** Causa medida acima: o decaimento do bumbo vira vários ataques. Direções: (a) **período refratário proporcional** à peça, não fixo; (b) **casamento por molde** do bumbo (o decaimento tem forma conhecida); (c) limiar adaptativo por banda em vez do desvio global. Régua: o gabarito de nove músicas, nos stems separados. **Hoje: 4 de 6.**
+- [x] **A camada de decisão era o gargalo — a competição de hipóteses levou o motor de 4 para 5 de 6 (2026-11-24).** Diagnóstico do dono, e ele acertou: **oito hipóteses de front-end acústico falharam sem regredir o placar** — o sinal já chega limpo, e o que faltava era **modelagem temporal no nível do compasso**. A leitura da `percussao` deixou de ser um limiar local e passou a ser **competição de hipóteses sobre as seis fatias normalizadas**:
+
+  ```
+  contraste 6/8 = (P0 + P3) / 2   ÷  média(P1, P2, P4, P5)      <- polos em s1 e s4
+  contraste 3/4 = (P0 + P2 + P4) / 3  ÷  média(P1, P3, P5)      <- polos em s1, s3 e s5
+  ```
+
+  - **Medido no motor, no gabarito independente: 4 → 5 de 6.** `say-something` (6/8) passou a acertar; só `binky` (3/4) resiste.
+  - **As três regras comparadas, no mesmo histograma do motor:** `fatia 3 vs 2+4` (a anterior) **4 de 6**; **competição sem rotação 5 de 6**; competição **com** rotação circular **4 de 6**.
+  - **A rotação circular foi testada e PIOROU** — e o motivo é estrutural: a origem do ciclo é o **último bumbo**, que **já é um polo** nos dois metros (em `6/8` ele toca em s1 ou s4; em `3/4`, em s1, s3 ou s5). Rotacionar não corrige nada e deixa a hipótese errada encontrar alinhamento espúrio (`fallin` quebra).
+  - **A lição que o teste deixou:** o limiar local comparava **duas posições soltas** e confundia ruído com contraste; o contraste **normalizado sobre o ciclo inteiro** é o que separa. É a mesma correção de forma que a `dobra` precisou — normalizar antes de comparar.
+  - **O que falta no `binky`:** o período do bumbo sai 0,93 s (dois tempos, não a barra de ~1,4 s), e o pico da caixa cai em **s2** (52%), onde nenhuma hipótese tem polo. **É o ciclo de novo**, e é o mesmo fantasma que resistiu às quatro hipóteses de detector.
+  - **Testes:** os dois do módulo passam (o `6/8` sintético dobra em 2, o `3/4` em 3, o silêncio abstém), e a suíte inteira segue verde.
 - [ ] **Arquitetura de âncora por croma (proposta do dono) — analisada e medida; uma peça é ouro, duas não fazem o que prometem (2026-11-24).** O dono propôs ancorar o ataque no **croma** em vez da energia: croma ponderado por transiente, gate por entropia, e `D_harm` (mudança) separado de `D_reart` (rearticulação). Analisei os quatro passos e medi cada um. **O motor não foi tocado: 4 de 6 intacto.**
 
   | passo | veredito | evidência |
