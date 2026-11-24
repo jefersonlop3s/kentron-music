@@ -296,6 +296,35 @@ você quer prever **não mede nada**. O corpus parecia validar a regra porque
 conjunto com a taxa-base oposta — que mostrou o erro.** Vale para o próximo
 gabarito: **contar as classes antes de contar os acertos.**
 
+### O sétimo desempate — a grade harmônica — e a precondição violada
+
+**O dono ouviu e adjudicou** (2026-11-24): `Crer e observar` é **`3/4`** — é
+**piano e voz, sem bateria**, e é o piano que marca os tempos 1, 2 e 3;
+`Me Derramar` e `Desde os confins` são **`6/8`**; `Nothing Else Matters` é
+**`6/8`** no corpo (a bateria clara entre 1:10 e 1:35); `House of the Rising Sun`
+é **`6/8`** (os pratos marcam os seis, e bumbo e caixa só crescem depois de 2 min).
+**Os gabaritos estão certos e a regra dos contrastes está refutada.**
+
+**E a precondição do módulo foi violada:** separados os stems com demucs, o stem
+de bateria do `Crer e observar` dá **−61,9 LUFS** — silêncio. O `percussao`
+**declara** que precisa de bateria; rodá-lo ali mede o uso indevido, não o motor.
+**O `LUFS` do stem é a régua barata para verificar a precondição antes de
+reportar qualquer placar.**
+
+**O segundo desempate que o dono pediu — a marcação harmônica contra a grade do
+compasso — foi medido nos 13 rotulados: 4 de 13, com todas as grades pontuando
+0,25 a 0,35 — o acerto ao acaso.** A tolerância de 15% cobre 30% de cada passo, e
+as fronteiras de acorde estão **no nível do ruído**: o `±0,25 s` de jitter que o
+`PENDING` já registrava. **A prescrição de lá continua sendo o caminho** — medir o
+ritmo harmônico pelos **picos de novidade de croma no nível de quadro (23 ms)**,
+não pelas fronteiras dos trechos.
+
+**Sete desempates tentados, sete sem sinal:** a subdivisão interna (3, 5 e 3 de
+8), o filtro fisiológico (revertido), o piso de contraste (revertido), a regra do
+`4/4` × `6/8` (1 de 13), o ritmo harmônico em batidas, a razão barra/batida e a
+grade harmônica (4 de 13, no acaso). **Não é falta de tentativa — é falta de
+sinal, e a resposta honesta segue sendo a oferta.**
+
 **Comparar dois contrastes e ficar com o maior não é decidir** — e foi daí que o
 piso nasceu. Medido: as 15 vinham de contrastes **abaixo de 1** — `0,65` contra
 `0,60`, `0,57` contra `0,45`. Não havia evidência nenhuma; havia um número maior
