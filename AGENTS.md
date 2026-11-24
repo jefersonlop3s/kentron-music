@@ -101,6 +101,7 @@ Transversais (carregar sempre): `vies-de-plausibilidade`, `disciplina-de-validac
 | `toolchain-unica` | ao ver aviso de duplicata no doctor ou gate que reprova só num contexto |
 | `hinario-e-dominio-publico` | ao ingerir ficha de hinário, ao decidir se um hino pode ter letra no app e ao avaliar a camada de tradução brasileira |
 | `ocr-em-digitalizacao` | quando o dado só existe em PDF escaneado (sem camada de texto) |
+| `relatorio-de-status` | quando o usuário perguntar "qual o status do projeto", "status", "como está o projeto", "progresso", ou qualquer variação |
 | `ssh-no-windows` | ao configurar SSH por chave para uma VM Windows, ao depurar "Permission denied (publickey)" com a chave certa no lugar, e antes de escrever `authorized_keys` por PowerShell |
 
 Toda lição que custou uma sessão vira skill (julgamento) ou gate (mecanismo) — skill `prosa-vira-gate`.
