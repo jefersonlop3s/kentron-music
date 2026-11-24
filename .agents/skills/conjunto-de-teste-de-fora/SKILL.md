@@ -1,6 +1,6 @@
 ---
 name: conjunto-de-teste-de-fora
-description: Contramedidas para os dois vieses que fazem um placar alto mentir — o de SELEÇÃO (o conjunto foi escolhido por quem construiu) e o de COBERTURA (o conjunto não contém a classe difícil). Cobre 100% em nove músicas virando 1 de 8 no conjunto de outra pessoa, e 6 de 6 virando 70% de erro num corpus real. Carregar antes de declarar qualquer acerto, antes de comemorar placar perfeito, e sempre que o número parecer bom demais.
+description: Contramedidas para os TRÊS vieses que fazem um placar alto mentir — o de SELEÇÃO (o conjunto foi escolhido por quem construiu), o de COBERTURA (o conjunto não contém a classe difícil) e o de TAXA-BASE (o conjunto tem a distribuição que torna a resposta trivial certa). Cobre 100% em nove músicas virando 1 de 8 no conjunto de outra pessoa, 6 de 6 virando 70% de erro num corpus real, e 13 de 15 virando 1 de 9 num conjunto balanceado. Carregar antes de declarar qualquer acerto, antes de comemorar placar perfeito, e sempre que o número parecer bom demais.
 ---
 
 # Conjunto escolhido por quem construiu não é teste
@@ -14,7 +14,7 @@ Caso de origem: duas vezes no mesmo dia, no mesmo motor. O `5 de 6` caiu para
 **1 de 8** no conjunto de outra pessoa; depois, o `6 de 6` virou **70% de erro**
 num corpus real de 40 músicas.
 
-## Os dois vieses
+## Os três vieses
 
 1. **Viés de seleção — o conjunto foi escolhido.** Nove músicas que *eu* escolhi
    para testar `3/4` × `6/8` continham só `3/4` e `6/8`. O placar mediu a minha
@@ -27,9 +27,23 @@ num corpus real de 40 músicas.
    `4/4` — **28 foram lidas como `6/8`**. O conjunto cobria os casos que o autor
    pensou em testar; o mundo tinha outro.
 
+3. **Viés de taxa-base — o conjunto tem a distribuição que torna a resposta
+   trivial certa.** O terceiro, e o mais traiçoeiro porque **parece acerto**. Uma
+   regra que diz `4/4` por padrão acertou **13 de 15** no corpus gospel (quase todo
+   `4/4`) — e **1 de 9** num conjunto **balanceado** (três de cada) e **0 de 4**
+   num conjunto de **taxa-base oposta** (hinos ternários). O número do corpus não
+   media a regra: media a frequência da classe. Medição de origem: `13 de 15` com
+   distribuição implausível é a denúncia — **`4/4` era a resposta certa na maioria
+   do conjunto, então dizer `4/4` sempre parecia funcionar.**
+
+**Os três dão placar alto e têm consertos diferentes:** o de seleção pede um
+conjunto de fora; o de cobertura pede a classe ausente; o de **taxa-base pede o
+balanceamento** — ou um segundo conjunto com a distribuição **oposta**.
+
 **O tamanho importa menos que a variedade.** Nove músicas que cobrem os casos que
 existem valem mais que nove que cobrem os que eu imaginei. `n=6` não separa `5/6`
-de `4/6` — e `n=9` sem a classe difícil não separa o certo do plausível.
+de `4/6` — e `n=9` sem a classe difícil não separa o certo do plausível. **E um
+conjunto desbalanceado não separa o certo do frequente.**
 
 ## Regras
 
@@ -45,10 +59,16 @@ de `4/6` — e `n=9` sem a classe difícil não separa o certo do plausível.
 4. **Desconfie da distribuição do resultado, não só do acerto.** `70% de 6/8` num
    repertório que é quase todo `4/4` é a denúncia. **O formato da distribuição é
    evidência** — um acerto de 100% com distribuição implausível está errado.
-5. **Placar perfeito pede explicação, não comemoração.** `6 de 6` em nove músicas
+5. **Conte as classes do conjunto antes de contar os acertos.** Se uma classe é a
+   maioria, **a resposta trivial acerta por acidente** — e o placar mede a
+   frequência, não a regra. O conserto é **balancear** (três de cada) ou medir num
+   segundo conjunto com a **distribuição oposta**. Medição de origem: `13 de 15`
+   num corpus desbalanceado virou `1 de 9` num balanceado e `0 de 4` no de
+   taxa-base oposta.
+6. **Placar perfeito pede explicação, não comemoração.** `6 de 6` em nove músicas
    é um resultado sobre nove músicas. Escreva o número **com o conjunto ao lado**,
    sempre — `6 de 6 (gabarito X, sem 4/4)`.
-6. **Refutação não é fracasso, é mapa.** Cada conjunto de fora que corrige um
+7. **Refutação não é fracasso, é mapa.** Cada conjunto de fora que corrige um
    número estreita o que a coisa é: "não é o detector, não é a banda, não é a
    janela, não é a âncora" é resultado.
 
@@ -57,6 +77,8 @@ de `4/6` — e `n=9` sem a classe difícil não separa o certo do plausível.
 1. Medir no conjunto próprio — sabendo que é interno.
 2. Buscar/construir um conjunto rotulado por fora, com a classe difícil dentro.
 3. Medir nele **antes** de publicar o número.
-4. Medir no corpus real, e olhar a **distribuição** do resultado.
-5. Escrever o placar sempre com o conjunto e a cobertura declarados.
-6. Registrar os vieses encontrados, com o número de cada lado.
+4. **Contar as classes.** Se a distribuição não for balanceada, construir um
+   segundo conjunto **balanceado** ou de **taxa-base oposta** — e medir nos dois.
+5. Medir no corpus real, e olhar a **distribuição** do resultado.
+6. Escrever o placar sempre com o conjunto e a cobertura declarados.
+7. Registrar os vieses encontrados, com o número de cada lado.

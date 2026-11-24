@@ -9,7 +9,7 @@ Um placar de trials é um instrumento, e instrumento descalibrado mente com a me
 
 ## Regras
 
-1. **Fixture que cita dado vivo apodrece em silêncio.** Resolva a referência em runtime e aborte com explicação se a precondição não existir. Sub-teste que zera por completo (0/N) quase nunca é o modelo piorando — modelo degrada em gradiente; zero absoluto cheira a precondição quebrada.
+1. **Fixture que cita dado vivo apodrece em silêncio.** Resolva a referência em runtime e aborte com explicação se a precondição não existir. Sub-teste que zera por completo (0/N) quase nunca é o modelo piorando — modelo degrada em gradiente; zero absoluto cheira a precondição quebrada. **E a precondição se mede no material, não se supõe:** um módulo que declara "precisa de bateria" reprovou `0 de 4` em hinos — e o stem de bateria isolado deu **−61,9 LUFS**, silêncio: era piano e voz. **O instrumento barato é o `LUFS` (ou a energia) do stem isolado da peça que o módulo exige.** Rodar fora da precondição mede o uso indevido, não o motor — e o placar resultante é pior que inútil: parece resultado.
 2. **O mesmo modelo emite o mesmo argumento em formas diferentes** (objeto, string serializada, lista). Capture a forma bruta antes de concluir.
 3. **O placar aceita o que o PRODUTO aceita.** Pontuação e execução são a mesma decisão em dois lugares; mudou uma, muda a outra no mesmo commit.
 4. **Silêncio é o pior modo de falha, e costuma ser comportamento correto sem instrução.** Toda proibição num prompt vem com a alternativa ("não invente X — diga que não achou e ofereça Y").

@@ -2,6 +2,19 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [docs] As lições do dia viram skill: o terceiro viés, a precondição no material e o ataque ao próprio diagnóstico (2026-11-24)
+
+Quatro lições medidas hoje, e onde cada uma foi salva:
+
+| lição | onde |
+|---|---|
+| **O terceiro viés de conjunto: a taxa-base** — um conjunto com a distribuição que torna a resposta trivial certa faz o placar medir a **frequência**, não a regra (`13 de 15` desbalanceado → `1 de 9` balanceado → `0 de 4` de taxa-base oposta) | **`conjunto-de-teste-de-fora`** — de *dois* vieses para **três**, com a regra *"conte as classes antes de contar os acertos"* |
+| **A precondição se mede no material, não se supõe** — o `percussao` declara "precisa de bateria" e reprovou `0 de 4` em hinos; o stem isolado deu **−61,9 LUFS**, silêncio: era piano e voz | **`medicao-sem-autoengano`** — a regra do "zero absoluto" ganhou o **instrumento**: o `LUFS` do stem isolado |
+| **Placar na altura do acaso condena a medida** — a grade harmônica deu `4 de 13` com as três grades entre **0,25 e 0,35**, que é a largura da tolerância (±15% cobre 30%) | **`medida-que-nao-separa`** — duas regras novas: a **conta do acaso antes de interpretar**, e *"sete tentativas sem sinal é um resultado"* |
+| **O ataque adversarial ao próprio diagnóstico** — seis contra-argumentos testados, **dois venceram contra o autor** (a métrica vazia e o escopo maior que a medição), e os dois viraram correção publicada | **`refute-o-proprio-diagnostico`** — skill nova, com as **quatro classes de ataque** que encontram erro real |
+
+**Total: 25 skills.** A quarta é a única nova; as três primeiras foram **correções** a skills existentes — e a `medicao-sem-autoengano` já previa a lição do hino (*"zero absoluto cheira a precondição quebrada"*): o que faltava era o **instrumento barato** para medir a precondição.
+
 ## [feat] A harmonia dá a escala da barra: o hipercompasso do corpus cai de 5,08 s para 1,76 s (2026-11-24)
 
 ### O problema, medido em 40 músicas reais

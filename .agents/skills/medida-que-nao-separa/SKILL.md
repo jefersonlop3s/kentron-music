@@ -59,6 +59,19 @@ regredir o placar, e o salto veio de duas correções de **forma**, não de sina
    gargalo seguinte é a decisão (ou o contrário). Rediagnostique a cada salto.
 6. **`A(T/2)` contra `A(T/3)` e afins: normalizar antes de comparar** — a mesma
    correção de forma vale em qualquer escala, do envelope ao ciclo.
+7. **Compare o placar com o acerto ao acaso — e faça essa conta antes de
+   interpretar.** Uma medida com tolerância de ±15% cobre **30%** de cada passo:
+   se ela pontua **0,25 a 0,35 em todas as classes**, ela está **no acaso**, e não
+   existe sinal para ajustar. Medição de origem: a grade harmônica deu `4 de 13`
+   com **todas as três grades entre 0,25 e 0,35** — o número não media a música,
+   media a largura da tolerância. **Placar na altura do acaso condena a medida
+   inteira: pare de tentar parâmetros e mude de grandeza.**
+8. **Sete tentativas sem sinal é um resultado, e o resultado é "não há sinal
+   nessa família".** A subdivisão interna (3, 5 e 3 de 8), o filtro fisiológico
+   (revertido), o piso de contraste (revertido), a regra do `4/4` × `6/8`
+   (`1 de 13`), o ritmo harmônico em batidas, a razão barra/batida e a grade
+   harmônica (`4 de 13`, no acaso). **Depois de três, o ônus é provar que a
+   família certa está sendo medida — não tentar a oitava variação.**
 
 ## Ritual
 
