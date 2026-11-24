@@ -325,6 +325,31 @@ não pelas fronteiras dos trechos.
 grade harmônica (4 de 13, no acaso). **Não é falta de tentativa — é falta de
 sinal, e a resposta honesta segue sendo a oferta.**
 
+### A correção do dono aponta o instrumento certo — e o alvo
+
+O dono corrigiu a própria descrição do `Crer e observar`, e a correção é o dado
+mais útil da rodada: **não** é o grave tocando nos três tempos. É **alternância de
+registro** — *"o tempo 1 vem mais grave, e nos tempos 2 e 3 os acordes soam
+abertos"*.
+
+**Isso é exatamente o par bumbo×caixa que o motor já mede:** a banda 30–110 Hz
+pega a nota grave da mão esquerda e a 150–450 Hz pega os acordes da direita. **O
+instrumento é o certo; o ciclo é que estava errado** — o motor mediu **1,29 s** e a
+barra real é **~2,58 s**, metade. Com o ciclo dobrado errado, as posições somem.
+
+**O teste direto não confirmou, e fica registrado como inconclusivo, não
+negativo:** com um detector de ataques por fluxo espectral no stem de piano
+isolado do demucs, os ataques saíram em **523** para uma barra de 3/4 a ~70 BPM
+(que tem ~210) — o detector conta harmônicos e decaimentos, e com as fases
+borradas as três e as quatro grades empatam. **Um detector melhor — ou o próprio
+motor com a barra corrigida — é o caminho.**
+
+**O alvo da próxima rodada, nomeado:** a **escala da barra quando o bumbo toca em
+todo tempo**. É o defeito que contamina o `Crer e observar` (1,29 vs 2,58 s), o
+`someday-my-prince` (0,61 s), o `house-rising-sun` (1,43 vs ~2,5 s) e **6 das 40**
+do corpus. **Nenhum desempate de compasso funciona antes disso** — todos medem a
+posição dentro de um ciclo, e o ciclo está errado.
+
 **Comparar dois contrastes e ficar com o maior não é decidir** — e foi daí que o
 piso nasceu. Medido: as 15 vinham de contrastes **abaixo de 1** — `0,65` contra
 `0,60`, `0,57` contra `0,45`. Não havia evidência nenhuma; havia um número maior
