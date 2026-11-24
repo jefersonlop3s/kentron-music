@@ -85,6 +85,14 @@ pub struct Compasso {
     pub margem_dobra: f32,
     /// Em quantas partes o ciclo se dobra — ver [`Dobra`].
     pub dobra: Dobra,
+    /// A leitura do compasso — **a moldura, com o nome quando a evidência o dá**.
+    ///
+    /// O motor não força um nome. `(batidas, período)` é moldura; e a falta de
+    /// informação **vira escolha do músico**, não palpite do motor: `3/4` e `6/8`
+    /// têm a mesma barra de seis subdivisões e a mesma duração em segundos — o
+    /// que muda é onde o pé bate. Quando a dobra não decide, o motor devolve as
+    /// duas leituras em [`Leitura::alternativas`] e o app pergunta.
+    pub leitura: Leitura,
     /// O acento **por instrumento** — e é o que separa `3/4` de `6/8`.
     pub bandas: PerfilBandas,
     /// Por que este compasso — ou por que não houve decisão.
@@ -125,6 +133,55 @@ pub enum Dobra {
     /// As duas correlações empatam dentro da margem — o motor não escolhe.
     #[default]
     Indeterminada,
+}
+
+/// A leitura do compasso: a moldura medida e o nome **quando ele é decidível**.
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct Leitura {
+    /// Batidas por compasso da moldura. 0 = indeterminado.
+    pub batidas: u8,
+    /// Duração da barra, em segundos. É o invariante.
+    pub compasso_s: f32,
+    /// Em quantas partes o ciclo se dobra.
+    pub dobra: Dobra,
+    /// `|A(T/2) - A(T/3)|` — quanto a dobra é decisiva.
+    pub margem_dobra: f32,
+    /// O nome do compasso — `3/4`, `6/8`, `4/4`, `2/4` — **só quando a evidência
+    /// o determina**. `None` é resposta, não falha: ver `alternativas`.
+    pub nome: Option<String>,
+    /// As leituras **consistentes com a barra medida** quando o motor não
+    /// decide. `3/4` e `6/8` têm a mesma barra de seis subdivisões: a diferença
+    /// é onde o pé bate, e isso o músico sabe. **A falta de informação vira
+    /// feature** — o app oferece as duas e guarda a escolha.
+    pub alternativas: Vec<String>,
+}
+
+/// Nome do compasso a partir de **quantas batidas** e **como o ciclo se dobra**.
+///
+/// A regra é musical, não convenção de código: `3` batidas que se dobram em
+/// **três** repetem o mesmo conteúdo três vezes — `3/4`, três grupos de duas
+/// subdivisões. `3` batidas que se dobram em **dois** têm duas metades espelho —
+/// `6/8`, dois grupos de três. **Mesma barra de seis subdivisões, nomes
+/// diferentes** — e é por isso que o nome não sai de contar subdivisões.
+fn nome_do_compasso(batidas: u8, dobra: Dobra) -> Option<&'static str> {
+    match (batidas, dobra) {
+        (3, Dobra::EmTres) => Some("3/4"),
+        (3, Dobra::EmDois) => Some("6/8"),
+        (4, Dobra::EmDois) => Some("4/4"),
+        (2, Dobra::EmDois) => Some("2/4"),
+        (6, Dobra::EmDois) => Some("6/8"),
+        (6, Dobra::EmTres) => Some("3/4"),
+        _ => None,
+    }
+}
+
+/// As leituras que a mesma barra comporta quando a dobra não decide.
+fn alternativas_de(batidas: u8) -> Vec<String> {
+    match batidas {
+        3 => vec!["3/4".into(), "6/8".into()],
+        6 => vec!["6/8".into(), "3/4".into()],
+        _ => Vec::new(),
+    }
 }
 
 /// Acento por posição do compasso, medido **por instrumento**.
@@ -509,6 +566,7 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
         correlacao_terco: 0.0,
         margem_dobra: 0.0,
         dobra: Dobra::Indeterminada,
+        leitura: Leitura::default(),
         bandas: PerfilBandas::default(),
         regra,
     };
@@ -700,6 +758,21 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
         correlacao_terco,
         margem_dobra,
         dobra,
+        leitura: {
+            let nome = nome_do_compasso(melhor_m, dobra);
+            Leitura {
+                batidas: melhor_m,
+                compasso_s,
+                dobra,
+                margem_dobra,
+                nome: nome.map(str::to_owned),
+                alternativas: if nome.is_some() {
+                    Vec::new()
+                } else {
+                    alternativas_de(melhor_m)
+                },
+            }
+        },
         bandas: PerfilBandas::medir(spectro, taxa, &vencedor.batidas, m_usize, p_usize),
         regra: format!(
             "{melhor_m} batidas por compasso: acento do tempo 1 {acento_rel:+.3} acima da média, \
@@ -1046,6 +1119,26 @@ mod tests {
             (perto - longe).abs() < 0.15,
             "a correção não compensou: {perto:.3} contra {longe:.3}"
         );
+    }
+
+    #[test]
+    fn o_nome_do_compasso_sai_da_dobra_e_das_batidas() {
+        // A mesma barra de seis subdivisões tem dois nomes: três batidas que se
+        // dobram em três são `3/4` (três grupos de duas); três que se dobram em
+        // dois são `6/8` (dois grupos de três). É a regra que o nome não pode
+        // violar — e é por isso que contar subdivisões não nomeia nada.
+        assert_eq!(nome_do_compasso(3, Dobra::EmTres), Some("3/4"));
+        assert_eq!(nome_do_compasso(3, Dobra::EmDois), Some("6/8"));
+        assert_eq!(nome_do_compasso(4, Dobra::EmDois), Some("4/4"));
+        assert_eq!(nome_do_compasso(2, Dobra::EmDois), Some("2/4"));
+        // Sem dobra decidida não há nome — e aí o motor **oferece** as duas.
+        assert_eq!(nome_do_compasso(3, Dobra::Indeterminada), None);
+        assert_eq!(
+            alternativas_de(3),
+            vec!["3/4".to_string(), "6/8".to_string()],
+            "a falta de informação tem de virar escolha, não palpite"
+        );
+        assert!(alternativas_de(4).is_empty(), "4/4 não tem alternativa");
     }
 
     #[test]
