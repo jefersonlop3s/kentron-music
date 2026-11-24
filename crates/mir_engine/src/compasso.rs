@@ -166,25 +166,20 @@ impl Leitura {
     /// Reconcilia a leitura com a relação **bumbo×caixa**, quando ela decide.
     ///
     /// Medido no gabarito independente (2026-11-24): a relação bumbo×caixa acerta
-    /// **6 de 6** e a dobra do envelope acerta **1 de 8**. Quando as duas discordam,
-    /// a percussão manda — e a `fonte` fica registrada para quem lê saber de onde
-    /// veio o nome.
+    /// **6 de 6** e a dobra do envelope acerta **1 de 8**.
+    ///
+    /// **Mas ela separa ternário de binário, não `6/8` de `4/4`.** As duas metades
+    /// é o que um `6/8` (dois grupos de três) **e** um `4/4` (dois grupos de dois)
+    /// fazem — e o corpus mostrou: **28 de 40 músicas de gospel lidas como `6/8`**,
+    /// quando o repertório é quase todo `4/4`. O gabarito não pegou isso porque
+    /// **não tem nenhum `4/4`**.
+    ///
+    /// Então: **três terços → `3/4`**, decidido; **duas metades → oferecer
+    /// `6/8` ou `4/4`**, sem decidir. A subdivisão por batida (três ou dois) é
+    /// quem fecharia — e ela ainda não foi medida de forma confiável.
     pub fn reconciliar(&mut self, bumbo_caixa: &crate::percussao::BumboCaixa) {
-        let (batidas, nome) = match bumbo_caixa.dobra {
-            2 => (6u8, "6/8"),
-            3 => (3u8, "3/4"),
-            _ => return,
-        };
-        if bumbo_caixa.periodo_bumbo_s > 0.0 {
-            self.compasso_s = bumbo_caixa.periodo_bumbo_s;
-        }
-        self.batidas = batidas;
-        self.nome = Some(nome.to_owned());
-        self.alternativas = Vec::new();
-        self.fonte = "percussão".to_owned();
-        self.regra = format!(
-            "relação bumbo×caixa: {nome} · contraste 6/8 {:.2} contra 3/4 {:.2} · \
-             caixa no ciclo {}",
+        let evidencia = format!(
+            "relação bumbo×caixa: contraste 6/8 {:.2} contra 3/4 {:.2} · caixa no ciclo {}",
             bumbo_caixa.escore_68,
             bumbo_caixa.escore_34,
             bumbo_caixa
@@ -194,6 +189,29 @@ impl Leitura {
                 .collect::<Vec<_>>()
                 .join(" ")
         );
+        match bumbo_caixa.dobra {
+            3 => {
+                if bumbo_caixa.periodo_bumbo_s > 0.0 {
+                    self.compasso_s = bumbo_caixa.periodo_bumbo_s;
+                }
+                self.batidas = 3;
+                self.nome = Some("3/4".to_owned());
+                self.alternativas = Vec::new();
+                self.fonte = "percussão".to_owned();
+                self.regra = format!("{evidencia} → três terços, `3/4`");
+            }
+            2 => {
+                if bumbo_caixa.periodo_bumbo_s > 0.0 {
+                    self.compasso_s = bumbo_caixa.periodo_bumbo_s;
+                }
+                self.nome = None;
+                self.alternativas = vec!["6/8".to_owned(), "4/4".to_owned()];
+                self.fonte = "percussão".to_owned();
+                self.regra =
+                    format!("{evidencia} → duas metades: `6/8` ou `4/4`, e a percussão não separa");
+            }
+            _ => {}
+        }
     }
 }
 
@@ -234,6 +252,12 @@ impl Leitura {
                 }
             }
             (Some(nome), true) => format!("{nome} (sugestão)"),
+            // Duas metades: a percussão **não separa** `6/8` de `4/4`, e o corpus
+            // mostrou que insistir no `6/8` erra 70% das vezes. Oferece os dois e
+            // diz de onde veio — a escolha é do músico.
+            (None, false) if self.fonte == "percussão" => {
+                format!("{alternativas}? (relação bumbo×caixa)")
+            }
             (None, false) => format!("{alternativas}?"),
             // Sem nome e sem alternativa não há o que dizer: comentário que não
             // informa é ruído na cifra.
