@@ -162,6 +162,20 @@ pub struct Leitura {
     pub regra: String,
 }
 
+/// O contraste mínimo para uma hipótese ser **afirmada**, não apenas preferida.
+///
+/// Comparar dois contrastes e ficar com o maior **não é decidir**: medido no
+/// corpus de 40 (2026-11-24), as 15 leituras `3/4` decididas vinham de contrastes
+/// **abaixo de 1** (`0,65` contra `0,60`; `0,57` contra `0,45`) — nenhuma
+/// evidência, só um número maior que o outro. **A hipótese tem de se confirmar**
+/// (os terços carregarem mais que o resto) para virar afirmação.
+///
+/// O piso separa, medido: o gabarito fica em `1,24 · 1,76 · 2,08` (**3 de 3**
+/// mantidos) e o corpus cai de 15 para **2** decididas. E o que sobra é
+/// **oferecido**, com `3/4` entre as alternativas — a estrutura ternária é
+/// medida, o nome do compasso é que não.
+pub const CONTRASTE_CONFIRMA: f32 = 1.0;
+
 impl Leitura {
     /// Reconcilia a leitura com a relação **bumbo×caixa**, quando ela decide.
     ///
@@ -177,6 +191,11 @@ impl Leitura {
     /// Então: **três terços → `3/4`**, decidido; **duas metades → oferecer
     /// `6/8` ou `4/4`**, sem decidir. A subdivisão por batida (três ou dois) é
     /// quem fecharia — e ela ainda não foi medida de forma confiável.
+    ///
+    /// **E a afirmação exige que o contraste confirme a hipótese:** um `3/4` só é
+    /// decidido com `escore_34` acima de [`CONTRASTE_CONFIRMA`]. Abaixo disso a
+    /// estrutura ternária é **medida** e **oferecida** — o corpus mostrou 13
+    /// músicas nesse estado, com `3/4` entre as alternativas e o nome em aberto.
     pub fn reconciliar(&mut self, bumbo_caixa: &crate::percussao::BumboCaixa) {
         let evidencia = format!(
             "relação bumbo×caixa: contraste 6/8 {:.2} contra 3/4 {:.2} · caixa no ciclo {}",
@@ -195,10 +214,24 @@ impl Leitura {
                     self.compasso_s = bumbo_caixa.periodo_bumbo_s;
                 }
                 self.batidas = 3;
-                self.nome = Some("3/4".to_owned());
-                self.alternativas = Vec::new();
                 self.fonte = "percussão".to_owned();
-                self.regra = format!("{evidencia} → três terços, `3/4`");
+                if bumbo_caixa.escore_34 > CONTRASTE_CONFIRMA {
+                    self.nome = Some("3/4".to_owned());
+                    self.alternativas = Vec::new();
+                    self.regra = format!("{evidencia} → três terços, contraste confirmado: `3/4`");
+                } else {
+                    // A estrutura ternária é **medida**; o nome do compasso não. Um
+                    // `3/4` com o bumbo em dois de três tempos e um `6/8` (ou um
+                    // `4/4` com subdivisão ternária) com o bumbo em dois de seis
+                    // produzem o **mesmo** histograma — e é por isso que a oferta
+                    // inclui os três, em vez de afirmar.
+                    self.nome = None;
+                    self.alternativas = vec!["3/4".to_owned(), "6/8".to_owned(), "4/4".to_owned()];
+                    self.regra = format!(
+                        "{evidencia} → três terços, mas o contraste não confirma o compasso \
+                         ternário: a estrutura é ternária, o nome não"
+                    );
+                }
             }
             2 => {
                 if bumbo_caixa.periodo_bumbo_s > 0.0 {
@@ -1359,5 +1392,39 @@ mod tests {
             "barra {} s, esperada ~2,0 s",
             compasso.compasso_s
         );
+    }
+
+    #[test]
+    fn a_estrutura_ternaria_so_vira_3_4_com_contraste_confirmado() {
+        // Medido no corpus de 40 (2026-11-24): as 15 leituras `3/4` decididas
+        // vinham de contrastes **abaixo de 1** (`0,65` contra `0,60`; `0,57`
+        // contra `0,45`) — nenhuma evidência, só um número maior que o outro. O
+        // gabarito independente fica em `1,24 · 1,76 · 2,08`.
+        let mut caixa = crate::percussao::BumboCaixa {
+            periodo_bumbo_s: 1.77,
+            escore_68: 0.60,
+            escore_34: 0.65,
+            dobra: 3,
+            ..crate::percussao::BumboCaixa::default()
+        };
+
+        let mut fraca = Leitura::default();
+        fraca.reconciliar(&caixa);
+        assert_eq!(fraca.nome, None, "afirmou `3/4` com contraste 0,65");
+        assert!(
+            fraca.alternativas.contains(&"3/4".to_owned()),
+            "a oferta tem de incluir `3/4`: {:?}",
+            fraca.alternativas
+        );
+        assert_eq!(fraca.batidas, 3, "a estrutura ternária é medida");
+
+        // O mesmo com o contraste do `mull-of-kintyre`, do gabarito.
+        caixa.escore_68 = 0.64;
+        caixa.escore_34 = 2.08;
+        let mut firme = Leitura::default();
+        firme.reconciliar(&caixa);
+        assert_eq!(firme.nome.as_deref(), Some("3/4"));
+        assert!(firme.alternativas.is_empty());
+        assert_eq!(firme.compasso_s, 1.77, "a barra vem da percussão");
     }
 }

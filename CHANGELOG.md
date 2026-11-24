@@ -47,9 +47,28 @@ A troca de acorde cai na fronteira da barra. Então a barra é o candidato `T/k`
 | gabarito independente | 6 de 6 | **6 de 6** |
 | testes | 80 | **150 no workspace** |
 
-### O que isto **não** conserta
+### O piso de confiança: a hipótese tem de se confirmar
 
-O veredito ficou **mais confiante**: as leituras `3/4` **decididas** passaram de 6 para **15 de 40**. A caixa nos terços **não distingue um compasso ternário de uma subdivisão ternária de um binário** — é a própria skill `medida-que-não-separa`. O corpus é louvor contemporâneo, majoritariamente binário, e **não há rótulo para essas 15**. **A escala está travada; o veredito segue sem verificação independente.**
+O veredito ficou **mais confiante**: as leituras `3/4` **decididas** passaram de 6 para **15 de 40**. E **comparar dois contrastes e ficar com o maior não é decidir** — medido, as 15 vinham de contrastes **abaixo de 1** (`0,65` contra `0,60`; `0,57` contra `0,45`). Não havia evidência; havia um número maior que o outro.
+
+**Dois discriminadores foram testados e nenhum separa:**
+
+| métrica | gabarito (3/4, devem decidir) | corpus (as 15) | separa? |
+|---|---|---|---|
+| alinhamento às trocas de acorde | 0,00 · 0,17 · 0,50 | até 0,31 | **não** |
+| margem de contraste (`34 − 68`) | +0,11 · +1,41 · +1,44 | até +0,63 | **não** |
+| **contraste `3/4` absoluto** | **1,24 · 1,76 · 2,08** | 0,47 a 0,86 · **e 2,04** | **quase** |
+
+**A regra: um `3/4` só é decidido com o contraste `3/4` acima de 1** — a hipótese tem de se confirmar (os terços carregarem mais que o resto), não apenas vencer a alternativa. O que fica abaixo é **oferecido**, com `3/4` entre as alternativas: **a estrutura ternária é medida; o nome do compasso é que não.**
+
+| | antes do piso | depois |
+|---|---|---|
+| gabarito · `3/4` decididos | 3 de 3 | **3 de 3** |
+| gabarito (total) | 6 de 6 | **6 de 6** |
+| corpus · `3/4` decididos | 15 de 40 | **2 de 40** |
+| corpus · ternário oferecido | — | **13** |
+
+**As 2 que sobraram têm barra implausível — o defeito inverso do hipercompasso:** `Agnus Dei` dá barra de 0,64 s (**283 BPM** por batida de `3/4`) e `Oficina G3 · Meus Passos`, 0,43 s (**421 BPM**). O bumbo toca em **todo tempo**, então o ciclo cai na **batida** em vez da barra — e o conjunto de candidatos só **desce** (`÷k`), não sobe. **A direção `×k` foi medida e quebra o gabarito** (o alvo harmônico do `fallin` é 1,5 barra e a escolha ia para 2,82 s): não é um candidato a mais, é outro critério. Fica registrado, com as duas músicas nomeadas para adjudicação.
 
 ## [feat] 6 de 6 no gabarito independente: a banda da caixa, a coincidência e o ciclo por contraste (2026-11-24)
 
