@@ -78,16 +78,38 @@ pub fn estimate_tempo(spectro: &Spectrogram, taxa: u32) -> Tempo {
     let max_lag = ((fps * 60.0 / 60.0) as usize)
         .min(curva.len() / 2)
         .max(min_lag + 1);
+    let correlacao = |lag: usize| -> f32 {
+        (0..curva.len() - lag)
+            .map(|i| curva[i] * curva[i + lag])
+            .sum()
+    };
     let mut melhor = (min_lag, f32::MIN);
     for lag in min_lag..max_lag {
-        let soma: f32 = (0..curva.len() - lag)
-            .map(|i| curva[i] * curva[i + lag])
-            .sum();
+        let soma = correlacao(lag);
         if soma > melhor.1 {
             melhor = (lag, soma);
         }
     }
-    let mut bpm = 60.0 * fps / melhor.0 as f32;
+    // **Interpolação parabólica do pico.** Sem ela o BPM só assume `60·fps/lag`
+    // com lag **inteiro** — degraus de ~5% que ainda dependem da taxa de
+    // amostragem do arquivo. Medido em 2026-11-22: 161,5 · 117,5 · 107,7 (44,1 kHz)
+    // e 165,4 · 175,8 · 127,8 (48 kHz) são **todos** lags inteiros, e o mesmo
+    // `Me Derramar` deu 117,2 no original e 117,5 no corte a 22 kHz. Com a grade
+    // derivando 5% por batida o acento não alinha dentro do compasso — e é a
+    // mesma interpolação que o espectro já usa nos picos (`spectrum::para_cada_pico`).
+    let lag = if melhor.0 > min_lag && melhor.0 + 1 < max_lag {
+        let (a, b, c) = (correlacao(melhor.0 - 1), melhor.1, correlacao(melhor.0 + 1));
+        let denominador = a - 2.0 * b + c;
+        if denominador.abs() > f32::EPSILON {
+            (melhor.0 as f32 + 0.5 * (a - c) / denominador)
+                .clamp(melhor.0 as f32 - 0.5, melhor.0 as f32 + 0.5)
+        } else {
+            melhor.0 as f32
+        }
+    } else {
+        melhor.0 as f32
+    };
+    let mut bpm = 60.0 * fps / lag;
     // Dobra para a faixa cantada quando a estimativa cai no harmônico.
     while bpm < 70.0 {
         bpm *= 2.0;
