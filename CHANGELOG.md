@@ -83,7 +83,7 @@ gabarito (3/4 certos)      0,90 · 1,39 · 1,93 s
 falsos positivos           0,64 · 0,43 s        <- abaixo do piso fisiológico
 ```
 
-As duas erradas dão **283 e 421 BPM por batida de `3/4`**. O que o dono descreveu, e que o motor não vê: *"contagem para não se perder… `1 e 2 e 3 e 4 e`"* — as dez são `4/4` com a caixa em contratempo e repiques no `e`. **O motor estava lendo o `e` como se fosse um tempo.**
+As duas erradas dão **283 e 421 BPM por batida de `3/4`**. O que o dono descreveu, e que o motor não vê: *"contagem para não se perder… `1 e 2 e 3 e 4 e`"* — as dez são `4/4` com a caixa em contratempo e repiques no `e`. **O motor estava lendo o **tempo** (a batida) como se fosse a **barra**.
 
 ### A regra final: a barra tem de ser plausível
 

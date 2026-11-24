@@ -207,7 +207,9 @@ candidatos só desce (`÷k`). **Uma barra fora da faixa não é uma barra.**
 **O que o dono descreveu, e que o motor não vê:** *"contagem para não se perder…
 `1 e 2 e 3 e 4 e`"*. As dez são `4/4` com a caixa em contratempo, repiques no `e`,
 sextinas na guitarra, bumbo duplo, e — no caso do `Meus Passos` — andamentos e
-compassos que mudam no meio. **O motor estava lendo o `e` como se fosse um tempo.**
+compassos que mudam no meio. **O motor estava lendo o tempo (a batida) como se
+fosse a barra** — e a caixa, que o dono ouve em contratempo, entrava no histograma
+como se fosse acento estrutural.
 
 ### A regra final: a barra tem de ser plausível
 
