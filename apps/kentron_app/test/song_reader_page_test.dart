@@ -221,7 +221,7 @@ void main() {
   });
 
   /// Cifra com 3 seções para testar navegação sem crash.
-  const _cifraTres = SongDetail(
+  const cifraTres = SongDetail(
     title: 'Três Seções',
     key: 'C',
     sections: <SongSection>[
@@ -238,14 +238,14 @@ void main() {
     core: 'falso',
   );
 
-  Future<SongDetail> _lerTres(String _) async => _cifraTres;
+  Future<SongDetail> lerTres(String _) async => cifraTres;
 
   testWidgets('piloto: navega entre 3 seções sem perder estado ou crashar', (tester) async {
     await tester.pumpWidget(
       _montar(
         SongReaderPage(
           input: 'ignorado',
-          ler: _lerTres,
+          ler: lerTres,
           transpor: _transpor,
           tons: _tons,
         ),
