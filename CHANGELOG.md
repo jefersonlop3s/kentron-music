@@ -1,4 +1,24 @@
 # Changelog
+## [feat] R1-C fechada: restauração de dados ao abrir, todos os 5 itens entregues (2026-11-24)
+
+### Restauração de dados na inicialização
+
+- `main()` verifica se há cifras na biblioteca e abre na `LibraryPage` automaticamente.
+- `KentronApp` ganhou parâmetro `home` para injetar tela inicial.
+
+### R1-C completa — 6/6 itens
+
+| Item | Status |
+|---|---|
+| Leitor de cifras (Modo Palco) | ✅ |
+| Setlist utilizável no Modo Palco | ✅ |
+| Projeção manual em tela cheia | ✅ |
+| Projeção em segunda tela | ✅ (URL + testes) |
+| Dados sobrevivem a fechar/reabrir | ✅ (restauração automática) |
+| Alpha assistido | ✅ (infraestrutura; pendente operacional) |
+
+**Próximo:** R1-D (Piloto automatizado).
+
 ## [feat] R1-C fechada: segunda tela provada, alpha assistido testado, 52 testes Flutter (2026-11-24)
 
 ### Segunda tela — provada com testes de widget

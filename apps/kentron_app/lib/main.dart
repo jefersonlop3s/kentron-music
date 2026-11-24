@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:core_l10n/core_l10n.dart';
+import 'package:flutter/foundation.dart';
 import 'package:kentron_app/src/rust/bridge.dart';
 import 'package:kentron_app/src/rust/frb_generated.dart';
 import 'package:kentron_app/src/stage/library_page.dart';
@@ -9,6 +12,12 @@ import 'package:material_ui/material_ui.dart';
 
 /// Sovereign Emerald, token visual do DESIGN.md.
 const _sovereignEmerald = Color(0xFF10B981);
+
+/// Diretório da biblioteca local (mesma lógica de library_page.dart).
+String _bibliotecaDir() {
+  if (kIsWeb) return '/tmp/kentron-library';
+  return '${Platform.environment['HOME'] ?? '/tmp'}/.kentron/library';
+}
 
 /// Cifra de exemplo da tela inicial: **só acordes, sem letra de terceiros**.
 /// O objetivo é provar a ponte (ADR-0007), não entregar o repertório.
@@ -32,13 +41,11 @@ Future<SongSummary> carregarPeloNucleo(String chordpro) =>
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // A tela inicial chama o núcleo Rust: sem isto a ponte não está carregada.
   await RustLib.init();
-  // Browser Source do OBS: a URL traz a cifra e o app abre direto na projeção.
+
+  // Browser Source do OBS: URL com a cifra abre direto na projeção.
   final chordpro = chordproDaUrl(Uri.base);
   if (chordpro != null) {
-    // `?secao=N` abre a projeção na seção pedida; sem ele, na primeira. É o
-    // canal que o piloto automatizado do OBS usa para navegar (ADR-0010).
     runApp(
       ProjecaoApp(
         chordpro: chordpro,
@@ -47,7 +54,24 @@ Future<void> main() async {
     );
     return;
   }
-  runApp(const KentronApp());
+
+  // Restauração: se há cifras na biblioteca, abre na LibraryPage.
+  // Senão, mostra a HomeScreen com a cifra de exemplo.
+  final Widget telaInicial = await _telaInicialComRestauracao();
+  runApp(KentronApp(home: telaInicial));
+}
+
+/// Decide a tela inicial: LibraryPage (se há dados) ou HomeScreen (vazio).
+Future<Widget> _telaInicialComRestauracao() async {
+  try {
+    final musicas = await listarBiblioteca(baseDir: _bibliotecaDir());
+    if (musicas.isNotEmpty) {
+      return const LibraryPage();
+    }
+  } on Object {
+    // Falha ao listar: mostra a HomeScreen mesmo.
+  }
+  return const HomeScreen();
 }
 
 class KentronApp extends StatelessWidget {
@@ -56,6 +80,7 @@ class KentronApp extends StatelessWidget {
     this.locale,
     this.carregar = carregarPeloNucleo,
     this.cifra = cifraDeExemplo,
+    this.home,
   });
 
   /// Quando informado, força o locale. Os testes usam isso para provar a
@@ -69,6 +94,9 @@ class KentronApp extends StatelessWidget {
 
   /// Cifra mostrada na tela inicial.
   final String cifra;
+
+  /// Tela inicial personalizada. Quando nula, usa [HomeScreen].
+  final Widget? home;
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +117,7 @@ class KentronApp extends StatelessWidget {
         ...GlobalMaterialLocalizations.delegates,
       ],
       supportedLocales: CoreL10n.supportedLocales,
-      home: HomeScreen(carregar: carregar, cifra: cifra),
+      home: home ?? HomeScreen(carregar: carregar, cifra: cifra),
     );
   }
 }

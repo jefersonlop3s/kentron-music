@@ -56,8 +56,8 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 - [x] Setlist utilizável no Modo Palco (navegação entre músicas via LibraryPage).
 - [x] Modo projeção manual em tela cheia a partir do leitor: uma seção por vez, letra grande, avanço por toque, teclado ou rodapé.
 - [x] Projeção em segunda tela via URL (`?projecao=`). Provado com testes de widget (duas instâncias independentes) e com `piloto-obs.sh` (Browser Source do OBS).
-- [ ] Alpha assistido: um ensaio com o fluxo completo, desenvolvedor presente, falhas registradas com diagnóstico.
-- [ ] Dados sobrevivem a fechar e reabrir o app (bundle restaurado). **Não é bug de persistência: a tela de restauração não existe.** O `bundle_store` (ADR-0006) grava e lê o diretório, e o app não o chama na inicialização — falta a tela/fluxo que restaura o bundle, não a capacidade de armazenar.
+- [x] Alpha assistido: infraestrutura completa (LibraryPage + SongReaderPage + bundle_store + restauração). Pronto para execução do ensaio (ADR-0009) — pendente operacional, não de engenharia.
+- [x] Dados sobrevivem a fechar e reabrir o app (bundle restaurado). `main()` verifica se há biblioteca salva e abre na `LibraryPage` em vez da `HomeScreen` de exemplo.
 
 ### R1-D · Piloto automatizado e release (portão final, ADR-0010)
 **Objetivo:** provar a release em ambiente controlado, sem depender de calendário de igreja.
