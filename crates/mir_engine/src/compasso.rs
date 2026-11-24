@@ -43,6 +43,16 @@ pub struct Compasso {
     pub inicio_s: f32,
     /// Período da batida, em segundos.
     pub periodo_s: f32,
+    /// Duração do compasso, em segundos: `periodo_s * batidas_por_compasso`.
+    /// Zero quando indeterminado.
+    ///
+    /// **É o invariante.** `(BPM, batidas)` é moldura; a duração da barra em
+    /// segundos é o que o áudio fixa. `Me Derramar` lê 4 batidas de 0,812 s
+    /// (barra 3,25 s) no acorde completo e 3 batidas de 0,526 s (barra 1,58 s,
+    /// **um grupo de acento**, metade da barra) na banda do violão: leituras
+    /// diferentes, mesma barra de ~3,2 s — e a barra que o dono marcou é 3,0 s.
+    /// O nome (`4/4`, `6/8`) é da banda; a barra em segundos é do áudio.
+    pub compasso_s: f32,
     /// Acento médio no tempo 1 menos o acento médio nos outros tempos.
     pub confianca: f32,
     /// Distância para o segundo colocado. Baixa = decisão frágil.
@@ -251,6 +261,7 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
         batidas_por_compasso: 0,
         inicio_s: 0.0,
         periodo_s: periodo,
+        compasso_s: 0.0,
         confianca: 0.0,
         margem: 0.0,
         entrada_no_tempo: 0,
@@ -419,6 +430,7 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
         batidas_por_compasso: melhor_m,
         inicio_s: inicio,
         periodo_s: periodo,
+        compasso_s: periodo * f32::from(melhor_m),
         confianca: acento_rel,
         margem,
         entrada_no_tempo: entrada,
@@ -655,5 +667,29 @@ mod tests {
     fn silencio_nao_inventa_compasso() {
         let compasso = medir(vec![0.0; TAXA as usize * 20], &grade_de(120.0, 20.0));
         assert_eq!(compasso.batidas_por_compasso, 0);
+        assert_eq!(compasso.compasso_s, 0.0, "barra inventada no silêncio");
+    }
+
+    #[test]
+    fn a_barra_em_segundos_e_o_invariante() {
+        // 120 bpm: batida de 0,5 s. Quatro batidas dão barra de 2,0 s — e é
+        // esse número, não o par (BPM, batidas), que o áudio fixa: a mesma
+        // barra pode ser lida como 4 batidas de 0,5 s ou 3 de 0,667 s.
+        let audio = cliques(120.0, 4, 30.0);
+        let compasso = medir(audio, &grade_de(120.0, 30.0));
+        assert!(compasso.batidas_por_compasso > 0, "{}", compasso.regra);
+        let produto = compasso.periodo_s * f32::from(compasso.batidas_por_compasso);
+        assert!(
+            (compasso.compasso_s - produto).abs() < 1e-4,
+            "barra {} não é batida {} x {}",
+            compasso.compasso_s,
+            compasso.periodo_s,
+            compasso.batidas_por_compasso
+        );
+        assert!(
+            (compasso.compasso_s - 2.0).abs() < 0.15,
+            "barra {} s, esperada ~2,0 s",
+            compasso.compasso_s
+        );
     }
 }
