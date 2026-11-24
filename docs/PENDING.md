@@ -245,6 +245,18 @@ Ou seja: **40 trechos em 23.558 (0,17%, um em 590) ficam sem explicação.** **N
   - **E o gate está quase fechado de qualquer forma:** o peso médio medido é **0,00–0,18**. A causa é de física: **o ataque de uma corda palhetada é banda-larga por natureza** — é isso que "ataque" significa no espectro. As duas ideias (ponderar por transiente e punir por entropia) **brigam entre si**.
   - **O `τ` de 30 ms é a escala errada para harmonia.** Com `τ`=30 ms e `τ`=100 ms o resultado é o mesmo (11,4 e 11,5 ancoras/s): o `D_harm` do grave dispara a cada **nota do baixo**, que é a linha mais movimentada. Mudança de acorde vive na escala de **0,5–2 s** — e nessa escala o `D_harm` **é** a novidade harmônica que o `compasso` já usa para ancorar o tempo 1.
   - **O que fica da proposta, e vale:** o **croma de ataque** é uma feature boa e ainda não usada pelo motor — a novidade de croma do `compasso` usa a diferença simples, não a derivada de meia-onda projetada. **É ali que ela pode render**, e é medível: a âncora do tempo 1 com o croma de ataque contra a atual.
+  - **TESTADO na âncora do tempo 1 — e não paga (2026-11-24).** Mesmo material, mesma régua:
+
+    | âncora | acertos |
+    |---|---|
+    | **último bumbo** (o que o motor faz) | **5 de 6** |
+    | harmônica, croma simples | 2 de 5 |
+    | harmônica, **croma de ataque** | 2 de 6 |
+
+    - **A âncora harmônica é PIOR que o bumbo** — e isso **corrige o meu diagnóstico anterior**. Eu tinha dito que "o último bumbo não é o tempo 1" e que a harmonia seria a âncora certa. **Medido: o bumbo é uma âncora melhor que a troca de acorde.** Ele toca no tempo 1 na maior parte do repertório; a troca de acorde é mais esparsa (0,7–1,3/s) e mais irregular.
+    - **O croma de ataque não melhora a âncora** (2 de 6 contra 2 de 5 do simples): a feature é boa, mas a âncora não é o lugar onde ela rende.
+    - **Limite honesto:** o meu detector de troca de acorde em Python é cru (novidade de croma com limiar e espaçamento), e o `compasso` do motor faz melhor — com a dobra pela fase e o escore de combos. **Mas a ordem de grandeza da diferença (5 contra 2) não é artefato de limiar.**
+  - **Conclusão da linha inteira:** a medida está **no teto** com o material e as ferramentas atuais. Quatro hipóteses de detector refutadas, a âncora harmônica refutada, o croma de ataque sem ganho na âncora. **O 4 de 6 (motor) e 5 de 6 (Python) seguem de pé, e a recomendação é aceitar com abstenção.**
 - [ ] **Detector de ataque por molde — atacado, e QUATRO hipóteses refutadas (2026-11-24).** A pedido do dono, ataquei o detector. **O número não subiu com nenhuma das quatro:**
 
   | hipótese | por que parecia certa | resultado |

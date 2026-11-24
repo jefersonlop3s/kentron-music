@@ -36,6 +36,22 @@ Peso médio medido: **0,00–0,18**. A causa é de física — **o ataque de uma
 
 O **croma de ataque** é feature boa e ainda não usada pelo motor: a novidade de croma do `compasso` usa a diferença simples, não a derivada de meia-onda projetada. **É ali que ela pode render**, e é medível — a âncora do tempo 1 com o croma de ataque contra a atual.
 
+### E o teste na âncora: não paga
+
+| âncora | acertos |
+|---|---|
+| **último bumbo** (o que o motor faz) | **5 de 6** |
+| harmônica, croma simples | 2 de 5 |
+| harmônica, **croma de ataque** | 2 de 6 |
+
+**A âncora harmônica é pior que o bumbo** — o que **corrige o meu diagnóstico anterior**. Eu tinha dito que "o último bumbo não é o tempo 1" e que a harmonia seria a âncora certa. **Medido: o bumbo é melhor.** Ele toca no tempo 1 na maior parte do repertório; a troca de acorde é mais esparsa e mais irregular.
+
+E o **croma de ataque não melhora a âncora** (2 de 6 contra 2 de 5): a feature é boa, mas a âncora não é onde ela rende.
+
+### A conclusão da linha
+
+**A medida está no teto** com o material e as ferramentas atuais: quatro hipóteses de detector refutadas, a âncora harmônica refutada, o croma de ataque sem ganho na âncora. **O 4 de 6 (motor) e 5 de 6 (Python) seguem de pé — nada regrediu em nenhuma das oito tentativas.**
+
 ## [feat] A relação bumbo×caixa no motor — 4 de 6 no gabarito independente (2026-11-24)
 
 ### Adicionado
