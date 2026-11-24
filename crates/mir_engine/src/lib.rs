@@ -20,6 +20,7 @@ pub mod dynamics;
 pub mod fichas;
 pub mod lyrics;
 pub mod melody;
+pub mod percussao;
 pub mod report;
 pub mod sheet;
 pub mod spectrum;
@@ -179,6 +180,7 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
         chords,
         baixo: baixo_trechos,
         melodia: melodia_trechos,
+        percussao: percussao::medir(spectro, audio.taxa),
         compasso,
         sections,
     }

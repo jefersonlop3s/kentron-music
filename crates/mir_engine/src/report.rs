@@ -81,6 +81,10 @@ pub struct Report {
     pub baixo: Vec<BaixoSegment>,
     /// O que a melodia tocou em cada trecho de acorde — a evidência da terça.
     pub melodia: Vec<MelodiaSegment>,
+    /// A relação entre o bumbo e a caixa (ADR-0017). **Pressupõe o stem de
+    /// bateria** — no mix o número sai contaminado pelo baixo. Ver
+    /// `crate::percussao`.
+    pub percussao: crate::percussao::BumboCaixa,
     /// Compasso e tempo 1 (ADR-0014, bloco 5). `batidas_por_compasso = 0` quando
     /// não há evidência para decidir — ver `crate::compasso`.
     pub compasso: crate::compasso::Compasso,
@@ -143,6 +147,9 @@ impl Report {
         } else {
             format!("{leitura}\n")
         });
+        if self.percussao.bumbos > 0 {
+            texto.push_str(&format!("percussão {}\n", self.percussao.regra));
+        }
         texto.push_str("\nestrutura (rótulo é repetição; papel é inferência):\n");
         for secao in &self.sections {
             let acordes = self.acordes_do_trecho(secao.inicio_s, secao.fim_s);

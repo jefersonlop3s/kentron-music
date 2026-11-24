@@ -2,6 +2,35 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [feat] A relação bumbo×caixa no motor — 4 de 6 no gabarito independente (2026-11-24)
+
+### Adicionado
+- **`crates/mir_engine/src/percussao.rs`** — mede o **bumbo** (30–110 Hz) e a **caixa** (1,5–5 kHz) separados e lê o metro da **relação** entre os dois: a caixa na **metade** do ciclo do bumbo (`6/8`) ou em **um terço e dois terços** (`3/4`). Período por autocorrelação com **interpolação parabólica**, a mesma do `estimate_tempo`.
+- **`Report.percussao`** e uma linha no resumo.
+- **2 testes:** o `6/8` sintético dobra em 2 com a barra em 3,00 s e o `3/4` em 3 com a barra em 1,50 s; o silêncio abstém.
+
+### Medido
+
+| material | resultado |
+|---|---|
+| sintético `6/8` (bumbo 1, caixa 4 de seis) | **dobra 2**, barra 3,00 s |
+| sintético `3/4` (bumbo 1, caixa 2 e 3) | **dobra 3**, barra 1,50 s |
+| `Me Derramar` (é `6/8`), no stem | barra **3,09 s**, caixa em 0 e na metade → **dobra 2** ✓ |
+| **gabarito independente (6 stems)** | **4 de 6** — contra **1 de 8** da medida anterior |
+
+### Por que funciona onde a `dobra` não funcionava
+
+A `dobra` somava bumbo, caixa, chimbau, violão e voz num fluxo espectral só — e **para essa soma o acento do bumbo e o da caixa são o mesmo tipo de evento**. Somados, `6/8` (bumbo em 1, caixa em 4) e `3/4` (bumbo em 1, caixa em 2 e 3) dão o mesmo envelope: contraste 0,42 nos dois, empate exato. **Separados, não empatam.**
+
+### Dois erros de contagem, achados pelos testes
+
+- O **silêncio** devolvia `min_lag` como período: correlação nula é ausência de periodicidade, não período mínimo.
+- A **novidade constante** fazia todo quadro virar ataque: variância zero não tem piso.
+
+### O que falta
+
+Nos 2 erros o **período do bumbo saiu pequeno** (`say-something` 1,26 s, `binky` 0,93 s) — é o ciclo de novo, não a relação. Próximo afinamento.
+
 ## [processo] O gabarito independente: o motor acerta 1 de 8, e o meu 5 de 6 era viés (2026-11-24)
 
 O dono trouxe **quatro vídeos de músicos** sobre `3/4` × `6/8` e autorizou baixar. Legendas automáticas para o texto; **frames** do vídeo de 15 min para ler as respostas que aparecem na tela.
