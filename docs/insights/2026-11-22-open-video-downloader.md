@@ -11,7 +11,7 @@
 - **Recursos:** resolução/quadro/formato (MP4, MKV), playlists inteiras, template de nome de saída, fila balanceada, **autenticação por arquivo de cookies do navegador**, basic auth, senha de vídeo, **atualização automática do app e do `yt-dlp`**, notificações e atalhos.
 - **Distribuição:** exe (Windows), dmg (Intel e Apple Silicon), AppImage/deb/rpm (Linux), Homebrew cask, WinGet e **Microsoft Store**.
 - **Licença:** **AGPL-3.0**, com disclaimer explícito no README: *"We do not condone the use of this software to violate local laws or platform terms of service (including the DMCA). **Users are personally responsible** for ensuring they use this software fairly and within legal boundaries."*
-- **Estado:** mantido — 1.064 commits; 74 issues e 26 PRs abertos; o repositório tem até `AGENTS.md`.
+- **Estado:** mantido — 1.064 commits; 74 issues e 26 PRs abertos; o repositório tem até `../../AGENTS.md`.
 
 **Observado — `yt-dlp/yt-dlp` (mesmo dia):**
 

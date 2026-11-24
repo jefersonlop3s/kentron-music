@@ -118,8 +118,8 @@ approved_in     = "ADR-0017"
 ## Referências e evolução
 
 - Origem: a pergunta do dono (2026-11-24) e o `PENDING` com as quatro variantes medidas e a causa nomeada.
-- `docs/CONCLUSION.md` · R4 · "O gabarito independente derruba o `5 de 6`" — o gabarito de nove músicas fica como **régua** do que esta decisão precisa destravar.
-- `docs/CONCLUSION.md` · R4 · "O metro: cinco medidas, uma funciona, um gargalo só".
+- [`../CONCLUSION.md`](../CONCLUSION.md) · R4 · "O gabarito independente derruba o `5 de 6`" — o gabarito de nove músicas fica como **régua** do que esta decisão precisa destravar.
+- [`../CONCLUSION.md`](../CONCLUSION.md) · R4 · "O metro: cinco medidas, uma funciona, um gargalo só".
 - ADR-0011 (MIR, primeiro incremento) — o enquadramento de "instrumento de trabalho, fora do portão da R1" é o mesmo.
 - ADR-0001 e `models/MANIFEST.toml` — a regra de licença de pesos (nada de `CC BY-NC*`) e o registro obrigatório antes de adotar.
 
