@@ -2,6 +2,28 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] A melodia cantada não nomeia o metro — a sílaba não respeita a barra (2026-11-22)
+
+Passo 2 da arquitetura do dono implementado: histerese de **0,6 semitom nos cents** (arredondar antes era o erro — transformava vibrato de ±30 cents em troca de classe), estabilidade de 4 quadros, e corte por **ataque harmônico** em 150–2500 Hz sobre a componente HPSS.
+
+### Medido
+
+| métrica | resultado |
+|---|---|
+| contagem de notas | **1,8–2,8/s** (antes 3–4/s, com 64–81% no piso) |
+| **histograma de fase dos inícios** | **plano nas seis faixas — 11–27% por fatia** |
+| notas ainda no piso (<0,15 s) | 11–34% |
+
+### O que isso encerra
+
+**Em música cantada, a melodia segue a sílaba, não o compasso** — o texto atravessa a barra. A hipótese de que as figuras da melodia nomeiam o metro **está certa para melodia instrumental e não vale para material cantado**.
+
+**Corroboração:** na componente **percussiva** (o complemento do HPSS) o perfil acha o backbeat — `Billie Jean` com a caixa em **1,6 na posição 2** (amplitude 0,8), `Me Derramar` com 0,7–0,8. **O metro é do acompanhamento.**
+
+### Decidido
+- **Não publicar a fusão.** Terceira versão da segmentação reprovada na medição; mesma disciplina.
+- **O próximo passo mudou de lado:** o perfil por banda passa a ser medido na **componente percussiva**, não no mix nem na melodia.
+
 ## [processo] As figuras da melodia não fecham a lacuna do metro — instrumento inexistente, medido (2026-11-22)
 
 Ideia do dono: transcender para MIDI e ler as **figuras rítmicas** da melodia — mais semínimas seria `3/4`, mais semínima pontuada seria `6/8`. **A tese musical é correta** e é a saída natural do beco do envelope de novidade: o envelope soma tudo e é ambíguo, a melodia é uma linha só.
