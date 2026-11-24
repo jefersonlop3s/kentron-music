@@ -21,5 +21,6 @@ Status: Proposto → Aceito | Rejeitado | Descontinuado | Substituído. **O acei
 | ADR-0014 | Análise harmônica pós-extração: tonalidade, baixo e qualidade do acorde | **Aceito** (emenda: ritmo × baixo sem modelo) | 2026-11-22 | kentron-music |
 | ADR-0015 | Alvos desktop (Windows, macOS, Linux) e a tela de palco por URL | **Aceito** | 2026-11-22 | kentron-music |
 | ADR-0016 | Decodificação de áudio: o motor lê o arquivo do usuário, sem ffmpeg | **Aceito** | 2026-11-22 | kentron-music |
+| ADR-0017 | Separação de bateria: o primeiro modelo no motor | **Proposto** — falta o aceite do dono sobre o portão (S1/S2/S3) e a licença dos pesos | 2026-11-24 | kentron-music |
 
-**Próximo número livre**: ADR-0017.
+**Próximo número livre**: ADR-0018.
