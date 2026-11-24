@@ -96,7 +96,23 @@ As duas erradas dão **283 e 421 BPM por batida de `3/4`**. O que o dono descrev
 | corpus · `3/4` decididos | 15 de 40 | 2 de 40 | **0 de 40** |
 | corpus · falsos positivos medidos | 2 de 2 | 2 de 2 | **0 de 2** |
 
-**A leitura honesta do resultado:** o motor **não** separa `4/4` de `6/8` — mas nas dez músicas adjudicadas a resposta certa (`4/4`) está **dentro da oferta em 10 de 10**, e ele **não afirma** nenhuma delas. **É o que a R1 entrega: a resposta certa entre as alternativas, sem vender palpite como medida.**
+**A leitura honesta, corrigida:** a métrica "a resposta certa está na oferta em 10 de 10" é **vazia** — a oferta binária é sempre `[6/8, 4/4]`. O que se pode afirmar: **o motor não afirma um nome errado em nenhuma das 40**, a oferta estreita o espaço e **diz qual evidência falta**, e **onde ele afirma, acerta** (3 de 3 no gabarito).
+
+**E a escala não está fechada em 40 de 40:** **6 das 40 ficam abaixo do piso fisiológico** — o ciclo caiu na batida — e a mediana de 1,76 s esconde isso.
+
+### A tentativa de refutação — cinco contra-argumentos, nenhum vence
+
+Antes de fechar a R1, o dono pediu que eu tentasse **derrubar o próprio diagnóstico**. Os cinco, e o que cada um mediu:
+
+| contra-argumento | resultado |
+|---|---|
+| **A** · "10 de 10 na oferta" prova algo? | **Vence — contra mim.** A métrica é vazia. Retirada. |
+| **B** · o ritmo harmônico em batidas decide `4/4` vs `3/4`? | **Falha.** Mede a *taxa* de troca (gabarito ~6,0; corpus ~3,2), não o metro. |
+| **C** · a escala está fechada? | **Vence em parte.** 6 das 40 abaixo do piso; a mediana esconde duas populações. |
+| **D** · o gate está ajustado em dois pontos? | **Vence em parte.** Margem de 0,05 s (`delilah` 0,90 contra o piso 0,85) — fina, não exercida pelo corpus. |
+| **E** · a razão barra/batida decide o compasso? | **Falha.** As faixas se sobrepõem inteiramente (0,75–4,03 no corpus; 1,50–2,97 no gabarito). |
+
+**O núcleo sobrevive:** nenhuma das cinco achou um sinal que separe compasso ternário de subdivisão ternária. **Onde não há evidência, a resposta honesta continua sendo a oferta.**
 
 ## [feat] 6 de 6 no gabarito independente: a banda da caixa, a coincidência e o ciclo por contraste (2026-11-24)
 

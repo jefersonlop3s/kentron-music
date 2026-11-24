@@ -1546,14 +1546,36 @@ alternativas, e a `regra` **nomeia o motivo**.
 | corpus · `3/4` decididos | 15 de 40 | 2 de 40 | **0 de 40** |
 | corpus · falsos positivos medidos | 2 de 2 | 2 de 2 | **0 de 2** |
 
+### A tentativa de refutação — cinco contra-argumentos, nenhum vence
+
+Antes de fechar a R1, o dono pediu que eu tentasse **derrubar o próprio
+diagnóstico**. Os cinco, e o que cada um mediu:
+
+| contra-argumento | resultado |
+|---|---|
+| **A** · "10 de 10 na oferta" prova algo? | **Vence — contra mim.** A oferta binária é sempre `[6/8, 4/4]`, então a métrica é vazia. Retirada. |
+| **B** · o ritmo harmônico em batidas decide `4/4` vs `3/4`? | **Falha.** Mede a *taxa* de troca (gabarito ~6,0; corpus ~3,2), não o metro. |
+| **C** · a escala está fechada? | **Vence em parte.** **6 das 40** ficam abaixo do piso fisiológico — o ciclo caiu na batida — e a mediana de 1,76 s esconde duas populações. |
+| **D** · o gate está ajustado em dois pontos? | **Vence em parte.** A margem é de **0,05 s** (`delilah` 0,90 contra o piso 0,85) — fina, ainda que não exercida pelo corpus. |
+| **E** · a razão barra/batida decide o compasso? | **Falha.** As faixas se sobrepõem inteiramente (0,75–4,03 no corpus; 1,50–2,97 no gabarito). |
+
 ### Ressalvas — o que isto **não** conserta
 
-- **O motor não separa `4/4` de `6/8`** — mas nas dez adjudicadas a resposta certa
-  (`4/4`) está **dentro da oferta em 10 de 10**, e ele **não afirma** nenhuma.
+- **O núcleo do diagnóstico sobrevive:** nenhuma das cinco tentativas achou um
+  sinal que separe um compasso ternário de uma subdivisão ternária de um binário.
+  **Onde não há evidência, a resposta honesta é a oferta.**
+- **O que se pode afirmar, e é medido:** o motor **não afirma um nome errado em
+  nenhuma das 40**, a oferta **estreita o espaço** (de três nomes para dois) e a
+  `regra` **diz qual evidência falta**; e **onde ele afirma, acerta** (3 de 3 no
+  gabarito).
+- **A escala não está fechada em 40 de 40** — o defeito do `×k` (o ciclo caindo na
+  batida) atinge **6 das 40**, e o gate da barra é o que impede que ele vire
+  afirmação.
 - **A direção `×k` continua refutada** (o alvo harmônico do `fallin` é 1,5 barra e
   a escolha ia para 2,82 s): **não é um candidato a mais, é outro critério.**
 - **A separação `4/4` × `6/8` continua aberta:** a subdivisão interna foi testada
   em três variantes e nenhuma separa (3, 5 e 3 acertos de 8).
+
 
 
 

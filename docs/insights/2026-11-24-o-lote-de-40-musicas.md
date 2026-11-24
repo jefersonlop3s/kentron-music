@@ -226,10 +226,38 @@ ternária é **medida** e **oferecida**, com `3/4` entre as alternativas — e a
 | corpus · falsos positivos medidos | 2 de 2 | 2 de 2 | **0 de 2** |
 | corpus · abstenções corretas (amostra do dono) | — | — | **7 de 7** |
 
-**A leitura honesta do resultado:** o motor **não** separa `4/4` de `6/8` — mas nas
-dez músicas adjudicadas a resposta certa (`4/4`) está **dentro da oferta em 10 de
-10**, e ele **não afirma** nenhuma delas. **É o que a R1 entrega: a resposta certa
-entre as alternativas, sem vender palpite como medida.**
+**A leitura honesta do resultado — corrigida.** Eu havia escrito que "a resposta
+certa está dentro da oferta em 10 de 10", e **essa métrica é vazia**: a oferta
+binária é sempre `[6/8, 4/4]`, então ela contém o `4/4` de qualquer músico que
+ofereça `4/4`. Não mede acerto nenhum. **O que se pode afirmar, e é medido:**
+
+- **O motor não afirma um nome errado em nenhuma das 40** — zero falsos positivos
+  depois do gate.
+- **A oferta estreita o espaço**: de três nomes para dois, e a `regra` **diz qual
+  evidência falta** (`"a barra cai fora da faixa fisiológica"`).
+- **Onde o motor afirma, ele acerta:** 3 de 3 no gabarito, 0 de 0 no corpus.
+
+**A escala da barra, também corrigida:** ela **não** está fechada em 40 de 40 —
+**6 das 40 ficam abaixo do piso fisiológico** (o ciclo caiu na batida) e a mediana
+de 1,76 s **esconde** isso. Está no `PENDING` como o defeito do `×k`.
+
+### A tentativa de refutação — cinco contra-argumentos, nenhum vence
+
+O dono pediu que eu tentasse **derrubar o próprio diagnóstico** antes de fechar a
+R1. Os cinco, e o que cada um mediu:
+
+| contra-argumento | resultado |
+|---|---|
+| **A** · "10 de 10 na oferta" prova algo? | **Vence — contra mim.** A métrica é vazia. Retirada. |
+| **B** · o ritmo harmônico em batidas decide `4/4` vs `3/4`? | **Falha.** Mede a *taxa* de troca (gabarito ~6,0; corpus ~3,2), não o metro. |
+| **C** · a escala está fechada? | **Vence em parte.** 6 das 40 abaixo do piso; a mediana esconde duas populações. |
+| **D** · o gate está ajustado em dois pontos? | **Vence em parte.** A margem é de 0,05 s (`delilah` 0,90 contra o piso 0,85) — fina, mas não exercida pelo corpus. |
+| **E** · a razão barra/batida decide o compasso? | **Falha.** As faixas se sobrepõem inteiramente (0,75–4,03 no corpus, 1,50–2,97 no gabarito). |
+
+**O núcleo do diagnóstico sobrevive:** a caixa nos terços **não** separa um
+compasso ternário de uma subdivisão ternária de um binário, e nenhuma das cinco
+tentativas achou um sinal que separe. **Onde não há evidência, a resposta honesta
+continua sendo a oferta.**
 
 **Comparar dois contrastes e ficar com o maior não é decidir** — e foi daí que o
 piso nasceu. Medido: as 15 vinham de contrastes **abaixo de 1** — `0,65` contra
