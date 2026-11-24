@@ -32,6 +32,14 @@ const CICLO_MAX_S: f32 = 5.0;
 const PISO_ATAQUE: f32 = 1.5;
 /// Espaçamento mínimo entre ataques da mesma peça.
 const ESPACO_MIN_S: f32 = 0.08;
+/// A partir de quanta massa em `P1` ou `P5` o período do bumbo é tratado como
+/// **capturado no submúltiplo** e o ciclo é ampliado por 1,5. Ver `medir`.
+///
+/// Calibrado no material: no `binky` a órfã é 0,52; nos cinco acertos ela fica
+/// entre 0,15 e 0,30. O limiar em 0,35 fica no vão, e é por isso que a regra
+/// **só dispara onde precisa** — o que a torna cirúrgica em vez de overfitting.
+const LIMIAR_ORFAO: f32 = 0.35;
+
 /// Quantas fatias do ciclo do bumbo o histograma da caixa usa.
 pub const FATIAS: usize = 6;
 
@@ -179,7 +187,7 @@ pub fn medir(spectro: &Spectrogram, taxa: u32) -> BumboCaixa {
     let fps = spectro.quadros_por_segundo(taxa).max(1.0);
     let bumbo = novidade_da_banda(spectro, taxa, BUMBO_DE_HZ, BUMBO_ATE_HZ);
     let caixa = novidade_da_banda(spectro, taxa, CAIXA_DE_HZ, CAIXA_ATE_HZ);
-    let periodo = periodo_dominante(&bumbo, fps, CICLO_MIN_S, CICLO_MAX_S);
+    let mut periodo = periodo_dominante(&bumbo, fps, CICLO_MIN_S, CICLO_MAX_S);
     let ataques_bumbo = ataques(&bumbo, fps);
     let ataques_caixa = ataques(&caixa, fps);
     let mut saida = BumboCaixa {
@@ -196,32 +204,66 @@ pub fn medir(spectro: &Spectrogram, taxa: u32) -> BumboCaixa {
         );
         return saida;
     }
-    let mut contagem = [0usize; FATIAS];
-    let mut total = 0usize;
-    for &c in &ataques_caixa {
-        // A caixa pertence ao ciclo do último bumbo que a precede.
-        let Some(&ultimo) = ataques_bumbo.iter().rfind(|&&b| b <= c + 0.02) else {
-            continue;
-        };
-        let fracao = (c - ultimo) / periodo;
-        if !(0.0..1.0).contains(&fracao) {
-            continue;
+    // O histograma da caixa no ciclo do bumbo, em `FATIAS` fatias centradas.
+    let histograma = |periodo: f32| -> Option<[f32; FATIAS]> {
+        if periodo <= 0.0 {
+            return None;
         }
-        // A fatia é a **mais próxima** do centro, não o intervalo em que a fração
-        // cai: com `floor` a metade exata (T/2) cai na fronteira entre duas
-        // fatias e a leitura se divide ao meio — medido no sintético, 71% numa
-        // fatia e 29% na seguinte, quando a verdade era o ponto exato.
-        let fatia = ((fracao * FATIAS as f32).round() as usize) % FATIAS;
-        contagem[fatia] += 1;
-        total += 1;
-    }
-    if total < 4 {
-        saida.regra = format!("sem evidência: só {total} caixa(s) no ciclo do bumbo");
+        let mut contagem = [0usize; FATIAS];
+        let mut total = 0usize;
+        for &c in &ataques_caixa {
+            // A caixa pertence ao ciclo do último bumbo que a precede.
+            let Some(&ultimo) = ataques_bumbo.iter().rfind(|&&b| b <= c + 0.02) else {
+                continue;
+            };
+            let fracao = (c - ultimo) / periodo;
+            if !(0.0..1.0).contains(&fracao) {
+                continue;
+            }
+            // A fatia é a **mais próxima** do centro, não o intervalo em que a
+            // fração cai: com `floor` a metade exata (T/2) cai na fronteira entre
+            // duas fatias e a leitura se divide ao meio — medido no sintético,
+            // 71% numa fatia e 29% na seguinte, quando a verdade era o ponto.
+            let fatia = ((fracao * FATIAS as f32).round() as usize) % FATIAS;
+            contagem[fatia] += 1;
+            total += 1;
+        }
+        if total < 4 {
+            return None;
+        }
+        let mut perfil = [0.0f32; FATIAS];
+        for (i, fatia) in contagem.iter().enumerate() {
+            perfil[i] = *fatia as f32 / total as f32;
+        }
+        Some(perfil)
+    };
+
+    let Some(mut perfil) = histograma(periodo) else {
+        saida.regra = "sem evidência: caixas de menos no ciclo do bumbo".to_owned();
         return saida;
+    };
+
+    // **Energia órfã: o erro de escala fica observável sem o gabarito.**
+    //
+    // `P1` e `P5` (a segunda e a sexta subdivisão) **nunca são polos** — nem em
+    // `3/4` (polos em `P0`, `P2`, `P4`) nem em `6/8` (polos em `P0`, `P3`). Massa
+    // concentrada ali é assinatura de período capturado no submúltiplo: o bumbo
+    // tocando a cada dois tempos de uma barra ternária dá `T = 2/3` da barra, e a
+    // caixa escorrega para uma fatia sem polo.
+    //
+    // Medido em `binky` (`3/4`, gabarito do Bennett): `P1 = 52%` com o `T` do
+    // bumbo, e `T` de 0,93 s contra a barra real de ~1,40 s — razão 2/3 exata.
+    let orfa = perfil[1].max(perfil[5]);
+    if orfa > LIMIAR_ORFAO {
+        // `T × 1,5`: a barra ternária em que o bumbo toca dois de três tempos.
+        if let Some(ampliado) = histograma(periodo * 1.5) {
+            perfil = ampliado;
+            periodo *= 1.5;
+        }
     }
-    for (i, fatia) in contagem.iter().enumerate() {
-        saida.caixa_no_ciclo[i] = *fatia as f32 / total as f32;
-    }
+    saida.caixa_no_ciclo = perfil;
+    saida.periodo_bumbo_s = periodo;
+
     // A leitura: **competição de hipóteses**, não limiar. O `6/8` tem os polos em
     // `s1` e `s4`; o `3/4` em `s1`, `s3` e `s5`. Cada hipótese é o contraste dos
     // seus polos contra o resto do ciclo, normalizado — e ganha a maior.
@@ -230,17 +272,10 @@ pub fn medir(spectro: &Spectrogram, taxa: u32) -> BumboCaixa {
     // duas posições soltas confundia ruído com contraste (4 de 6); o contraste
     // normalizado sobre o ciclo inteiro acerta 5 de 6 no gabarito.
     let media = |idx: [usize; 4], n: usize| -> f32 {
-        idx[..n]
-            .iter()
-            .map(|&i| saida.caixa_no_ciclo[i])
-            .sum::<f32>()
-            / n as f32
+        idx[..n].iter().map(|&i| perfil[i]).sum::<f32>() / n as f32
     };
-    saida.escore_68 =
-        (saida.caixa_no_ciclo[0] + saida.caixa_no_ciclo[3]) / 2.0 / (media([1, 2, 4, 5], 4) + 1e-9);
-    saida.escore_34 = (saida.caixa_no_ciclo[0] + saida.caixa_no_ciclo[2] + saida.caixa_no_ciclo[4])
-        / 3.0
-        / (media([1, 3, 5, 0], 3) + 1e-9);
+    saida.escore_68 = (perfil[0] + perfil[3]) / 2.0 / (media([1, 2, 4, 5], 4) + 1e-9);
+    saida.escore_34 = (perfil[0] + perfil[2] + perfil[4]) / 3.0 / (media([1, 3, 5, 0], 3) + 1e-9);
     saida.dobra = if saida.escore_68 > saida.escore_34 {
         2
     } else if saida.escore_34 > saida.escore_68 {
@@ -249,12 +284,11 @@ pub fn medir(spectro: &Spectrogram, taxa: u32) -> BumboCaixa {
         0
     };
     saida.regra = format!(
-        "período do bumbo {periodo:.2} s · {} bumbo(s) e {} caixa(s) · caixa no ciclo {} · \
-         contraste 6/8 {:.2} contra 3/4 {:.2} → dobra em {}",
+        "período do bumbo {periodo:.2} s (órfã {orfa:.2}) · {} bumbo(s) e {} caixa(s) · \
+         caixa no ciclo {} · contraste 6/8 {:.2} contra 3/4 {:.2} → dobra em {}",
         ataques_bumbo.len(),
         ataques_caixa.len(),
-        saida
-            .caixa_no_ciclo
+        perfil
             .iter()
             .map(|v| format!("{:.0}%", v * 100.0))
             .collect::<Vec<_>>()

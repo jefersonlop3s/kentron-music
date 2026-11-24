@@ -35,6 +35,16 @@ contraste 3/4 = (P0 + P2 + P4) / 3  ÷  média(P1, P3, P5)        <- polos em s1
 
 `binky`: o período do bumbo sai 0,93 s (dois tempos, não a barra de ~1,4 s) e o pico da caixa cai em **s2**, onde nenhuma hipótese tem polo. **É o ciclo de novo** — o mesmo fantasma que resistiu às quatro hipóteses de detector.
 
+### A energia órfã corrigiu a escala — e o veredito não virou
+
+`P1` e `P5` **nunca são polos** em nenhum dos dois metros. Massa concentrada ali é assinatura de período capturado no submúltiplo. A regra: se `max(P1,P5) > 0,35`, ampliar o ciclo por **1,5** e refazer.
+
+- **Acertou a escala na mosca:** `binky` de **0,93 s para 1,39 s** — a barra real é **~1,40 s**. A razão `2/3` prevista, corrigida por `×1,5`.
+- **Cirúrgica:** disparou **só no `binky`**. As órficas dos cinco acertos ficam entre 0,15 e 0,30; o limiar é 0,35, no vão.
+- **Mas o veredito não virou:** o histograma no período corrigido é `23% 30% 22% 12% 5% 8%` — espalhado, não os terços limpos. **O período era um erro; o outro é a precisão dos onsets da caixa.**
+
+**Placar: 5 de 6 mantido.** A regra entra porque corrige o período (ganho medido) e não regride — com o limite declarado de que não fecha o `binky` sozinha.
+
 ## [processo] A âncora por croma: uma peça é ouro, o gate é no-op por matemática (2026-11-24)
 
 O dono propôs ancorar o ataque no **croma** em vez da energia — croma ponderado por transiente, gate por entropia, e `D_harm` separado de `D_reart`. Analisei e medi cada um dos quatro passos. **O motor não foi tocado: 4 de 6 intacto.**
