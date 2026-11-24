@@ -232,6 +232,19 @@ Ou seja: **40 trechos em 23.558 (0,17%, um em 590) ficam sem explicação.** **N
   - **Conclusão honesta: é pendência com causa nomeada, não ajuste de limiar.** O que falta é **detector de ataque que modele o decaimento** — limiar adaptativo com período refratário proporcional à peça, ou casamento por molde do bumbo —, e não um parâmetro a mais. Mesma lição do resto da campanha: quando dois parâmetros não movem o número, o problema é o instrumento.
   - **O que fica de pé:** 4 de 6 no motor, 5 de 6 no experimento em Python — a diferença entre os dois é o detector, e é ali que o trabalho continua.
 - [ ] **Detector de ataque por peça da bateria — o próximo (2026-11-24).** Causa medida acima: o decaimento do bumbo vira vários ataques. Direções: (a) **período refratário proporcional** à peça, não fixo; (b) **casamento por molde** do bumbo (o decaimento tem forma conhecida); (c) limiar adaptativo por banda em vez do desvio global. Régua: o gabarito de nove músicas, nos stems separados. **Hoje: 4 de 6.**
+- [ ] **Arquitetura de âncora por croma (proposta do dono) — analisada e medida; uma peça é ouro, duas não fazem o que prometem (2026-11-24).** O dono propôs ancorar o ataque no **croma** em vez da energia: croma ponderado por transiente, gate por entropia, e `D_harm` (mudança) separado de `D_reart` (rearticulação). Analisei os quatro passos e medi cada um. **O motor não foi tocado: 4 de 6 intacto.**
+
+  | passo | veredito | evidência |
+  |---|---|---|
+  | **1 · croma de ataque** (derivada de meia-onda antes da projeção em 12 bins) | **funciona, e é o ouro** | só a energia nova entra; nota sustentada e reverberação desaparecem |
+  | **2 · gate por entropia** | **é no-op no `D_harm` — provado** | ver abaixo |
+  | **3 · `D_harm` a τ=30 ms** | **mede nota, não acorde** | no grave dá **11,4 ancoras/s** (saturação) |
+  | **4 · croma grave < 300 Hz** | **converge para o que o `compasso` já faz** | o baixo é a linha mais movimentada |
+
+  - **O gate é no-op por matemática, não por ajuste.** `W(t)` é escalar por quadro, então `Cg(t) = W(t)·C(t)` e na distância cosseno o peso **cancela**: `D_harm = 1 - C(t)·C(t-τ)/(|C(t)||C(t-τ)|)`. **Verificado numericamente: a diferença entre com e sem gate é 1,18e-10.** E na medição os picos são **idênticos** com gate e sem gate (17 · 72 · 71 · 148 · 99 · 180 · 64 · 39 · 14). Ele só afetaria o `D_reart`, que é soma — não produto normalizado.
+  - **E o gate está quase fechado de qualquer forma:** o peso médio medido é **0,00–0,18**. A causa é de física: **o ataque de uma corda palhetada é banda-larga por natureza** — é isso que "ataque" significa no espectro. As duas ideias (ponderar por transiente e punir por entropia) **brigam entre si**.
+  - **O `τ` de 30 ms é a escala errada para harmonia.** Com `τ`=30 ms e `τ`=100 ms o resultado é o mesmo (11,4 e 11,5 ancoras/s): o `D_harm` do grave dispara a cada **nota do baixo**, que é a linha mais movimentada. Mudança de acorde vive na escala de **0,5–2 s** — e nessa escala o `D_harm` **é** a novidade harmônica que o `compasso` já usa para ancorar o tempo 1.
+  - **O que fica da proposta, e vale:** o **croma de ataque** é uma feature boa e ainda não usada pelo motor — a novidade de croma do `compasso` usa a diferença simples, não a derivada de meia-onda projetada. **É ali que ela pode render**, e é medível: a âncora do tempo 1 com o croma de ataque contra a atual.
 - [ ] **Detector de ataque por molde — atacado, e QUATRO hipóteses refutadas (2026-11-24).** A pedido do dono, ataquei o detector. **O número não subiu com nenhuma das quatro:**
 
   | hipótese | por que parecia certa | resultado |

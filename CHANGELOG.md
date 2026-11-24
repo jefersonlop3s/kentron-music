@@ -2,6 +2,40 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] A âncora por croma: uma peça é ouro, o gate é no-op por matemática (2026-11-24)
+
+O dono propôs ancorar o ataque no **croma** em vez da energia — croma ponderado por transiente, gate por entropia, e `D_harm` separado de `D_reart`. Analisei e medi cada um dos quatro passos. **O motor não foi tocado: 4 de 6 intacto.**
+
+| passo | veredito | evidência |
+|---|---|---|
+| **1 · croma de ataque** (derivada de meia-onda antes da projeção em 12 bins) | **funciona, e é o ouro** | só a energia nova entra; sustentado e reverberação desaparecem |
+| **2 · gate por entropia** | **no-op no `D_harm` — provado** | abaixo |
+| **3 · `D_harm` a τ=30 ms** | **mede nota, não acorde** | no grave: **11,4 ancoras/s** (saturação) |
+| **4 · croma grave < 300 Hz** | **converge para o que o `compasso` já faz** | o baixo é a linha mais movimentada |
+
+### O gate é no-op por matemática
+
+`W(t)` é escalar por quadro, então `Cg(t) = W(t)·C(t)` e na distância cosseno o peso **cancela**:
+
+```
+D_harm = 1 - Cg(t)·Cg(t-τ) / (|Cg(t)|·|Cg(t-τ)|)
+       = 1 - C(t)·C(t-τ) / (|C(t)|·|C(t-τ)|)
+```
+
+**Verificado numericamente: 1,18e-10 de diferença** entre com e sem gate. E na medição os picos são **idênticos** (17 · 72 · 71 · 148 · 99 · 180 · 64 · 39 · 14). O gate só afetaria o `D_reart`, que é soma.
+
+### E ele está quase fechado de qualquer forma
+
+Peso médio medido: **0,00–0,18**. A causa é de física — **o ataque de uma corda palhetada é banda-larga por natureza**, e é isso que "ataque" significa no espectro. **Ponderar por transiente e punir por entropia brigam entre si.**
+
+### O `τ` é a escala errada para harmonia
+
+`τ`=30 ms e `τ`=100 ms dão o mesmo (11,4 e 11,5 ancoras/s): o `D_harm` do grave dispara a cada **nota do baixo**. Mudança de acorde vive na escala de **0,5–2 s** — e ali o `D_harm` **é** a novidade harmônica que o `compasso` já usa para ancorar o tempo 1.
+
+### O que fica da proposta
+
+O **croma de ataque** é feature boa e ainda não usada pelo motor: a novidade de croma do `compasso` usa a diferença simples, não a derivada de meia-onda projetada. **É ali que ela pode render**, e é medível — a âncora do tempo 1 com o croma de ataque contra a atual.
+
 ## [feat] A relação bumbo×caixa no motor — 4 de 6 no gabarito independente (2026-11-24)
 
 ### Adicionado
