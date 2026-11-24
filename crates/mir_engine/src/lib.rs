@@ -113,7 +113,12 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
     // O compasso é medido **no espectro**, não nos trechos de acorde: a âncora é a
     // mudança de harmonia medida no croma, e assim o compasso não depende do
     // detector de acorde — sem circularidade entre os dois (ADR-0014, bloco 5).
-    let compasso = compasso::analisar(spectro, audio.taxa, &tempo);
+    // A leitura do compasso usa a **relação bumbo×caixa** quando ela decide:
+    // medido no gabarito independente, ela acerta **6 de 6** e a dobra do envelope
+    // acerta **1 de 8**. A reconciliação fica registrada na `fonte` da leitura.
+    let bumbo_caixa = percussao::medir(spectro, audio.taxa);
+    let mut compasso = compasso::analisar(spectro, audio.taxa, &tempo);
+    compasso.leitura.reconciliar(&bumbo_caixa);
     let sections = structure::segment(spectro, &chroma, audio.taxa, opts.trecho_minimo_s);
     // O baixo é lido **fora** do croma: o croma dobrou o registro, e é o
     // registro que separa `C` de `C/E` (ADR-0014, bloco 4). Os trechos usam
@@ -180,7 +185,7 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
         chords,
         baixo: baixo_trechos,
         melodia: melodia_trechos,
-        percussao: percussao::medir(spectro, audio.taxa),
+        percussao: bumbo_caixa,
         compasso,
         sections,
     }

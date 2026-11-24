@@ -155,6 +155,46 @@ pub struct Leitura {
     /// a diferença é onde o pé bate, e isso o músico sabe. **A falta de
     /// informação vira feature** — o app oferece as duas e guarda a escolha.
     pub alternativas: Vec<String>,
+    /// De onde veio esta leitura: `envelope` (a `dobra` do `compasso`) ou
+    /// `percussão` (a relação bumbo×caixa). Ver [`crate::compasso::Compasso::reconciliar`].
+    pub fonte: String,
+    /// Por que esta leitura — a evidência, em uma linha.
+    pub regra: String,
+}
+
+impl Leitura {
+    /// Reconcilia a leitura com a relação **bumbo×caixa**, quando ela decide.
+    ///
+    /// Medido no gabarito independente (2026-11-24): a relação bumbo×caixa acerta
+    /// **6 de 6** e a dobra do envelope acerta **1 de 8**. Quando as duas discordam,
+    /// a percussão manda — e a `fonte` fica registrada para quem lê saber de onde
+    /// veio o nome.
+    pub fn reconciliar(&mut self, bumbo_caixa: &crate::percussao::BumboCaixa) {
+        let (batidas, nome) = match bumbo_caixa.dobra {
+            2 => (6u8, "6/8"),
+            3 => (3u8, "3/4"),
+            _ => return,
+        };
+        if bumbo_caixa.periodo_bumbo_s > 0.0 {
+            self.compasso_s = bumbo_caixa.periodo_bumbo_s;
+        }
+        self.batidas = batidas;
+        self.nome = Some(nome.to_owned());
+        self.alternativas = Vec::new();
+        self.fonte = "percussão".to_owned();
+        self.regra = format!(
+            "relação bumbo×caixa: {nome} · contraste 6/8 {:.2} contra 3/4 {:.2} · \
+             caixa no ciclo {}",
+            bumbo_caixa.escore_68,
+            bumbo_caixa.escore_34,
+            bumbo_caixa
+                .caixa_no_ciclo
+                .iter()
+                .map(|v| format!("{:.0}%", v * 100.0))
+                .collect::<Vec<_>>()
+                .join(" ")
+        );
+    }
 }
 
 impl Leitura {
@@ -169,6 +209,16 @@ impl Leitura {
         }
         let alternativas = self.alternativas.join(" ou ");
         let palpite = match (&self.nome, alternativas.is_empty()) {
+            // Leitura **da percussão** não é sugestão: é a relação bumbo×caixa,
+            // que mede 6 de 6 no gabarito independente. Vem com a evidência e o
+            // convite a registrar.
+            (Some(nome), _) if self.fonte == "percussão" => {
+                return format!(
+                    "compasso: {nome} (relação bumbo×caixa) · barra {:.2} s — \
+                     registre com {{time: {nome}}}",
+                    self.compasso_s
+                );
+            }
             (Some(nome), false) => {
                 // O nome já está entre as alternativas; repeti-lo soa como erro.
                 let outras: Vec<&str> = self
@@ -819,6 +869,10 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
                 margem_dobra,
                 nome: nome.map(str::to_owned),
                 alternativas: alternativas_de(melhor_m),
+                fonte: "envelope".to_owned(),
+                regra: format!(
+                    "dobra do envelope: contraste A(T/2) {correlacao_meio:.3} contra A(T/3) {correlacao_terco:.3}"
+                ),
             }
         },
         bandas: PerfilBandas::medir(spectro, taxa, &vencedor.batidas, m_usize, p_usize),
@@ -1181,8 +1235,36 @@ mod tests {
             margem_dobra: 0.24,
             nome: Some("6/8".into()),
             alternativas: vec!["3/4".into(), "6/8".into()],
+            fonte: "percussão".into(),
+            regra: String::new(),
         };
         let texto = leitura.sugestao();
+        assert!(
+            texto.contains("relação bumbo×caixa"),
+            "leitura da percussão não é sugestão: {texto}"
+        );
+        assert!(
+            texto.contains("registre com {time: 6/8}"),
+            "a leitura da percussão convida a registrar: {texto}"
+        );
+        assert!(
+            !texto.contains("(sugestão)"),
+            "a percussão mede 6 de 6 — não é sugestão: {texto}"
+        );
+
+        // A leitura do **envelope** continua marcada como sugestão: ela acerta
+        // 1 de 8 no gabarito, e apresentá-la sem a marca seria vender palpite.
+        let envelope = Leitura {
+            batidas: 3,
+            compasso_s: 2.4,
+            dobra: Dobra::EmDois,
+            margem_dobra: 0.24,
+            nome: Some("6/8".into()),
+            alternativas: vec!["3/4".into(), "6/8".into()],
+            fonte: "envelope".into(),
+            regra: String::new(),
+        };
+        let texto = envelope.sugestao();
         assert!(texto.contains("6/8 (sugestão)"), "sem a marca: {texto}");
         assert!(texto.contains("ou 3/4"), "alternativa sumiu: {texto}");
         assert!(
