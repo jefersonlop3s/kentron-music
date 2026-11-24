@@ -2,6 +2,24 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] As figuras da melodia não fecham a lacuna do metro — instrumento inexistente, medido (2026-11-22)
+
+Ideia do dono: transcender para MIDI e ler as **figuras rítmicas** da melodia — mais semínimas seria `3/4`, mais semínima pontuada seria `6/8`. **A tese musical é correta** e é a saída natural do beco do envelope de novidade: o envelope soma tudo e é ambíguo, a melodia é uma linha só.
+
+### Medido — e as duas rotas falharam
+
+| rota | resultado |
+|---|---|
+| segmentar por mudança de classe de altura | **64–81% das notas entre 0,12 e 0,20 s** — pico colado no mínimo de duração |
+| + filtro de moda de 0,12 s | 55–75% continuaram no piso; notas **aumentaram** (`house-rising-sun` 535 → 728) |
+| cortar por ataque na banda da voz (200–1000 Hz) | **os mesmos ataques do espectro cheio** — 101 contra 101 (`Billie Jean`), 144 contra 146, 119 contra 122 |
+
+**Causa:** a classe de altura oscila a ~7 Hz — vibrato de voz é 4–7 Hz e cruza a fronteira de semitom, e cada cruzamento corta a nota. A 43 quadros/s, 0,12 s = 5 quadros: a janela é **menor que o período do vibrato**, então nenhum filtro curto separa "vibrato numa nota" de "duas notas".
+
+### Decidido
+- **Não publicar a segmentação.** O código foi implementado, medido e **revertido**: uma lista de notas errada em 75% é pior que lista nenhuma, e um MIDI feito dela seria ficção com carimbo de transcrição.
+- **O que falta não é limiar:** é **rastreador de nota** (ataque **e** altura juntos) ou **stems** — a parte com ML da R4 etapa 2, atrás do portão.
+
 ## [feat] A dobra do ciclo: `A(T/2)` contra `A(T/3)`, a regra do dono medida (2026-11-22)
 
 ### Adicionado

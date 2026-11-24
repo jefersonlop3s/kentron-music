@@ -1424,3 +1424,43 @@ Três testes herméticos e limiar de abstenção calibrado no material.
 - **A margem no motor é menor que no Python** porque a janela 4096/salto 1024
   suaviza o envelope. O caminho é um envelope dedicado mais fino, **não** um
   limiar mais frouxo: o limiar ficou em 0,05 e o motor prefere abster.
+
+## R4 · As figuras da melodia não fecham a lacuna — o instrumento não existe (2026-11-22)
+
+**Status:** 🔴 **Não entregue, e a razão está medida.** Nenhum código publicado.
+
+Ideia do dono: transcender para MIDI e ler as **figuras rítmicas** da melodia —
+mais semínimas seria `3/4`, mais semínima pontuada seria `6/8`.
+
+**A tese musical é correta**, e é a saída natural do beco do envelope: o envelope
+soma tudo e é ambíguo, a melodia é uma linha só. Implementei a segmentação e
+**medi antes de publicar**.
+
+### Medido — duas rotas, as duas falharam
+
+| rota | resultado |
+|---|---|
+| segmentar por mudança de classe de altura | **64–81% das notas entre 0,12 e 0,20 s** — pico colado no mínimo |
+| + filtro de moda de 0,12 s | 55–75% no piso; as notas **aumentaram** (`house-rising-sun` 535 → 728) |
+| cortar por ataque na banda da voz (200–1000 Hz) | **os mesmos ataques do espectro cheio** — 101 contra 101 |
+
+**Causa:** a classe oscila a ~7 Hz. Vibrato de voz é 4–7 Hz e cruza a fronteira
+de semitom; cada cruzamento corta a nota. A 43 quadros/s, 0,12 s = 5 quadros — a
+janela é **menor que o período do vibrato**, então nenhum filtro curto separa
+"vibrato numa nota" de "duas notas". E a banda de 200–1000 Hz não isola a voz: os
+ataques dela são a bateria.
+
+### Decidido
+
+- **Revertido.** Uma lista de notas errada em 75% é pior que lista nenhuma, e um
+  MIDI feito dela seria ficção com carimbo de transcrição.
+- **O que falta não é limiar:** é **rastreador de nota** (ataque **e** altura
+  juntos) ou **stems** — a parte com ML da R4 etapa 2, atrás do portão.
+
+### Aprendizado
+
+**Uma tese certa não basta: o instrumento tem de existir antes da medida.** A
+ideia do dono estava certa e o resultado foi um pico no mínimo de duração — o
+sinal de instrumento quebrado, não de música. É o mesmo padrão do "74–99% dos
+ataques são graves" desta sessão: **resultado implausível é denúncia do aparelho
+antes de ser descoberta.**
