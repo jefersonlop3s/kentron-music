@@ -22,6 +22,10 @@ const VOZ_DE_HZ: f32 = 200.0;
 const VOZ_ATE_HZ: f32 = 1000.0;
 /// Até onde os harmônicos são procurados ao pontuar um candidato.
 const HARMONICO_ATE_HZ: f32 = 3500.0;
+/// Janela da mediana temporal do HPSS, em quadros: ~0,2 s a 43 quadros/s.
+const JANELA_TEMPO_HPSS: usize = 9;
+/// Janela da mediana espectral do HPSS, em bins.
+const JANELA_FREQ_HPSS: usize = 17;
 /// Pico abaixo disto (fração do maior do quadro) não é candidato a voz.
 const PISO_DO_PICO: f32 = 0.20;
 
@@ -89,8 +93,10 @@ impl Melodia {
 #[must_use]
 pub fn extrair(spectro: &Spectrogram, taxa: u32) -> Melodia {
     let hz_por_bin = taxa as f32 / spectro.janela as f32;
-    let classes = spectro
-        .quadros
+    // A altura vem da componente **harmônica**, não do mix: a bateria fora do
+    // sinal é o que impede o vibrato de virar nota. Ver `Spectrogram::harmonico`.
+    let harmonico = spectro.harmonico(JANELA_TEMPO_HPSS, JANELA_FREQ_HPSS);
+    let classes = harmonico
         .iter()
         .map(|mags| classe_do_quadro(mags, hz_por_bin))
         .collect();
