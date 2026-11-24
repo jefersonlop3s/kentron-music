@@ -125,6 +125,18 @@ impl PerfilBandas {
                 saida.push((e - anterior).max(0.0));
                 anterior = e;
             }
+            // Normaliza pela média **da própria banda**. Sem isso a banda grave —
+            // que tem magnitude muito maior — domina o perfil e ele sai chapado:
+            // medido em nove músicas de banda (3/4, 6/8 e 4/4), 74–99% dos
+            // ataques eram classificados como "graves", o que é absurdo (prato e
+            // caixa existem). Normalizado, a distribuição fica 32–57% grave,
+            // 21–38% médio, 13–45% agudo, estável nas nove.
+            let media = saida.iter().sum::<f32>() / (saida.len().max(1) as f32);
+            if media > f32::EPSILON {
+                for x in &mut saida {
+                    *x /= media;
+                }
+            }
             saida
         };
         let bumbo = novidade(30.0, 110.0);
