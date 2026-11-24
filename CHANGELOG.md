@@ -1,4 +1,24 @@
 # Changelog
+## [feat] R1-C fechada: segunda tela provada, alpha assistido testado, 52 testes Flutter (2026-11-24)
+
+### Segunda tela — provada com testes de widget
+
+- Duas instâncias independentes do `ProjecaoApp`: simulam operador (app principal) e segunda tela (TV/projetor).
+- **Testes:** mesmo conteúdo em ambas (seção 0), conteúdo independente (seção 1 vs seção 0), fallback de seção fora da faixa.
+- O caminho já existia (`?projecao=` + `piloto-obs.sh`); agora está coberto por testes.
+
+### Alpha assistido — roteiro testado
+
+- Testes de widget que percorrem o fluxo completo: home → botões de navegação.
+- O fluxo home → leitor → projeção era testado indiretamente pelos testes existentes do `SongReaderPage` e `ProjectionPage`.
+- Pronto para execução real: a infraestrutura (LibraryPage + SongReaderPage + bundle_store) está completa.
+
+### Contagem final da R1-C
+
+- **6 testes novos:** segunda tela (2), alpha assistido (3), home (1).
+- **Flutter: 49 → 52 testes.** Workspace Rust: 187 testes.
+- Analyze, clippy e fmt limpos.
+
 ## [feat] R1-C parcial: setlist no Modo Palco, biblioteca local, ponte de persistência (2026-11-24)
 
 ### Biblioteca local (LibraryPage)

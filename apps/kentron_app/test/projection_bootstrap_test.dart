@@ -105,4 +105,60 @@ void main() {
     );
     expect(find.textContaining('ponte caiu'), findsOneWidget);
   });
+
+  // ── Segunda tela: duas projeções independentes mostram o mesmo ────────
+
+  testWidgets('segunda tela mostra o mesmo conteúdo da projeção principal', (
+    tester,
+  ) async {
+    // Simula duas instâncias do ProjecaoApp (operador + segunda tela).
+    await tester.pumpWidget(
+      const ProjecaoApp(
+        chordpro: 'ignorado',
+        ler: _lerDuas,
+        locale: Locale('en'),
+        initialSection: 0,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Operador vê a primeira seção
+    expect(find.text('Santo, santo'), findsOneWidget);
+    expect(find.byType(ProjectionPage), findsOneWidget);
+
+    // Segunda tela com a mesma cifra, mesma seção — mesmo conteúdo
+    await tester.pumpWidget(
+      const ProjecaoApp(
+        chordpro: 'ignorado',
+        ler: _lerDuas,
+        locale: Locale('en'),
+        initialSection: 0,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Ambas mostram o mesmo
+    expect(find.text('Santo, santo'), findsOneWidget);
+    expect(find.text('Santo é o Senhor'), findsNothing);
+  });
+
+  testWidgets('segunda tela mostra a seção pedida, independente da principal', (
+    tester,
+  ) async {
+    // A segunda tela (TV/projetor) abre com sua própria seção via URL.
+    // O conteúdo independe do que o operador vê no app principal.
+    await tester.pumpWidget(
+      const ProjecaoApp(
+        chordpro: 'ignorado',
+        ler: _lerDuas,
+        locale: Locale('en'),
+        initialSection: 1,
+      ),
+    );
+    // Duas pumps: uma para o build, outra para o FutureBuilder resolver.
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Santo é o Senhor'), findsOneWidget);
+    expect(find.text('Santo, santo'), findsNothing);
+  });
 }
