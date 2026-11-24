@@ -1,6 +1,7 @@
 # ADR-0017 — Separação de bateria: o primeiro modelo no motor
 
-Status: Proposto — **prova conceitual executada (2026-11-24)**; falta o aceite do dono. Data: 2026-11-24. Autoridade de aceite: dono do projeto.
+Status: **aceito (2026-11-24)** — decisão do dono do projeto, com a prova conceitual executada.
+Autoridade de aceite: dono do projeto. As três ressalvas da prova estão registradas no `PENDING` como pendência de tratativa posterior.
 Repositórios/contratos afetados: `crates/mir_engine` (novo módulo de stems), `models/MANIFEST.toml`, ROADMAP R4 (portão S1/S2/S3).
 
 ## Contexto

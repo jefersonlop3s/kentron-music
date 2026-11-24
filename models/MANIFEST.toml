@@ -21,3 +21,14 @@
 # approved_in  = ""                # ADR ou spike que aprovou (ex.: spike S1)
 
 schema = 1
+
+[[model]]
+id              = "htdemucs_6s"
+purpose         = "separação de fontes para medir a relação bumbo×caixa no metro"
+code_license    = "MIT"
+weights_license = "MIT"   # LICENSE do repositório (Meta Platforms); sem termo separado para os pesos
+source_url      = "https://github.com/facebookresearch/demucs"
+weights_url     = "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/5c90dfd2-34c22ccb.th"
+sha256          = "34c22ccb381c6f9fdbf324f04e1e2fe21aaaf293f5ded163a162697ff9a02ddd"
+format          = "pytorch"
+approved_in     = "ADR-0017"
