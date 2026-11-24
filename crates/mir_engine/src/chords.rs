@@ -366,13 +366,28 @@ struct Bruto {
 const MINIMO_DE_QUADROS: usize = 3;
 
 /// Fração dos quadros com F0 que a terça precisa somar para decidir.
-const FRACAO_DA_TERCA: f32 = 0.4;
+///
+/// **0,20 é medido, não escolhido** (2026-11-22): nos três acordes de `Me Derramar`
+/// com verdade conhecida, a terça aparece em **21%** (`G5` → `G9`, terça B),
+/// **29%** (`Gsus2` → `G9`) e **20%** (`C5` → `C9`, terça E) dos quadros com F0.
+/// O 0,40 anterior só servia para melodia parada — **melodia de verdade se move**,
+/// e toca a fundamental, a quinta, a nona e a terça no mesmo trecho. **Limite
+/// declarado:** calibrado em três acordes de uma música; o piso precisa de casos
+/// negativos para não disparar terça onde não há.
+const FRACAO_DA_TERCA: f32 = 0.2;
 
 /// Promove `5` para maior/menor quando a melodia canta a terça.
 ///
 /// Só toca em `Potencia`: qualidade já decidida não é sobrescrita. É o mesmo
 /// princípio do `com_terca` — na dúvida, dizer menos. Se a melodia errar, o
 /// custo é um `5` que continua `5`, não um acorde que vira o oposto.
+/// Promove a maior/menor o acorde **sem terça** quando a melodia traz a terça.
+///
+/// Vale para `5` (potência), `sus4` e `sus2`: são os três casos em que o croma
+/// perdeu a terça e o nome ficou sem qualidade. Medido em `Me Derramar`
+/// (2026-11-22): o motor dizia `G5` e `Gsus2` onde é `G9` — e a melodia tocava
+/// **B (a terça)** e **A (a nona)** no mesmo trecho. A terça vem da melodia; é a
+/// mesma tese do bloco 3 da ADR-0014, aplicada a quem não é potência pura.
 fn com_a_melodia(
     tonica: usize,
     qualidade: Qualidade,
@@ -380,7 +395,10 @@ fn com_a_melodia(
     fim_s: f32,
     melodia: &Melodia,
 ) -> Qualidade {
-    if qualidade != Qualidade::Potencia {
+    if !matches!(
+        qualidade,
+        Qualidade::Potencia | Qualidade::SusQuatro | Qualidade::SusDois
+    ) {
         return qualidade;
     }
     let com_f0 = melodia.quadros_com_f0(inicio_s, fim_s);
@@ -403,6 +421,44 @@ fn com_a_melodia(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_terca_fraca_da_melodia_promove_potencia_e_sus() {
+        // Medido em `Me Derramar` (2026-11-22): a melodia toca a terça em **21%**
+        // dos quadros com F0, porque no mesmo trecho ela também toca a
+        // fundamental, a quinta e a nona. Com o limiar antigo de 0,40 o motor
+        // ficava em `G5` onde a verdade é `G` — melodia de verdade se move.
+        let mut classes = vec![Some(11usize); 7]; // B = terça maior de G
+        classes.extend(vec![Some(7usize); 20]); // G = fundamental
+        classes.extend(vec![Some(2usize); 4]); // D = quinta
+        classes.push(None); // um quadro sem F0
+        let melodia = Melodia { classes, fps: 10.0 };
+        assert_eq!(
+            com_a_melodia(7, Qualidade::Potencia, 0.0, 3.1, &melodia),
+            Qualidade::Maior,
+            "terça a 23% dos quadros com F0 tem de promover"
+        );
+        assert_eq!(
+            com_a_melodia(7, Qualidade::SusQuatro, 0.0, 3.1, &melodia),
+            Qualidade::Maior,
+            "sus4 sem terça no croma também é promovido pela melodia"
+        );
+    }
+
+    #[test]
+    fn sem_terca_na_melodia_nao_inventa_qualidade() {
+        // Prova negativa: melodia que só toca fundamental e quinta não decide.
+        let classes = vec![Some(7usize); 20]
+            .into_iter()
+            .chain(vec![Some(2usize); 5])
+            .collect();
+        let melodia = Melodia { classes, fps: 10.0 };
+        assert_eq!(
+            com_a_melodia(7, Qualidade::Potencia, 0.0, 2.5, &melodia),
+            Qualidade::Potencia,
+            "sem terça o motor não inventa qualidade"
+        );
+    }
 
     #[test]
     fn a_barra_entra_so_quando_o_baixo_informa() {

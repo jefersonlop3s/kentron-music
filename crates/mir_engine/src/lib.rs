@@ -88,6 +88,26 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
     // perdeu na mixagem (ADR-0014, bloco 3).
     let melodia = melody::extrair(spectro, audio.taxa);
     let mut chords = chords::detect_com_melodia(&chroma, Some(&melodia));
+    let melodia_trechos: Vec<report::MelodiaSegment> = chords
+        .iter()
+        .map(|trecho| {
+            let contagem = melodia.contagem(trecho.inicio_s, trecho.fim_s);
+            let dominante = melodia.dominante(trecho.inicio_s, trecho.fim_s);
+            report::MelodiaSegment {
+                inicio_s: trecho.inicio_s,
+                fim_s: trecho.fim_s,
+                quadros_com_f0: melodia.quadros_com_f0(trecho.inicio_s, trecho.fim_s),
+                dominante: dominante
+                    .map(|(classe, _, _)| chords::nome(classe, chords::Qualidade::Maior)),
+                fracao_dominante: dominante.map_or(0.0, |(_, vezes, total_f0)| {
+                    vezes as f32 / total_f0.max(1) as f32
+                }),
+                contagem,
+            }
+        })
+        .collect();
+    // O tempo vem antes do baixo: o compasso usa a novidade de croma, e o baixo
+    // usa o compasso só para a leitura por trecho.
     let tempo = structure::estimate_tempo(spectro, audio.taxa);
     // O compasso é medido **no espectro**, não nos trechos de acorde: a âncora é a
     // mudança de harmonia medida no croma, e assim o compasso não depende do
@@ -158,6 +178,7 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
         tonalidade: tonality::analisar(&chroma),
         chords,
         baixo: baixo_trechos,
+        melodia: melodia_trechos,
         compasso,
         sections,
     }

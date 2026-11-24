@@ -18,6 +18,25 @@ pub struct AudioInfo {
     pub afinacao_cents: f32,
 }
 
+/// O que a melodia tocou num trecho — a evidência que arbitra a terça.
+///
+/// Existe separado porque **a melodia é extraída e usada mas não aparecia em
+/// lugar nenhum**: sem publicá-la, a hipótese de que ela carrega a terça (e as
+/// extensões da pentatônica) não era conferível.
+#[derive(Debug, Clone, Serialize)]
+pub struct MelodiaSegment {
+    pub inicio_s: f32,
+    pub fim_s: f32,
+    /// Quantos quadros do trecho deram F0 confiável.
+    pub quadros_com_f0: usize,
+    /// Classe de altura dominante, na convenção do motor (`C`, `Db`, …).
+    pub dominante: Option<String>,
+    /// Fração dos quadros com F0 que a dominante representa.
+    pub fracao_dominante: f32,
+    /// Histograma por classe de altura (`0` = C).
+    pub contagem: [usize; 12],
+}
+
 /// O baixo estimado num trecho de acorde.
 ///
 /// Existe separado do croma de propósito: o croma descarta o registro, e é o
@@ -60,6 +79,8 @@ pub struct Report {
     /// Baixo por trecho de acorde (ADR-0014, bloco 4). Vazio quando a banda do
     /// baixo não tem evidência — o motor não inventa inversão.
     pub baixo: Vec<BaixoSegment>,
+    /// O que a melodia tocou em cada trecho de acorde — a evidência da terça.
+    pub melodia: Vec<MelodiaSegment>,
     /// Compasso e tempo 1 (ADR-0014, bloco 5). `batidas_por_compasso = 0` quando
     /// não há evidência para decidir — ver `crate::compasso`.
     pub compasso: crate::compasso::Compasso,
