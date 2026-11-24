@@ -2,6 +2,43 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] O gabarito independente: o motor acerta 1 de 8, e o meu 5 de 6 era viés (2026-11-24)
+
+O dono trouxe **quatro vídeos de músicos** sobre `3/4` × `6/8` e autorizou baixar. Legendas automáticas para o texto; **frames** do vídeo de 15 min para ler as respostas que aparecem na tela.
+
+### Os quatro confirmam a regra — e ela é a `dobra`
+
+- `Jay Fenichel`: *"it all has to do with **how you subdivide the six** — divide by **two** → two groups of three, that's 6/8; 3/4 is the opposite, divide by **three**"*.
+- `Andrew Freed`: *"both have the same amount of eighth notes… **the underlying pulse is different**"*.
+- `David Bennett`: `3/4` = **simple triple**; `6/8` = **compound duple** — *"68 has two strong beats in a bar, not six, but two"*.
+
+### E confirmam a ambiguidade como fato musical
+
+Bennett: em andamento **lento** o `6/8` *"can start to sound like 3/4 because our ear can't latch onto the two beats"* (`Gravity`, John Mayer); em andamento **rápido** o `3/4` soa como `6/8` (`America`, Simon & Garfunkel, *"I've seen differing opinions"*). Fecha: *"it comes down to the way you want to feel the music"*.
+
+### O gabarito — nove exemplos com resposta na tela
+
+| música | Bennett | o motor |
+|---|---|---|
+| Mull of Kintyre (Wings) | 3/4 | **3/4** ✓ |
+| We Are The Champions (Queen) | 6/8 | sem nome |
+| My Favorite Things | 3/4 | sem nome |
+| Delilah (Tom Jones) | 3/4 | 6/8 ✗ |
+| Fallin' (Alicia Keys) | 6/8 | 4/4 ✗ |
+| Say Something | 6/8 | 3/4 ✗ |
+| The Times They Are a-Changin' | 3/4 | sem nome (alternativas certas) |
+| Manic Depression (Hendrix) | 3/4 | 3/4 ✓ |
+| Binky (Snarky Puppy) | 3/4 | 4/4 ✗ |
+
+**1 acerto, 4 erros, 4 sem nome.** (O `Manic Depression` já estava no conjunto anterior e já acertava; entre os oito novos, **1 de 8**.)
+
+### O que isso obrigou a corrigir
+
+- **O `5 de 6` era viés de seleção.** A medida **não generaliza** para material escolhido por outra pessoa.
+- **A margem não é confiança:** no gabarito as margens de acertos e erros se sobrepõem (acerto 0,401; erros 0,243 · 0,190 · 0,053). O limiar de 0,05 foi calibrado no conjunto viciado.
+- **O nome virou sugestão, e as alternativas vêm sempre.** A cifra carrega `{comment: …}` em vez de `{time: …}`: gravar um palpite de 1/8 como fato é pior que não gravar. `{time: …}` fica para o músico.
+- **O fixture dourado pegou a mudança** antes de ela ser aceita.
+
 ## [processo] O metro: cinco medidas, uma funciona, um gargalo só (2026-11-22)
 
 Fechamento da campanha. O placar do que foi medido:

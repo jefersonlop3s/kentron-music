@@ -1465,6 +1465,69 @@ sinal de instrumento quebrado, não de música. É o mesmo padrão do "74–99% 
 ataques são graves" desta sessão: **resultado implausível é denúncia do aparelho
 antes de ser descoberta.**
 
+## R4 · O gabarito independente derruba o `5 de 6`: viés de seleção (2026-11-24)
+
+**Status:** 🔴 **A medida da dobra não generaliza.** O motor acerta **1 de 8** no
+gabarito independente. Corrigido no produto: o nome virou sugestão.
+
+### Os músicos confirmam a regra
+
+Quatro vídeos trazidos pelo dono, todos sobre `3/4` × `6/8`. O texto saiu das
+legendas automáticas e as respostas, dos **frames** do vídeo de 15 min.
+
+- `Jay Fenichel`: *"it all has to do with **how you subdivide the six** — divide
+  by **two** → two groups of three, that's 6/8; 3/4 is the opposite, divide by
+  **three**"*.
+- `David Bennett`: `3/4` = **simple triple** (três tempos fortes, cada um em
+  dois); `6/8` = **compound duple** (**dois** tempos fortes, cada um em três) —
+  *"68 has two strong beats in a bar, not six, but two"*.
+
+**É a `dobra`** — a comparação `A(T/2)` × `A(T/3)` é literalmente "dividir o seis
+por dois ou por três". A regra estava certa.
+
+### E confirmam a ambiguidade como fato musical
+
+Bennett: em andamento **lento** o `6/8` *"can start to sound like 3/4 because our
+ear can't latch onto the two beats"*; em andamento **rápido** o `3/4` soa como
+`6/8`. Fecha: *"it comes down to the way you want to feel the music"*.
+
+**O gargalo da barra não é só engenharia — é ambiguidade que profissionais
+reconhecem.**
+
+### O gabarito, e o resultado
+
+| música | Bennett | o motor |
+|---|---|---|
+| Mull of Kintyre | 3/4 | **3/4** ✓ |
+| We Are The Champions | 6/8 | sem nome |
+| My Favorite Things | 3/4 | sem nome |
+| Delilah | 3/4 | 6/8 ✗ |
+| Fallin' | 6/8 | 4/4 ✗ |
+| Say Something | 6/8 | 3/4 ✗ |
+| The Times They Are a-Changin' | 3/4 | sem nome (alternativas certas) |
+| Manic Depression | 3/4 | **3/4** ✓ |
+| Binky | 3/4 | 4/4 ✗ |
+
+**Entre os oito novos: 1 de 8.**
+
+### O que ficou decidido
+
+- **O `5 de 6` era viés de seleção** — medido num conjunto que eu escolhi. A
+  medida **não generaliza**.
+- **A margem não é confiança:** no gabarito as margens de acerto e erro se
+  sobrepõem (0,401 contra 0,243 · 0,190 · 0,053).
+- **O nome virou sugestão; as alternativas vêm sempre; a cifra carrega
+  `{comment: …}` e não `{time: …}`.** Gravar um palpite de 1/8 como fato é pior
+  que não gravar — e `{time: …}` é a decisão do músico.
+- **O gabarito fica como régua:** nenhum ajuste novo sem medir nele.
+
+### Aprendizado
+
+**Teste escolhido por quem construiu não é teste.** O `5 de 6` me deu confiança
+por horas; o `1 de 8` veio de material que **outra pessoa** escolheu e rotulou. A
+diferença entre os dois números é o tamanho do meu viés — e ela só apareceu porque
+o dono desconfiou do conjunto, não do código.
+
 ## R4 · O metro: cinco medidas, uma funciona, um gargalo só (2026-11-22)
 
 **Status:** 🟡 **Investigação fechada.** A medida certa existe (`Compasso.dobra`),

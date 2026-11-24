@@ -45,12 +45,13 @@ pub fn montar(relatorio: &Report, alinhadas: &[LinhaAlinhada], ficha: &Ficha) ->
         format!("{:.0}", relatorio.audio.duracao_s),
     );
     metadata.insert("source".to_owned(), "mir_engine".to_owned());
-    // O tempo do compasso, **quando o motor decide**. `time` é a diretiva padrão
-    // do ChordPro, e é o lar da escolha: quando a dobra não decide, a diretiva
-    // fica ausente e o músico a escreve. **A falta de informação vira escolha,
-    // não palpite** — e a escolha fica na cifra, que é onde ela sobrevive.
-    if let Some(nome) = &relatorio.compasso.leitura.nome {
-        metadata.insert("time".to_owned(), nome.clone());
+    // O compasso **não** entra como `time`. O nome do motor acerta 1 de 8 no
+    // gabarito independente de `David Bennett` — gravá-lo como fato seria pior
+    // que não gravar. A leitura vai como **comentário**, e `{time: …}` fica para
+    // o músico: a diretiva é a decisão dele, não o palpite do motor.
+    let leitura = relatorio.compasso.leitura.sugestao();
+    if !leitura.is_empty() {
+        metadata.insert("comment".to_owned(), leitura);
     }
     metadata.insert("lyrics_source".to_owned(), ficha.origem.descricao());
     metadata.insert(

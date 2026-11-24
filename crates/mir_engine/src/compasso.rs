@@ -146,14 +146,54 @@ pub struct Leitura {
     pub dobra: Dobra,
     /// `|A(T/2) - A(T/3)|` — quanto a dobra é decisiva.
     pub margem_dobra: f32,
-    /// O nome do compasso — `3/4`, `6/8`, `4/4`, `2/4` — **só quando a evidência
-    /// o determina**. `None` é resposta, não falha: ver `alternativas`.
+    /// O nome sugerido — `3/4`, `6/8`, `4/4`, `2/4`. **É sugestão, não
+    /// decisão:** no gabarito independente de `David Bennett` ele acerta 1 de 8.
+    /// `None` é resposta, não falha — ver `alternativas`, que vem sempre.
     pub nome: Option<String>,
-    /// As leituras **consistentes com a barra medida** quando o motor não
-    /// decide. `3/4` e `6/8` têm a mesma barra de seis subdivisões: a diferença
-    /// é onde o pé bate, e isso o músico sabe. **A falta de informação vira
-    /// feature** — o app oferece as duas e guarda a escolha.
+    /// As leituras **consistentes com a barra medida** — **sempre**, não só
+    /// quando o nome falta. `3/4` e `6/8` têm a mesma barra de seis subdivisões:
+    /// a diferença é onde o pé bate, e isso o músico sabe. **A falta de
+    /// informação vira feature** — o app oferece as duas e guarda a escolha.
     pub alternativas: Vec<String>,
+}
+
+impl Leitura {
+    /// A leitura em uma linha, para o resumo e para o comentário da cifra.
+    ///
+    /// **A sugestão vem marcada como sugestão.** O nome erra 7 de 8 no gabarito
+    /// independente; apresentá-lo sem a marca seria vender palpite como medida.
+    #[must_use]
+    pub fn sugestao(&self) -> String {
+        if self.batidas == 0 {
+            return String::new();
+        }
+        let alternativas = self.alternativas.join(" ou ");
+        let palpite = match (&self.nome, alternativas.is_empty()) {
+            (Some(nome), false) => {
+                // O nome já está entre as alternativas; repeti-lo soa como erro.
+                let outras: Vec<&str> = self
+                    .alternativas
+                    .iter()
+                    .map(String::as_str)
+                    .filter(|a| *a != nome.as_str())
+                    .collect();
+                if outras.is_empty() {
+                    format!("{nome} (sugestão)")
+                } else {
+                    format!("{nome} (sugestão) ou {}", outras.join(" ou "))
+                }
+            }
+            (Some(nome), true) => format!("{nome} (sugestão)"),
+            (None, false) => format!("{alternativas}?"),
+            // Sem nome e sem alternativa não há o que dizer: comentário que não
+            // informa é ruído na cifra.
+            (None, true) => return String::new(),
+        };
+        format!(
+            "compasso: {palpite} · barra {:.2} s — confirme com {{time: …}}",
+            self.compasso_s
+        )
+    }
 }
 
 /// Nome do compasso a partir de **quantas batidas** e **como o ciclo se dobra**.
@@ -163,6 +203,12 @@ pub struct Leitura {
 /// subdivisões. `3` batidas que se dobram em **dois** têm duas metades espelho —
 /// `6/8`, dois grupos de três. **Mesma barra de seis subdivisões, nomes
 /// diferentes** — e é por isso que o nome não sai de contar subdivisões.
+///
+/// **O nome é sugestão, não decisão.** Medido contra o gabarito independente de
+/// `David Bennett` (oito músicas com a resposta na tela): **1 acerto, 3 erros e
+/// 4 sem nome**. O `5 de 6` que a medida tinha antes foi **viés de seleção** do
+/// conjunto de teste. Por isso [`Leitura::alternativas`] vem **sempre**, e não
+/// só quando o nome falta: a escolha é do músico em qualquer caso.
 fn nome_do_compasso(batidas: u8, dobra: Dobra) -> Option<&'static str> {
     match (batidas, dobra) {
         (3, Dobra::EmTres) => Some("3/4"),
@@ -175,7 +221,13 @@ fn nome_do_compasso(batidas: u8, dobra: Dobra) -> Option<&'static str> {
     }
 }
 
-/// As leituras que a mesma barra comporta quando a dobra não decide.
+/// As leituras que a mesma barra comporta — **sempre**, não só quando a dobra
+/// não decide.
+///
+/// `3/4` e `6/8` têm a mesma barra de seis subdivisões e a mesma duração em
+/// segundos; o que muda é onde o pé bate. Como o nome erra 7 de 8 no gabarito
+/// independente, a alternativa não pode ser um consolo: ela é a **resposta
+/// principal**, e o nome é o palpite que vem junto.
 fn alternativas_de(batidas: u8) -> Vec<String> {
     match batidas {
         3 => vec!["3/4".into(), "6/8".into()],
@@ -766,11 +818,7 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
                 dobra,
                 margem_dobra,
                 nome: nome.map(str::to_owned),
-                alternativas: if nome.is_some() {
-                    Vec::new()
-                } else {
-                    alternativas_de(melhor_m)
-                },
+                alternativas: alternativas_de(melhor_m),
             }
         },
         bandas: PerfilBandas::medir(spectro, taxa, &vencedor.batidas, m_usize, p_usize),
@@ -1119,6 +1167,35 @@ mod tests {
             (perto - longe).abs() < 0.15,
             "a correção não compensou: {perto:.3} contra {longe:.3}"
         );
+    }
+
+    #[test]
+    fn a_sugestao_vem_marcada_como_sugestao() {
+        // O nome erra 7 de 8 no gabarito independente: apresentá-lo sem a marca
+        // seria vender palpite como medida. E a alternativa é a resposta
+        // principal, não um consolo.
+        let leitura = Leitura {
+            batidas: 3,
+            compasso_s: 2.4,
+            dobra: Dobra::EmDois,
+            margem_dobra: 0.24,
+            nome: Some("6/8".into()),
+            alternativas: vec!["3/4".into(), "6/8".into()],
+        };
+        let texto = leitura.sugestao();
+        assert!(texto.contains("6/8 (sugestão)"), "sem a marca: {texto}");
+        assert!(texto.contains("ou 3/4"), "alternativa sumiu: {texto}");
+        assert!(
+            !texto.contains("ou 6/8"),
+            "o nome repetido na alternativa soa como erro: {texto}"
+        );
+        // Sem nome e sem alternativa não há o que dizer — comentário que não
+        // informa é ruído na cifra.
+        let mudo = Leitura {
+            batidas: 4,
+            ..Leitura::default()
+        };
+        assert!(mudo.sugestao().is_empty(), "falou sem ter o que dizer");
     }
 
     #[test]
