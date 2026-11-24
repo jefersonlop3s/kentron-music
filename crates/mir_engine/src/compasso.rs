@@ -251,10 +251,17 @@ impl Leitura {
                     self.compasso_s = bumbo_caixa.periodo_bumbo_s;
                 }
                 self.nome = None;
-                self.alternativas = vec!["6/8".to_owned(), "4/4".to_owned()];
+                // **A oferta inclui o `3/4` — sempre.** Medido nos hinos com compasso
+                // declarado (2026-11-24): `Crer e observar` e `Noite feliz` **são
+                // `3/4`** e a caixa delas **não** caiu nos terços (`dobra = 2`) — um
+                // compasso ternário **se apresenta como binário**. A oferta sem `3/4`
+                // perderia a resposta certa, e a oferta é abstensão: **estreitar por
+                // conta própria é vender palpite.**
+                self.alternativas = vec!["3/4".to_owned(), "6/8".to_owned(), "4/4".to_owned()];
                 self.fonte = "percussão".to_owned();
-                self.regra =
-                    format!("{evidencia} → duas metades: `6/8` ou `4/4`, e a percussão não separa");
+                self.regra = format!(
+                    "{evidencia} → duas metades: `3/4`, `6/8` ou `4/4`, e a percussão não separa"
+                );
             }
             _ => {}
         }
