@@ -1,6 +1,6 @@
 # ADR-0017 — Separação de bateria: o primeiro modelo no motor
 
-Status: Proposto. Data: 2026-11-24. Autoridade de aceite: dono do projeto.
+Status: Proposto — **prova conceitual executada (2026-11-24)**; falta o aceite do dono. Data: 2026-11-24. Autoridade de aceite: dono do projeto.
 Repositórios/contratos afetados: `crates/mir_engine` (novo módulo de stems), `models/MANIFEST.toml`, ROADMAP R4 (portão S1/S2/S3).
 
 ## Contexto
@@ -62,6 +62,57 @@ Escopo declarado desta decisão:
 - **On-device (S1):** o alvo de produto exige que a análise rode no dispositivo. O ONNX Runtime cobre desktop e móvel, mas **o custo em telefone não foi medido** — fica para o spike S1, e não é pré-requisito do incremento de trabalho.
 - **Reversibilidade:** alta. O módulo é aditivo e o motor não depende dele; desligar é remover a chamada e o peso.
 - **Testes:** herméticos no caminho DSP (como hoje). O caminho com stem precisa de um teste que **não** exija o peso no repositório: o modelo entra por caminho configurável e o teste de integração roda só quando o arquivo existe, declarado como tal.
+
+## Prova conceitual — executada (2026-11-24)
+
+### Licenciamento — conferido na fonte
+
+- **Código:** `LICENSE` do repositório = **MIT**, "Copyright (c) Meta Platforms, Inc. and affiliates".
+- **Pesos:** hospedados por Meta em `dl.fbaipublicfiles.com`, **sem termo separado**; o README declara a release como MIT. Os espelhos no Hugging Face (`adefossez/HTDemucs-6s`, do próprio autor) **não declaram licença** — a fonte autoritativa é o LICENSE do repositório.
+- **Hash medido, e ele se confere:** `sha256 = 34c22ccb381c6f9fdbf324f04e1e2fe21aaaf293f5ded163a162697ff9a02ddd`. O nome do arquivo é `5c90dfd2-34c22ccb.th` — o sufixo é o **prefixo do sha256**, que é a convenção do Demucs. O arquivo é o que diz ser.
+
+### O modelo
+
+**54.996.327 bytes = 52,4 MB**, exatamente o `content-length` previsto.
+
+### Desempenho medido
+
+**13,5× o tempo real** em CPU (46,8 s de áudio em 3,5 s; 30 s em 16,2 s incluindo a carga do modelo). Uma faixa de 4 minutos sai em **~18 s**. O README estimava ≈1,5× — o número real é **9× melhor**.
+
+### O que a separação resolve — medido em `Me Derramar` (que é `6/8`)
+
+| | mix | stem de bateria |
+|---|---|---|
+| barra do bumbo | 1,25 s | **2,28 s** |
+| bumbos detectados | 22 | **10** |
+| caixa no ciclo | 43% · 24% · 10% · 10% · 10% · 5% | **58% · 0% · 0% · 8% · 33% · 0%** |
+
+**A assinatura apareceu:** com o baixo fora da banda, a barra do bumbo salta para 2,28 s e a caixa cai em **0 e na metade do ciclo** — a leitura de `6/8`. Era exatamente a causa medida no contexto desta ADR.
+
+### O que a separação ainda não resolve
+
+No gabarito independente, o resultado **não fecha**: em `binky` (`3/4`) a caixa cai em **1/3 e 2/3** com `T = 0,93 s` (assinatura de `3/4` ✓), mas nas outras cinco o histograma continua dominado pela fatia zero — bumbo e caixa batendo **juntos** no tempo 1.
+
+**A causa mudou de lado.** Antes era a bateria não separada; agora é o **estimador de ataque e de período**, que é meu e é cru: limiar por desvio, espaçamento mínimo e mediana de intervalos. **O modelo não é o gargalo.**
+
+### Veredito para o aceite
+
+A separação **removeu a causa medida** (o baixo na banda do bumbo, verificado em `Me Derramar`) e **não é suficiente sozinha** — o que falta agora é detector de ataque e estimador de período no motor, que é trabalho de DSP deste projeto.
+
+**Entrada pronta para o `models/MANIFEST.toml`, a registrar no aceite:**
+
+```toml
+[[model]]
+id              = "htdemucs_6s"
+purpose         = "separação de fontes para medir a relação bumbo×caixa no metro"
+code_license    = "MIT"
+weights_license = "MIT"   # LICENSE do repositório; sem termo separado para os pesos
+source_url      = "https://github.com/facebookresearch/demucs"
+weights_url     = "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/5c90dfd2-34c22ccb.th"
+sha256          = "34c22ccb381c6f9fdbf324f04e1e2fe21aaaf293f5ded163a162697ff9a02ddd"
+format          = "pytorch"
+approved_in     = "ADR-0017"
+```
 
 ## Referências e evolução
 
