@@ -4,7 +4,6 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import 'frb_generated.dart';
-
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `detail`, `key_note`, `song_key`
@@ -62,6 +61,61 @@ Future<void> podePublicar({required String input}) =>
 /// (`Db`, `Eb`, `Ab`, `Bb`), que é como a cifra popular costuma escrever.
 Future<List<String>> keyChoices() =>
     RustLib.instance.api.crateBridgeKeyChoices();
+
+/// Salva uma cifra no diretório da biblioteca local.
+///
+/// Cria o diretório `base_dir/id/` com `meta.json` e `song.cho`.
+/// O `id` é um identificador estável (slug do título, por exemplo).
+///
+/// # Errors
+///
+/// Devolve erro quando o diretório não pode ser criado, o JSON não pode
+/// ser escrito ou o ChordPro não é válido.
+Future<void> salvarNaBiblioteca({
+  required String baseDir,
+  required String id,
+  required String chordpro,
+}) => RustLib.instance.api.crateBridgeSalvarNaBiblioteca(
+  baseDir: baseDir,
+  id: id,
+  chordpro: chordpro,
+);
+
+/// Carrega uma cifra da biblioteca local e devolve o ChordPro.
+///
+/// # Errors
+///
+/// Devolve erro quando o diretório não existe ou o bundle está corrompido.
+Future<String> carregarDaBiblioteca({
+  required String baseDir,
+  required String id,
+}) => RustLib.instance.api.crateBridgeCarregarDaBiblioteca(
+  baseDir: baseDir,
+  id: id,
+);
+
+/// Lista os IDs das músicas na biblioteca local.
+///
+/// Lê o arquivo `library.json` no diretório base.
+///
+/// # Errors
+///
+/// Devolve erro quando o índice não existe ou está corrompido.
+Future<List<SongSummary>> listarBiblioteca({required String baseDir}) =>
+    RustLib.instance.api.crateBridgeListarBiblioteca(baseDir: baseDir);
+
+/// Remove uma cifra da biblioteca local.
+///
+/// # Errors
+///
+/// Devolve erro quando o diretório não pode ser removido.
+Future<void> removerDaBiblioteca({
+  required String baseDir,
+  required String id,
+}) => RustLib.instance.api.crateBridgeRemoverDaBiblioteca(
+  baseDir: baseDir,
+  id: id,
+);
 
 /// Onde um acorde cai sobre a letra: a coluna e o acorde.
 class ChordMark {

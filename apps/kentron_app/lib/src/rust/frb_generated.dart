@@ -4,14 +4,11 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'bridge.dart';
-
 import 'dart:async';
 import 'dart:convert';
-
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
-
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
@@ -67,7 +64,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 29489783;
+  int get rustContentHash => 1070150335;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -79,13 +76,33 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
+  Future<String> crateBridgeCarregarDaBiblioteca({
+    required String baseDir,
+    required String id,
+  });
+
   Future<List<String>> crateBridgeKeyChoices();
+
+  Future<List<SongSummary>> crateBridgeListarBiblioteca({
+    required String baseDir,
+  });
 
   Future<SongSummary> crateBridgeParseSong({required String input});
 
   Future<void> crateBridgePodePublicar({required String input});
 
   Future<SongDetail> crateBridgeReadSong({required String input});
+
+  Future<void> crateBridgeRemoverDaBiblioteca({
+    required String baseDir,
+    required String id,
+  });
+
+  Future<void> crateBridgeSalvarNaBiblioteca({
+    required String baseDir,
+    required String id,
+    required String chordpro,
+  });
 
   Future<SongDetail> crateBridgeTransposeSong({
     required String input,
@@ -102,6 +119,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
+  Future<String> crateBridgeCarregarDaBiblioteca({
+    required String baseDir,
+    required String id,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(baseDir, serializer);
+          sse_encode_String(id, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 1,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateBridgeCarregarDaBibliotecaConstMeta,
+        argValues: [baseDir, id],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeCarregarDaBibliotecaConstMeta =>
+      const TaskConstMeta(
+        debugName: "carregar_da_biblioteca",
+        argNames: ["baseDir", "id"],
+      );
+
+  @override
   Future<List<String>> crateBridgeKeyChoices() {
     return handler.executeNormal(
       NormalTask(
@@ -110,7 +162,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 1,
+            funcId: 2,
             port: port_,
           );
         },
@@ -129,6 +181,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "key_choices", argNames: []);
 
   @override
+  Future<List<SongSummary>> crateBridgeListarBiblioteca({
+    required String baseDir,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(baseDir, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 3,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_song_summary,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateBridgeListarBibliotecaConstMeta,
+        argValues: [baseDir],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeListarBibliotecaConstMeta =>
+      const TaskConstMeta(
+        debugName: "listar_biblioteca",
+        argNames: ["baseDir"],
+      );
+
+  @override
   Future<SongSummary> crateBridgeParseSong({required String input}) {
     return handler.executeNormal(
       NormalTask(
@@ -138,7 +223,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 2,
+            funcId: 4,
             port: port_,
           );
         },
@@ -166,7 +251,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 3,
+            funcId: 5,
             port: port_,
           );
         },
@@ -194,7 +279,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 4,
+            funcId: 6,
             port: port_,
           );
         },
@@ -213,6 +298,78 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "read_song", argNames: ["input"]);
 
   @override
+  Future<void> crateBridgeRemoverDaBiblioteca({
+    required String baseDir,
+    required String id,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(baseDir, serializer);
+          sse_encode_String(id, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 7,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateBridgeRemoverDaBibliotecaConstMeta,
+        argValues: [baseDir, id],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeRemoverDaBibliotecaConstMeta =>
+      const TaskConstMeta(
+        debugName: "remover_da_biblioteca",
+        argNames: ["baseDir", "id"],
+      );
+
+  @override
+  Future<void> crateBridgeSalvarNaBiblioteca({
+    required String baseDir,
+    required String id,
+    required String chordpro,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(baseDir, serializer);
+          sse_encode_String(id, serializer);
+          sse_encode_String(chordpro, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 8,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateBridgeSalvarNaBibliotecaConstMeta,
+        argValues: [baseDir, id, chordpro],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeSalvarNaBibliotecaConstMeta =>
+      const TaskConstMeta(
+        debugName: "salvar_na_biblioteca",
+        argNames: ["baseDir", "id", "chordpro"],
+      );
+
+  @override
   Future<SongDetail> crateBridgeTransposeSong({
     required String input,
     required String toKey,
@@ -226,7 +383,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 9,
             port: port_,
           );
         },
@@ -292,6 +449,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<SongSection> dco_decode_list_song_section(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_song_section).toList();
+  }
+
+  @protected
+  List<SongSummary> dco_decode_list_song_summary(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_song_summary).toList();
   }
 
   @protected
@@ -439,6 +602,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <SongSection>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_song_section(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<SongSummary> sse_decode_list_song_summary(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <SongSummary>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_song_summary(deserializer));
     }
     return ans_;
   }
@@ -600,6 +775,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_song_section(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_song_summary(
+    List<SongSummary> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_song_summary(item, serializer);
     }
   }
 

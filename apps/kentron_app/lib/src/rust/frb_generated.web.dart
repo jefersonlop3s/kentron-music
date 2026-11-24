@@ -7,12 +7,9 @@
 // ignore_for_file: argument_type_not_assignable
 
 import 'bridge.dart';
-
 import 'dart:async';
 import 'dart:convert';
-
 import 'frb_generated.dart';
-
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
@@ -43,6 +40,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<SongSection> dco_decode_list_song_section(dynamic raw);
+
+  @protected
+  List<SongSummary> dco_decode_list_song_summary(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -88,6 +88,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<SongSection> sse_decode_list_song_section(SseDeserializer deserializer);
+
+  @protected
+  List<SongSummary> sse_decode_list_song_summary(SseDeserializer deserializer);
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
@@ -146,6 +149,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_song_section(
     List<SongSection> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_song_summary(
+    List<SongSummary> self,
     SseSerializer serializer,
   );
 

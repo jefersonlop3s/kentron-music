@@ -1,4 +1,32 @@
 # Changelog
+## [feat] R1-C parcial: setlist no Modo Palco, biblioteca local, ponte de persistência (2026-11-24)
+
+### Biblioteca local (LibraryPage)
+
+- **`apps/kentron_app/lib/src/stage/library_page.dart`** — tela de biblioteca que lista cifras salvas, permite adicionar (colar ChordPro), remover e abrir no Modo Palco.
+- Interface vazia com ilustração e CTA, estado de erro com "Tentar novamente", suporte a pull-to-refresh.
+
+### Setlist no Modo Palco
+
+- `SongReaderPage` aceita os parâmetros `biblioteca`, `indiceNaBiblioteca` e `diretorioBase` para navegação entre músicas.
+- AppBar ganha botões anterior/próxima e indicador `N / M` quando navegando pela biblioteca.
+
+### Ponte FFI para persistência
+
+- **`crates/kentron_ffi/src/bridge.rs`** — quatro novas funções expostas ao Dart:
+  - `salvar_na_biblioteca(base_dir, id, chordpro)` — salva cifra no bundle.
+  - `carregar_da_biblioteca(base_dir, id)` — carrega cifra do bundle.
+  - `listar_biblioteca(base_dir)` → `Vec<SongSummary>` — lista músicas.
+  - `remover_da_biblioteca(base_dir, id)` — remove cifra.
+- Bindings regenerados com `flutter_rust_bridge_codegen 2.13.0`.
+
+### Tela inicial
+
+- Botão "Biblioteca" adicionado na `HomeScreen`.
+
+### Pendente para alpha assistido
+- Executar o ensaio com fluxo completo (ADR-0009). A infraestrutura está pronta.
+
 ## [feat] R1-B fechada: exportação OpenLyrics, paginação intra-seção, pseudolocalização (2026-11-24)
 
 ### Exportação OpenLyrics

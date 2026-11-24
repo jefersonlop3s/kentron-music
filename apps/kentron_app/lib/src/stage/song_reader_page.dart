@@ -38,6 +38,9 @@ Future<void> conferirPublicacao(String cifra) => podePublicar(input: cifra);
 ///
 /// Carrega do núcleo Rust por injeção (`ler`), não por chamada direta: o widget
 /// fica hermético nos testes e o mesmo código serve ao app real.
+///
+/// Quando [biblioteca] é fornecida, o leitor exibe botões de navegação
+/// (anterior/próxima) na AppBar para trocar de música sem voltar à lista.
 class SongReaderPage extends StatefulWidget {
   const SongReaderPage({
     super.key,
@@ -46,6 +49,9 @@ class SongReaderPage extends StatefulWidget {
     this.transpor = transposeToKey,
     this.tons = keyChoices,
     this.portaoDePublicacao = conferirPublicacao,
+    this.biblioteca,
+    this.indiceNaBiblioteca = 0,
+    this.diretorioBase,
   });
 
   /// A cifra em ChordPro, como veio do arquivo ou do exemplo.
@@ -64,6 +70,15 @@ class SongReaderPage extends StatefulWidget {
   /// se a letra pode virar link público; a tela não copia a regra.
   final Future<void> Function(String cifra) portaoDePublicacao;
 
+  /// Lista de músicas da biblioteca, para navegação entre cifras.
+  final List<SongSummary>? biblioteca;
+
+  /// Índice da música atual na biblioteca.
+  final int indiceNaBiblioteca;
+
+  /// Diretório base para carregar cifras da biblioteca.
+  final String? diretorioBase;
+
   @override
   State<SongReaderPage> createState() => _SongReaderPageState();
 }
@@ -74,16 +89,54 @@ class _SongReaderPageState extends State<SongReaderPage> {
   Object? _erro;
   bool _palco = false;
   bool _trocandoTom = false;
+  late int _indiceBiblioteca = widget.indiceNaBiblioteca;
 
   @override
   void initState() {
     super.initState();
-    _carregar();
+    _carregarAtual();
   }
 
-  Future<void> _carregar() async {
+  bool get _temBiblioteca => widget.biblioteca != null && widget.biblioteca!.length > 1;
+
+  bool get _temAnterior => _temBiblioteca && _indiceBiblioteca > 0;
+
+  bool get _temProxima => _temBiblioteca && _indiceBiblioteca < widget.biblioteca!.length - 1;
+
+  Future<void> _carregarAtual() async {
+    if (_temBiblioteca) {
+      await _carregarDaBiblioteca(_indiceBiblioteca);
+    } else {
+      await _carregar(widget.input);
+    }
+  }
+
+  Future<void> _carregarDaBiblioteca(int indice) async {
+    final musica = widget.biblioteca![indice];
+    final id = musica.title.isNotEmpty
+        ? musica.title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        : '';
+    if (id.isEmpty || widget.diretorioBase == null) {
+      setState(() => _erro = 'Música sem identificador');
+      return;
+    }
     try {
-      final cifra = await widget.ler(widget.input);
+      final chordpro = await _carregarCifra(id);
+      await _carregar(chordpro);
+    } on Object catch (e) {
+      if (!mounted) return;
+      setState(() => _erro = e);
+    }
+  }
+
+  Future<String> _carregarCifra(String id) async {
+    // Usa o pacote bridge diretamente
+    return carregarDaBiblioteca(baseDir: widget.diretorioBase!, id: id);
+  }
+
+  Future<void> _carregar(String chordpro) async {
+    try {
+      final cifra = await widget.ler(chordpro);
       final tons = await widget.tons();
       if (!mounted) return;
       setState(() {
@@ -95,6 +148,26 @@ class _SongReaderPageState extends State<SongReaderPage> {
       if (!mounted) return;
       setState(() => _erro = erro);
     }
+  }
+
+  void _anterior() {
+    if (!_temAnterior) return;
+    setState(() {
+      _indiceBiblioteca -= 1;
+      _cifra = null;
+      _erro = null;
+    });
+    _carregarDaBiblioteca(_indiceBiblioteca);
+  }
+
+  void _proxima() {
+    if (!_temProxima) return;
+    setState(() {
+      _indiceBiblioteca += 1;
+      _cifra = null;
+      _erro = null;
+    });
+    _carregarDaBiblioteca(_indiceBiblioteca);
   }
 
   Future<void> _transporPara(String tom) async {
@@ -157,12 +230,43 @@ class _SongReaderPageState extends State<SongReaderPage> {
     return Scaffold(
       backgroundColor: _palco ? _slateInk : null,
       appBar: AppBar(
-        // O AppBar acompanha o modo Palco: sem isto, a barra fica clara sobre
-        // um corpo escuro — medido na prova de navegador em 2026-11-21.
         backgroundColor: _palco ? _slateInk : null,
         foregroundColor: _palco ? _paperWhite : null,
         title: Text(titulo),
+        leading: _temBiblioteca
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  if (_temAnterior)
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left),
+                      tooltip: 'Anterior',
+                      onPressed: _anterior,
+                    ),
+                  if (_temProxima)
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right),
+                      tooltip: 'Próxima',
+                      onPressed: _proxima,
+                    ),
+                ],
+              )
+            : null,
         actions: <Widget>[
+          if (_temBiblioteca)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Center(
+                child: Text(
+                  '${_indiceBiblioteca + 1} / ${widget.biblioteca!.length}',
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ),
+            ),
           IconButton(
             tooltip: l10n.stageProject,
             onPressed: _cifra == null ? null : _abrirProjecao,

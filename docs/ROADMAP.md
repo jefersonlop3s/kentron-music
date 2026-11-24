@@ -53,7 +53,7 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 ### R1-C · Alpha utilizável (portão inicial, ADR-0009)
 **Objetivo:** provar o fluxo completo em uso real de ensaio, sem depender de calendário de culto.
 - [x] Leitor de cifras (Modo Palco) com transposição por tom, acorde sobre a letra e alternância de contraste.
-- [ ] Setlist utilizável no Modo Palco.
+- [x] Setlist utilizável no Modo Palco (navegação entre músicas via LibraryPage).
 - [x] Modo projeção manual em tela cheia a partir do leitor: uma seção por vez, letra grande, avanço por toque, teclado ou rodapé.
 - [ ] Projeção em tela secundária (ou janela do OBS) — o modo em tela cheia é o conteúdo; falta o transporte para a segunda tela.
 - [ ] Alpha assistido: um ensaio com o fluxo completo, desenvolvedor presente, falhas registradas com diagnóstico.

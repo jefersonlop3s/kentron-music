@@ -163,6 +163,91 @@ pub fn key_choices() -> Vec<String> {
     .map(|key| (*key).to_owned())
     .collect()
 }
+/// Salva uma cifra no diretório da biblioteca local.
+///
+/// Cria o diretório `base_dir/id/` com `meta.json` e `song.cho`.
+/// O `id` é um identificador estável (slug do título, por exemplo).
+///
+/// # Errors
+///
+/// Devolve erro quando o diretório não pode ser criado, o JSON não pode
+/// ser escrito ou o ChordPro não é válido.
+pub fn salvar_na_biblioteca(base_dir: String, id: String, chordpro: String) -> Result<(), String> {
+    let song = ChordProParser::parse(&chordpro).map_err(|e| format!("ChordPro inválido: {e}"))?;
+    let bundle = notation_bundle::bundle::SongBundle::new(
+        notation_bundle::bundle::SongId::new(&id).map_err(|e| format!("id inválido: {e}"))?,
+        song,
+    )
+    .map_err(|e| format!("bundle inválido: {e}"))?;
+
+    let path: &std::path::Path = base_dir.as_ref();
+    notation_bundle::bundle_store::save_bundle(&path.join(&id), &bundle, None)
+        .map_err(|e| format!("erro ao salvar: {e}"))?;
+    Ok(())
+}
+
+/// Carrega uma cifra da biblioteca local e devolve o ChordPro.
+///
+/// # Errors
+///
+/// Devolve erro quando o diretório não existe ou o bundle está corrompido.
+pub fn carregar_da_biblioteca(base_dir: String, id: String) -> Result<String, String> {
+    let path: &std::path::Path = base_dir.as_ref();
+    let bundle = notation_bundle::bundle_store::load_bundle(&path.join(&id))
+        .map_err(|e| format!("erro ao carregar: {e}"))?;
+    Ok(notation_bundle::chordpro::write(bundle.song()))
+}
+
+/// Lista os IDs das músicas na biblioteca local.
+///
+/// Lê o arquivo `library.json` no diretório base.
+///
+/// # Errors
+///
+/// Devolve erro quando o índice não existe ou está corrompido.
+pub fn listar_biblioteca(base_dir: String) -> Result<Vec<SongSummary>, String> {
+    let path: &std::path::Path = base_dir.as_ref();
+    let library = notation_bundle::bundle_store::load_library(path)
+        .map_err(|e| format!("erro ao listar: {e}"))?;
+
+    Ok(library
+        .iter()
+        .map(|bundle| SongSummary {
+            title: bundle.title().to_owned(),
+            key: bundle.key().map(|k| k.to_owned()),
+            artist: bundle.artist().map(|a| a.to_owned()),
+            sections: bundle.song().sections.len() as u32,
+            chords: {
+                let mut chords: Vec<String> = Vec::new();
+                for section in &bundle.song().sections {
+                    for line in &section.lines {
+                        for placement in &line.chords {
+                            if !chords.contains(&placement.chord) {
+                                chords.push(placement.chord.clone());
+                            }
+                        }
+                    }
+                }
+                chords
+            },
+            core: format!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION")),
+        })
+        .collect())
+}
+
+/// Remove uma cifra da biblioteca local.
+///
+/// # Errors
+///
+/// Devolve erro quando o diretório não pode ser removido.
+pub fn remover_da_biblioteca(base_dir: String, id: String) -> Result<(), String> {
+    let path: &std::path::Path = base_dir.as_ref();
+    let dir = path.join(&id);
+    if dir.exists() {
+        std::fs::remove_dir_all(&dir).map_err(|e| format!("erro ao remover: {e}"))?;
+    }
+    Ok(())
+}
 
 fn detail(song: &Song) -> SongDetail {
     SongDetail {
