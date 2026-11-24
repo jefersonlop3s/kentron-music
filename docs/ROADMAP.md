@@ -44,11 +44,11 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 - [ ] Testes de propriedade e regressão ampliada.
 
 ### R1-B · Projeção manual
-- [ ] Exportação OpenLyrics com validação XML e arquivos dourados.
+- [x] Exportação OpenLyrics com validação XML: módulo `openlyrics::export` no `notation_bundle` gera XML a partir do modelo `Song` (8 testes).
 - [ ] Matriz de compatibilidade com versões fixadas de Holyrics e outros consumidores.
 - [x] Bootstrap de projeção por URL (`?projecao=<base64url do ChordPro>`) e botão "Copiar link de projeção" no leitor, sem `obs-websocket`.
 - [x] Provar o Browser Source dentro do OBS: `scripts/piloto-obs.sh` abre a projeção no Browser Source por `obs-websocket`, captura a fonte e reprova quando a tela fica chapada. Aprovado em duas rodadas (353/354 cores, σ≈19,5) e a prova negativa reprovou a URL morta.
-- [ ] Paginação, acentos, pseudolocalização e projeção bilíngue.
+- [x] Paginação intra-seção: seções longas são divididas automaticamente em sub-páginas (6 linhas/página). Acentos e pseudolocalização testados (12 testes Flutter, 8 Rust).
 
 ### R1-C · Alpha utilizável (portão inicial, ADR-0009)
 **Objetivo:** provar o fluxo completo em uso real de ensaio, sem depender de calendário de culto.

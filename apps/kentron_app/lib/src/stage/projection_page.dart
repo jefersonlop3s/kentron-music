@@ -8,11 +8,18 @@ const _slateInk = Color(0xFF0B0F14);
 const _paperWhite = Color(0xFFF2F5F7);
 const _vibrantGold = Color(0xFFE0B341);
 
+/// Número máximo de linhas de letra visíveis por página de projeção.
+/// Acima disso, a seção é dividida em sub-páginas.
+const _linhasPorPagina = 6;
+
 /// Projeção manual: uma seção por vez, letra grande, sem acorde.
 ///
 /// "Manual" é literal: o operador avança e volta. Não há rolagem automática
 /// nem cronômetro — quem projeta decide o ritmo. A letra é o que a congregação
 /// lê; o acorde fica no Modo Palco, com a banda.
+///
+/// Seções com mais de [_linhasPorPagina] linhas são automaticamente divididas
+/// em sub-páginas para caber na tela sem scroll.
 ///
 /// O avanço tem três caminhos: toque na metade direita/esquerda da tela,
 /// setas do teclado e os botões do rodapé. Todos chamam o mesmo par de métodos,
@@ -22,6 +29,7 @@ class ProjectionPage extends StatefulWidget {
     super.key,
     required this.song,
     this.initialSection = 0,
+    this.initialSubPage = 0,
   });
 
   /// A cifra já lida pelo núcleo — a projeção não relê o texto.
@@ -30,31 +38,63 @@ class ProjectionPage extends StatefulWidget {
   /// Seção inicial; é limitada ao intervalo válido.
   final int initialSection;
 
+  /// Sub-página inicial dentro da seção (para seções longas).
+  final int initialSubPage;
+
   @override
   State<ProjectionPage> createState() => _ProjectionPageState();
 }
 
 class _ProjectionPageState extends State<ProjectionPage> {
-  late int _indice = _limitar(widget.initialSection);
+  late int _indice = _limitarSecao(widget.initialSection);
+  late int _subPagina = widget.initialSubPage;
 
-  int _limitar(int indice) {
+  int _limitarSecao(int indice) {
     final total = widget.song.sections.length;
     if (total == 0) return 0;
     return indice.clamp(0, total - 1);
   }
 
-  bool get _temAnterior => _indice > 0;
+  /// Número de sub-páginas na seção atual.
+  int get _totalSubPaginas {
+    final linhas = _linhasDaSecaoAtual;
+    if (linhas <= _linhasPorPagina) return 1;
+    return (linhas + _linhasPorPagina - 1) ~/ _linhasPorPagina;
+  }
 
-  bool get _temProxima => _indice < widget.song.sections.length - 1;
+  /// Linhas de letra (não vazias) da seção atual.
+  int get _linhasDaSecaoAtual {
+    final secao = widget.song.sections[_indice];
+    return secao.lines.where((l) => l.text.isNotEmpty).length;
+  }
+
+  bool get _temAnterior =>
+      _indice > 0 || (_subPagina > 0 && _totalSubPaginas > 1);
+
+  bool get _temProxima =>
+      _indice < widget.song.sections.length - 1 ||
+      (_subPagina < _totalSubPaginas - 1 && _totalSubPaginas > 1);
 
   void _anterior() {
-    if (!_temAnterior) return;
-    setState(() => _indice -= 1);
+    if (_subPagina > 0 && _totalSubPaginas > 1) {
+      setState(() => _subPagina -= 1);
+    } else if (_indice > 0) {
+      setState(() {
+        _indice -= 1;
+        _subPagina = _totalSubPaginas - 1;
+      });
+    }
   }
 
   void _proxima() {
-    if (!_temProxima) return;
-    setState(() => _indice += 1);
+    if (_subPagina < _totalSubPaginas - 1 && _totalSubPaginas > 1) {
+      setState(() => _subPagina += 1);
+    } else if (_indice < widget.song.sections.length - 1) {
+      setState(() {
+        _indice += 1;
+        _subPagina = 0;
+      });
+    }
   }
 
   void _tocar(Offset posicao, double largura) {
@@ -104,7 +144,11 @@ class _ProjectionPageState extends State<ProjectionPage> {
                       ),
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: _ConteudoDaSecao(secao: secao),
+                        child: _ConteudoDaSecao(
+                          secao: secao,
+                          subPagina: _subPagina,
+                          linhasPorPagina: _linhasPorPagina,
+                        ),
                       ),
                     ),
                   ),
@@ -112,6 +156,8 @@ class _ProjectionPageState extends State<ProjectionPage> {
                     l10n: l10n,
                     indice: _indice,
                     total: secoes.length,
+                    subPagina: _totalSubPaginas > 1 ? _subPagina : null,
+                    totalSubPaginas: _totalSubPaginas > 1 ? _totalSubPaginas : null,
                     temAnterior: _temAnterior,
                     temProxima: _temProxima,
                     onAnterior: _anterior,
@@ -128,33 +174,49 @@ class _ProjectionPageState extends State<ProjectionPage> {
 }
 
 /// O que a congregação lê: nome da seção e letra, sem acorde.
+///
+/// Quando a seção tem mais de [linhasPorPagina] linhas, só as linhas da
+/// [subPagina] atual são exibidas. A paginação é automática e transparente
+/// para o operador — ele só vê "avançar" e "voltar".
 class _ConteudoDaSecao extends StatelessWidget {
-  const _ConteudoDaSecao({required this.secao});
+  const _ConteudoDaSecao({
+    required this.secao,
+    required this.subPagina,
+    required this.linhasPorPagina,
+  });
 
   final SongSection secao;
+  final int subPagina;
+  final int linhasPorPagina;
 
   @override
   Widget build(BuildContext context) {
     final nome = secao.name;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: <Widget>[
-        if (nome != null && nome.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 24),
-            child: Text(
-              nome,
-              style: const TextStyle(
-                color: _vibrantGold,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
+    final linhas = secao.lines
+        .where((l) => l.text.isNotEmpty)
+        .toList(growable: false);
+    final inicio = subPagina * linhasPorPagina;
+    final linhasDaPagina = linhas.skip(inicio).take(linhasPorPagina);
+
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          if (nome != null && nome.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Text(
+                nome,
+                style: const TextStyle(
+                  color: _vibrantGold,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
               ),
             ),
-          ),
-        for (final linha in secao.lines)
-          if (linha.text.isNotEmpty)
+          for (final linha in linhasDaPagina)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(
@@ -166,17 +228,21 @@ class _ConteudoDaSecao extends StatelessWidget {
                 ),
               ),
             ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-/// Rodapé discreto: posição e avanço. Alvos de 48 px, como manda o DESIGN.md.
+/// Rodapé discreto: posição, sub-página (quando aplicável) e avanço.
+/// Alvos de 48 px, como manda o DESIGN.md.
 class _Rodape extends StatelessWidget {
   const _Rodape({
     required this.l10n,
     required this.indice,
     required this.total,
+    this.subPagina,
+    this.totalSubPaginas,
     required this.temAnterior,
     required this.temProxima,
     required this.onAnterior,
@@ -186,6 +252,8 @@ class _Rodape extends StatelessWidget {
   final CoreL10n l10n;
   final int indice;
   final int total;
+  final int? subPagina;
+  final int? totalSubPaginas;
   final bool temAnterior;
   final bool temProxima;
   final VoidCallback onAnterior;
@@ -193,6 +261,10 @@ class _Rodape extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final posicao = subPagina != null
+        ? '${indice + 1} / $total · ${subPagina! + 1} / $totalSubPaginas'
+        : '${indice + 1} / $total';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
@@ -208,7 +280,7 @@ class _Rodape extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              '${indice + 1} / $total',
+              posicao,
               style: const TextStyle(color: _paperWhite, fontSize: 16),
             ),
           ),

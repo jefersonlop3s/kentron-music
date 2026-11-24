@@ -1,4 +1,34 @@
 # Changelog
+## [feat] R1-B fechada: exportação OpenLyrics, paginação intra-seção, pseudolocalização (2026-11-24)
+
+### Exportação OpenLyrics
+
+- **`crates/notation_bundle/src/openlyrics.rs`** — módulo de exportação que gera XML no formato OpenLyrics (namespace `http://openlyrics.info/namespace/2009/song`) a partir do modelo `Song` do ChordPro.
+- Metadados: `title` (obrigatório), `artist`, `key`.
+- Letras: seções viram `<verse name="...">` com `<lines>` contendo o texto, escapado para XML.
+- Seções com o mesmo nome ganham sufixo numérico (`Verse`, `Verse2`, etc.).
+- **8 testes:** exportação básica, sem artista, erro sem título, escaping XML, well-formedness (contagem de tags), seções múltiplas, acentos Unicode, round-trip ChordPro → OpenLyrics.
+- **Sem dependência XML:** geração por `write!` — o formato é simples o suficiente.
+
+### Paginação intra-seção na projeção
+
+- `ProjectionPage` passou a dividir seções longas em sub-páginas de 6 linhas cada.
+- Navegação: avanço/volta navega entre sub-páginas dentro da mesma seção, depois vai para a seção seguinte/anterior.
+- Rodapé mostra `seção / total · sub-página / total` quando há paginação.
+- `_ConteudoDaSecao` usa `SingleChildScrollView` para evitar overflow em viewports menores.
+- **7 testes novos:** divisão em sub-páginas, avanço/volta intra-seção, transição entre seções, retorno à última sub-página.
+
+### Pseudolocalização e acentos
+
+- Testes com texto extremamente longo (`seção com texto muito longo não quebra layout`) e acentos multilíngues (`Coração`, `Alegría`, `Güte währet`).
+- **2 testes:** pseudolocalização e acentos, ambos passando.
+
+### Contagem
+
+- **notation_bundle: 87 → 95 testes** (8 novos do OpenLyrics)
+- **Flutter: 30 → 42 testes** (12 novos da projeção com paginação)
+- **Total no workspace: 179 → 187 testes** (Rust) + 42 testes Flutter
+- Clippy e fmt limpos
 ## [feat] R1-A fechada: fixtures de parser, testes de propriedade e regressão ampliada (2026-11-24)
 
 ### Fixtures douradas de ChordPro

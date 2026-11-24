@@ -15,3 +15,4 @@ pub mod chord_naming;
 pub mod chordpro;
 pub mod harmony;
 pub mod musicxml;
+pub mod openlyrics;
