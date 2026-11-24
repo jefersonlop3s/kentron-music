@@ -179,11 +179,62 @@ ternário de uma subdivisão ternária de um binário** — é a própria skill
 `medida-que-não-separa`. O corpus é louvor contemporâneo, majoritariamente
 binário: 15 de 40 como `3/4` é implausível na ordem de grandeza.
 
-### O piso de confiança: a hipótese tem de se confirmar
+### O veredito do dono: as dez são `4/4` — e o contraste não separa
 
-**Comparar dois contrastes e ficar com o maior não é decidir.** Medido: as 15
-vinham de contrastes **abaixo de 1** — `0,65` contra `0,60`, `0,57` contra
-`0,45`. Não havia evidência nenhuma; havia um número maior que o outro.
+**Dez músicas ouvidas e adjudicadas pelo dono (2026-11-24):**
+
+| música | o motor | veredito | barra | contraste `3/4` |
+|---|---|---|---|---|
+| Agnus Dei | **decidiu `3/4`** | **`4/4`** ✗ | 0,64 s | 1,09 |
+| Oficina G3 · Meus Passos | **decidiu `3/4`** | **`4/4`** ✗ | 0,43 s | **2,04** |
+| Tudo é teu · Eu Sou Livre · Tua Graça · Abraça-me · Um Lugar para 2 · Te Adorar · Faz chover | ofereceu | `4/4` ✓ | 0,75–1,78 s | 0,54–0,86 |
+
+**O piso de contraste não basta, e isto é medido:** `Meus Passos` tem contraste
+**2,04** — **maior que o `binky` do gabarito (1,24)** — e é `4/4`. **Nenhum limiar
+de contraste separa o certo do errado.**
+
+**O que separa é a plausibilidade da barra:**
+
+```
+gabarito (3/4 certos)      0,90 · 1,39 · 1,93 s
+falsos positivos           0,64 · 0,43 s        <- abaixo do piso fisiológico
+```
+
+As duas erradas têm barra de **283 e 421 BPM por batida de `3/4`**. O bumbo toca em
+**todo tempo**, o ciclo cai na **batida** em vez da barra, e o conjunto de
+candidatos só desce (`÷k`). **Uma barra fora da faixa não é uma barra.**
+
+**O que o dono descreveu, e que o motor não vê:** *"contagem para não se perder…
+`1 e 2 e 3 e 4 e`"*. As dez são `4/4` com a caixa em contratempo, repiques no `e`,
+sextinas na guitarra, bumbo duplo, e — no caso do `Meus Passos` — andamentos e
+compassos que mudam no meio. **O motor estava lendo o `e` como se fosse um tempo.**
+
+### A regra final: a barra tem de ser plausível
+
+`reconciliar` só afirma `3/4` com **as duas** condições: contraste confirmado
+(**> 1**) **e** barra dentro da faixa fisiológica. Sem qualquer uma, a estrutura
+ternária é **medida** e **oferecida**, com `3/4` entre as alternativas — e a
+`regra` **nomeia o motivo**.
+
+| | antes | depois do piso | depois do gate da barra |
+|---|---|---|---|
+| gabarito · `3/4` decididos | 3 de 3 | 3 de 3 | **3 de 3** |
+| gabarito (total) | 6 de 6 | 6 de 6 | **6 de 6** |
+| corpus · `3/4` decididos | 15 de 40 | 2 de 40 | **0 de 40** |
+| corpus · falsos positivos medidos | 2 de 2 | 2 de 2 | **0 de 2** |
+| corpus · abstenções corretas (amostra do dono) | — | — | **7 de 7** |
+
+**A leitura honesta do resultado:** o motor **não** separa `4/4` de `6/8` — mas nas
+dez músicas adjudicadas a resposta certa (`4/4`) está **dentro da oferta em 10 de
+10**, e ele **não afirma** nenhuma delas. **É o que a R1 entrega: a resposta certa
+entre as alternativas, sem vender palpite como medida.**
+
+**Comparar dois contrastes e ficar com o maior não é decidir** — e foi daí que o
+piso nasceu. Medido: as 15 vinham de contrastes **abaixo de 1** — `0,65` contra
+`0,60`, `0,57` contra `0,45`. Não havia evidência nenhuma; havia um número maior
+que o outro.
+
+### O piso de contraste — o que ele fez, e por que não bastou
 
 **Dois discriminadores foram testados e nenhum separa** — o que sobra é o
 contraste absoluto:
@@ -205,13 +256,14 @@ alternativa. O que fica abaixo é **oferecido**, com `3/4` entre as alternativas
 | corpus · `3/4` decididos | 15 de 40 | **2 de 40** |
 | corpus · ternário oferecido | — | **13** |
 
-**As 2 que sobraram têm barra implausível, e isso é um defeito novo — o inverso do
-hipercompasso:** `Agnus Dei` dá barra de 0,64 s (**283 BPM** por batida de `3/4`)
-e `Meus Passos`, 0,43 s (**421 BPM**). O bumbo toca em **todo tempo**, então o
-ciclo cai na **batida** em vez da barra — e o conjunto de candidatos só **desce**
-(`÷k`), não sobe. **A direção `×k` foi medida e quebra o gabarito** (o alvo
-harmônico do `fallin` é 1,5 barra, e a escolha ia para 2,82 s): não é um candidato
-a mais, é outro critério. Fica registrado.
+**O piso reduziu de 15 para 2 — e as 2 que sobraram eram as duas erradas.** O
+contraste não bastou, e o defeito delas é o **inverso do hipercompasso**:
+`Agnus Dei` dava barra de 0,64 s (**283 BPM** por batida de `3/4`) e `Meus Passos`,
+0,43 s (**421 BPM**). O bumbo toca em **todo tempo**, o ciclo cai na **batida** em
+vez da barra, e o conjunto de candidatos só **desce** (`÷k`), não sobe. **A
+direção `×k` foi medida e quebra o gabarito** (o alvo harmônico do `fallin` é 1,5
+barra, e a escolha ia para 2,82 s): não é um candidato a mais, é outro critério. É
+o que o **gate da barra** resolve, sem tocar no gabarito.
 
 ## O que ficou estabelecido
 

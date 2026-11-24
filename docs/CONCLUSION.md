@@ -1512,18 +1512,49 @@ com `3/4` entre as alternativas — a estrutura ternária é medida, o nome não
 | corpus · `3/4` decididos | 15 de 40 | **2 de 40** |
 | corpus · ternário oferecido | — | **13** |
 
+### O veredito do dono e a regra final: a barra tem de ser plausível
+
+**Dez músicas ouvidas e adjudicadas pelo dono (2026-11-24): as dez são `4/4`** —
+as duas que o motor decidia `3/4` são falsos positivos, e as sete que ele ofereceu
+são abstenções corretas.
+
+**O piso de contraste não bastou, e isto é medido:** `Meus Passos` tem contraste
+**2,04** — **maior que o `binky` do gabarito (1,24)** — e é `4/4`. **Nenhum limiar
+de contraste separa o certo do errado.**
+
+**O que separa é a plausibilidade da barra:**
+
+```
+gabarito (3/4 certos)      0,90 · 1,39 · 1,93 s
+falsos positivos           0,64 · 0,43 s        <- abaixo do piso fisiológico
+```
+
+As duas erradas dão **283 e 421 BPM por batida de `3/4`** — o bumbo toca em **todo
+tempo** e o ciclo cai na **batida**. **O dono descreveu o que o motor não vê:**
+*"contagem para não se perder… `1 e 2 e 3 e 4 e`"*. As dez são `4/4` com a caixa
+em contratempo e repiques no `e`.
+
+**A regra final:** `reconciliar` só afirma `3/4` com **as duas** condições —
+contraste confirmado (**> 1**) **e** barra dentro da faixa fisiológica. Sem
+qualquer uma, a estrutura ternária é **medida** e **oferecida**, com `3/4` entre as
+alternativas, e a `regra` **nomeia o motivo**.
+
+| | antes | piso | **gate da barra** |
+|---|---|---|---|
+| gabarito · `3/4` decididos | 3 de 3 | 3 de 3 | **3 de 3** |
+| gabarito (total) | 6 de 6 | 6 de 6 | **6 de 6** |
+| corpus · `3/4` decididos | 15 de 40 | 2 de 40 | **0 de 40** |
+| corpus · falsos positivos medidos | 2 de 2 | 2 de 2 | **0 de 2** |
+
 ### Ressalvas — o que isto **não** conserta
 
-- **As 2 que sobraram têm barra implausível — o defeito inverso do hipercompasso.**
-  `Agnus Dei` dá barra de 0,64 s (**283 BPM** por batida de `3/4`) e
-  `Oficina G3 · Meus Passos`, 0,43 s (**421 BPM**). O bumbo toca em **todo tempo**,
-  então o ciclo cai na **batida** em vez da barra — e o conjunto de candidatos só
-  **desce** (`÷k`), não sobe.
-- **A direção `×k` foi medida e quebra o gabarito** (o alvo harmônico do `fallin`
-  é 1,5 barra e a escolha ia para 2,82 s): não é um candidato a mais, é **outro
-  critério**. Fica registrado.
+- **O motor não separa `4/4` de `6/8`** — mas nas dez adjudicadas a resposta certa
+  (`4/4`) está **dentro da oferta em 10 de 10**, e ele **não afirma** nenhuma.
+- **A direção `×k` continua refutada** (o alvo harmônico do `fallin` é 1,5 barra e
+  a escolha ia para 2,82 s): **não é um candidato a mais, é outro critério.**
 - **A separação `4/4` × `6/8` continua aberta:** a subdivisão interna foi testada
   em três variantes e nenhuma separa (3, 5 e 3 acertos de 8).
+
 
 
 ## R4 · As figuras da melodia não fecham a lacuna — o instrumento não existe (2026-11-22)

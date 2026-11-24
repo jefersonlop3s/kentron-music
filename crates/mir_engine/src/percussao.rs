@@ -44,8 +44,16 @@ const CICLO_MAX_S: f32 = 5.0;
 /// Faixa em que uma **barra real** cabe: 70 BPM em `4/4` dá 3,43 s, 176 BPM em
 /// `3/4` dá 1,02 s. O que passa disso é o **hipercompasso** — medido no corpus de
 /// 40 músicas: barra mediana de 5,08 s contra troca de acorde mediana de 1,90 s.
-const BARRA_MIN_S: f32 = 0.85;
-const BARRA_MAX_S: f32 = 3.60;
+///
+/// **E é também o que separa a leitura certa da errada.** Medido com veredito do
+/// dono (2026-11-24), em dez músicas ouvidas: as **duas** que o motor decidia
+/// `3/4` e **são `4/4`** têm barra de **0,64 s** e **0,43 s** — abaixo do piso —,
+/// e as **três** que o gabarito decide `3/4` **certo** ficam em **0,90 · 1,39 ·
+/// 1,93 s**. O bumbo toca em **todo tempo**, o ciclo cai na **batida** em vez da
+/// barra, e o conjunto de candidatos só desce (`÷k`). **Uma barra fora desta
+/// faixa não é uma barra** — e sem isso o motor afirmava `3/4` a 283 e 421 BPM.
+pub const BARRA_MIN_S: f32 = 0.85;
+pub const BARRA_MAX_S: f32 = 3.60;
 /// Em quantas partes o ciclo bruto pode estar subdividido: `T`, `T/2`, `T/3`, `T/4`.
 const DIVISORES: [f32; 4] = [1.0, 2.0, 3.0, 4.0];
 /// Banda em que dois candidatos contam como **empatados** na distância ao alvo.

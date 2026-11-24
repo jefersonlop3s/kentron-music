@@ -210,26 +210,39 @@ impl Leitura {
         );
         match bumbo_caixa.dobra {
             3 => {
-                if bumbo_caixa.periodo_bumbo_s > 0.0 {
-                    self.compasso_s = bumbo_caixa.periodo_bumbo_s;
-                }
+                // **A barra tem de ser plausível para o `3/4` ser afirmado.** Medido
+                // com veredito do dono (2026-11-24), em dez músicas ouvidas: as
+                // **duas** que o motor decidia `3/4` e **são `4/4`** têm barra de
+                // 0,64 s e 0,43 s (283 e 421 BPM por batida de `3/4`) — o bumbo toca
+                // em todo tempo e o ciclo cai na **batida**. As três do gabarito
+                // ficam em 0,90 · 1,39 · 1,93 s. O contraste **não** separa: a pior
+                // das falsas tem contraste 2,04, maior que o `binky` do gabarito.
+                let barra_plausivel = (crate::percussao::BARRA_MIN_S
+                    ..=crate::percussao::BARRA_MAX_S)
+                    .contains(&bumbo_caixa.periodo_bumbo_s);
                 self.batidas = 3;
                 self.fonte = "percussão".to_owned();
-                if bumbo_caixa.escore_34 > CONTRASTE_CONFIRMA {
+                if barra_plausivel && bumbo_caixa.escore_34 > CONTRASTE_CONFIRMA {
+                    self.compasso_s = bumbo_caixa.periodo_bumbo_s;
                     self.nome = Some("3/4".to_owned());
                     self.alternativas = Vec::new();
                     self.regra = format!("{evidencia} → três terços, contraste confirmado: `3/4`");
                 } else {
                     // A estrutura ternária é **medida**; o nome do compasso não. Um
-                    // `3/4` com o bumbo em dois de três tempos e um `6/8` (ou um
-                    // `4/4` com subdivisão ternária) com o bumbo em dois de seis
-                    // produzem o **mesmo** histograma — e é por isso que a oferta
-                    // inclui os três, em vez de afirmar.
+                    // `3/4` com o bumbo em dois de três tempos e um `4/4` com
+                    // subdivisão ternária (ou um `6/8`) produzem o **mesmo**
+                    // histograma — e a barra fora da faixa é a prova de que a escala
+                    // está errada. **A oferta inclui os três.**
                     self.nome = None;
                     self.alternativas = vec!["3/4".to_owned(), "6/8".to_owned(), "4/4".to_owned()];
+                    let motivo = if barra_plausivel {
+                        "o contraste não confirma o compasso ternário"
+                    } else {
+                        "a barra cai fora da faixa fisiológica"
+                    };
                     self.regra = format!(
-                        "{evidencia} → três terços, mas o contraste não confirma o compasso \
-                         ternário: a estrutura é ternária, o nome não"
+                        "{evidencia} → três terços, mas {motivo}: a estrutura é ternária, \
+                         o nome não"
                     );
                 }
             }
@@ -1426,5 +1439,23 @@ mod tests {
         assert_eq!(firme.nome.as_deref(), Some("3/4"));
         assert!(firme.alternativas.is_empty());
         assert_eq!(firme.compasso_s, 1.77, "a barra vem da percussão");
+
+        // **E a barra tem de ser plausível.** `Oficina G3 · Meus Passos` tem
+        // contraste 2,04 — **maior que o `binky` do gabarito (1,24)** — e o
+        // veredito do dono é `4/4`, com barra de 0,43 s (421 BPM por batida de
+        // `3/4`). O contraste **não separa**; a barra separa.
+        caixa.periodo_bumbo_s = 0.43;
+        caixa.escore_34 = 2.04;
+        let mut barra_impossivel = Leitura::default();
+        barra_impossivel.reconciliar(&caixa);
+        assert_eq!(
+            barra_impossivel.nome, None,
+            "afirmou `3/4` com barra de 0,43 s (421 BPM por batida)"
+        );
+        assert!(
+            barra_impossivel.regra.contains("faixa fisiológica"),
+            "{}",
+            barra_impossivel.regra
+        );
     }
 }

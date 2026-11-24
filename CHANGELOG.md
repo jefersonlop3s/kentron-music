@@ -68,7 +68,35 @@ O veredito ficou **mais confiante**: as leituras `3/4` **decididas** passaram de
 | corpus · `3/4` decididos | 15 de 40 | **2 de 40** |
 | corpus · ternário oferecido | — | **13** |
 
-**As 2 que sobraram têm barra implausível — o defeito inverso do hipercompasso:** `Agnus Dei` dá barra de 0,64 s (**283 BPM** por batida de `3/4`) e `Oficina G3 · Meus Passos`, 0,43 s (**421 BPM**). O bumbo toca em **todo tempo**, então o ciclo cai na **batida** em vez da barra — e o conjunto de candidatos só **desce** (`÷k`), não sobe. **A direção `×k` foi medida e quebra o gabarito** (o alvo harmônico do `fallin` é 1,5 barra e a escolha ia para 2,82 s): não é um candidato a mais, é outro critério. Fica registrado, com as duas músicas nomeadas para adjudicação.
+**As 2 que sobraram têm barra implausível — o defeito inverso do hipercompasso:** `Agnus Dei` dá barra de 0,64 s (**283 BPM** por batida de `3/4`) e `Oficina G3 · Meus Passos`, 0,43 s (**421 BPM**). O bumbo toca em **todo tempo**, então o ciclo cai na **batida** em vez da barra — e o conjunto de candidatos só **desce** (`÷k`), não sobe. **A direção `×k` foi medida e quebra o gabarito** (o alvo harmônico do `fallin` é 1,5 barra e a escolha ia para 2,82 s): não é um candidato a mais, é outro critério.
+
+### O veredito do dono: as dez são `4/4` — e o piso não bastou
+
+**Dez músicas ouvidas e adjudicadas pelo dono (2026-11-24):** as **duas** que o motor decidia `3/4` são **`4/4`** ✗ e as **sete** que ele ofereceu são **`4/4`** ✓.
+
+**O piso de contraste não basta, e isto é medido:** `Meus Passos` tem contraste **2,04** — **maior que o `binky` do gabarito (1,24)** — e é `4/4`. **Nenhum limiar de contraste separa o certo do errado.**
+
+**O que separa é a plausibilidade da barra:**
+
+```
+gabarito (3/4 certos)      0,90 · 1,39 · 1,93 s
+falsos positivos           0,64 · 0,43 s        <- abaixo do piso fisiológico
+```
+
+As duas erradas dão **283 e 421 BPM por batida de `3/4`**. O que o dono descreveu, e que o motor não vê: *"contagem para não se perder… `1 e 2 e 3 e 4 e`"* — as dez são `4/4` com a caixa em contratempo e repiques no `e`. **O motor estava lendo o `e` como se fosse um tempo.**
+
+### A regra final: a barra tem de ser plausível
+
+`reconciliar` só afirma `3/4` com **as duas** condições: contraste confirmado (**> 1**) **e** barra dentro da faixa fisiológica. Sem qualquer uma, a estrutura ternária é **medida** e **oferecida**, com `3/4` entre as alternativas — e a `regra` **nomeia o motivo**.
+
+| | antes | piso | **gate da barra** |
+|---|---|---|---|
+| gabarito · `3/4` decididos | 3 de 3 | 3 de 3 | **3 de 3** |
+| gabarito (total) | 6 de 6 | 6 de 6 | **6 de 6** |
+| corpus · `3/4` decididos | 15 de 40 | 2 de 40 | **0 de 40** |
+| corpus · falsos positivos medidos | 2 de 2 | 2 de 2 | **0 de 2** |
+
+**A leitura honesta do resultado:** o motor **não** separa `4/4` de `6/8` — mas nas dez músicas adjudicadas a resposta certa (`4/4`) está **dentro da oferta em 10 de 10**, e ele **não afirma** nenhuma delas. **É o que a R1 entrega: a resposta certa entre as alternativas, sem vender palpite como medida.**
 
 ## [feat] 6 de 6 no gabarito independente: a banda da caixa, a coincidência e o ciclo por contraste (2026-11-24)
 
