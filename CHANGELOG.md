@@ -2,6 +2,53 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [feat] 6 de 6 no gabarito independente: a banda da caixa, a coincidência e o ciclo por contraste (2026-11-24)
+
+### O que fechou o último erro
+
+Três descobertas, cada uma medida:
+
+**1. A banda da caixa estava errada — e não por timbre.** A hipótese era que os fios (1,5–5 kHz) pegavam o chimbau. **Medido: não.** O ataque do bumbo é um transiente **banda-larga** e dispara em **todas** as bandas no mesmo instante:
+
+```
+pele da caixa 150-450    52%  21%  13%   6%   4%   4%
+fios 1.5-5k              32%  29%  17%  12%   4%   6%
+prato 6.5-13k            25%  35%  18%  14%   4%   4%
+```
+
+**A mesma forma nas três** — a caixa real fica encoberta pelo ataque do bumbo. **Conserto: a banda da caixa passou a ser a PELE (150–450 Hz)**, onde o corpo dela vive e o prato não tem energia.
+
+**2. A caixa que coincide com o bumbo é descartada** (tolerância 0,06 s). Sem a supressão: 5 de 6. Com ela: **6 de 6**.
+
+**3. O ciclo é escolhido pelo contraste, não por limiar.** O bumbo pode ser capturado num **submúltiplo da barra**, e o fator depende do metro: `3/4` com o bumbo em dois de três tempos → `T` em **2/3** (fator **1,5**); `6/8` com ele em dois de seis → `T` na **metade** (fator **2**). Um limiar de energia órfã **não separa os dois** (`binky` 56%, `say-something` 36% — fatores diferentes). **Os três ciclos candidatos são avaliados e vence o de maior contraste** — a mesma moeda que decide a dobra.
+
+### Resultado
+
+| música | Bennett | o motor | ciclo |
+|---|---|---|---|
+| Mull of Kintyre | 3/4 | **3/4** | 1,93 s |
+| We Are The Champions | 6/8 | **6/8** | 1,90 s |
+| Delilah | 3/4 | **3/4** | 0,90 s |
+| Fallin' | 6/8 | **6/8** | 1,88 s |
+| Say Something | 6/8 | **6/8** | 1,26 → **2,52 s** |
+| Binky | 3/4 | **3/4** | 0,93 → **1,39 s** |
+
+**6 de 6 — o fator certo para cada metro, achado sozinho.**
+
+### A lição
+
+A regra da energia órfã era remédio para o sintoma. Com a banda certa o sintoma desapareceu, e a escolha do ciclo pôde virar **evidência** em vez de limiar. **Quando o front-end acerta, a decisão não precisa de exceção.**
+
+### A trilha inteira
+
+```
+1 de 8   a dobra sozinha, no mix
+2 de 7   a relação caixa×bumbo, no mix
+4 de 6   no stem separado (ADR-0017)
+5 de 6   competição de hipóteses sobre as fatias
+6 de 6   banda da pele + supressão de coincidência + ciclo por contraste
+```
+
 ## [feat] A decisão era o gargalo: competição de hipóteses leva o motor de 4 para 5 de 6 (2026-11-24)
 
 ### O diagnóstico que destravou

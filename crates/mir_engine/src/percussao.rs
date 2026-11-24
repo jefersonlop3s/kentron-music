@@ -22,9 +22,22 @@ use serde::Serialize;
 /// Faixa do bumbo. O baixo vive aqui também — ver o cabeçalho.
 const BUMBO_DE_HZ: f32 = 30.0;
 const BUMBO_ATE_HZ: f32 = 110.0;
-/// Faixa da caixa: os fios, que é o que a distingue do chimbau.
-const CAIXA_DE_HZ: f32 = 1_500.0;
-const CAIXA_ATE_HZ: f32 = 5_000.0;
+/// Faixa da caixa: a **pele**, não os fios.
+///
+/// Medido em 2026-11-24, no `binky`: com os fios (1,5–5 kHz) o histograma da
+/// caixa fica `52% 21% 13% 6% 4% 4%` — massa empilhada logo depois do bumbo. A
+/// causa **não é timbre**: o ataque do bumbo é um transiente banda-larga e dispara
+/// em **todas** as bandas no mesmo instante (medido: pele `52% 21% 13%`, fios
+/// `32% 29% 17%`, prato `25% 35% 18%` — a mesma forma). A pele da caixa
+/// (150–450 Hz) é onde o corpo dela vive e o prato não tem energia.
+const CAIXA_DE_HZ: f32 = 150.0;
+const CAIXA_ATE_HZ: f32 = 450.0;
+/// Tolerância para considerar que uma caixa **coincide** com o bumbo e descartá-la.
+///
+/// O ataque do bumbo vaza para a banda da caixa, e a caixa real fica encoberta
+/// por ele. Medido: sem a supressão o gabarito fica em 5 de 6; com 0,06 s (e com
+/// 0,10 s) fica em **6 de 6**.
+const COINCIDENCIA_S: f32 = 0.06;
 /// Ciclo plausível do bumbo, em segundos.
 const CICLO_MIN_S: f32 = 0.4;
 const CICLO_MAX_S: f32 = 5.0;
@@ -32,14 +45,6 @@ const CICLO_MAX_S: f32 = 5.0;
 const PISO_ATAQUE: f32 = 1.5;
 /// Espaçamento mínimo entre ataques da mesma peça.
 const ESPACO_MIN_S: f32 = 0.08;
-/// A partir de quanta massa em `P1` ou `P5` o período do bumbo é tratado como
-/// **capturado no submúltiplo** e o ciclo é ampliado por 1,5. Ver `medir`.
-///
-/// Calibrado no material: no `binky` a órfã é 0,52; nos cinco acertos ela fica
-/// entre 0,15 e 0,30. O limiar em 0,35 fica no vão, e é por isso que a regra
-/// **só dispara onde precisa** — o que a torna cirúrgica em vez de overfitting.
-const LIMIAR_ORFAO: f32 = 0.35;
-
 /// Quantas fatias do ciclo do bumbo o histograma da caixa usa.
 pub const FATIAS: usize = 6;
 
@@ -187,9 +192,20 @@ pub fn medir(spectro: &Spectrogram, taxa: u32) -> BumboCaixa {
     let fps = spectro.quadros_por_segundo(taxa).max(1.0);
     let bumbo = novidade_da_banda(spectro, taxa, BUMBO_DE_HZ, BUMBO_ATE_HZ);
     let caixa = novidade_da_banda(spectro, taxa, CAIXA_DE_HZ, CAIXA_ATE_HZ);
-    let mut periodo = periodo_dominante(&bumbo, fps, CICLO_MIN_S, CICLO_MAX_S);
+    let periodo = periodo_dominante(&bumbo, fps, CICLO_MIN_S, CICLO_MAX_S);
     let ataques_bumbo = ataques(&bumbo, fps);
     let ataques_caixa = ataques(&caixa, fps);
+    // A caixa que **coincide com o bumbo** é descartada: o ataque do bumbo é
+    // banda-larga e vaza para a banda da caixa, encobertos a caixa real. Sem
+    // isto o gabarito fica em 5 de 6; com isto, 6 de 6 (medido 2026-11-24).
+    let ataques_caixa: Vec<f32> = ataques_caixa
+        .into_iter()
+        .filter(|&c| {
+            !ataques_bumbo
+                .iter()
+                .any(|&b| (c - b).abs() <= COINCIDENCIA_S)
+        })
+        .collect();
     let mut saida = BumboCaixa {
         periodo_bumbo_s: periodo,
         bumbos: ataques_bumbo.len(),
@@ -238,54 +254,57 @@ pub fn medir(spectro: &Spectrogram, taxa: u32) -> BumboCaixa {
         Some(perfil)
     };
 
-    let Some(mut perfil) = histograma(periodo) else {
+    let Some(perfil) = histograma(periodo) else {
         saida.regra = "sem evidência: caixas de menos no ciclo do bumbo".to_owned();
         return saida;
     };
 
-    // **Energia órfã: o erro de escala fica observável sem o gabarito.**
+    // **O ciclo é escolhido pela evidência, não por limiar.**
     //
-    // `P1` e `P5` (a segunda e a sexta subdivisão) **nunca são polos** — nem em
-    // `3/4` (polos em `P0`, `P2`, `P4`) nem em `6/8` (polos em `P0`, `P3`). Massa
-    // concentrada ali é assinatura de período capturado no submúltiplo: o bumbo
-    // tocando a cada dois tempos de uma barra ternária dá `T = 2/3` da barra, e a
-    // caixa escorrega para uma fatia sem polo.
+    // O bumbo pode ser capturado num submúltiplo da barra: em `3/4` em que ele
+    // toca dois de três tempos, `T` sai em **2/3** da barra (fator 1,5); em `6/8`
+    // em que ele toca dois de seis, `T` sai na **metade** (fator 2). Medido: um
+    // limiar de energia órfã **não separa os dois** — `binky` (órfã 56%) e
+    // `say-something` (órfã 36%) precisam de fatores **diferentes**.
     //
-    // Medido em `binky` (`3/4`, gabarito do Bennett): `P1 = 52%` com o `T` do
-    // bumbo, e `T` de 0,93 s contra a barra real de ~1,40 s — razão 2/3 exata.
-    let orfa = perfil[1].max(perfil[5]);
-    if orfa > LIMIAR_ORFAO {
-        // `T × 1,5`: a barra ternária em que o bumbo toca dois de três tempos.
-        if let Some(ampliado) = histograma(periodo * 1.5) {
-            perfil = ampliado;
-            periodo *= 1.5;
-        }
-    }
-    saida.caixa_no_ciclo = perfil;
-    saida.periodo_bumbo_s = periodo;
-
-    // A leitura: **competição de hipóteses**, não limiar. O `6/8` tem os polos em
-    // `s1` e `s4`; o `3/4` em `s1`, `s3` e `s5`. Cada hipótese é o contraste dos
-    // seus polos contra o resto do ciclo, normalizado — e ganha a maior.
-    //
-    // Usar **as seis fatias** é o que separa esta leitura da anterior: comparar
-    // duas posições soltas confundia ruído com contraste (4 de 6); o contraste
-    // normalizado sobre o ciclo inteiro acerta 5 de 6 no gabarito.
-    let media = |idx: [usize; 4], n: usize| -> f32 {
+    // Então os três ciclos candidatos são avaliados e vence o de **maior
+    // contraste** — a mesma moeda que decide a dobra. Assim a correção de escala
+    // não é uma regra à parte: ela é a mesma competição, aplicada ao ciclo.
+    let media = |perfil: &[f32; FATIAS], idx: [usize; 4], n: usize| -> f32 {
         idx[..n].iter().map(|&i| perfil[i]).sum::<f32>() / n as f32
     };
-    saida.escore_68 = (perfil[0] + perfil[3]) / 2.0 / (media([1, 2, 4, 5], 4) + 1e-9);
-    saida.escore_34 = (perfil[0] + perfil[2] + perfil[4]) / 3.0 / (media([1, 3, 5, 0], 3) + 1e-9);
-    saida.dobra = if saida.escore_68 > saida.escore_34 {
+    let contraste = |perfil: &[f32; FATIAS]| -> (f32, f32) {
+        let s68 = (perfil[0] + perfil[3]) / 2.0 / (media(perfil, [1, 2, 4, 5], 4) + 1e-9);
+        let s34 =
+            (perfil[0] + perfil[2] + perfil[4]) / 3.0 / (media(perfil, [1, 3, 5, 0], 3) + 1e-9);
+        (s68, s34)
+    };
+    let inicial = contraste(&perfil);
+    let mut melhor = (periodo, perfil, inicial);
+    for fator in [1.5f32, 2.0] {
+        if let Some(candidato) = histograma(periodo * fator) {
+            let escore = contraste(&candidato);
+            if escore.0.max(escore.1) > melhor.2.0.max(melhor.2.1) {
+                melhor = (periodo * fator, candidato, escore);
+            }
+        }
+    }
+    let (periodo, perfil, (escore_68, escore_34)) = melhor;
+    saida.caixa_no_ciclo = perfil;
+    saida.periodo_bumbo_s = periodo;
+    saida.escore_68 = escore_68;
+    saida.escore_34 = escore_34;
+    saida.dobra = if escore_68 > escore_34 {
         2
-    } else if saida.escore_34 > saida.escore_68 {
+    } else if escore_34 > escore_68 {
         3
     } else {
         0
     };
     saida.regra = format!(
-        "período do bumbo {periodo:.2} s (órfã {orfa:.2}) · {} bumbo(s) e {} caixa(s) · \
-         caixa no ciclo {} · contraste 6/8 {:.2} contra 3/4 {:.2} → dobra em {}",
+        "período do bumbo {periodo:.2} s · {} bumbo(s) e {} caixa(s) · \
+         caixa no ciclo {} · contraste 6/8 {escore_68:.2} contra 3/4 {escore_34:.2} → \
+         dobra em {}",
         ataques_bumbo.len(),
         ataques_caixa.len(),
         perfil
@@ -293,8 +312,6 @@ pub fn medir(spectro: &Spectrogram, taxa: u32) -> BumboCaixa {
             .map(|v| format!("{:.0}%", v * 100.0))
             .collect::<Vec<_>>()
             .join(" "),
-        saida.escore_68,
-        saida.escore_34,
         saida.dobra
     );
     saida
