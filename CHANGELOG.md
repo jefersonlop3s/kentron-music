@@ -2,6 +2,62 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [docs] Faixas de Hz da bateria: o mapa medido e o que não separa (2026-11-22)
+
+### Adicionado
+- **`docs/insights/2026-11-22-faixas-de-hz-da-bateria.md`** — nove faixas com bateria de verdade (três `3/4`, três `6/8`, três `4/4`), baixadas sob autorização do dono e mantidas **fora** do repositório (ADR-0013). Método: novidade de energia por banda em cada ataque, normalizada pela média da própria banda, para não deixar a banda grave dominar.
+
+### Medido — medianas das nove faixas
+
+| peça | ≤300 Hz | 1,5–5 kHz | 6,5–13 kHz |
+|---|---|---|---|
+| **bumbo** | **53%** (25–68) | 1% | 0% |
+| **caixa** | 13% | **65%** (48–76) | 25% |
+| **chimbau** | 13% | 25% | **60%** (47–75) |
+
+A distribuição por família é estável nas nove: **32–57% grave, 21–38% médio, 13–45% agudo**.
+
+### Descoberto — o que a banda não separa
+- **Bumbo e caixa se separam por banda** (53% contra 1% em 1,5–5 kHz).
+- **Caixa e chimbau não:** a caixa tem **25%** da energia na faixa do chimbau e o chimbau **25%** na da caixa, simétrico. O que os separa é o **decaimento** (caixa 150–250 ms, chimbau fechado ~50 ms) — não a faixa. É o próximo passo da partitura de bateria.
+
+### Resultado negativo registrado
+- **O perfil de acento por instrumento é chapado em mix denso:** 0,5–1,5 por posição em oito das nove faixas; só `Nothing Else Matters` (mix esparso) dá 1,8–2,0. Em mix denso toda banda sobe em toda batida, e a banda de 30–110 Hz carrega o **baixo elétrico** junto com o bumbo.
+- **O motor devolve `3` para o `3/4` e para o `6/8`**, com margem 0,00–0,04 em oito das nove — abstenção disfarçada. **A discriminação `3/4` × `6/8` continua aberta.**
+
+## [feat] Acento por instrumento e o invariante da barra (2026-11-22)
+
+### Adicionado
+- **`Compasso.compasso_s`** — `periodo_s × batidas_por_compasso`, zero quando indeterminado. `(BPM, batidas)` é moldura; **a barra em segundos é o invariante**.
+- **`Compasso.bandas`** (`PerfilBandas`) — acento por posição em **bumbo 30–110 Hz**, **caixa 1,5–5 kHz** e **chimbau 6,5–13 kHz**, dobrado em **dois** compassos, com `bandas.backbeat()`. A barra começa **onde o bumbo bate**: a fase do motor desliza uma batida quando há acento em quase toda batida.
+- Normalização da novidade **pela média da própria banda** — sem isso a banda grave domina a medida.
+- **3 testes:** o invariante da barra, caixa no tempo 4 de 6 (bate na virada da metade) e caixa nos tempos 2 e 3 (não bate).
+
+### Medido — `Me Derramar`, 39–59 s, áudio original
+- **Hierarquia limpa:** chimbau **0,52 s** → pé **1,55 s** → compasso **3,095 s**; a **caixa tem período de um compasso inteiro** — uma caixa por dois pés, a assinatura do `6/8` de banda.
+- **O "meio-forte" existe:** bumbo **4,38** no tempo 1 e **1,32** na posição 6 — 12× os 0,08–0,11 das demais.
+
+### Corrigido
+- **A conclusão de que `3/4` e `6/8` seriam o mesmo objeto acústico estava errada.** O erro era somar bumbo, caixa e chimbau numa novidade espectral só — é essa soma que apaga o backbeat. Refutada pelo dono e registrada no `PENDING`.
+
+## [feat] Melodia no JSON e arbitragem estendida a `sus` (2026-11-22)
+
+### Adicionado
+- **`Report.melodia`** — `MelodiaSegment` por trecho: quadros com F0, classe dominante, fração e histograma das 12 classes. A melodia era extraída e usada, mas **invisível**: sem publicar, a hipótese de que ela carrega a terça não era conferível.
+- **Arbitragem estendida a `5`/`sus4`/`sus2`** e **`FRACAO_DA_TERCA` de 0,40 para 0,20**, medido — o limiar antigo só servia para melodia parada.
+- **2 testes:** a terça fraca promove `5` e `sus4`, e a prova negativa (sem terça na melodia o motor não inventa qualidade).
+
+### Medido — trecho 39–51 s de `Me Derramar`, com a verdade do dono
+
+| trecho | motor | a melodia tocou | verdade |
+|---|---|---|---|
+| 0,16–1,95 s | `G5` → **`G`** ✓ | B (terça de G) 21% | `G9` |
+| 6,90–9,45 s | `Em` → `Em` ✓ | G (terça de Em) 30% | `Em7` |
+| 9,45–11,91 s | `C5` → **`C`** ✓ | E (terça de C) 19% | `C9` |
+| 1,95–3,65 s | `Gsus2` ✗ | A 24%, B 20%, D 10% | `G9` |
+
+O quarto não é falha do árbitro: o acorde detectado é `Dsus4` com baixo **G**, então ele procurou a terça **de Ré** e a melodia toca **Si**, a terça **de Sol**. **A raiz estava errada antes da terça** — o conserto é o baixo vir antes do acorde.
+
 ## [feat] Terça pela melodia no motor (ADR-0014, bloco 3) (2026-11-22)
 ### Adicionado
 - **`crates/mir_engine/src/melody.rs`** — `extrair(spectro, taxa)` devolve a **classe de altura da voz por quadro**, com `contagem`, `quadros_com_f0` e `dominante`. O método é soma harmônica sobre os picos do espectro (a fundamental da voz vem com 2f e 3f), na banda de 200–1000 Hz, com piso de 20% do maior pico do quadro.

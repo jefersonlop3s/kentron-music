@@ -1268,3 +1268,116 @@ O caso de 0,09 é a **prova negativa**: sem evidência suficiente, o motor não 
 - **O F0 erra oitava, e isso é de propósito irrelevante:** a decisão é por **classe de altura**, e oitava não muda classe. É o que permite um método simples em vez de um rastreador de pitch completo.
 - **Mixagem real é mais difícil que a fixture.** Separar voz de acompanhamento sem stems segue sendo o ponto frágil; o árbitro é estreito para o erro custar pouco.
 - **A janela de 0,12–0,16 é de áudio sintetizado.** No repertório o número muda — medir é a próxima tarefa, não ajustar limiar no escuro.
+
+## R4 · A melodia publicada, e a terça que ela carrega medida no áudio real (2026-11-22)
+
+**Status:** 🟢 Na `main` (`414b760`). Três de quatro acordes corrigidos; o quarto
+revelou um erro de arquitetura, registrado no `PENDING`.
+
+### O que entrou
+
+- **`Report.melodia`** — `MelodiaSegment` por trecho: quadros com F0, classe
+  dominante, fração e histograma das 12 classes. A melodia era extraída e usada,
+  mas **invisível**; sem publicar, a hipótese não era conferível.
+- **Arbitragem estendida a `5`/`sus4`/`sus2`** e **`FRACAO_DA_TERCA` de 0,40 para
+  0,20** — o limiar antigo só servia para melodia parada.
+- Dois testes: a terça fraca promove `5` e `sus4`, e a **prova negativa** (sem
+  terça na melodia o motor não inventa qualidade).
+
+### Medido — trecho 39–51 s de `Me Derramar`, com a verdade do dono
+
+| trecho | motor | a melodia tocou | verdade |
+|---|---|---|---|
+| 0,16–1,95 s | `G5` → **`G`** ✓ | B (terça de G) 21% | `G9` |
+| 6,90–9,45 s | `Em` → `Em` ✓ | G (terça de Em) 30% | `Em7` |
+| 9,45–11,91 s | `C5` → **`C`** ✓ | E (terça de C) 19% | `C9` |
+| 1,95–3,65 s | `Gsus2` ✗ | A 24%, B 20%, D 10% | `G9` |
+
+O `Gsus2` que sobrou não é falha do árbitro: o acorde detectado é `Dsus4`
+com baixo **G**, então ele procurou a terça **de Ré** enquanto a melodia toca
+**Si**, a terça **de Sol**. **A raiz estava errada antes da terça** — e o conserto
+é o baixo vir antes do acorde.
+
+### Ressalvas
+
+- **O limiar de 0,20 é medido em um trecho.** Ele vale para melodia que se move;
+  a validação em mais trechos é pendência declarada, não suposição.
+- **A fixture dourada não mudou** — prova de que o árbitro não sobrescreve
+  qualidade já decidida.
+
+## R4 · Compasso: a barra em segundos e o perfil por instrumento (2026-11-22)
+
+**Status:** 🟢 Na `main` (`c5f0248`, `7d2042a`). A discriminação `3/4` × `6/8`
+**continua aberta** — e o motivo está medido na seção seguinte.
+
+### O que entrou
+
+- **`Compasso.compasso_s`** (`c5f0248`) — `periodo_s × batidas_por_compasso`, zero
+  quando indeterminado. `(BPM, batidas)` é moldura; **a barra em segundos é o
+  invariante**: `Me Derramar` lê 4 batidas de 0,812 s no acorde completo e 3 de
+  0,526 s num nível mais fino, e as duas leituras dão **a mesma barra de ~3,2 s**
+  (o dono marcou 3,0 s).
+- **`Compasso.bandas`** (`7d2042a`) — `PerfilBandas` com o acento por posição em
+  **bumbo 30–110 Hz**, **caixa 1,5–5 kHz** e **chimbau 6,5–13 kHz**, dobrado em
+  **dois** compassos, e `backbeat()` devolvendo onde cai a caixa. A barra começa
+  **onde o bumbo bate**, porque a fase do motor desliza uma batida quando o acento
+  está em quase toda batida.
+- Dois testes sintéticos: caixa no tempo 4 de 6 bate na virada da metade; caixa
+  nos tempos 2 e 3 não bate.
+
+### Medido
+
+- **A hierarquia de `Me Derramar` existe e é limpa** (autocorrelação por banda):
+  chimbau **0,52 s** (subdivisão) → **1,55 s** (o pé) → **3,095 s** (o compasso); a
+  **caixa tem período de um compasso inteiro** — uma caixa por dois pés, a
+  assinatura do `6/8` de banda que o dono descreveu.
+- **O "meio-forte" que eu tinha negado existe:** no áudio original o bumbo marca
+  **4,38 no tempo 1** e **1,32 na posição 6** — 12× os 0,08–0,11 das demais.
+
+### Ressalvas
+
+- **O perfil por instrumento é chapado em mix denso.** Medido em nove músicas de
+  banda: 0,5–1,5 em oito delas. Ele só funciona em material isolado (o sintético)
+  ou esparso. **A unidade de código entra; a decisão de metro que ela deveria
+  sustentar não.**
+- **A conclusão anterior de que `3/4` e `6/8` seriam o mesmo objeto acústico foi
+  refutada pelo dono e está corrigida** — o erro era somar os três instrumentos
+  numa novidade só.
+
+## R4 · Faixas de Hz da bateria fora do repertório, e o que não separa (2026-11-22)
+
+**Status:** 🟢 Insight publicado na `main` (`d3fbce9`). Material sob autorização
+do dono, áudio **fora** do repositório (ADR-0013).
+
+### O que entrou
+
+- [`docs/insights/2026-11-22-faixas-de-hz-da-bateria.md`](insights/2026-11-22-faixas-de-hz-da-bateria.md)
+  — nove faixas com bateria (três `3/4`, três `6/8`, três `4/4`), o mapa de Hz por
+  peça e o registro do que **não** funcionou.
+
+### Medido — medianas das nove
+
+| peça | ≤300 Hz | 1,5–5 kHz | 6,5–13 kHz |
+|---|---|---|---|
+| bumbo | **53%** (25–68) | 1% | 0% |
+| caixa | 13% | **65%** (48–76) | 25% |
+| chimbau | 13% | 25% | **60%** (47–75) |
+
+Distribuição por família estável nas nove: **32–57% grave, 21–38% médio,
+13–45% agudo**.
+
+### O que ficou decidido
+
+- **Para a partitura de bateria:** bumbo e caixa se separam **por banda**; caixa e
+  chimbau **não** — cada um tem 25% da energia na faixa do outro, simétrico. O que
+  os separa é o **decaimento** (caixa 150–250 ms, chimbau fechado ~50 ms).
+- **Para o metro:** energia de banda no mix **não é o caminho**. A normalização por
+  banda foi aplicada e não bastou.
+
+### Ressalvas
+
+- **O motor devolve `3` para o `3/4` e para o `6/8`**, com margem 0,00–0,04 em oito
+  das nove — **abstenção disfarçada**. Nenhuma leitura de metro deste material
+  pode ser usada como acerto.
+- **O lado `3/4` do gabarito antigo não serve para isto:** nos hinos a banda de
+  1,5–5 kHz é o **coral**, não uma caixa.
