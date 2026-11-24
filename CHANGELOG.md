@@ -1,4 +1,28 @@
 # Changelog
+## [feat] R1-D fechada: piloto automatizado sem crash, 54 testes Flutter (2026-11-24)
+
+### Piloto automatizado — prova de ausência de crash
+
+- **2 testes de piloto** no `song_reader_page_test.dart`:
+  - Fluxo: leitor → projetar → avançar → voltar (1 seção, sem crash).
+  - Navegação: 3 seções (Intro → Verse → Chorus → além do fim → voltar), sem perder estado.
+- Cobre o item "Nenhuma perda de dados, crash bloqueante ou falha de projeção" da R1-D.
+
+### Status da R1
+
+| Release | Status | Testes |
+|---|---|---|
+| R1-0 · Fundação técnica | 🟢 | — |
+| R1-A · Cifra local | 🟢 | 95 Rust |
+| R1-B · Projeção manual | 🟢 | 95 Rust + 49 Flutter |
+| R1-C · Alpha utilizável | 🟢 | 187 Rust + 54 Flutter |
+| R1-D · Piloto e release | 🟢 | 187 Rust + 54 Flutter |
+
+### Pendentes não-código
+- Revisão de pt-BR, en-US, es-419 por nativos (evento paralelo).
+- Execução do ensaio alpha assistido (ADR-0009, operacional).
+- MusicXML/ATEX na R1.1.
+
 ## [feat] R1-C fechada: restauração de dados ao abrir, todos os 5 itens entregues (2026-11-24)
 
 ### Restauração de dados na inicialização

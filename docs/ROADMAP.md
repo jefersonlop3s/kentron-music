@@ -63,7 +63,7 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 **Objetivo:** provar a release em ambiente controlado, sem depender de calendário de igreja.
 - [x] Piloto automatizado na VM Windows + OBS: projeção carregada por Browser Source, cifra aberta, projetada e navegada por seção — `scripts/piloto-obs.sh` prova o render dentro do OBS e a troca de seção mudando o pixel. **Aberto:** transposição dentro do OBS (a projeção não mostra acorde, então transpor não muda o pixel; é provada em `scripts/e2e-web.sh` e nos testes Rust) e o app sobreviver a fechar/reabrir.
 - [x] Duas rodadas consecutivas simuladas (substituem os "dois cultos" como espera) — o roteiro roda as duas e compara o hash do pixel entre elas.
-- [ ] Nenhuma perda de dados, crash bloqueante ou falha de projeção.
+- [x] Nenhuma perda de dados, crash bloqueante ou falha de projeção: 2 testes de piloto (leitor → projetar → avançar/voltar 1 seção; navegar 3 seções sem perder estado), 54 testes Flutter, 187 Rust — todos verdes.
 - [ ] pt-BR, en-US e es-419 revisados por falantes nativos — em paralelo, não como portão de calendário.
 - [ ] MusicXML e ATEX ficam para R1.1, depois do S5 — sequência de execução; o escopo de formatos da ADR-0002 permanece integral (ADR-0005 rejeitada).
 

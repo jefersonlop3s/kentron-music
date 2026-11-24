@@ -2,6 +2,7 @@ import 'package:core_l10n/core_l10n.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kentron_app/src/rust/bridge.dart';
 import 'package:kentron_app/src/stage/chord_line.dart';
+import 'package:kentron_app/src/stage/projection_page.dart';
 import 'package:kentron_app/src/stage/song_reader_page.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -185,5 +186,100 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('ponte caiu'), findsOneWidget);
+  });
+
+  // ── Piloto: fluxo completo sem crash ──────────────────────────────
+
+  testWidgets('piloto: leitor → projetar → avançar → voltar sem crash', (tester) async {
+    await tester.pumpWidget(
+      _montar(
+        const SongReaderPage(
+          input: 'ignorado',
+          ler: _ler,
+          transpor: _transpor,
+          tons: _tons,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Projetar
+    await tester.tap(find.byTooltip('Project'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ProjectionPage), findsOneWidget);
+    expect(find.text('1 / 1'), findsOneWidget);
+
+    // Avançar (deve ficar no mesmo lugar, única seção)
+    await tester.tap(find.byTooltip('Next section'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 / 1'), findsOneWidget);
+
+    // Voltar (também sem sair do intervalo)
+    await tester.tap(find.byTooltip('Previous section'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 / 1'), findsOneWidget);
+  });
+
+  /// Cifra com 3 seções para testar navegação sem crash.
+  const _cifraTres = SongDetail(
+    title: 'Três Seções',
+    key: 'C',
+    sections: <SongSection>[
+      SongSection(name: 'Intro', lines: <SongLine>[
+        SongLine(text: 'Intro', chords: <ChordMark>[]),
+      ]),
+      SongSection(name: 'Verse', lines: <SongLine>[
+        SongLine(text: 'Verso', chords: <ChordMark>[]),
+      ]),
+      SongSection(name: 'Chorus', lines: <SongLine>[
+        SongLine(text: 'Refrão', chords: <ChordMark>[]),
+      ]),
+    ],
+    core: 'falso',
+  );
+
+  Future<SongDetail> _lerTres(String _) async => _cifraTres;
+
+  testWidgets('piloto: navega entre 3 seções sem perder estado ou crashar', (tester) async {
+    await tester.pumpWidget(
+      _montar(
+        SongReaderPage(
+          input: 'ignorado',
+          ler: _lerTres,
+          transpor: _transpor,
+          tons: _tons,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Projetar
+    await tester.tap(find.byTooltip('Project'));
+    await tester.pumpAndSettle();
+    // "Intro" aparece como nome da seção e como texto — ao menos 1
+    expect(find.text('Intro'), findsAtLeastNWidgets(1));
+    expect(find.text('1 / 3'), findsOneWidget);
+
+    // Avançar 3 vezes (ciclo completo)
+    await tester.tap(find.byTooltip('Next section'));
+    await tester.pumpAndSettle();
+    expect(find.text('Verse'), findsOneWidget);
+    expect(find.text('2 / 3'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Next section'));
+    await tester.pumpAndSettle();
+    expect(find.text('Refrão'), findsOneWidget);
+    expect(find.text('3 / 3'), findsOneWidget);
+
+    // Tentar avançar além do fim (não crasha, não sai do intervalo)
+    await tester.tap(find.byTooltip('Next section'));
+    await tester.pumpAndSettle();
+    expect(find.text('3 / 3'), findsOneWidget);
+
+    // Voltar
+    await tester.tap(find.byTooltip('Previous section'));
+    await tester.pumpAndSettle();
+    expect(find.text('Verse'), findsOneWidget);
+    expect(find.text('2 / 3'), findsOneWidget);
   });
 }
