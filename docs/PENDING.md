@@ -207,6 +207,19 @@ Ou seja: **40 trechos em 23.558 (0,17%, um em 590) ficam sem explicação.** **N
   - **Prova hermética:** tom de 220 Hz com batidas de ruído por cima; a classe não pode oscilar mais que 4 vezes e tem de ficar em Lá. Custo: 5,5 s para uma faixa de 5 min.
   - **O que o HPSS NÃO resolve, e está medido:** as durações passam a empilhar em **~0,23 s**, que é o timescale do kernel (mediana de 9 quadros = 0,21 s), não da música. **O HPSS serve para a altura; os cortes de nota têm de vir do ataque** — é o passo 3 da arquitetura do dono, ainda aberto.
 - [ ] **A fusão das duas fontes (o passo 3 da arquitetura do dono) — próximo:** nota nasce quando há **ataque harmônico** com altura confiável logo depois (`t+20 ms`), ou quando **sem ataque** a altura cruza a histerese de 0,6 semitom e estabiliza. Já existe: `Spectrogram::harmonico` (a altura limpa), `spectrum::novidade` (o ataque) e a grade do `compasso`. Falta juntá-los e medir se as figuras separam `3/4` de `6/8` — a pergunta aberta desde o começo.
+- [x] **O perfil por banda na componente percussiva — medido, e também não separa (2026-11-22).** O HPSS deixa o acompanhamento limpo (a guitarra e a voz saem das bandas), e a fase foi alinhada ao `inicio_s` do motor. Amplitudes do perfil (máximo − mínimo): `House of the Rising Sun` 0,51 · `Manic Depression` 0,43 · `My Favorite Things` 0,56 · `Nothing Else Matters` 0,71 · `Since I've Been Loving You` 0,92 · `Someday My Prince Will Come` 1,35. **Nenhuma estrutura consistente de dois ou de três blocos**, e os picos migram entre as músicas (`Nothing Else Matters`: bumbo na 4, caixa na 6; `Someday My Prince`: tudo na 3). **Ressalva que impede o veredito:** a posição do ciclo não é garantidamente a barra — o `inicio_s` e o `periodo` do motor são o **grupo de acento** em compasso composto.
+- [ ] **O METRO: cinco medidas tentadas, uma funciona, e o gargalo é só um (fechamento da investigação, 2026-11-22).** Placar do que foi medido nesta campanha:
+
+  | medida | resultado |
+  |---|---|
+  | perfil de acento no mix | chapado (contraste 0,42 em `m=3` **e** em `m=6` — empate exato) |
+  | perfil por banda no mix | 0,5–1,5 em oito de nove — chapado |
+  | perfil por banda na componente percussiva | 0,43–1,35, sem estrutura consistente |
+  | figuras rítmicas da melodia | fase plana (11–27%) — **refutada para material cantado** |
+  | **dobra: `A(T/2)` contra `A(T/3)`** | **5 de 6** com a barra do motor, **5 de 6** com a barra verdadeira, 4 de 6 com o pico da autocorrelação |
+
+  **A única medida que separa é a dobra**, e o erro dela é sempre de **nível do `T`** — nunca da regra. Testei escolher o nível pela decisividade da dobra: troca o erro de lugar, não melhora (5 de 6 de novo, e o erro de `since-been-loving-you` fica em 0,021). **O gargalo é a barra, e só ela.**
+  **Recomendação:** aceitar 5 de 6 **com abstenção** (o limiar de 0,05 já pega os casos de margem fina) e parar de procurar medida nova — cinco tentativas apontaram a mesma peça faltando.
 - [x] **Passo 2 (a fusão) implementado e medido — e ele responde a pergunta da melodia, com um "não" (2026-11-22).** Fusão das duas fontes como o dono desenhou: histerese de 0,6 semitom **nos cents** (arredondar antes era o erro: transformava vibrato de ±30 cents em troca de classe), estabilidade de 4 quadros, e o corte por **ataque harmônico** em 150–2500 Hz sobre a componente HPSS.
   - **A contagem de notas ficou plausível:** **1,8–2,8 notas/s** (antes 3–4/s, com 64–81% no piso de duração).
   - **O histograma de fase dos inícios melódicos é PLANO nas seis faixas:** 11–27% em cada uma das 6 fatias do ciclo. **Não há estrutura de dois blocos nem de três.**

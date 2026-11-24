@@ -1464,3 +1464,34 @@ ideia do dono estava certa e o resultado foi um pico no mínimo de duração —
 sinal de instrumento quebrado, não de música. É o mesmo padrão do "74–99% dos
 ataques são graves" desta sessão: **resultado implausível é denúncia do aparelho
 antes de ser descoberta.**
+
+## R4 · O metro: cinco medidas, uma funciona, um gargalo só (2026-11-22)
+
+**Status:** 🟡 **Investigação fechada.** A medida certa existe (`Compasso.dobra`),
+acerta **5 de 6**, e o que falta é uma peça nomeada.
+
+| medida | resultado |
+|---|---|
+| perfil de acento no mix | chapado — 0,42 em `m=3` **e** em `m=6` |
+| perfil por banda no mix | 0,5–1,5 em oito de nove |
+| perfil por banda na componente percussiva (HPSS) | 0,43–1,35, sem estrutura consistente |
+| figuras rítmicas da melodia | fase plana, 11–27% — **refutada para cantado** |
+| **dobra `A(T/2)` × `A(T/3)`** | **5 de 6**, nos dois níveis de `T` |
+
+### O que ficou decidido
+
+- **A dobra é a medida.** O erro dela é sempre de **nível do `T`**, nunca da
+  regra; escolher o nível pela decisividade troca o erro de lugar, não melhora.
+- **Aceitar 5 de 6 com abstenção.** O limiar de 0,05 descarta as margens finas —
+  e margem fina não é evidência.
+- **Parar de procurar medida nova.** Cinco caminhos independentes apontaram a
+  mesma peça faltando: **a barra** — decidir se o ciclo medido vale um grupo ou
+  dois.
+
+### Aprendizado
+
+**Hipótese refutada não é trabalho perdido — é o mapa do que não é.** A melodia
+não nomeia o metro em música cantada porque **a sílaba conta a história e o
+compasso é a cena**: a fala atravessa a barra. A metáfora é do dono e ela é a
+explicação medida: a fase dos inícios melódicos é plana porque o texto não tem
+compasso.

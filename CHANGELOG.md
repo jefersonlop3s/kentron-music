@@ -2,6 +2,22 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [processo] O metro: cinco medidas, uma funciona, um gargalo só (2026-11-22)
+
+Fechamento da campanha. O placar do que foi medido:
+
+| medida | resultado |
+|---|---|
+| perfil de acento no mix | chapado — contraste 0,42 em `m=3` **e** em `m=6`, empate exato |
+| perfil por banda no mix | 0,5–1,5 em oito de nove — chapado |
+| perfil por banda na componente percussiva | 0,43–1,35, sem estrutura consistente |
+| figuras rítmicas da melodia | fase plana (11–27%) — **refutada para material cantado** |
+| **dobra: `A(T/2)` contra `A(T/3)`** | **5 de 6** com a barra do motor · **5 de 6** com a barra verdadeira · 4 de 6 com o pico da autocorrelação |
+
+**A única medida que separa é a dobra**, e o erro dela é sempre de **nível do `T`**, nunca da regra. Escolher o nível pela decisividade da dobra troca o erro de lugar (5 de 6 de novo, erro em 0,021).
+
+**Recomendação:** aceitar **5 de 6 com abstenção** — o limiar de 0,05 já pega as margens finas — e parar de procurar medida nova. Cinco tentativas apontaram a mesma peça faltando: **a barra**.
+
 ## [processo] A melodia cantada não nomeia o metro — a sílaba não respeita a barra (2026-11-22)
 
 Passo 2 da arquitetura do dono implementado: histerese de **0,6 semitom nos cents** (arredondar antes era o erro — transformava vibrato de ±30 cents em troca de classe), estabilidade de 4 quadros, e corte por **ataque harmônico** em 150–2500 Hz sobre a componente HPSS.
