@@ -1559,6 +1559,33 @@ diagnóstico**. Os cinco, e o que cada um mediu:
 | **D** · o gate está ajustado em dois pontos? | **Vence em parte.** A margem é de **0,05 s** (`delilah` 0,90 contra o piso 0,85) — fina, ainda que não exercida pelo corpus. |
 | **E** · a razão barra/batida decide o compasso? | **Falha.** As faixas se sobrepõem inteiramente (0,75–4,03 no corpus; 1,50–2,97 no gabarito). |
 
+### O sexto contra-argumento — a regra do dono, testada e **refutada**
+
+O dono propôs uma regra nova, **musicalmente correta**: *"se a música sustenta a
+batida em três, é `6/8`; se não sustenta, é `4/4`"*. Implementada e medida, ela
+**falha** — e o modo da falha é a lição do dia.
+
+**O que parecia separação limpa** (os `6/8` do Bennett com `escore_68` de
+12,00 · 2,89 · 1,06 contra os `4/4` do corpus em 0,26 a 0,78) era a **taxa-base**:
+o corpus é quase todo `4/4`, então "`4/4` por padrão" acerta por acidente.
+
+| conjunto | taxa-base | resultado |
+|---|---|---|
+| corpus (gospel) | quase todo `4/4` | 13 de 15 — **acidente** |
+| `EstudoMetro` — nove clássicos documentados, **3 de cada** | balanceado | **1 de 9** |
+| hinos com compasso declarado | ternário | **0 de 4** |
+
+**A falha tem forma:** os hinos saem **invertidos** — os `6/8` viram `3/4` e os
+`3/4` viram `6/8`. O `escore_68` (a caixa na metade) dispara em `4/4` com a barra
+em fração (`back-in-black` 6,16) e o `escore_34` (a caixa nos terços) dispara em
+`6/8` (`Me Derramar` 1,01). **Os dois contrastes não medem o que a regra pede.**
+Revertido, sem exceção.
+
+**A lição, e é de método:** um conjunto com a **mesma taxa-base** da classe que
+você quer prever **não mede nada**. Foi um conjunto **balanceado** — e um com a
+**taxa-base oposta** — que mostrou o erro. **Contar as classes antes de contar os
+acertos.**
+
 ### Ressalvas — o que isto **não** conserta
 
 - **O núcleo do diagnóstico sobrevive:** nenhuma das cinco tentativas achou um

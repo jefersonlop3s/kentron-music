@@ -256,8 +256,45 @@ R1. Os cinco, e o que cada um mediu:
 
 **O núcleo do diagnóstico sobrevive:** a caixa nos terços **não** separa um
 compasso ternário de uma subdivisão ternária de um binário, e nenhuma das cinco
-tentativas achou um sinal que separe. **Onde não há evidência, a resposta honesta
-continua sendo a oferta.**
+tentativas achou um sinal que separe.
+
+### O sexto contra-argumento — a regra do dono, testada e **refutada**
+
+O dono propôs uma regra nova, e ela é **musicalmente correta**: *"se a música
+sustenta a batida em três, é `6/8`; se não sustenta, é `4/4`"*. Implementada e
+medida, ela **falha**, e o modo da falha é a lição do dia.
+
+**O que parecia uma separação limpa** — os `6/8` do Bennett com `escore_68` de
+**12,00 · 2,89 · 1,06** e os `4/4` do corpus com **0,26 a 0,78** — era a
+**taxa-base**: o corpus é quase todo `4/4`, então "`4/4` por padrão" acerta por
+acidente. **Dois conjuntos com taxa-base diferente expõem isso:**
+
+| conjunto | taxa-base | resultado |
+|---|---|---|
+| corpus (gospel) | quase todo `4/4` | 13 de 15 — **acidente** |
+| `EstudoMetro` — nove clássicos de compasso documentado, **3 de cada** | balanceado | **1 de 9** |
+| hinos com compasso declarado | ternário | **0 de 4** |
+
+E a falha tem **forma**, não é ruído: os hinos saem **invertidos** — os `6/8`
+viram `3/4` e os `3/4` viram `6/8`. Medido:
+
+```text
+back-in-black     (4/4)  escore_68 = 6,16  -> o motor diria 6/8   ✗
+house-rising-sun  (6/8)  escore_68 = 0,74  -> o motor diria 4/4   ✗
+Me Derramar       (6/8)  escore_34 = 1,01  -> o motor diria 3/4   ✗
+Crer e observar   (3/4)  escore_68 = 2,14  -> o motor diria 6/8   ✗
+```
+
+**Os dois contrastes não medem o que a regra pede.** O `escore_68` (a caixa na
+metade) dispara em `4/4` com a barra em fração, e o `escore_34` (a caixa nos
+terços) dispara em `6/8` — **a evidência não separa as duas famílias, e às vezes
+as troca.** Revertido, sem exceção.
+
+**A lição, e é de método:** um conjunto com a **mesma taxa-base** da classe que
+você quer prever **não mede nada**. O corpus parecia validar a regra porque
+"`4/4`" é a resposta certa na maioria dele. **Foi um conjunto balanceado — e um
+conjunto com a taxa-base oposta — que mostrou o erro.** Vale para o próximo
+gabarito: **contar as classes antes de contar os acertos.**
 
 **Comparar dois contrastes e ficar com o maior não é decidir** — e foi daí que o
 piso nasceu. Medido: as 15 vinham de contrastes **abaixo de 1** — `0,65` contra
