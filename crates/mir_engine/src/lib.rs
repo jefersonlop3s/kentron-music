@@ -116,7 +116,13 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
     // A leitura do compasso usa a **relação bumbo×caixa** quando ela decide:
     // medido no gabarito independente, ela acerta **6 de 6** e a dobra do envelope
     // acerta **1 de 8**. A reconciliação fica registrada na `fonte` da leitura.
-    let bumbo_caixa = percussao::medir(spectro, audio.taxa);
+    //
+    // A **escala** da barra vem do ritmo harmônico — as fronteiras de acorde são o
+    // relógio da harmonia, e sem elas o ciclo da percussão fica no hipercompasso
+    // (medido: barra mediana de 5,08 s no corpus de 40, contra 1,90 s de troca de
+    // acorde). A bateria dá a **fase**; a harmonia dá a **escala**.
+    let cortes_harmonicos: Vec<f32> = chords.iter().skip(1).map(|t| t.inicio_s).collect();
+    let bumbo_caixa = percussao::medir(spectro, audio.taxa, &cortes_harmonicos);
     let mut compasso = compasso::analisar(spectro, audio.taxa, &tempo);
     compasso.leitura.reconciliar(&bumbo_caixa);
     let sections = structure::segment(spectro, &chroma, audio.taxa, opts.trecho_minimo_s);

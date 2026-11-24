@@ -2,6 +2,55 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [feat] A harmonia dá a escala da barra: o hipercompasso do corpus cai de 5,08 s para 1,76 s (2026-11-24)
+
+### O problema, medido em 40 músicas reais
+
+O motor lia **2 a 5 barras** no corpus: barra mediana de **5,08 s** contra troca de acorde mediana de **1,90 s** (razão 2,16 a 5,19), com 17 das 40 acima de 6 s. É o **hipercompasso** — a bateria discreta faz o período da percussão disparar. O mesmo motor que acerta **6 de 6** no gabarito independente.
+
+**Duas tentativas anteriores foram medidas e refutadas:**
+
+| tentativa | corpus | gabarito | veredito |
+|---|---|---|---|
+| subdivisão interna separa `4/4` de `6/8` | 3, 5 e 3 acertos de 8 | — | **não separa** |
+| filtro fisiológico no contraste | 5,08 → 4,81 s | **6 → 5 de 6** | **revertido** |
+
+### O conserto: a bateria dá a fase, a harmonia dá a escala
+
+A troca de acorde cai na fronteira da barra. Então a barra é o candidato `T/k` (`k ∈ {1,2,3,4}`) **mais próximo do intervalo mediano entre trocas**, com o **alinhamento às fronteiras** como desempate e o maior ciclo como desempate final.
+
+**Os três critérios possíveis foram medidos antes de tocar no motor:**
+
+| critério | corpus (mediana) | na faixa 1,5–2,5 s | gabarito |
+|---|---|---|---|
+| alinhamento médio às trocas | 2,13 s | 11 de 34 | **quebra o `fallin`** |
+| coincidência das fronteiras | 1,80 s | 16 de 34 | 1,88 s ✓ |
+| distância ao intervalo de troca | 1,77 s | 28 de 34 | 1,88 s ✓ |
+| **com o alinhamento como desempate** | **1,77 s** | **29 de 34** | **1,88 s ✓** |
+
+**O alinhamento sozinho não serve — e isso é medido:** os custos dele saem todos entre 0,40 e 0,50 (quase não discrimina) e ele quebra o `fallin`.
+
+### A ordem importa, e o porte quase estragou tudo
+
+**A dobra e a subdivisão são ortogonais.** A **dobra** (`×1,5`, `×2`) conserta o bumbo que toca menos de uma vez por compasso — decidida pelo **contraste**, é o que acerta o gabarito. A **subdivisão** (`÷2`, `÷3`, `÷4`) conserta o hipercompasso — decidida pela **harmonia**, porque o contraste degenera no denominador nulo (`5e8` contra `3,3e8`) e prefere o ciclo longo.
+
+**Aplicada ao ciclo bruto, a harmonia quebra o `binky`** (de `3/4` decidido para binário oferecido errado): o ciclo bruto dele é 0,93 s, a dobra dá a barra de 1,39 s, e o alvo harmônico dele é 4,46 s — **três barras adiante**. Com a dobra primeiro e a subdivisão depois, o `binky` volta a 1,39 s.
+
+### Resultado
+
+| | antes | depois |
+|---|---|---|
+| corpus · barra mediana | 5,08 s | **1,76 s** |
+| corpus · na faixa 1,5–2,5 s | — | **29 de 40** |
+| corpus · acima de 4 s | 17 de 40 | **0 de 40** |
+| corpus · razão barra/troca | 2,2 a 5,2 | **0,93** |
+| gabarito independente | 6 de 6 | **6 de 6** |
+| testes | 80 | **150 no workspace** |
+
+### O que isto **não** conserta
+
+O veredito ficou **mais confiante**: as leituras `3/4` **decididas** passaram de 6 para **15 de 40**. A caixa nos terços **não distingue um compasso ternário de uma subdivisão ternária de um binário** — é a própria skill `medida-que-não-separa`. O corpus é louvor contemporâneo, majoritariamente binário, e **não há rótulo para essas 15**. **A escala está travada; o veredito segue sem verificação independente.**
+
 ## [feat] 6 de 6 no gabarito independente: a banda da caixa, a coincidência e o ciclo por contraste (2026-11-24)
 
 ### O que fechou o último erro

@@ -41,6 +41,17 @@ const COINCIDENCIA_S: f32 = 0.06;
 /// Ciclo plausível do bumbo, em segundos.
 const CICLO_MIN_S: f32 = 0.4;
 const CICLO_MAX_S: f32 = 5.0;
+/// Faixa em que uma **barra real** cabe: 70 BPM em `4/4` dá 3,43 s, 176 BPM em
+/// `3/4` dá 1,02 s. O que passa disso é o **hipercompasso** — medido no corpus de
+/// 40 músicas: barra mediana de 5,08 s contra troca de acorde mediana de 1,90 s.
+const BARRA_MIN_S: f32 = 0.85;
+const BARRA_MAX_S: f32 = 3.60;
+/// Em quantas partes o ciclo bruto pode estar subdividido: `T`, `T/2`, `T/3`, `T/4`.
+const DIVISORES: [f32; 4] = [1.0, 2.0, 3.0, 4.0];
+/// Banda em que dois candidatos contam como **empatados** na distância ao alvo.
+const EMPATE_ANCORA: f32 = 1.05;
+/// Tolerância para uma troca de acorde contar como **alinhada** ao ciclo.
+const ALINHAMENTO: f32 = 0.10;
 /// Piso do ataque, em desvios-padrão acima da média da própria banda.
 const PISO_ATAQUE: f32 = 1.5;
 /// Espaçamento mínimo entre ataques da mesma peça.
@@ -183,12 +194,91 @@ fn ataques(novidade: &[f32], fps: f32) -> Vec<f32> {
     saida
 }
 
+/// O intervalo mediano entre trocas de acorde — **a escala em que a música anda**.
+///
+/// É o relógio da harmonia, não o da percussão: medido no corpus de 40 músicas,
+/// ele dá 1,90 s enquanto o ciclo bruto da percussão dá 5,08 s. Os dois discordam
+/// por um fator de 2 a 5 — e é essa discordância que denuncia o hipercompasso.
+fn intervalo_harmonico(cortes: &[f32]) -> Option<f32> {
+    let mut intervalos: Vec<f32> = cortes
+        .windows(2)
+        .map(|par| par[1] - par[0])
+        .filter(|d| (0.3..15.0).contains(d))
+        .collect();
+    if intervalos.len() < 2 {
+        return None;
+    }
+    intervalos.sort_by(f32::total_cmp);
+    Some(intervalos[intervalos.len() / 2])
+}
+
+/// A fração das trocas de acorde que caem **na grade** de um ciclo.
+///
+/// A troca de acorde acontece na fronteira da barra (ou num múltiplo dela), então
+/// um ciclo que não tem as trocas nas suas fronteiras é fração ou múltiplo da
+/// barra. Medido nos três critérios possíveis, em 2026-11-24: o alinhamento
+/// **sozinho** separa mal (custos todos entre 0,40 e 0,50, e ele quebra o
+/// `fallin`, levando a barra para a metade); ele serve como **desempate**.
+fn alinhamento(periodo: f32, cortes: &[f32]) -> f32 {
+    let (Some(&origem), true) = (cortes.first(), periodo > 0.0 && cortes.len() >= 3) else {
+        return 0.0;
+    };
+    let na_grade = cortes
+        .iter()
+        .filter(|&&t| {
+            let voltas = (t - origem) / periodo;
+            let fracao = voltas - voltas.floor();
+            fracao.min(1.0 - fracao) <= ALINHAMENTO
+        })
+        .count();
+    na_grade as f32 / cortes.len() as f32
+}
+
+/// Escolhe a barra entre os divisores do ciclo bruto.
+///
+/// **A bateria dá a fase; a harmonia dá a escala.** O ciclo bruto da percussão
+/// pode estar certo (`T`) ou em submúltiplo (`T/2`, `T/3`, `T/4`), e o que decide
+/// **não** é o contraste do histograma: medido, ele degenera quando o
+/// denominador é nulo (`5e8` contra `3,3e8`) e prefere o ciclo longo — foi assim
+/// que o corpus ficou em 5,08 s de barra mediana.
+///
+/// O que decide é o **ritmo harmônico**: a troca de acorde cai na fronteira da
+/// barra, então a barra é o candidato mais próximo do intervalo mediano entre
+/// trocas. Medido nos 40 do corpus e nos 6 do gabarito: a barra mediana cai de
+/// 5,75 s para **1,77 s**, 29 das 34 músicas com acordes entram na faixa de
+/// 1,5–2,5 s, todas as 34 ficam na faixa fisiológica — e o `fallin` (6/8, barra
+/// de 1,88 s) **não regride**.
+fn escolher_barra(periodo: f32, cortes: &[f32]) -> Option<f32> {
+    let alvo = intervalo_harmonico(cortes)?;
+    let mut avaliados: Vec<(f32, f32, f32)> = DIVISORES
+        .iter()
+        .map(|&divisor| periodo / divisor)
+        .filter(|&p| (BARRA_MIN_S..=BARRA_MAX_S).contains(&p))
+        .map(|p| (p, (p - alvo).abs() / alvo, alinhamento(p, cortes)))
+        .collect();
+    if avaliados.is_empty() {
+        return None;
+    }
+    let melhor = avaliados.iter().map(|a| a.1).fold(f32::INFINITY, f32::min);
+    avaliados.retain(|a| a.1 <= melhor * EMPATE_ANCORA);
+    // Empate vai para o **maior** período: a barra é o maior ciclo que cabe na
+    // faixa, e o menor é a sua fração. Sobrevindo empate exato, o melhor alinhado.
+    avaliados
+        .into_iter()
+        .max_by(|a, b| a.0.total_cmp(&b.0).then(a.2.total_cmp(&b.2)))
+        .map(|a| a.0)
+}
+
 /// Mede a relação entre o bumbo e a caixa.
+///
+/// `cortes` são as fronteiras de acorde — o relógio da harmonia, que dá a escala
+/// da barra. Sem eles a escala cai no contraste do histograma, que é o que
+/// errava no corpus.
 ///
 /// Devolve `dobra = 0` sem evidência — o mesmo princípio de abstenção do resto
 /// do motor: pouco ataque ou período incoerente não viram palpite.
 #[must_use]
-pub fn medir(spectro: &Spectrogram, taxa: u32) -> BumboCaixa {
+pub fn medir(spectro: &Spectrogram, taxa: u32, cortes: &[f32]) -> BumboCaixa {
     let fps = spectro.quadros_por_segundo(taxa).max(1.0);
     let bumbo = novidade_da_banda(spectro, taxa, BUMBO_DE_HZ, BUMBO_ATE_HZ);
     let caixa = novidade_da_banda(spectro, taxa, CAIXA_DE_HZ, CAIXA_ATE_HZ);
@@ -259,17 +349,26 @@ pub fn medir(spectro: &Spectrogram, taxa: u32) -> BumboCaixa {
         return saida;
     };
 
-    // **O ciclo é escolhido pela evidência, não por limiar.**
+    // **A dobra é do contraste; a escala é da harmonia — e elas são ortogonais.**
     //
-    // O bumbo pode ser capturado num submúltiplo da barra: em `3/4` em que ele
-    // toca dois de três tempos, `T` sai em **2/3** da barra (fator 1,5); em `6/8`
-    // em que ele toca dois de seis, `T` sai na **metade** (fator 2). Medido: um
-    // limiar de energia órfã **não separa os dois** — `binky` (órfã 56%) e
-    // `say-something` (órfã 36%) precisam de fatores **diferentes**.
+    // O ciclo bruto pode estar em submúltiplo da barra, e há dois consertos
+    // diferentes para dois erros diferentes:
     //
-    // Então os três ciclos candidatos são avaliados e vence o de **maior
-    // contraste** — a mesma moeda que decide a dobra. Assim a correção de escala
-    // não é uma regra à parte: ela é a mesma competição, aplicada ao ciclo.
+    // 1. **A dobra** (`×1,5`, `×2`) conserta o bumbo que toca **menos** de uma vez
+    //    por compasso — `3/4` em que ele toca dois de três tempos (`binky`: bruto
+    //    0,93 s, barra 1,39 s), `6/8` em que ele toca dois de seis. Quem decide é o
+    //    **contraste** do histograma da caixa, e é o que acerta o gabarito.
+    // 2. **A subdivisão** (`÷2`, `÷3`, `÷4`) conserta o **hipercompasso** — a
+    //    bateria discreta faz o período disparar para 2 a 4 barras (medido no
+    //    corpus de 40: barra mediana de 5,08 s contra troca de acorde mediana de
+    //    1,90 s). Quem decide é a **harmonia**, e o contraste **não serve**: ele
+    //    degenera quando o denominador é nulo (`5e8` contra `3,3e8`) e prefere o
+    //    ciclo longo.
+    //
+    // A ordem importa: a dobra vem **primeiro** (é o que o gabarito precisa) e a
+    // subdivisão depois, sobre o ciclo já dobrado. Aplicar a harmonia ao ciclo
+    // bruto **quebra o `binky`** (o alvo harmônico dele é 4,46 s, três barras
+    // adiante, e a escolha caía na metade da barra) — medido em 2026-11-24.
     let media = |perfil: &[f32; FATIAS], idx: [usize; 4], n: usize| -> f32 {
         idx[..n].iter().map(|&i| perfil[i]).sum::<f32>() / n as f32
     };
@@ -287,6 +386,11 @@ pub fn medir(spectro: &Spectrogram, taxa: u32) -> BumboCaixa {
             if escore.0.max(escore.1) > melhor.2.0.max(melhor.2.1) {
                 melhor = (periodo * fator, candidato, escore);
             }
+        }
+    }
+    if let Some(barra) = escolher_barra(melhor.0, cortes) {
+        if let Some(perfil_barra) = histograma(barra) {
+            melhor = (barra, perfil_barra, contraste(&perfil_barra));
         }
     }
     let (periodo, perfil, (escore_68, escore_34)) = melhor;
@@ -368,7 +472,7 @@ mod tests {
             canais: 1,
         };
         let spectro = Spectrogram::new(&audio, 4096, 1024);
-        medir(&spectro, TAXA)
+        medir(&spectro, TAXA, &[])
     }
 
     #[test]
@@ -400,6 +504,41 @@ mod tests {
             (simples.periodo_bumbo_s - 1.5).abs() < 0.25,
             "a barra do bumbo devia ser 1,5 s: {}",
             simples.regra
+        );
+    }
+
+    #[test]
+    fn a_harmonia_traz_a_barra_de_volta_do_hipercompasso() {
+        // A bateria é **discreta**: o bumbo toca uma vez a cada **duas** barras, e
+        // o ciclo bruto sai no hipercompasso — 4,0 s para uma barra de 2,0 s. É o
+        // modo de falha medido no corpus de 40 (barra mediana de 5,08 s contra
+        // 1,90 s de troca de acorde, razão de 2,16 a 5,19).
+        let amostras = bateria(8, &[1], &[2, 4, 6, 8]);
+        let sem_acordes = medir_amostras(amostras.clone());
+        // Sem acordes o ciclo fica **fora da faixa fisiológica** — e a dobra por
+        // contraste ainda o **piora** (dobra de 4,0 para 8,0 s), que é exatamente
+        // o defeito medido no corpus: o contraste degenera e prefere o ciclo longo.
+        assert!(
+            sem_acordes.periodo_bumbo_s > BARRA_MAX_S,
+            "sem acordes o ciclo devia ficar no hipercompasso (acima de {BARRA_MAX_S} s): {}",
+            sem_acordes.regra
+        );
+
+        // Com as trocas de acorde **na barra** (2,0 s), a escala volta — a
+        // subdivisão é da harmonia, e o contraste não a faria: medido, ele
+        // degenera no denominador nulo e prefere o ciclo longo.
+        let audio = Audio {
+            amostras,
+            taxa: TAXA,
+            canais: 1,
+        };
+        let spectro = Spectrogram::new(&audio, 4096, 1024);
+        let cortes: Vec<f32> = (1..12).map(|i| i as f32 * 2.0).collect();
+        let com_acordes = medir(&spectro, TAXA, &cortes);
+        assert!(
+            (com_acordes.periodo_bumbo_s - 2.0).abs() < 0.4,
+            "com acordes o ciclo devia voltar a 2,0 s: {}",
+            com_acordes.regra
         );
     }
 

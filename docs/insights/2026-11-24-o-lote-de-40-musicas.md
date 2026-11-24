@@ -58,7 +58,7 @@ corpus é gospel com bateria discreta, e foi escolhido pelo dono.
 **A medida separa ternário de binário quando o bumbo é detectável.** No corpus ele
 não é — a mesma parede de sempre: **o ataque da bateria em mixagem discreta**.
 
-## As duas propostas de conserto — medidas, e nenhuma fecha ainda
+## As duas propostas de conserto — a primeira não fecha, a segunda fechou
 
 ### Proposta 1 · a subdivisão interna separa `4/4` de `6/8` (`T/4` contra `T/6`)
 
@@ -117,18 +117,88 @@ faixa plausível** — o resultado **não mudou no corpus** e **regrediu o gabar
 **Revertido.** Nada entrou: sem ganho medido e com regressão no gabarito, a
 mudança não se justifica — e o filtro fisiológico, sozinho, **não é o conserto**.
 
+### Proposta 3 · o critério harmônico — e este fechou
+
+**A tese:** a troca de acorde cai na fronteira da barra. Então a barra é o
+candidato `T/k` (`k ∈ {1,2,3,4}`) **mais próximo do intervalo mediano entre
+trocas** — o relógio da harmonia, que no corpus marca 1,90 s enquanto o da
+percussão marca 5,08 s.
+
+**Os critérios possíveis, medidos nos dois conjuntos antes de tocar no motor:**
+
+| critério | corpus (mediana) | na faixa 1,5–2,5 s | gabarito |
+|---|---|---|---|
+| A · alinhamento médio às trocas | 2,13 s | 11 de 34 | **quebra o `fallin`** (0,94 s) |
+| B · coincidência das fronteiras | 1,80 s | 16 de 34 | 1,88 s ✓ |
+| C · distância ao intervalo de troca | 1,77 s | 28 de 34 | 1,88 s ✓ |
+| **C, com B como desempate** | **1,77 s** | **29 de 34** | **1,88 s ✓** |
+
+**O alinhamento sozinho não serve — e isso é medido, não suposto:** os custos dele
+saem todos entre **0,40 e 0,50** (ele quase não discrimina) e ele **quebra o
+`fallin`**, levando a barra para a metade. Ele entra como **desempate**, não como
+juiz.
+
+**A dobra e a subdivisão são ortogonais — e a ordem importa.**
+
+- A **dobra** (`×1,5`, `×2`) conserta o bumbo que toca **menos** de uma vez por
+  compasso. Quem decide é o **contraste** do histograma — e é o que acerta o
+  gabarito.
+- A **subdivisão** (`÷2`, `÷3`, `÷4`) conserta o **hipercompasso**. Quem decide é
+  a **harmonia** — o contraste **não serve**, ele degenera no denominador nulo e
+  prefere o ciclo longo.
+
+**O bug do porte, e a lição:** apliquei a harmonia ao ciclo **bruto**, e o `binky`
+caiu de `3/4` **decidido** para binário oferecido errado. O ciclo bruto dele é
+0,93 s; a **dobra** (×1,5) dá a barra de 1,39 s — e o alvo harmônico dele é
+4,46 s, **três barras adiante**. Com a dobra primeiro e a subdivisão depois, o
+`binky` volta a 1,39 s e o **6 de 6** se mantém.
+
+**A simulação em Python tinha previsto isso** — ela usava o ciclo **pós-dobra** (é
+o que o JSON carrega). O porte trocou a entrada e o erro só apareceu no gabarito.
+**Testar fora do motor não basta: o porte é um lugar onde o erro pode entrar.**
+
+### O resultado, medido no motor
+
+| | antes | depois |
+|---|---|---|
+| corpus · barra mediana | 5,08 s | **1,76 s** |
+| corpus · na faixa 1,5–2,5 s | — | **29 de 40** |
+| corpus · acima de 4 s | 17 de 40 (acima de 6 s) | **0 de 40** |
+| corpus · razão barra/troca | 2,2 a 5,2 | **0,93** |
+| gabarito independente | 6 de 6 | **6 de 6** |
+| testes | 80 | **150 no workspace** |
+
+**Os dois critérios de aceite foram batidos:** o gabarito ficou em 6 de 6 (sem
+regressão no `fallin`) e a barra do corpus caiu de 5,08 s para 1,76 s, dentro da
+faixa pedida de 1,5 a 2,5 s. **Zero das 40 ficou acima de 4 s.**
+
+**E o que isto NÃO conserta — medido, não suposto:** o veredito ficou **mais
+confiante**. As leituras `3/4` **decididas** passaram de 6 para **15 de 40**
+(9 músicas saíram da abstenção), e a caixa nos terços **não distingue um compasso
+ternário de uma subdivisão ternária de um binário** — é a própria skill
+`medida-que-não-separa`. O corpus é louvor contemporâneo, majoritariamente
+binário: 15 de 40 como `3/4` é implausível na ordem de grandeza, e **não tenho
+rótulo para essas 15**. **A escala está travada; o veredito continua sem
+verificação independente.**
+
 ## O que ficou estabelecido
 
 - **A bateria define a fase; a harmonia define a escala; a subdivisão separaria
-  `4/4` de `6/8`.** As três partes da tese estão certas — e **nenhuma das duas
-  últimas tem medida que funcione ainda**.
-- **A âncora harmônica é o caminho**, e ela está **medida como referência**
-  (1,90 s de troca de acorde contra 5,08 s de barra), mas **não como critério**:
-  falta escolher o ciclo por **alinhamento com as fronteiras de acorde**, e não
-  por contraste de histograma.
-- **O hipercompasso é o próximo problema de verdade** — e ele é de material
-  (bateria discreta), não de código: o mesmo motor que acerta `6 de 6` no
-  gabarito lê 2 a 5 barras no corpus.
+  `4/4` de `6/8`.** As três partes estão certas — e a terceira **continua sem
+  medida que funcione** (3, 5 e 3 acertos de 8).
+- **A âncora harmônica virou critério, e funcionou.** Ela era só referência
+  (1,90 s de troca contra 5,08 s de barra); agora é o juiz da escala, com o
+  alinhamento como desempate — e derruba a barra mediana do corpus para 1,76 s
+  **sem tocar no gabarito**.
+- **A dobra e a subdivisão são operações ortogonais, e a ordem importa:** a dobra
+  (`×1,5`, `×2`) pelo contraste primeiro, a subdivisão (`÷2`, `÷3`, `÷4`) pela
+  harmonia depois. Invertida, ela quebra o `binky`.
+- **O hipercompasso é de material, não de código** — e agora está **medido e
+  corrigido**: o mesmo motor que acerta `6 de 6` no gabarito lia 2 a 5 barras no
+  corpus, e a harmonia traz a escala de volta.
+- **A escala está travada; o veredito não.** 15 de 40 leem `3/4` **decidido**, e a
+  caixa nos terços não separa compasso ternário de subdivisão ternária. **É o
+  próximo problema — e ele é de honestidade, não de precisão.**
 
 ## As duas lições
 
