@@ -1,4 +1,30 @@
 # Changelog
+## [feat] R1-A fechada: fixtures de parser, testes de propriedade e regressão ampliada (2026-11-24)
+
+### Fixtures douradas de ChordPro
+
+Três novas fixtures `.cho` em `tests/golden_chordpro/`:
+
+| Fixture | O que cobre |
+|---|---|
+| **`advanced_chords`** | acordes invertidos (`D/F#`, `G/B`, `Am/C`, `Bbmaj9/D`, `C/E`), `6/9` (`C6/9`, `Dm6/9`, `G6/9`, `C6/9/E`), acidentes duplos (`F##dim`, `Bbbmaj7`, `C##m`, `Ebb`) |
+| **`multilingual`** | letras em português (acentos), espanhol (ñ, acentos), alemão (Umlaute) e japonês (não-latino) |
+| **`edge_cases`** | `sus4`, `sus2`, `maj7`, `7sus4`, `7b9`, `dim`, `aug`, metadados `time`/`duration` |
+
+Cada fixture é provada em duas camadas: (1) parse assertion que confere cada acorde/texto, e (2) **round-trip** `parse → write → parse` que prova a preservação do modelo completo.
+
+### Testes de propriedade
+
+- **Chord round-trip**: 78+ chord strings do mundo real (maiores, menores, com acidentes, invertidos, `6/9`, sétimas, suspensos, alterados, estendidos, `add`, power chords, com/sem baixo) provam que `Chord::from_str(x).to_string() == x`.
+- **Transposition round-trip**: os mesmos 78+ acordes são transpostos para cima e de volta em 7 intervalos diferentes — acordes com acidentes duplos excluídos por limitação enarmônica documentada.
+- **Parser round-trip**: 10 cenários de borda (song vazio, só metadados, seção sem nome, 20 seções, acorde em toda posição, acorde além do texto, linhas sem acordes, etc.).
+- **Regressão**: 8 testes de regressão (comentários, metadados com caracteres especiais, nomes de seção com números/espaços, Nashville numbers, chaves complexas, sistemas de notação).
+
+### Contagem
+
+- **28 testes novos** no `notation_bundle` (de 59 para **87**)
+- **179 testes** no workspace (de 149 para **179**)
+- Clippy e fmt limpos
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
