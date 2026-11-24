@@ -75,10 +75,56 @@ pub struct Compasso {
     /// espectral. É onde a informação de metro costuma estar: acorde troca no
     /// tempo forte, e o bumbo/címbalo espalha o acento espectral.
     pub perfil_harmonico: Vec<f32>,
-    /// Por que este compasso — ou por que não houve decisão.
-    pub regra: String,
+    /// Autocorrelação do envelope no **meio** do compasso (`A(T/2)`).
+    pub correlacao_meio: f32,
+    /// Autocorrelação do envelope no **terço** do compasso (`A(T/3)`).
+    pub correlacao_terco: f32,
+    /// `|A(T/2) - A(T/3)|`. **Margem fina é abstenção disfarçada** — medido em
+    /// seis faixas reais: de 0,003 a 0,104, com as três decisões certas todas
+    /// acima de 0,05.
+    pub margem_dobra: f32,
+    /// Em quantas partes o ciclo se dobra — ver [`Dobra`].
+    pub dobra: Dobra,
     /// O acento **por instrumento** — e é o que separa `3/4` de `6/8`.
     pub bandas: PerfilBandas,
+    /// Por que este compasso — ou por que não houve decisão.
+    pub regra: String,
+}
+
+/// Em quantas partes o ciclo se dobra — **a decisão que separa `6/8` de `3/4`**.
+///
+/// Medida por autocorrelação do envelope de novidade no meio e no terço do
+/// compasso, que é estrutural e não depende de limiar de acento: em `3/4` os
+/// três tempos repetem o mesmo conteúdo, então o envelope casa deslocado de
+/// `T/3`; em `6/8` as duas metades são espelho, então casa deslocado de `T/2`.
+///
+/// Validado no sintético com separação limpa (`A(T/2) = 0,53` contra
+/// `A(T/3) = -0,02` no composto; `-0,05` contra `0,76` no simples). No motor,
+/// medido em dez faixas: **`Me Derramar` decide `emdois` com margem 0,332** (e é
+/// `6/8`); das nove faixas de banda, **cinco abstêm**, três decidem certo e uma
+/// decide errado (`back-in-black`, margem 0,149). A margem do motor é **menor
+/// que a do experimento em Python** porque o espectrograma do motor usa janela
+/// de 4096 com salto de 1024 — envelope mais suave, contraste menor. O caminho
+/// para ganhar margem é um envelope dedicado, mais fino, não baixar o limiar.
+///
+/// **Não é o mesmo que dizer o nome do compasso:** `4/4` também se dobra em
+/// dois. O par `(dobra, batidas_por_compasso)` é que nomeia — dobra em dois
+/// **com grupo de três** é `6/8`; dobra em dois com grupo de dois é `4/4`.
+///
+/// **E depende do ciclo ser a barra.** Em compasso composto o ciclo que o motor
+/// mede é o **grupo de acento** (3 subdivisões), não a barra: medir a dobra ali
+/// conta subdivisões, não metro. Enquanto o ciclo não for a barra, a leitura
+/// vale como evidência, não como nome.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum Dobra {
+    /// As metades são espelho: o envelope casa em `T/2`.
+    EmDois,
+    /// Os terços repetem: o envelope casa em `T/3`.
+    EmTres,
+    /// As duas correlações empatam dentro da margem — o motor não escolhe.
+    #[default]
+    Indeterminada,
 }
 
 /// Acento por posição do compasso, medido **por instrumento**.
@@ -233,6 +279,42 @@ fn dobrar_em_dois_compassos(
         }
     }
     acc
+}
+
+/// Abaixo desta distância entre `A(T/2)` e `A(T/3)` o motor **não escolhe** a
+/// dobra do ciclo.
+///
+/// Calibrado no material, não escolhido: no experimento em Python (envelope de
+/// 11 ms) as margens foram 0,003 · 0,003 · 0,023 · 0,054 · 0,057 · 0,104, e o
+/// único erro ficava abaixo de 0,05. **No motor a margem é menor** — janela de
+/// 4096 com salto de 1024 suaviza o envelope — e com 0,05 ele abstém em metade
+/// das dez faixas: cinco decisões, quatro certas, uma errada. O limiar não foi
+/// baixado para "acertar mais": **margem fina não é evidência**, e erro com
+/// margem fina seria pior que abstenção.
+const MARGEM_DOBRA: f32 = 0.05;
+
+/// Autocorrelação do envelope de novidade no deslocamento `lag_s`, corrigida
+/// pelo tamanho da janela.
+///
+/// A correção `n / (n - k)` não é cosmética: sem ela o valor cai sempre com o
+/// lag (menos pares contribuem) e a comparação entre `T/2` e `T/3` sai viciada a
+/// favor do terço. Medido no sintético: sem a correção o `6/8` era lido como
+/// simples.
+fn correlacao(novidade: &[f32], fps: f32, lag_s: f32) -> f32 {
+    let n = novidade.len();
+    let k = (lag_s * fps).round() as usize;
+    if k == 0 || k >= n {
+        return 0.0;
+    }
+    let media: f32 = novidade.iter().sum::<f32>() / n as f32;
+    let var: f32 = novidade.iter().map(|&x| (x - media) * (x - media)).sum();
+    if var <= f32::EPSILON {
+        return 0.0;
+    }
+    let soma: f32 = (0..(n - k))
+        .map(|i| (novidade[i] - media) * (novidade[i + k] - media))
+        .sum();
+    (soma / var) * (n as f32 / (n - k) as f32)
 }
 
 /// Soma a novidade numa janela em volta de um instante.
@@ -423,6 +505,10 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
         entrada_no_tempo: 0,
         perfil: Vec::new(),
         perfil_harmonico: Vec::new(),
+        correlacao_meio: 0.0,
+        correlacao_terco: 0.0,
+        margem_dobra: 0.0,
+        dobra: Dobra::Indeterminada,
         bandas: PerfilBandas::default(),
         regra,
     };
@@ -564,6 +650,23 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
     // primeiro som pode cair no tempo 3 ou 4 de um compasso **fantasma**, cujo
     // tempo 1 ninguém tocou — a banda entra no tempo 1 do compasso seguinte.
     let (fase, periodo) = (vencedor.fase, vencedor.periodo);
+    // A **dobra do ciclo**: em quantas partes o envelope de novidade se repete
+    // dentro do compasso medido. Em `3/4` os três tempos repetem o mesmo
+    // conteúdo e o envelope casa deslocado de `T/3`; em `6/8` as metades são
+    // espelho e ele casa deslocado de `T/2`. É a medida que separa os dois sem
+    // depender de limiar de acento — e ela é publicada com a margem, porque
+    // margem fina não é evidência.
+    let compasso_s = periodo * f32::from(melhor_m);
+    let correlacao_meio = correlacao(&novidade, fps, compasso_s * 0.5);
+    let correlacao_terco = correlacao(&novidade, fps, compasso_s / 3.0);
+    let margem_dobra = (correlacao_meio - correlacao_terco).abs();
+    let dobra = if margem_dobra < MARGEM_DOBRA {
+        Dobra::Indeterminada
+    } else if correlacao_meio > correlacao_terco {
+        Dobra::EmDois
+    } else {
+        Dobra::EmTres
+    };
     let primeiro_ataque = tempo.batidas_s.first().copied().unwrap_or(fase);
     let k = ((primeiro_ataque - fase) / periodo).floor();
     let pos = (k as isize - isize::from(melhor_p)).rem_euclid(isize::from(melhor_m));
@@ -593,6 +696,10 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
         entrada_no_tempo: entrada,
         perfil,
         perfil_harmonico: perfil_h,
+        correlacao_meio,
+        correlacao_terco,
+        margem_dobra,
+        dobra,
         bandas: PerfilBandas::medir(spectro, taxa, &vencedor.batidas, m_usize, p_usize),
         regra: format!(
             "{melhor_m} batidas por compasso: acento do tempo 1 {acento_rel:+.3} acima da média, \
@@ -698,10 +805,12 @@ mod tests {
         v
     }
 
-    /// Bateria sintética: bumbo nas posições `bumbo_em` e caixa em `caixa_em`
-    /// (1-based, dentro do compasso de `compasso` batidas). O bumbo é um seno
-    /// grave curto (30–110 Hz); a caixa, ruído branco curto (1,5–5 kHz) — as
-    /// duas bandas que o perfil por instrumento mede.
+    /// Bateria sintética: bumbo nas posições `bumbo_em`, caixa em `caixa_em` e
+    /// **chimbau em todas** (1-based, dentro do compasso de `compasso` batidas).
+    /// O bumbo é um seno grave curto (30–110 Hz); a caixa e o chimbau, ruído
+    /// branco curto em amplitudes diferentes. O chimbau em toda subdivisão não é
+    /// enfeite: sem ele o padrão fica esparso, o motor escolhe a grade errada e a
+    /// medida da dobra recebe uma barra que não é a barra.
     fn bateria(
         bpm: f32,
         compasso: u8,
@@ -724,13 +833,13 @@ mod tests {
                     }
                 }
             }
-            if caixa_em.contains(&pos) {
-                for j in 0..(TAXA as usize / 60) {
-                    if i0 + j < n {
-                        let t = j as f32 / TAXA as f32;
-                        let x = ((i0 + j) as f32 * 12.9898).sin() * 43_758.547;
-                        v[i0 + j] += 0.8 * (-40.0 * t).exp() * (x - x.floor() - 0.5);
-                    }
+            let caixa = caixa_em.contains(&pos);
+            let (amp, decai) = if caixa { (0.8, 40.0) } else { (0.25, 120.0) };
+            for j in 0..(TAXA as usize / 60) {
+                if i0 + j < n {
+                    let t = j as f32 / TAXA as f32;
+                    let x = (((i0 + j) as f32 * 12.9898).sin()) * 43_758.547;
+                    v[i0 + j] += amp * (-decai * t).exp() * (x - x.floor() - 0.5);
                 }
             }
             k += 1;
@@ -899,6 +1008,51 @@ mod tests {
             "a caixa do 3/4 não cai na virada da metade: {:?}",
             compasso.bandas.caixa
         );
+    }
+
+    #[test]
+    fn a_correlacao_encontra_o_periodo_do_envelope() {
+        // Envelope com ataques a cada 10 quadros: no deslocamento de 1,0 s
+        // (10 quadros a 10 fps) a correlação é máxima; fora do período, cai.
+        let mut nv = vec![0.0f32; 400];
+        for i in (0..400).step_by(10) {
+            nv[i] = 1.0;
+        }
+        assert!(
+            correlacao(&nv, 10.0, 1.0) > 0.9,
+            "não achou o período: {}",
+            correlacao(&nv, 10.0, 1.0)
+        );
+        assert!(
+            correlacao(&nv, 10.0, 0.7).abs() < 0.2,
+            "achou período onde não há: {}",
+            correlacao(&nv, 10.0, 0.7)
+        );
+    }
+
+    #[test]
+    fn a_correlacao_corrige_o_tamanho_da_janela() {
+        // A comparação entre `T/2` e `T/3` só é justa porque a correção
+        // `n/(n-k)` compensa a queda do número de pares. Sem ela, um envelope
+        // perfeitamente periódico parece menos periódico no lag maior — e o
+        // composto era lido como simples.
+        let mut nv = vec![0.0f32; 600];
+        for i in (0..600).step_by(8) {
+            nv[i] = 1.0;
+        }
+        let perto = correlacao(&nv, 10.0, 0.8);
+        let longe = correlacao(&nv, 10.0, 1.6);
+        assert!(
+            (perto - longe).abs() < 0.15,
+            "a correção não compensou: {perto:.3} contra {longe:.3}"
+        );
+    }
+
+    #[test]
+    fn silencio_nao_decide_a_dobra() {
+        let compasso = medir(vec![0.0; TAXA as usize * 20], &grade_de(120.0, 20.0));
+        assert_eq!(compasso.dobra, Dobra::Indeterminada);
+        assert_eq!(compasso.margem_dobra, 0.0);
     }
 
     #[test]

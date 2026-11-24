@@ -2,6 +2,28 @@
 
 Todos os eventos notáveis do projeto Kentron Music Hub.
 
+## [feat] A dobra do ciclo: `A(T/2)` contra `A(T/3)`, a regra do dono medida (2026-11-22)
+
+### Adicionado
+- **`Compasso.dobra`** (`emdois`/`emtres`/`indeterminada`), **`correlacao_meio`**, **`correlacao_terco`** e **`margem_dobra`** — a autocorrelação do envelope de novidade no **meio** e no **terço** do compasso, comparadas. É a regra proposta pelo dono: em `6/8` as metades são espelho e o envelope casa em `T/2`; em `3/4` os três tempos repetem e ele casa em `T/3`.
+- **Limiar de abstenção `0,05`**, calibrado no material — margem fina não é evidência, e erro com margem fina seria pior que abstenção.
+- **3 testes:** a correlação acha o período do envelope, a correção `n/(n-k)` compensa a queda de pares, e o silêncio abstém.
+
+### Medido
+
+| material | resultado |
+|---|---|
+| sintético `6/8` (bumbo 1, caixa 4) | `A(T/2)=0,532` contra `A(T/3)=-0,015` |
+| sintético `3/4` (bumbo 1, caixa 2 e 3) | `-0,048` contra `0,763` |
+| `Me Derramar` (é `6/8`) | **`emdois`, margem 0,332** |
+| nove faixas de banda | 5 abstenções · 4 decisões · **3 certas, 1 errada** (`back-in-black`, 0,149) |
+
+**A correção `n/(n-k)` é necessária:** sem ela o valor cai sempre com o lag e o `6/8` ideal era lido como simples.
+
+### Limitações declaradas
+- **O ciclo tem de ser a barra.** Em compasso composto o ciclo que o motor mede é o **grupo de acento** (3 subdivisões): ali a dobra conta subdivisões, não metro.
+- **A margem do motor é menor que a do experimento em Python** (envelope de 11 ms, que deu 5 de 6): a janela 4096/salto 1024 suaviza o envelope. O caminho é um envelope dedicado mais fino, **não** um limiar mais frouxo.
+
 ## [docs] Faixas de Hz da bateria: o mapa medido e o que não separa (2026-11-22)
 
 ### Adicionado
