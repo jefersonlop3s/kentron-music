@@ -77,6 +77,150 @@ pub struct Compasso {
     pub perfil_harmonico: Vec<f32>,
     /// Por que este compasso — ou por que não houve decisão.
     pub regra: String,
+    /// O acento **por instrumento** — e é o que separa `3/4` de `6/8`.
+    pub bandas: PerfilBandas,
+}
+
+/// Acento por posição do compasso, medido **por instrumento**.
+///
+/// [`Compasso::perfil`] mistura bumbo, caixa e chimbau numa novidade espectral
+/// só, e é essa média que apaga a diferença entre `3/4` e `6/8`: em `3/4` a
+/// caixa cai nos tempos 2 e 3; em `6/8`, **uma vez só, no tempo 4**. Somados, os
+/// dois viram "um acento a cada três tempos" e empatam — medido no gabarito de
+/// domínio: contraste 0,42 nos dois. Separados, não empatam.
+///
+/// Cada perfil cobre **dois** compassos de `batidas_por_compasso`, porque é
+/// comparando as metades que o compasso composto se revela: em `6/8` a caixa
+/// está na virada da metade; em `3/4` as duas metades são iguais.
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct PerfilBandas {
+    /// Bumbo, 30–110 Hz.
+    pub bumbo: Vec<f32>,
+    /// Caixa, 1,5–5 kHz — **o backbeat**.
+    pub caixa: Vec<f32>,
+    /// Chimbau, 6,5–13 kHz — a subdivisão.
+    pub chimbal: Vec<f32>,
+}
+
+impl PerfilBandas {
+    /// Posição (a partir de 1) do maior acento da caixa nos dois compassos;
+    /// 0 quando não há acento.
+    ///
+    /// **É onde cai a caixa** — o "TÁ" do tempo 4 que o músico ouve como a
+    /// virada do compasso composto. Medido em `Me Derramar`: a caixa tem
+    /// período de 3,095 s = **o compasso inteiro**, contra 1,55 s do pé — uma
+    /// caixa por dois pés, que é a assinatura do `6/8` de banda.
+    #[must_use]
+    pub fn backbeat(&self) -> u8 {
+        maior_posicao(&self.caixa)
+    }
+
+    fn medir(spectro: &Spectrogram, taxa: u32, batidas: &[f32], m: usize, p: usize) -> Self {
+        let fps = spectro.quadros_por_segundo(taxa).max(1.0);
+        let novidade = |de_hz: f32, ate_hz: f32| {
+            let energia = spectro.energia_banda(taxa, de_hz, ate_hz);
+            let mut saida = Vec::with_capacity(energia.len());
+            let mut anterior = energia.first().copied().unwrap_or(0.0);
+            for &e in &energia {
+                saida.push((e - anterior).max(0.0));
+                anterior = e;
+            }
+            saida
+        };
+        let bumbo = novidade(30.0, 110.0);
+        // A barra começa **onde o bumbo bate**, não na fase que o motor escolheu
+        // para o acento: com acento em quase toda batida a fase desliza uma
+        // batida (medido: o tempo 1 caía no índice 2), e aí o perfil da caixa
+        // sai deslocado. O bumbo é a âncora estável — e é o que o músico conta.
+        let acentos_bumbo: Vec<f32> = batidas.iter().map(|&b| acento(&bumbo, fps, b)).collect();
+        let referencia = argmax(&acentos_bumbo)
+            .filter(|_| acentos_bumbo.iter().copied().fold(0.0f32, f32::max) > f32::EPSILON);
+        let referencia = referencia.unwrap_or(p);
+        Self {
+            bumbo: dobrar_em_dois_compassos(&bumbo, fps, batidas, m, referencia),
+            caixa: dobrar_em_dois_compassos(
+                &novidade(1_500.0, 5_000.0),
+                fps,
+                batidas,
+                m,
+                referencia,
+            ),
+            chimbal: dobrar_em_dois_compassos(
+                &novidade(6_500.0, 13_000.0),
+                fps,
+                batidas,
+                m,
+                referencia,
+            ),
+        }
+    }
+}
+
+/// Índice do maior valor; `None` para vetor vazio.
+fn argmax(v: &[f32]) -> Option<usize> {
+    let mut melhor: Option<(usize, f32)> = None;
+    for (i, &x) in v.iter().enumerate() {
+        if melhor.is_none_or(|(_, m)| x > m) {
+            melhor = Some((i, x));
+        }
+    }
+    melhor.map(|(i, _)| i)
+}
+
+/// Índice (a partir de 1) do maior valor; 0 para vetor vazio ou todo zerado.
+fn maior_posicao(v: &[f32]) -> u8 {
+    let mut melhor = (0usize, f32::MIN);
+    for (i, &x) in v.iter().enumerate() {
+        if x > melhor.1 {
+            melhor = (i, x);
+        }
+    }
+    if v.is_empty() || melhor.1 <= f32::EPSILON {
+        0
+    } else {
+        (melhor.0 + 1) as u8
+    }
+}
+
+/// Dobra a novidade em **dois** compassos de `m` batidas, com a fase `p` no
+/// índice 0, e normaliza pela média.
+///
+/// Dois compassos, não um: com um só, a caixa do tempo 4 de `6/8` cai na mesma
+/// posição do bumbo do tempo 1 — que é exatamente o empate que se quer desfazer.
+fn dobrar_em_dois_compassos(
+    novidade: &[f32],
+    fps: f32,
+    batidas: &[f32],
+    m: usize,
+    p: usize,
+) -> Vec<f32> {
+    if m == 0 {
+        return Vec::new();
+    }
+    let n = 2 * m;
+    let mut acc = vec![0.0f32; n];
+    let mut cnt = vec![0usize; n];
+    for (i, &b) in batidas.iter().enumerate() {
+        // `i = p` é o tempo 1 do primeiro compasso: vai para o índice 0.
+        let d = i as isize - p as isize;
+        let grupo = d.div_euclid(m as isize).rem_euclid(2);
+        let posicao = d.rem_euclid(m as isize);
+        let idx = grupo as usize * m + posicao as usize;
+        acc[idx] += acento(novidade, fps, b);
+        cnt[idx] += 1;
+    }
+    for i in 0..n {
+        if cnt[i] > 0 {
+            acc[i] /= cnt[i] as f32;
+        }
+    }
+    let media: f32 = acc.iter().sum::<f32>() / n as f32;
+    if media > f32::EPSILON {
+        for x in &mut acc {
+            *x /= media;
+        }
+    }
+    acc
 }
 
 /// Soma a novidade numa janela em volta de um instante.
@@ -267,6 +411,7 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
         entrada_no_tempo: 0,
         perfil: Vec::new(),
         perfil_harmonico: Vec::new(),
+        bandas: PerfilBandas::default(),
         regra,
     };
     if tempo.bpm <= 0.0 || tempo.batidas_s.is_empty() {
@@ -436,6 +581,7 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
         entrada_no_tempo: entrada,
         perfil,
         perfil_harmonico: perfil_h,
+        bandas: PerfilBandas::medir(spectro, taxa, &vencedor.batidas, m_usize, p_usize),
         regra: format!(
             "{melhor_m} batidas por compasso: acento do tempo 1 {acento_rel:+.3} acima da média, \
              mudança de harmonia concentrada no tempo 1, margem {margem:.3} contra {rival_m} \
@@ -536,6 +682,46 @@ mod tests {
             for x in &mut v {
                 *x /= pico;
             }
+        }
+        v
+    }
+
+    /// Bateria sintética: bumbo nas posições `bumbo_em` e caixa em `caixa_em`
+    /// (1-based, dentro do compasso de `compasso` batidas). O bumbo é um seno
+    /// grave curto (30–110 Hz); a caixa, ruído branco curto (1,5–5 kHz) — as
+    /// duas bandas que o perfil por instrumento mede.
+    fn bateria(
+        bpm: f32,
+        compasso: u8,
+        duracao_s: f32,
+        bumbo_em: &[u8],
+        caixa_em: &[u8],
+    ) -> Vec<f32> {
+        let n = (duracao_s * TAXA as f32) as usize;
+        let mut v = vec![0.0f32; n];
+        let periodo = 60.0 / bpm;
+        let mut k = 0usize;
+        while (k as f32) * periodo < duracao_s {
+            let pos = (k % usize::from(compasso)) as u8 + 1;
+            let i0 = (k as f32 * periodo * TAXA as f32) as usize;
+            if bumbo_em.contains(&pos) {
+                for j in 0..(TAXA as usize / 40) {
+                    if i0 + j < n {
+                        let t = j as f32 / TAXA as f32;
+                        v[i0 + j] += (-25.0 * t).exp() * (2.0 * PI * 60.0 * t).sin();
+                    }
+                }
+            }
+            if caixa_em.contains(&pos) {
+                for j in 0..(TAXA as usize / 60) {
+                    if i0 + j < n {
+                        let t = j as f32 / TAXA as f32;
+                        let x = ((i0 + j) as f32 * 12.9898).sin() * 43_758.547;
+                        v[i0 + j] += 0.8 * (-40.0 * t).exp() * (x - x.floor() - 0.5);
+                    }
+                }
+            }
+            k += 1;
         }
         v
     }
@@ -660,6 +846,46 @@ mod tests {
             compasso.batidas_por_compasso, 4,
             "6/8 lido como 4/4: {}",
             compasso.regra
+        );
+    }
+
+    #[test]
+    fn a_caixa_do_tempo_quatro_e_o_composto() {
+        // 6/8 de banda: bumbo no 1, caixa no 4 de seis. É o "TÁ" que o músico
+        // ouve como a virada — e o que a novidade espectral única apagava.
+        let audio = bateria(120.0, 6, 30.0, &[1], &[4]);
+        let compasso = medir(audio, &grade_de(120.0, 30.0));
+        assert!(compasso.batidas_por_compasso > 0, "{}", compasso.regra);
+        assert_eq!(
+            maior_posicao(&compasso.bandas.bumbo),
+            1,
+            "bumbo fora do tempo 1"
+        );
+        assert_eq!(
+            compasso.bandas.backbeat(),
+            compasso.batidas_por_compasso + 1,
+            "a caixa do tempo 4 de 6 deveria cair na virada da metade: {:?}",
+            compasso.bandas.caixa
+        );
+    }
+
+    #[test]
+    fn a_caixa_dos_tempos_dois_e_tres_nao_e_composto() {
+        // 3/4: bumbo no 1, caixa no 2 e no 3. As duas metades ficam iguais —
+        // e é isso que separa 3/4 de 6/8, não a taxa de ataque (que é a mesma).
+        let audio = bateria(120.0, 3, 30.0, &[1], &[2, 3]);
+        let compasso = medir(audio, &grade_de(120.0, 30.0));
+        assert!(compasso.batidas_por_compasso > 0, "{}", compasso.regra);
+        assert_eq!(
+            maior_posicao(&compasso.bandas.bumbo),
+            1,
+            "bumbo fora do tempo 1"
+        );
+        assert_ne!(
+            compasso.bandas.backbeat(),
+            compasso.batidas_por_compasso + 1,
+            "a caixa do 3/4 não cai na virada da metade: {:?}",
+            compasso.bandas.caixa
         );
     }
 
