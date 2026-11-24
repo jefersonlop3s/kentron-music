@@ -134,6 +134,33 @@ impl Report {
             self.tonalidade.correlacao,
             self.tonalidade.margem
         ));
+        // O compasso sai **com a evidência e com a alternativa**. Quando a dobra
+        // não decide, o motor não chuta: ele diz qual é a barra e oferece os dois
+        // nomes que ela comporta — a escolha é do músico, e tem lar no ChordPro.
+        let leitura = &self.compasso.leitura;
+        if leitura.batidas == 0 {
+            texto.push_str("compasso  — (sem evidência para decidir)\n");
+        } else if let Some(nome) = &leitura.nome {
+            texto.push_str(&format!(
+                "compasso  {nome} · barra {:.2} s · dobra em {} (margem {:.3})\n",
+                leitura.compasso_s,
+                if leitura.dobra == crate::compasso::Dobra::EmDois {
+                    "dois"
+                } else {
+                    "três"
+                },
+                leitura.margem_dobra
+            ));
+        } else {
+            let alternativas = leitura.alternativas.join(" ou ");
+            texto.push_str(&format!(
+                "compasso  {alternativas}? · barra {:.2} s · a dobra não decide (margem {:.3}) — \
+                 escolha e registre com {{time: {}}}\n",
+                leitura.compasso_s,
+                leitura.margem_dobra,
+                leitura.alternativas.first().map_or("?", String::as_str)
+            ));
+        }
         texto.push_str("\nestrutura (rótulo é repetição; papel é inferência):\n");
         for secao in &self.sections {
             let acordes = self.acordes_do_trecho(secao.inicio_s, secao.fim_s);
@@ -170,8 +197,17 @@ impl Report {
     /// A letra **não** entra — vem de ASR, que é outro incremento (ADR-0011).
     #[must_use]
     pub fn para_chordpro(&self, titulo: &str) -> String {
+        // O compasso entra como `time` quando o motor decide; quando não, a
+        // diretiva fica ausente e o músico a escreve — a escolha é dele.
+        let compasso = self
+            .compasso
+            .leitura
+            .nome
+            .as_ref()
+            .map(|nome| format!("{{time: {nome}}}\n"))
+            .unwrap_or_default();
         let mut texto = format!(
-            "{{title: {titulo}}}\n{{key: {}}}\n{{tempo: {:.0}}}\n{{duration: {:.0}}}\n{{source: mir_engine}}\n",
+            "{{title: {titulo}}}\n{{key: {}}}\n{compasso}{{tempo: {:.0}}}\n{{duration: {:.0}}}\n{{source: mir_engine}}\n",
             self.tonalidade.rotulo(),
             self.tempo.bpm,
             self.audio.duracao_s

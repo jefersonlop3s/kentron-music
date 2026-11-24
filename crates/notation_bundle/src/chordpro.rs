@@ -259,6 +259,25 @@ mod tests {
     }
 
     #[test]
+    fn o_compasso_escolhido_sobrevive_ao_round_trip() {
+        // O motor sabe a barra mas não sempre o nome; quando não sabe, o músico
+        // escolhe e registra `{time: ...}` na cifra. **A escolha tem de
+        // sobreviver** ao parse e à escrita — senão o app pergunta de novo toda
+        // vez, e a feature vira incômodo.
+        let song = ChordProParser::parse("{title: T}\n{key: C}\n{time: 6/8}\n\n[C]x\n")
+            .expect("fixture should parse");
+        assert_eq!(song.metadata.get("time").map(String::as_str), Some("6/8"));
+
+        let escrito = write(&song);
+        let relido = ChordProParser::parse(&escrito).expect("a própria saída tem de reparsear");
+        assert_eq!(
+            relido.metadata.get("time").map(String::as_str),
+            Some("6/8"),
+            "a escolha do compasso se perdeu: {escrito:?}"
+        );
+    }
+
+    #[test]
     fn write_is_deterministic_and_sorts_metadata() {
         let song = ChordProParser::parse("{title: T}\n{artist: A}\n{key: C}\n\n[C]x\n")
             .expect("fixture should parse");
