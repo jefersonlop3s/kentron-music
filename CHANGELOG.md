@@ -1,4 +1,28 @@
 # Changelog
+## [release] R1 completa — da fundação ao piloto (2026-11-24)
+
+### Alpha assistido simulado
+
+- Fluxo completo exercitado: build web → servir → abrir app → biblioteca → Modo Palco → projeção → segunda tela → restauração.
+- **54 testes Flutter** cobrem cada etapa do fluxo.
+- **187 testes Rust** cobrem o núcleo (parser, bundle, transposição, exportação, FFI).
+- Build web compila e serve com a ponte wasm.
+
+### Status final da R1
+
+| Release | Itens | Testes |
+|---|---|---|
+| R1-0 · Fundação técnica | 4/4 ✅ | — |
+| R1-A · Cifra local | 3/3 ✅ | 95 Rust |
+| R1-B · Projeção manual | 4/4 ✅ | 95 Rust + 49 Flutter |
+| R1-C · Alpha utilizável | 6/6 ✅ | 187 Rust + 54 Flutter |
+| R1-D · Piloto e release | 4/4 ✅ | 187 Rust + 54 Flutter |
+
+### Pendentes (eventos, não código)
+- Revisão pt-BR/en-US/es-419 por nativos.
+- Ensaio presencial (ADR-0009).
+- MusicXML/ATEX na R1.1.
+
 ## [feat] R1-D fechada: piloto automatizado sem crash, 54 testes Flutter (2026-11-24)
 
 ### Piloto automatizado — prova de ausência de crash
