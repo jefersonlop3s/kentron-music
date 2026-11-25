@@ -170,6 +170,12 @@ pub struct Leitura {
     /// Força relativa da mudança no 2º pico vs 1º pico. Se < 0.5, não
     /// há evidência de segundo acento harmônico forte.
     pub razao_harm_secundaria: f32,
+    /// **P3 — Janela de 6 subdivisões**: energia percussiva normalizada em
+    /// cada uma das 6 posições da barra. O padrão revela o metro:
+    /// - `[alta, baixa, alta, baixa, alta, baixa]` → 3/4 (3 pares)
+    /// - `[alta, baixa, baixa, alta, baixa, baixa]` → 6/8 (2 trios)
+    /// - Distribuição espalhada → 4/4 (8 subdivisões, não 6)
+    pub subdivisao_6: [f32; 6],
     /// Por que esta leitura — a evidência, em uma linha.
     pub regra: String,
 }
@@ -282,7 +288,7 @@ impl Leitura {
                 if bumbo_caixa.periodo_bumbo_s > 0.0 {
                     self.compasso_s = bumbo_caixa.periodo_bumbo_s;
                 }
-                // **P1+P2+P4: lag ratio + posições harmônicas + filtro de passagens.**
+                // **P1+P2+P3+P4: lag ratio + posições harmônicas + subdivisão 6 + filtro de passagens.**
                 // A decisão combina três critérios (Klapuri 2006, Peeters 2010,
                 // De Clercq 2023, medido 2026-11-24):
                 //
@@ -298,7 +304,25 @@ impl Leitura {
                 let lag = self.lag_ratio;
                 let pos_sec = self.pos_harm_secundaria;
                 let m = self.batidas;
-                if lag > 3.0 && lag < 5.0 {
+                // **P3 — Janela de 6 subdivisões**: a distribuição de energia
+                // nas 6 posições da barra separa 4/4 de 6/8. Em 6/8, a energia
+                // se concentra nas bordas dos grupos (pos 0 e 3) com vales
+                // nos meios (pos 2 e 5). Em 4/4, a energia é distribuída entre
+                // as 8 subdivisões, aparecendo espalhada nas 6 posições.
+                let sub6 = self.subdivisao_6;
+                let bordas = sub6[0] + sub6[3];
+                let meios = sub6[2] + sub6[5];
+                let eh_68 = bordas > 0.0 && meios < 0.3 * bordas;
+                if eh_68 {
+                    // P3 confirmou 6/8: energia concentrada nas bordas
+                    // (pos 0 e 3) com vales nos meios (pos 2 e 5).
+                    self.nome = Some("6/8".to_owned());
+                    self.alternativas = vec!["3/4".to_owned(), "4/4".to_owned()];
+                    self.fonte = "percussão+harmonia".to_owned();
+                    self.regra = format!(
+                        "{evidencia} → P3: bordas ({bordas:.1}) >> meios ({meios:.1}): `6/8`"
+                    );
+                } else if lag > 3.0 && lag < 5.0 {
                     self.nome = Some("4/4".to_owned());
                     self.alternativas = vec!["3/4".to_owned(), "6/8".to_owned()];
                     self.fonte = "percussão+harmonia".to_owned();
@@ -1105,6 +1129,43 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
         dobra,
         leitura: {
             let nome = nome_do_compasso(melhor_m, dobra);
+            // **P3 — Janela de 6 subdivisões**: energia percussiva em cada
+            // uma das 6 posições da barra, alinhada pela **fase do tempo 1**
+            // (inicio_s). Revela se a subdivisão é em pares (4/4: oitos
+            // pares), trios (6/8: grupos de 3) ou pares ternários (3/4).
+            // A fase é essencial: sem ela, a posição 0 pode cair sobre
+            // o contratempo em vez do downbeat (medido em Ousado Amor).
+            let subdivisao_6 = {
+                let passo = compasso_s / 6.0;
+                let mut acc = [0.0f32; 6];
+                let mut cnt = [0usize; 6];
+                if passo > 0.0 {
+                    // Alinha pela fase do compasso (tempo 1).
+                    let fase = inicio;
+                    for &b in &vencedor.batidas {
+                        let offset = b - fase;
+                        if offset >= 0.0 {
+                            let idx = ((offset % compasso_s) / passo) as usize;
+                            if idx < 6 {
+                                acc[idx] += acento(&novidade, fps, b);
+                                cnt[idx] += 1;
+                            }
+                        }
+                    }
+                }
+                for i in 0..6 {
+                    if cnt[i] > 0 {
+                        acc[i] /= cnt[i] as f32;
+                    }
+                }
+                let media = acc.iter().sum::<f32>() / 6.0;
+                if media > f32::EPSILON {
+                    for a in &mut acc {
+                        *a /= media;
+                    }
+                }
+                acc
+            };
             Leitura {
                 batidas: melhor_m,
                 compasso_s,
@@ -1114,6 +1175,7 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
                 pos_harm_primaria,
                 pos_harm_secundaria,
                 razao_harm_secundaria,
+                subdivisao_6,
                 nome: nome.map(str::to_owned),
                 alternativas: alternativas_de(melhor_m),
                 fonte: "envelope".to_owned(),
@@ -1486,6 +1548,7 @@ mod tests {
             pos_harm_primaria: 1,
             pos_harm_secundaria: 0,
             razao_harm_secundaria: 0.0,
+            subdivisao_6: [0.0; 6],
             nome: Some("6/8".into()),
             alternativas: vec!["3/4".into(), "6/8".into()],
             fonte: "percussão".into(),
@@ -1516,6 +1579,7 @@ mod tests {
             pos_harm_primaria: 1,
             pos_harm_secundaria: 0,
             razao_harm_secundaria: 0.0,
+            subdivisao_6: [0.0; 6],
             nome: Some("6/8".into()),
             alternativas: vec!["3/4".into(), "6/8".into()],
             fonte: "envelope".into(),
