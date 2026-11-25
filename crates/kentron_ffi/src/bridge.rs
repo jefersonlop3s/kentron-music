@@ -18,6 +18,8 @@ pub struct SongSummary {
     pub key: Option<String>,
     /// Artista (`{artist: ...}`), quando declarado.
     pub artist: Option<String>,
+    /// Compasso (`{time: ...}`), quando declarado.
+    pub time: Option<String>,
     /// Quantidade de seções (estrofes, refrões, pontes).
     pub sections: u32,
     /// Acordes distintos, na ordem em que aparecem na cifra.
@@ -77,6 +79,8 @@ pub struct SongDetail {
     pub key: Option<String>,
     /// Artista, quando declarado.
     pub artist: Option<String>,
+    /// Compasso (`{time: ...}`), quando declarado.
+    pub time: Option<String>,
     /// As seções, na ordem do arquivo.
     pub sections: Vec<SongSection>,
     /// Qual núcleo respondeu, no formato `kentron_ffi <versão>`.
@@ -250,6 +254,7 @@ fn summary(song: &Song) -> SongSummary {
         title: song.metadata.get("title").cloned().unwrap_or_default(),
         key: song.metadata.get("key").cloned(),
         artist: song.metadata.get("artist").cloned(),
+        time: song.metadata.get("time").cloned(),
         sections: song.sections.len() as u32,
         chords,
         core: format!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION")),
@@ -261,6 +266,7 @@ fn detail(song: &Song) -> SongDetail {
         title: song.metadata.get("title").cloned().unwrap_or_default(),
         key: song.metadata.get("key").cloned(),
         artist: song.metadata.get("artist").cloned(),
+        time: song.metadata.get("time").cloned(),
         sections: song
             .sections
             .iter()

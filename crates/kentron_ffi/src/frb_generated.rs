@@ -28,7 +28,7 @@
 // Section: imports
 
 use flutter_rust_bridge::for_generated::byteorder::{NativeEndian, ReadBytesExt, WriteBytesExt};
-use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
+use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
 use flutter_rust_bridge::{Handler, IntoIntoDart};
 
 // Section: boilerplate
@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1070150335;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1556826576;
 
 // Section: executor
 
@@ -146,6 +146,39 @@ fn wire__crate__bridge__listar_biblioteca_impl(
         },
     )
 }
+fn wire__crate__bridge__parse_musicxml_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "parse_musicxml",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_input = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok = crate::bridge::parse_musicxml(api_input)?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__bridge__parse_song_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -206,6 +239,39 @@ fn wire__crate__bridge__pode_publicar_impl(
             move |context| {
                 transform_result_sse::<_, String>((move || {
                     let output_ok = crate::bridge::pode_publicar(api_input)?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__bridge__read_musicxml_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "read_musicxml",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_input = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok = crate::bridge::read_musicxml(api_input)?;
                     std::result::Result::Ok(output_ok)
                 })())
             }
@@ -461,12 +527,14 @@ impl SseDecode for crate::bridge::SongDetail {
         let mut var_title = <String>::sse_decode(deserializer);
         let mut var_key = <Option<String>>::sse_decode(deserializer);
         let mut var_artist = <Option<String>>::sse_decode(deserializer);
+        let mut var_time = <Option<String>>::sse_decode(deserializer);
         let mut var_sections = <Vec<crate::bridge::SongSection>>::sse_decode(deserializer);
         let mut var_core = <String>::sse_decode(deserializer);
         return crate::bridge::SongDetail {
             title: var_title,
             key: var_key,
             artist: var_artist,
+            time: var_time,
             sections: var_sections,
             core: var_core,
         };
@@ -503,6 +571,7 @@ impl SseDecode for crate::bridge::SongSummary {
         let mut var_title = <String>::sse_decode(deserializer);
         let mut var_key = <Option<String>>::sse_decode(deserializer);
         let mut var_artist = <Option<String>>::sse_decode(deserializer);
+        let mut var_time = <Option<String>>::sse_decode(deserializer);
         let mut var_sections = <u32>::sse_decode(deserializer);
         let mut var_chords = <Vec<String>>::sse_decode(deserializer);
         let mut var_core = <String>::sse_decode(deserializer);
@@ -510,6 +579,7 @@ impl SseDecode for crate::bridge::SongSummary {
             title: var_title,
             key: var_key,
             artist: var_artist,
+            time: var_time,
             sections: var_sections,
             chords: var_chords,
             core: var_core,
@@ -562,12 +632,14 @@ fn pde_ffi_dispatcher_primary_impl(
         1 => wire__crate__bridge__carregar_da_biblioteca_impl(port, ptr, rust_vec_len, data_len),
         2 => wire__crate__bridge__key_choices_impl(port, ptr, rust_vec_len, data_len),
         3 => wire__crate__bridge__listar_biblioteca_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__bridge__parse_song_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__bridge__pode_publicar_impl(port, ptr, rust_vec_len, data_len),
-        6 => wire__crate__bridge__read_song_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crate__bridge__remover_da_biblioteca_impl(port, ptr, rust_vec_len, data_len),
-        8 => wire__crate__bridge__salvar_na_biblioteca_impl(port, ptr, rust_vec_len, data_len),
-        9 => wire__crate__bridge__transpose_song_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire__crate__bridge__parse_musicxml_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crate__bridge__parse_song_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__bridge__pode_publicar_impl(port, ptr, rust_vec_len, data_len),
+        7 => wire__crate__bridge__read_musicxml_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__bridge__read_song_impl(port, ptr, rust_vec_len, data_len),
+        9 => wire__crate__bridge__remover_da_biblioteca_impl(port, ptr, rust_vec_len, data_len),
+        10 => wire__crate__bridge__salvar_na_biblioteca_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__bridge__transpose_song_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -609,6 +681,7 @@ impl flutter_rust_bridge::IntoDart for crate::bridge::SongDetail {
             self.title.into_into_dart().into_dart(),
             self.key.into_into_dart().into_dart(),
             self.artist.into_into_dart().into_dart(),
+            self.time.into_into_dart().into_dart(),
             self.sections.into_into_dart().into_dart(),
             self.core.into_into_dart().into_dart(),
         ]
@@ -660,6 +733,7 @@ impl flutter_rust_bridge::IntoDart for crate::bridge::SongSummary {
             self.title.into_into_dart().into_dart(),
             self.key.into_into_dart().into_dart(),
             self.artist.into_into_dart().into_dart(),
+            self.time.into_into_dart().into_dart(),
             self.sections.into_into_dart().into_dart(),
             self.chords.into_into_dart().into_dart(),
             self.core.into_into_dart().into_dart(),
@@ -765,6 +839,7 @@ impl SseEncode for crate::bridge::SongDetail {
         <String>::sse_encode(self.title, serializer);
         <Option<String>>::sse_encode(self.key, serializer);
         <Option<String>>::sse_encode(self.artist, serializer);
+        <Option<String>>::sse_encode(self.time, serializer);
         <Vec<crate::bridge::SongSection>>::sse_encode(self.sections, serializer);
         <String>::sse_encode(self.core, serializer);
     }
@@ -792,6 +867,7 @@ impl SseEncode for crate::bridge::SongSummary {
         <String>::sse_encode(self.title, serializer);
         <Option<String>>::sse_encode(self.key, serializer);
         <Option<String>>::sse_encode(self.artist, serializer);
+        <Option<String>>::sse_encode(self.time, serializer);
         <u32>::sse_encode(self.sections, serializer);
         <Vec<String>>::sse_encode(self.chords, serializer);
         <String>::sse_encode(self.core, serializer);
@@ -842,7 +918,7 @@ mod io {
     use flutter_rust_bridge::for_generated::byteorder::{
         NativeEndian, ReadBytesExt, WriteBytesExt,
     };
-    use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
+    use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
     use flutter_rust_bridge::{Handler, IntoIntoDart};
 
     // Section: boilerplate
@@ -866,7 +942,7 @@ mod web {
     };
     use flutter_rust_bridge::for_generated::wasm_bindgen;
     use flutter_rust_bridge::for_generated::wasm_bindgen::prelude::*;
-    use flutter_rust_bridge::for_generated::{Lifetimeable, Lockable, transform_result_dco};
+    use flutter_rust_bridge::for_generated::{transform_result_dco, Lifetimeable, Lockable};
     use flutter_rust_bridge::{Handler, IntoIntoDart};
 
     // Section: boilerplate

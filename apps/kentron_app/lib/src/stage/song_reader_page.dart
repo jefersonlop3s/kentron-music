@@ -296,6 +296,7 @@ class _SongReaderPageState extends State<SongReaderPage> {
     }
     final cor = _palco ? _paperWhite : _slateInk;
     final tom = cifra.key;
+    final tempo = cifra.time;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
@@ -320,7 +321,19 @@ class _SongReaderPageState extends State<SongReaderPage> {
             ],
           ),
         ),
-        if (_trocandoTom) const LinearProgressIndicator(minHeight: 2),
+        ),
+            ),
+          if (tempo != null && tempo.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              child: Row(
+                children: <Widget>[
+                  Text('${l10n.stageTime}: ', style: _mono.copyWith(color: cor)),
+                  Text(tempo!, style: _mono.copyWith(color: _vibrantGold)),
+                ],
+              ),
+            ),
+          if (_trocandoTom) const LinearProgressIndicator(minHeight: 2),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),

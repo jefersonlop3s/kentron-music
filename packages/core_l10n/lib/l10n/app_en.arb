@@ -97,5 +97,9 @@
         "type": "String"
       }
     }
+  },
+  "stageTime": "Time",
+  "@stageTime": {
+    "description": "Label of the time signature / compass display in Stage Mode."
   }
 }

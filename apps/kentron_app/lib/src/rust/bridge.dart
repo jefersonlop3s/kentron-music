@@ -4,9 +4,10 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import 'frb_generated.dart';
+
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `detail`, `key_note`, `song_key`
+// These functions are ignored because they are not marked as `pub`: `detail`, `key_note`, `song_key`, `summary`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Lê uma cifra ChordPro e devolve o resumo que a interface usa.
@@ -42,6 +43,25 @@ Future<SongDetail> transposeSong({
   required String input,
   required String toKey,
 }) => RustLib.instance.api.crateBridgeTransposeSong(input: input, toKey: toKey);
+
+/// Lê uma cifra MusicXML e devolve o resumo que a interface usa.
+///
+/// Converte o MusicXML para o modelo interno [`Song`] e extrai o mesmo
+/// resumo de [`parse_song`].
+///
+/// # Errors
+///
+/// Devolve erro quando o XML é inválido ou o formato não é score-partwise.
+Future<SongSummary> parseMusicxml({required String input}) =>
+    RustLib.instance.api.crateBridgeParseMusicxml(input: input);
+
+/// Lê um MusicXML e devolve a estrutura completa, linha a linha.
+///
+/// # Errors
+///
+/// Devolve erro quando o XML é inválido ou o formato não é score-partwise.
+Future<SongDetail> readMusicxml({required String input}) =>
+    RustLib.instance.api.crateBridgeReadMusicxml(input: input);
 
 /// O portão de publicação da letra: o motor decide, o app obedece.
 ///
@@ -150,6 +170,9 @@ class SongDetail {
   /// Artista, quando declarado.
   final String? artist;
 
+  /// Compasso (`{time: ...}`), quando declarado.
+  final String? time;
+
   /// As seções, na ordem do arquivo.
   final List<SongSection> sections;
 
@@ -160,6 +183,7 @@ class SongDetail {
     required this.title,
     this.key,
     this.artist,
+    this.time,
     required this.sections,
     required this.core,
   });
@@ -169,6 +193,7 @@ class SongDetail {
       title.hashCode ^
       key.hashCode ^
       artist.hashCode ^
+      time.hashCode ^
       sections.hashCode ^
       core.hashCode;
 
@@ -180,6 +205,7 @@ class SongDetail {
           title == other.title &&
           key == other.key &&
           artist == other.artist &&
+          time == other.time &&
           sections == other.sections &&
           core == other.core;
 }
@@ -239,6 +265,9 @@ class SongSummary {
   /// Artista (`{artist: ...}`), quando declarado.
   final String? artist;
 
+  /// Compasso (`{time: ...}`), quando declarado.
+  final String? time;
+
   /// Quantidade de seções (estrofes, refrões, pontes).
   final int sections;
 
@@ -253,6 +282,7 @@ class SongSummary {
     required this.title,
     this.key,
     this.artist,
+    this.time,
     required this.sections,
     required this.chords,
     required this.core,
@@ -263,6 +293,7 @@ class SongSummary {
       title.hashCode ^
       key.hashCode ^
       artist.hashCode ^
+      time.hashCode ^
       sections.hashCode ^
       chords.hashCode ^
       core.hashCode;
@@ -275,6 +306,7 @@ class SongSummary {
           title == other.title &&
           key == other.key &&
           artist == other.artist &&
+          time == other.time &&
           sections == other.sections &&
           chords == other.chords &&
           core == other.core;
