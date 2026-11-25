@@ -595,6 +595,13 @@ impl ScorePartParser {
                     _depth += 1;
                     let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
 
+                    // Capture document-level metadata (before any <part>)
+                    match name.as_str() {
+                        "work-title" | "movement-title" => { text.clear(); }
+                        "creator" => { text.clear(); }
+                        _ => {}
+                    }
+
                     match name.as_str() {
                         "part" => {
                             let pid = e.attributes()
@@ -649,6 +656,16 @@ impl ScorePartParser {
                 Ok(Event::End(ref e)) => {
                     let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
                     match name.as_str() {
+                        // Document-level metadata captured when ending their elements
+                        "work-title" if !in_target && !text.is_empty() => {
+                            self.metadata.entry("title".to_owned()).or_insert_with(|| text.trim().to_owned());
+                        }
+                        "movement-title" if !in_target && !text.is_empty() => {
+                            self.metadata.entry("title".to_owned()).or_insert_with(|| text.trim().to_owned());
+                        }
+                        "creator" if !in_target && !text.is_empty() => {
+                            self.metadata.entry("composer".to_owned()).or_insert_with(|| text.trim().to_owned());
+                        }
                         "part" => { in_target = false; in_measure = false; }
                         "measure" => { in_measure = false; }
                         "attributes" => { in_attr = false; in_key = false; in_time = false; }
@@ -665,10 +682,15 @@ impl ScorePartParser {
                         }
                         "time" => { in_time = false; }
                         "beats" if in_time => {
-                            self.metadata.insert("time_beats".to_owned(), text.trim().to_owned());
+                            self.metadata.insert("_time_beats".to_owned(), text.trim().to_owned());
                         }
                         "beat-type" if in_time => {
-                            self.metadata.insert("time_beat_type".to_owned(), text.trim().to_owned());
+                            let beats = self.metadata.get("_time_beats").cloned().unwrap_or_default();
+                            let btype = text.trim().to_owned();
+                            if !beats.is_empty() && !btype.is_empty() {
+                                self.metadata.insert("time".to_owned(), format!("{beats}/{btype}"));
+                            }
+                            self.metadata.insert("_time_beat_type".to_owned(), btype);
                         }
                         "harmony" if in_harmony => {
                             in_harmony = false;
@@ -779,59 +801,74 @@ impl ScorePartParser {
 
         // Build sections: collect harmony + lyrics into lines
         let mut sections = Vec::new();
-        let mut lines = Vec::new();
-        let mut chord_line: Vec<ChordPlacement> = Vec::new();
-        let lyric_text = String::new();
-        let _prev_time: f64 = -1.0;
-
-        for event in &sorted_events {
-            match &event.kind {
-                PosEventKind::Harmony(chord) => {
-                    let pos = (event.time * 4.0).round() as usize;
-                    chord_line.push(ChordPlacement {
-                        position: pos,
-                        chord: chord.clone(),
-                    });
-                }
-                // Lyrics variant removed — lyrics tracked via self.lyrics
-            }
-        }
-
-        // Add a line with chords and lyrics
-        if !chord_line.is_empty() || !lyric_text.is_empty() {
-            // If no lyrics, create text from chord timing
-            let text = if lyric_text.is_empty() {
-                " ".repeat(chord_line.last().map(|c| c.position + 5).unwrap_or(0))
-            } else {
-                lyric_text.clone()
-            };
-            lines.push(Line {
-                chords: chord_line,
-                text,
-            });
-        }
-
-        // Fallback: push lyrics as a plain text line even without chords
-        if lines.is_empty() && !self.lyrics.is_empty() {
-            lines.push(Line {
-                chords: Vec::new(),
-                text: self.lyrics.join(" "),
-            });
-        }
-
-        sections.push(Section {
-            name: None,
-            lines,
-        });
-
-        // Title from metadata if available
+        let mut lines: Vec<Line> = Vec::new();
         let mut metadata = self.metadata.clone();
-        // Extract part name as subtitle if we have it
-        if let Some(pn) = self.all_part_names.first() {
-            if !pn.is_empty() && !metadata.contains_key("subtitle") {
-                metadata.insert("subtitle".to_owned(), pn.clone());
+
+        // If we have lyrics, create one line per lyric word,
+        // distributing chords proportionally.
+        if !self.lyrics.is_empty() {
+            let total = self.lyrics.len();
+            let chords = self.events.len();
+
+            // Collect chords in order
+            let chord_names: Vec<String> = sorted_events.iter()
+                .map(|e| {
+                    let PosEventKind::Harmony(c) = &e.kind;
+                    c.clone()
+                })
+                .collect();
+
+            for (idx, word) in self.lyrics.iter().enumerate() {
+                let mut line_chords = Vec::new();
+                if chords > 0 && total > 0 {
+                    // Distribute chords per lyric word
+                    let per_line = (chords as f32 / total as f32).ceil() as usize;
+                    let start = idx * per_line;
+                    let end = (start + per_line).min(chords);
+                    for i in start..end {
+                        if i < chord_names.len() {
+                            line_chords.push(ChordPlacement {
+                                position: 0,
+                                chord: chord_names[i].clone(),
+                            });
+                        }
+                    }
+                }
+                lines.push(Line {
+                    chords: line_chords,
+                    text: word.clone(),
+                });
+            }
+        } else if !self.events.is_empty() {
+            // No lyrics — one line with space-separated chords
+            let mut text = String::new();
+            let mut chord_line = Vec::new();
+            for event in &sorted_events {
+                let PosEventKind::Harmony(chord) = &event.kind;
+                chord_line.push(ChordPlacement {
+                    position: text.len(),
+                    chord: chord.clone(),
+                });
+                text.push(' ');
+            }
+            if !chord_line.is_empty() {
+                lines.push(Line { chords: chord_line, text });
             }
         }
+
+        sections.push(Section { name: None, lines });
+
+        // Title fallback: part name becomes title when no title metadata
+        if !metadata.contains_key("title") {
+            if let Some(pn) = self.all_part_names.first() {
+                if !pn.is_empty() {
+                    metadata.insert("title".to_owned(), pn.clone());
+                }
+            }
+        }
+
+        // Remove internal keys (prefixed with _)
+        metadata.retain(|k, _| !k.starts_with('_'));
 
         Ok(Song { metadata, sections })
     }
