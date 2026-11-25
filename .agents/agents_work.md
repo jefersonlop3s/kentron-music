@@ -27,21 +27,29 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
-### opencode/asr-timestamp — Spike do timestamp de palavra do ASR (transcrição local)
-- **Início**: 2026-11-25 20:57 (UTC) · **Última atualização**: 2026-11-25 20:57 (UTC)
-- **Repositórios**: `kentron-music` · **Branches**: `spike/asr-timestamp-de-palavra` (de `origin/main` `226a5be`) · **Worktrees**: `/Users/jefersonlopes/Develop/Projects/app-music-wt/asr-timestamp`
-- **Demanda**: o dono propôs transcrição local (whisper, sem API) para o acorde cair "na sílaba exata"; medir o timestamp de palavra é o que decide, antes de qualquer ADR de transcritor.
-- **Paths sob edição**: `scripts/medir-timestamp-asr.py`, `docs/PENDING.md`, `docs/CONCLUSION.md`, `CHANGELOG.md` — **concluído e commitado** (`d7707ac`), aguardando integração na `main`.
-- **Status**: aguardando decisão do dono (integrar a branch; e a medição em voz cantada exige stem de voz ou referência anotada).
-- **PRs**: nenhum (merge `--ff-only` local quando o dono autorizar).
-
-**Achado:** modo DTW mediana **230–386 ms** com **viés tardio sistemático** (+223 a +373 ms), determinístico; **o `medium` erra mais que o `small`**; somado ao jitter de ±0,25 s da fronteira de acorde, **"a sílaba exata" não se sustenta** — revisão humana obrigatória. **Aberto:** erro em voz cantada com música (os dois instrumentos de áudio real não separam; exige stem de voz ou referência anotada).
+Nenhum.
 
 ## 🟡 Interrompido / órfão
 
 Nenhum.
 
 ## 🟢 Concluído recentemente
+
+### opencode/asr-timestamp — Spike do timestamp de palavra do ASR (transcrição local)
+- **Início**: 2026-11-25 20:57 (UTC) · **Última atualização**: 2026-11-25 21:17 (UTC)
+- **Repositórios**: `kentron-music` · **Branches**: `spike/asr-timestamp-de-palavra` e `fix/gates-vermelhos-main` (**integradas na `main` e removidas**) · **Worktrees**: `~/Develop/Projects/app-music-wt/asr-timestamp`
+- **Demanda**: o dono propôs transcrição local (whisper, sem API) para o acorde cair "na sílaba exata"; medir o timestamp de palavra é o que decide, antes de qualquer ADR de transcritor. Depois pediu en/es, a ideia do dicionário e integrar/pushar.
+- **Paths sob edição**: nenhum (concluído e publicado em `origin/main` `2ec7537`).
+- **Status**: concluído.
+- **PRs**: nenhum (push direto na `main` com a bateria verde: `226a5be..2ec7537`).
+
+**Feito:** `scripts/medir-timestamp-asr.py` (verdade sintética conferida por energia + prova negativa; `--lingua` pt/en/es); medições en/es e do dicionário; **conserto de dois gates que deixavam a `main` impushável** (o `tr` do gate `test` montava crates como lixo; o `types` rodava clippy no workspace inteiro) e a exceção documentada do `semgrep`; Demucs/torch instalados e o `htdemucs_6s` exercido.
+
+**Provado:** push `226a5be..2ec7537` com **todos os gates verdes**; o fallback do `test` roda 119 testes; `cargo clippy -p mir_engine` continua reprovando (a mordida do gate escopado segue); `semgrep` rc=0 no arquivo; sha256 dos pesos == `MANIFEST`; `documentation.py check` sem link quebrado; `ruff` limpo.
+
+**Achados:** DTW mediana **230–386 ms** com **viés tardio sistemático**, determinístico, replicado em en/es; **o `medium` erra mais que o `small`** nos três idiomas; **"a sílaba exata" não se sustenta** (soma-se ao jitter de ±0,25 s da fronteira de acorde); `--prompt` com o vocabulário da música derruba o WER **0,50→0,08** e o dicionário pós-hoc não (0,42) — o erro dominante é **fusão de palavras**.
+
+**Aberto:** (1) erro absoluto em **voz cantada** — o **stem de voz foi testado e NÃO resolve** (métrica satura); exige **referência anotada à mão** (decisão do dono); (2) **`scripts/exportar_onnx.py` está quebrado** (bag vs state_dict) — caminho ONNX/`ort` não roda; é de `cline/f5ba4`; (3) dívida de lint/format em `crates/` (3 clippy lints + 2 arquivos não-formatados) tocados por `cline/0d661` e `cline/f5ba4`; (4) **ADR-0019** do transcritor, depois de (1).
 
 ### cline/0caf3 — ADR-0014 bloco 3: terça pela melodia
 - **Início:** 2026-11-22 15:40 (UTC) · **Última atualização:** 2026-11-22 16:32 (UTC)
