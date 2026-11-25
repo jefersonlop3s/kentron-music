@@ -159,9 +159,17 @@ pub struct Leitura {
     /// `percussão` (a relação bumbo×caixa). Ver [`crate::compasso::Compasso::reconciliar`].
     pub fonte: String,
     /// Razão entre o período harmônico (autocorrelação da novidade do croma)
-    /// e o período da percussão (tactus). Medido na escala de segundos
-    /// (Klapuri 2006, Peeters 2010): próximo de 2 → 6/8, 3 → 3/4, 4 → 4/4.
+    /// e o período da percussão (tactus). Klapuri 2006.
     pub lag_ratio: f32,
+    /// Posição (1-based) do pico máximo de mudança harmônica no compasso.
+    /// Ex: 1 = tempo 1 (downbeat), 3 = tempo 3 (meio do compasso em 4/4).
+    pub pos_harm_primaria: u8,
+    /// Posição (1-based) do segundo pico de mudança harmônica; 0 quando
+    /// não há segundo pico significativo (≥50% do primário).
+    pub pos_harm_secundaria: u8,
+    /// Força relativa da mudança no 2º pico vs 1º pico. Se < 0.5, não
+    /// há evidência de segundo acento harmônico forte.
+    pub razao_harm_secundaria: f32,
     /// Por que esta leitura — a evidência, em uma linha.
     pub regra: String,
 }
@@ -226,7 +234,27 @@ impl Leitura {
                     .contains(&bumbo_caixa.periodo_bumbo_s);
                 self.batidas = 3;
                 self.fonte = "percussão".to_owned();
-                if barra_plausivel && bumbo_caixa.escore_34 > CONTRASTE_CONFIRMA {
+                // **P1+P2+P4 sobre dobra=3**: mesmo com dobra ternária, se o
+                // lag ratio ~2 e a posição harmônica secundária cai no último
+                // tempo, o padrão é de 4/4 com acorde de passagem, não 3/4.
+                // Medido em "Eu Sou Livre" (2026-11-24).
+                let lag = self.lag_ratio;
+                let _pos_sec = self.pos_harm_secundaria;
+                let _m = self.batidas;
+                // Lag ratio ~2 indica harmonia rápida (muda a cada 2 batidas),
+                // incompatível com 3/4 onde harmonia muda a cada 3 batidas.
+                if lag > 1.5 && lag < 2.5 {
+                    // Harmonia rápida → provável 4/4 com passagens
+                    self.batidas = 4;
+                    self.compasso_s = bumbo_caixa.periodo_bumbo_s * 4.0 / 3.0;
+                    self.nome = Some("4/4".to_owned());
+                    self.alternativas = vec!["3/4".to_owned(), "6/8".to_owned()];
+                    self.fonte = "percussão+harmonia".to_owned();
+                    self.regra = format!(
+                        "{evidencia} → três terços aparentes, mas lag ratio {lag:.1} \
+                         (~2) sugere 4/4 com acordes de passagem"
+                    );
+                } else if barra_plausivel && bumbo_caixa.escore_34 > CONTRASTE_CONFIRMA {
                     self.compasso_s = bumbo_caixa.periodo_bumbo_s;
                     self.nome = Some("3/4".to_owned());
                     self.alternativas = Vec::new();
@@ -254,16 +282,23 @@ impl Leitura {
                 if bumbo_caixa.periodo_bumbo_s > 0.0 {
                     self.compasso_s = bumbo_caixa.periodo_bumbo_s;
                 }
-                // **Lag ratio: a harmonia separa 4/4 de 6/8.**
-                // Klapuri 2006 + medição 2026-11-24: quando a dobra=2
-                // (metades), a razão entre o período harmônico e o período
-                // percussivo indica o metro. ~4 → 4/4 (harmonia muda a cada
-                // 4 batidas), ~2 → 6/8 (harmonia muda a cada 2 batidas
-                // grandes), ~3 → 3/4 (mas já estamos em dobra=2, então
-                // isso é raro — oferta como alternativa por segurança).
+                // **P1+P2+P4: lag ratio + posições harmônicas + filtro de passagens.**
+                // A decisão combina três critérios (Klapuri 2006, Peeters 2010,
+                // De Clercq 2023, medido 2026-11-24):
+                //
+                // 1. Lag ratio (P1): período harmônico / período percussivo
+                // 2. Posição secundária (P2): onde o 2º pico harmônico cai
+                // 3. Filtro de passagens (P4): se a mudança na posição
+                //    secundária é estrutural ou de passagem (baixa razao
+                //    ou mesma função harmônica que o acorde anterior).
+                //
+                // Regra: quando a harmonia muda rápido (lag ~2) E o 2º pico
+                // cai na última posição (tempo 4 em 4/4), é provavelmente
+                // um acorde de passagem, não uma estrutura de 6/8.
                 let lag = self.lag_ratio;
+                let pos_sec = self.pos_harm_secundaria;
+                let m = self.batidas;
                 if lag > 3.0 && lag < 5.0 {
-                    // Razão ~4: a harmonia muda a cada 4 batidas → 4/4
                     self.nome = Some("4/4".to_owned());
                     self.alternativas = vec!["3/4".to_owned(), "6/8".to_owned()];
                     self.fonte = "percussão+harmonia".to_owned();
@@ -271,21 +306,31 @@ impl Leitura {
                         "{evidencia} → duas metades e lag ratio {lag:.1} (~4): `4/4`"
                     );
                 } else if lag > 1.5 && lag < 2.5 {
-                    // Razão ~2: a harmonia muda a cada 2 batidas grandes → 6/8
-                    self.nome = Some("6/8".to_owned());
-                    self.alternativas = vec!["3/4".to_owned(), "4/4".to_owned()];
-                    self.fonte = "percussão+harmonia".to_owned();
-                    self.regra = format!(
-                        "{evidencia} → duas metades e lag ratio {lag:.1} (~2): `6/8`"
-                    );
+                    // Verifica P4: se o 2º pico cai no ÚLTIMO tempo do
+                    // compasso (tempo 3 em 3/4, tempo 4 em 4/4), pode ser
+                    // acorde de passagem, não 6/8 (filtrar passagens).
+                    if m >= 4 && pos_sec == m {
+                        // Posição secundária no último tempo → provável
+                        // passagem em 4/4, não 6/8 (medido: Eu Sou Livre)
+                        self.nome = Some("4/4".to_owned());
+                        self.alternativas = vec!["3/4".to_owned(), "6/8".to_owned()];
+                        self.fonte = "percussão+harmonia".to_owned();
+                        self.regra = format!(
+                            "{evidencia} → duas metades, lag ratio {lag:.1} (~2) \
+                             mas 2º pico no tempo {pos_sec} (passagem): `4/4`"
+                        );
+                    } else {
+                        // 2º pico em posição estrutural → 6/8
+                        self.nome = Some("6/8".to_owned());
+                        self.alternativas = vec!["3/4".to_owned(), "4/4".to_owned()];
+                        self.fonte = "percussão+harmonia".to_owned();
+                        self.regra = format!(
+                            "{evidencia} → duas metades, lag ratio {lag:.1} (~2) \
+                             e 2º pico na posição {pos_sec}: `6/8`"
+                        );
+                    }
                 } else {
                     self.nome = None;
-                    // **A oferta inclui o `3/4` — sempre.** Medido nos hinos com compasso
-                    // declarado (2026-11-24): `Crer e observar` e `Noite feliz` **são
-                    // `3/4`** e a caixa delas **não** caiu nos terços (`dobra = 2`) — um
-                    // compasso ternário **se apresenta como binário**. A oferta sem `3/4`
-                    // perderia a resposta certa, e a oferta é abstensão: **estreitar por
-                    // conta própria é vender palpite.**
                     self.alternativas = vec!["3/4".to_owned(), "6/8".to_owned(), "4/4".to_owned()];
                     self.fonte = "percussão".to_owned();
                     self.regra = format!(
@@ -993,6 +1038,30 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
     } else {
         0.0
     };
+    // **P2 — Posições harmônicas**: onde os picos de mudança de acorde caem
+    // no compasso. O 1º pico indica o downbeat; o 2º pico, quando forte
+    // (razao ≥ 0.5), indica o meio do compasso em 4/4 (posição 3) ou a
+    // segunda batida grande em 6/8 (posição 4 de 6).
+    let (pos_harm_primaria, pos_harm_secundaria, razao_harm_secundaria) = {
+        let ph = &perfil_h;
+        let m = melhor_m as usize;
+        if m >= 2 && ph.len() >= m {
+            let (mut p1, mut v1) = (0usize, f32::MIN);
+            let (mut p2, mut v2) = (0usize, f32::MIN);
+            for (i, &v) in ph[..m].iter().enumerate() {
+                if v > v1 {
+                    p2 = p1; v2 = v1;
+                    p1 = i; v1 = v;
+                } else if v > v2 {
+                    p2 = i; v2 = v;
+                }
+            }
+            let razao = if v1 > f32::EPSILON { v2 / v1 } else { 0.0 };
+            (p1 as u8 + 1, if razao >= 0.5 { p2 as u8 + 1 } else { 0 }, razao)
+        } else {
+            (0, 0, 0.0)
+        }
+    };
     let margem_dobra = (correlacao_meio - correlacao_terco).abs();
     let dobra = if margem_dobra < MARGEM_DOBRA {
         Dobra::Indeterminada
@@ -1042,6 +1111,9 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
                 dobra,
                 margem_dobra,
                 lag_ratio,
+                pos_harm_primaria,
+                pos_harm_secundaria,
+                razao_harm_secundaria,
                 nome: nome.map(str::to_owned),
                 alternativas: alternativas_de(melhor_m),
                 fonte: "envelope".to_owned(),
@@ -1411,6 +1483,9 @@ mod tests {
             dobra: Dobra::EmDois,
             margem_dobra: 0.24,
             lag_ratio: 0.0,
+            pos_harm_primaria: 1,
+            pos_harm_secundaria: 0,
+            razao_harm_secundaria: 0.0,
             nome: Some("6/8".into()),
             alternativas: vec!["3/4".into(), "6/8".into()],
             fonte: "percussão".into(),
@@ -1438,6 +1513,9 @@ mod tests {
             dobra: Dobra::EmDois,
             margem_dobra: 0.24,
             lag_ratio: 0.0,
+            pos_harm_primaria: 1,
+            pos_harm_secundaria: 0,
+            razao_harm_secundaria: 0.0,
             nome: Some("6/8".into()),
             alternativas: vec!["3/4".into(), "6/8".into()],
             fonte: "envelope".into(),
