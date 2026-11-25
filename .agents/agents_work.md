@@ -27,7 +27,15 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
-Nenhum.
+### opencode/asr-timestamp — Spike do timestamp de palavra do ASR (transcrição local)
+- **Início**: 2026-11-25 20:57 (UTC) · **Última atualização**: 2026-11-25 20:57 (UTC)
+- **Repositórios**: `kentron-music` · **Branches**: `spike/asr-timestamp-de-palavra` (de `origin/main` `226a5be`) · **Worktrees**: `/Users/jefersonlopes/Develop/Projects/app-music-wt/asr-timestamp`
+- **Demanda**: o dono propôs transcrição local (whisper, sem API) para o acorde cair "na sílaba exata"; medir o timestamp de palavra é o que decide, antes de qualquer ADR de transcritor.
+- **Paths sob edição**: `scripts/medir-timestamp-asr.py`, `docs/PENDING.md`, `docs/CONCLUSION.md`, `CHANGELOG.md` — **concluído e commitado** (`d7707ac`), aguardando integração na `main`.
+- **Status**: aguardando decisão do dono (integrar a branch; e a medição em voz cantada exige stem de voz ou referência anotada).
+- **PRs**: nenhum (merge `--ff-only` local quando o dono autorizar).
+
+**Achado:** modo DTW mediana **230–386 ms** com **viés tardio sistemático** (+223 a +373 ms), determinístico; **o `medium` erra mais que o `small`**; somado ao jitter de ±0,25 s da fronteira de acorde, **"a sílaba exata" não se sustenta** — revisão humana obrigatória. **Aberto:** erro em voz cantada com música (os dois instrumentos de áudio real não separam; exige stem de voz ou referência anotada).
 
 ## 🟡 Interrompido / órfão
 
