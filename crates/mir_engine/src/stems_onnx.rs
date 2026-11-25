@@ -36,18 +36,14 @@ fn preparar_audio(audio: &Audio) -> Result<Vec<Vec<f32>>, String> {
     if audio.canais == 1 {
         Ok(vec![audio.amostras.clone(), audio.amostras.clone()])
     } else if audio.canais >= 2 {
-        let ch0 = audio.amostras[..n].iter().copied().collect::<Vec<_>>();
-        let ch1 = audio.amostras[n..(2 * n).min(audio.amostras.len())]
-            .iter()
-            .copied()
-            .collect::<Vec<_>>();
+        let ch0 = audio.amostras[..n].to_vec();
+        let ch1 = audio.amostras[n..(2 * n).min(audio.amostras.len())].to_vec();
         Ok(vec![ch0, ch1])
     } else {
         Err(format!("canais insuficientes: {}", audio.canais))
     }
 }
 
-#[must_use]
 pub fn separar(audio: &Audio, model_path: &Path) -> Result<Vec<(String, Audio)>, String> {
     let canais = preparar_audio(audio)?;
     let total = canais[0].len();
@@ -67,7 +63,7 @@ pub fn separar(audio: &Audio, model_path: &Path) -> Result<Vec<(String, Audio)>,
 
     let overlap = N_AMOSTRAS / 4;
     let stride = N_AMOSTRAS - overlap;
-    let n_chunks = (total + stride - 1) / stride;
+    let n_chunks = total.div_ceil(stride);
     let janela = criar_janela(overlap);
 
     let mut saidas = (0..N_STEMS)
@@ -82,7 +78,7 @@ pub fn separar(audio: &Audio, model_path: &Path) -> Result<Vec<(String, Audio)>,
 
         let mut chunk = vec![0.0f32; N_AMOSTRAS * N_CANAIS];
         for i in 0..clen {
-            chunk[i * N_CANAIS + 0] = canais[0][start + i];
+            chunk[i * N_CANAIS] = canais[0][start + i];
             chunk[i * N_CANAIS + 1] = canais[1].get(start + i).copied().unwrap_or(0.0);
         }
 
@@ -99,12 +95,14 @@ pub fn separar(audio: &Audio, model_path: &Path) -> Result<Vec<(String, Audio)>,
             .try_extract_tensor::<f32>()
             .map_err(|e| e.to_string())?;
 
-        for s in 0..dims[1].min(N_STEMS as i64) as usize {
-            for c in 0..dims[2].min(N_CANAIS as i64) as usize {
-                let off = ((s * dims[2] as usize + c) * N_AMOSTRAS) as usize;
+        let n_s = dims[1].min(N_STEMS as i64) as usize;
+        let n_c = dims[2].min(N_CANAIS as i64) as usize;
+        for (s, saida) in saidas.iter_mut().take(n_s).enumerate() {
+            for c in 0..n_c {
+                let off = (s * dims[2] as usize + c) * N_AMOSTRAS;
                 for i in 0..clen {
                     let idx = (start + i) * N_CANAIS + c;
-                    saidas[s][idx] += dados[off + i] * janela[i];
+                    saida[idx] += dados[off + i] * janela[i];
                     if s == 0 {
                         pesos[idx] += janela[i];
                     }
@@ -113,10 +111,10 @@ pub fn separar(audio: &Audio, model_path: &Path) -> Result<Vec<(String, Audio)>,
         }
     }
 
-    for s in 0..N_STEMS {
+    for saida in &mut saidas {
         for i in 0..total * N_CANAIS {
             if pesos[i] > 1e-8f32 {
-                saidas[s][i] /= pesos[i];
+                saida[i] /= pesos[i];
             }
         }
     }

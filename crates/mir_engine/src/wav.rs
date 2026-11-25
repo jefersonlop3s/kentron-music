@@ -50,7 +50,7 @@ impl Audio {
 pub fn escrever(audio: &Audio, caminho: &Path) -> Result<(), String> {
     let n_amostras = audio.amostras.len();
     let taxa = audio.taxa;
-    let canais = audio.canais as u16;
+    let canais = audio.canais;
     let dados_len = n_amostras * 2; // 16 bits
     let file_size = 36 + dados_len;
     let mut buf = Vec::with_capacity(file_size + 8);
@@ -69,7 +69,7 @@ pub fn escrever(audio: &Audio, caminho: &Path) -> Result<(), String> {
     buf.extend_from_slice(b"data");
     buf.extend_from_slice(&dados_len.to_le_bytes());
     for s in &audio.amostras {
-        let amostra = (s.max(-1.0).min(1.0) * 32_768.0) as i16;
+        let amostra = (s.clamp(-1.0, 1.0) * 32_768.0) as i16;
         buf.extend_from_slice(&amostra.to_le_bytes());
     }
     std::fs::write(caminho, &buf).map_err(|erro| format!("{caminho:?}: {erro}"))?;

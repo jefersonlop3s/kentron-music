@@ -356,7 +356,7 @@ mod tests {
     /// Prioridade: chimbau com decaimento curto vence outras bandas.
     #[test]
     fn test_classificacao_prioridade_hihat() {
-        let grupo = vec![
+        let grupo = [
             Candidato {
                 tempo_s: 1.0,
                 peca: "kick".into(),
@@ -389,7 +389,7 @@ mod tests {
     /// Prioridade: prato com decaimento longo vence outras bandas.
     #[test]
     fn test_classificacao_prioridade_crash() {
-        let grupo = vec![
+        let grupo = [
             Candidato {
                 tempo_s: 2.0,
                 peca: "snare".into(),
