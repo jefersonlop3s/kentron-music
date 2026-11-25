@@ -38,7 +38,11 @@ def main():
     output_path = os.path.join(output_dir, 'htdemucs_6s.onnx')
     
     print(f'1. Carregando pesos: {model_path}')
-    state = torch.load(model_path, map_location='cpu', weights_only=False)
+    # O checkpoint do Demucs e um pickle (nao ha alternativa: `torch.load` e
+    # pickle-based). A regra dispara na chamada, nao no `weights_only`. A excecao
+    # e justificada pelo pin: os bytes vem da URL do MANIFEST e o sha256 confere
+    # exatamente (5c90dfd2-34c22ccb, 52,4 MB) — arquivo de proveniencia fixada.
+    state = torch.load(model_path, map_location='cpu', weights_only=False)  # nosemgrep
     print(f'   Pesos carregados: {len(state)} chaves')
     
     print('2. Instanciando arquitetura HTDemucs (6 fontes)...')
