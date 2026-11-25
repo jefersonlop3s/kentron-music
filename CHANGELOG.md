@@ -1,4 +1,46 @@
 # Changelog
+## [feat] R1.1 + GAP MIR 1-4 + ADR-0017 parcial + pre-push fix (2026-11-24)
+
+### R1.1 · MusicXML e ATEX — ambos os formatos suportados
+
+- **MusicXML parser** completo: score-partwise e score-timewise, multi-part selection, backup/forward position tracking, MXL (ZIP) com container.xml. 21 testes.
+- **ATEX/GPIF parser** (Guitar Pro): GPIF XML com IDs, letras CDATA, acordes por MIDI pitch, tablatura. 15 testes.
+- **Bundle integration**: `save_bundle_with_musicxml()` + `load_musicxml_from_bundle()`.
+- **Ponte FFI**: `parse_musicxml` + `read_musicxml` expostas ao Dart.
+- **Fixes MusicXML**: captura de título, compositor, letras e time signature corrigidos.
+- **Quick-xml 0.37** com advisory ignorado (só usamos `Reader`, não `NsReader`).
+
+### GAP motor MIR — itens 1-4 corrigidos
+
+1. **Formato**: CordPro `[C] [F] [G]` é válido — o GAP reportou "0 acordes" por grep mal feito.
+2. **Seções**: fator de novidade 1.5→2.0, cosseno de agrupamento 0.9→0.95. Fixture dourada atualizada.
+3. **Tonalidade**: segunda melhor tônica e alerta `DECISÃO FRÁGIL` quando margem < 0.10.
+4. **Título**: extração de tags ID3/MP4 via Symphonia, com fallback para nome do arquivo.
+- **Item 5 (compasso)**: permanece aberto — depende da ADR-0017 (bateria separada).
+
+### ADR-0017 · Separação de bateria (parcial)
+
+- **Módulo `stems`**: carrega `drums.wav` e compara `BumboCaixa` do mix com o stem de bateria.
+- **CLI `--stems <dir>`**: ativa a análise comparativa.
+- **Módulo `pecas`**: identifica 7 peças individuais (kick, snare, hihat, floor_tom, rack_tom, crash) por banda de frequência + decaimento. 7 testes.
+- **Medição**: mix período 0.76s (falso 3/4) → stem período 3.08s (6/8 real) — diferença de 4×.
+- Pendente: pipeline automático Demucs, export ONNX + `ort`, recalibrar `compasso_s` com período do stem.
+
+### Infraestrutura
+
+- **Pre-push timeout**: `test` gate só testa crates alterados (~2s vs ~26s). `flutter` gate só roda se `apps/` mudou.
+- **deny.toml**: advisories RUSTSEC-2026-0194/0195 ignorados com justificativa.
+- **Exercício ADR-0013**: planilha → tags ID3 validado (37/40 MP3s casados, insight registrado).
+
+### Métricas
+
+| Métrica | Antes | Depois |
+|---------|-------|--------|
+| Commits `main` | 267 | **278** |
+| Testes Rust | ~200 | **228** (90 mir + 128 notation + 10 ffi) |
+| Clippy | ✅ | ✅ |
+| Módulos novos | — | `musicxml.rs`, `atex.rs`, `stems.rs`, `pecas.rs` |
+
 ## [release] R1 completa — da fundação ao piloto (2026-11-24)
 
 ### Alpha assistido simulado

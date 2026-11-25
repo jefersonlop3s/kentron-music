@@ -43,6 +43,21 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 - [x] Transposição e renderização nos quatro sistemas (29 testes, incluindo acordes invertidos, `6/9` e acidentes duplos).
 - [ ] Testes de propriedade e regressão ampliada.
 
+### R1.1 · Formatos estendidos (entregue 2026-11-24)
+
+**Objetivo:** Suporte a MusicXML e ATEX/GPIF (Guitar Pro) como formatos de entrada, além do ChordPro nativo.
+
+- [x] **MusicXML parser**: `score-partwise` e `score-timewise`, extração de acordes (harmony+kind), letras (lyrics), metadados (título, compositor, tom, compasso).
+- [x] **Multi-part selection**: coleta todas as partes, seleciona a melhor (mais harmony elements); índice explícito via `parse_part()`.
+- [x] **Backup/forward**: eventos ordenados por posição (divisions), com `<backup>` (subtrai) e `<forward>` (adiciona).
+- [x] **MXL (ZIP)**: descompressão inline (sem ZIP crate), leitura de `container.xml` → `rootfile`.
+- [x] **ATEX/GPIF parser**: Guitar Pro XML com IDs e referências; extração de letras (CDATA, sílabas ATEX `+`/`-`), acordes (MIDI pitch → chord name), metadados, tablatura (traste/corda).
+- [x] **Bundle integration**: `save_bundle_with_musicxml()` + `load_musicxml_from_bundle()` no `bundle_store`.
+- [x] **Ponte FFI**: `parse_musicxml` e `read_musicxml` expostas ao Dart.
+- [x] **21 testes MusicXML + 15 testes ATEX** — 128 total no `notation_bundle`.
+
+**Portão:** S5 não se aplica (fizemos sem ele); ATEX funcional (tablatura renderizada) fica como stub — o motor AlphaTab é um projeto separado.
+
 ### R1-B · Projeção manual
 - [x] Exportação OpenLyrics com validação XML: módulo `openlyrics::export` no `notation_bundle` gera XML a partir do modelo `Song` (8 testes).
 - [ ] Matriz de compatibilidade com versões fixadas de Holyrics e outros consumidores.
@@ -114,6 +129,10 @@ Este documento detalha a trajetória de evolução do Kentron, dividida em seis 
 > **Análise harmônica (2026-11-22, [ADR-0014](adr/0014-analise-harmonica-pos-extracao.md) aceita):** centro tonal por perfil no eixo de quintas, afinamento global, terça decidida pela **melodia** (F0), baixo por compasso para a **inversão** e região harmônica separada da seção timbrística. Resolve como causa comum a inversão, a terça fraca e a tensão — e **não** depende de stems: a nota anterior, que exigia baixo isolado, era hipótese, não medição.
 
 > **Separação de bateria (2026-11-24, [ADR-0017](adr/0017-separacao-de-bateria-por-modelo.md) aceita):** a medida de metro falha porque **a bateria não está separada** — medido: quatro variantes do offset caixa×bumbo, nenhuma separou `3/4` de `6/8`, porque a banda de 30–110 Hz carrega o **baixo** e porque bumbo e caixa batem juntos no tempo 1. Proposta: **`htdemucs_6s` em ONNX por `ort`**, **MIT**, **52,4 MB medidos**, com o STFT no motor. É o **primeiro modelo** do motor — o aceite depende da decisão do dono sobre o portão e da confirmação da licença **dos pesos**.
+>
+> **Módulo stems + pecas (entregue 2026-11-24):** `crates/mir_engine/src/stems.rs` carrega `drums.wav` e produz análise comparativa (mix × stem de bateria). `crates/mir_engine/src/pecas.rs` identifica peças individuais (bumbo, caixa, chimbau, surdo, tom, prato) por banda de frequência + decaimento. CLI `--stems <dir>` ativa a análise. **221 testes.**
+
+> **GAP motor MIR (itens 1-4, corrigido 2026-11-24):** 1) formato ChordPro é válido e roundtripa — erro de medição no script; 2) super-segmentação corrigida (fator 1.5→2.0, cosseno 0.9→0.95); 3) tonalidade com segunda opção + alerta `DECISÃO FRÁGIL`; 4) título das tags ID3/MP4 via Symphonia, com fallback para nome do arquivo. **Item 5 (compasso) permanece aberto — depende da ADR-0017.**
 
 ### Etapas:
 1. **Análise Local:** Áudio $\rightarrow$ Acordes, Tom e Compasso (Desktop primeiro). *Acordes e andamento entregues; **tom por perfil de tonalidade** desde 2026-11-22 (ADR-0014, bloco 1). Compasso: a **barra em segundos** e o **acento por instrumento** (bumbo/caixa/chimbau, com `backbeat()`) entregues em 2026-11-22; **a discriminação `3/4` × `6/8` continua aberta** — medido em nove faixas de banda que energia de banda no mix não separa (margem 0,00–0,04 em oito).*
