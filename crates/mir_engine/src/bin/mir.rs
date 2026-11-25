@@ -245,7 +245,7 @@ fn main() -> ExitCode {
             eprintln!(
                 "uso: mir <arquivo.wav> [--json|--chordpro|--frases-vocais] \
                  [--letra arquivo | --hino titulo] [--licenca texto] [--gravacao \"desc|ano|titular\"] \
-                 [--extraida-por nome] | --listar-hinos | --auditar-corpus | --ficha \"campos\" | \
+                 [--extraida-por nome] [--stems dir] | --listar-hinos | --auditar-corpus | --ficha \"campos\" | \
                  --listar-fichas | --ficha-hino \"hinário|número\" | --auditar-fichas"
             );
             return ExitCode::FAILURE;
@@ -340,8 +340,11 @@ fn main() -> ExitCode {
         return ExitCode::SUCCESS;
     }
 
+    // Diretório opcional com stems de bateria (drums.wav) para análise comparativa.
+    let stems_dir = valor_de("--stems").map(std::path::PathBuf::from);
+
     let (relatorio, alinhadas) =
-        mir_engine::analyze_com_letra(&audio, &Opts::default(), letra.as_ref());
+        mir_engine::analyze_com_letra(&audio, &Opts::default(), letra.as_ref(), stems_dir.as_deref());
     if json {
         match relatorio.para_json() {
             Ok(texto) => println!("{texto}"),
@@ -433,7 +436,7 @@ fn explicar_letra_por_ficha(titulo: &str, ano_corrente: u16) -> ExitCode {
 
 /// Diz se o argumento é o valor de uma bandeira (`--letra x`), não o arquivo.
 fn eh_valor_de(args: &[String], valor: &str) -> bool {
-    const VALORADAS: [&str; 8] = [
+    const VALORADAS: [&str; 9] = [
         "--letra",
         "--hino",
         "--licenca",
@@ -442,6 +445,7 @@ fn eh_valor_de(args: &[String], valor: &str) -> bool {
         "--ficha",
         "--ficha-hino",
         "--relatorio-uso",
+        "--stems",
     ];
     args.iter().enumerate().any(|(i, argumento)| {
         VALORADAS.contains(&argumento.as_str()) && i + 1 < args.len() && args[i + 1] == valor

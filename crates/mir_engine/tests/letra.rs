@@ -227,7 +227,7 @@ fn alinha_a_letra_as_frases_e_poe_o_acorde_na_silaba() {
         trecho_minimo_s: 4.0,
         ..Opts::default()
     };
-    let (relatorio, alinhadas) = analyze_com_letra(&audio, &opts, Some(&letra));
+    let (relatorio, alinhadas) = analyze_com_letra(&audio, &opts, Some(&letra), None);
 
     // 1. As quatro linhas cantadas cabem no áudio.
     assert_eq!(

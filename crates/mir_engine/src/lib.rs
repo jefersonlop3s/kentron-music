@@ -220,14 +220,19 @@ pub fn analyze_com(
 /// Análise + alinhamento da letra, com uma STFT só.
 ///
 /// Sem letra, devolve o alinhamento vazio — não inventa linha nenhuma.
+///
+/// `drums_path` é um diretório opcional contendo `drums.wav` para análise
+/// comparativa de percussão (ADR-0017). Quando `Some`, o relatório inclui
+/// `stems` com a análise separada da bateria.
 #[must_use]
 pub fn analyze_com_letra(
     audio: &Audio,
     opts: &Opts,
     letra: Option<&lyrics::Letra>,
+    drums_path: Option<&Path>,
 ) -> (report::Report, Vec<lyrics::LinhaAlinhada>) {
     let spectro = spectrum::Spectrogram::new(audio, opts.janela, opts.salto);
-    let relatorio = analyze_com(audio, opts, &spectro, None);
+    let relatorio = analyze_com(audio, opts, &spectro, drums_path);
     let alinhadas = letra.map_or_else(Vec::new, |letra| {
         lyrics::alinhar(&relatorio, letra, &spectro, audio.taxa)
     });
