@@ -26,6 +26,15 @@ wildcards = "deny"
 
 [advisories]
 yanked = "deny"
+# quick-xml 0.37.5: NsReader OOM (namespace resolver unbounded allocation).
+# Não afeta nosso uso — só usamos Reader (plain), não NsReader.
+# RUSTSEC-2026-0194 (quick-xml) + RUSTSEC-2026-0195 (quick-xml).
+# A versão 0.42 corrige, mas mudou a API de &[u8] para &str —
+# a migração fica para quando o workspace tiver tempo de lidar com ela.
+ignore = [
+    "RUSTSEC-2026-0194",
+    "RUSTSEC-2026-0195",
+]
 
 [sources]
 unknown-registry = "deny"

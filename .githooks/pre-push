@@ -343,7 +343,27 @@ if [ -f "Cargo.toml" ]; then
 
     gate_test() {
         precisa_de cargo "https://rustup.rs" || return 127
-        cargo test --offline
+        # Só testa os crates que o push tocou. O workspace completo roda no
+        # `scripts/ci-local.sh` e no CI. Medido (2026-11-24): workspace
+        # completo ~26s, crate único ~2s — sem este recorte o hook estourava
+        # o timeout de 30s do runner e o push falhava antes de começar.
+        local crates=''
+        while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            local crate
+            crate=$(echo "$f" | grep -oE '^crates/[^/]+' | head -1)
+            [ -n "$crate" ] && crates="$crates -p $(basename "$crate")"
+        done <<< "$CHANGED_FILES"
+        if [ -z "$crates" ]; then
+            # Nenhum crate tocado: testa só notation_bundle (dependência
+            # universal) e kentron_ffi (ponte, sempre relevante).
+            crates="-p notation_bundle -p kentron_ffi"
+        fi
+        # `sort -u` remove duplicatas de crate que apareceu em vários arquivos
+        local uniq
+        uniq=$(echo "$crates" | tr ' ' '\\n' | sort -u | tr '\\n' ' ')
+        # shellcheck disable=SC2086
+        cargo test --offline $uniq
     }
     run_gate test gate_test
 
@@ -549,6 +569,13 @@ fi
 
 if [ -f "apps/kentron_app/pubspec.yaml" ]; then
     gate_flutter() {
+        # Só roda se o push tocou o app Flutter. Medido (2026-11-24): o
+        # `flutter test` leva ~8s e, somado ao resto, ultrapassa o timeout
+        # de 30s do runner. O workspace completo é coberto pelo ci-local.sh.
+        if ! grep -qE '^apps/' <<< "$CHANGED_FILES"; then
+            echo "nenhum arquivo do app no push"
+            return 0
+        fi
         local flutter_bin="${FLUTTER_BIN:-}"
         if [ -z "$flutter_bin" ]; then
             if command -v flutter >/dev/null 2>&1; then
