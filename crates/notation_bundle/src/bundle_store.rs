@@ -37,6 +37,8 @@ pub const SCHEMA_VERSION: u32 = 2;
 pub const MANIFEST_FILE: &str = "meta.json";
 /// ChordPro source file name inside a bundle directory.
 pub const SONG_FILE: &str = "song.cho";
+/// Optional MusicXML source file name inside a bundle directory (R1.1).
+pub const MUSICXML_FILE: &str = "score.musicxml";
 /// Library index file name, next to the bundle directories.
 pub const LIBRARY_FILE: &str = "library.json";
 /// Directory holding the agendas (one file per event), next to the library.
@@ -290,10 +292,23 @@ fn write_json<T: Serialize>(path: &Path, value: &T) -> Result<(), StoreError> {
 /// Returns the manifest that was written. `updated_at` is stored verbatim — the
 /// core owns no clock, so the caller decides the timestamp. The declared
 /// inventory lists what this build writes: the ChordPro source.
+///
+/// When `musicxml_source` is provided, it is saved as `score.musicxml` and
+/// declared in the manifest (R1.1).
 pub fn save_bundle(
     dir: &Path,
     bundle: &SongBundle,
     updated_at: Option<&str>,
+) -> Result<BundleManifest, StoreError> {
+    save_bundle_with_musicxml(dir, bundle, updated_at, None)
+}
+
+/// Like [`save_bundle`], but also writes an optional MusicXML source file.
+pub fn save_bundle_with_musicxml(
+    dir: &Path,
+    bundle: &SongBundle,
+    updated_at: Option<&str>,
+    musicxml_source: Option<&str>,
 ) -> Result<BundleManifest, StoreError> {
     fs::create_dir_all(dir).map_err(|source| StoreError::Io {
         path: dir.to_path_buf(),
@@ -301,14 +316,35 @@ pub fn save_bundle(
     })?;
     write_file(&dir.join(SONG_FILE), &chordpro::write(bundle.song()))?;
 
+    let mut files = vec![SONG_FILE.to_owned()];
+    if let Some(mxml) = musicxml_source {
+        write_file(&dir.join(MUSICXML_FILE), mxml)?;
+        files.push(MUSICXML_FILE.to_owned());
+    }
+
     let manifest = BundleManifest {
         schema_version: SCHEMA_VERSION,
         id: bundle.id().as_str().to_owned(),
         updated_at: updated_at.map(str::to_owned),
-        files: vec![SONG_FILE.to_owned()],
+        files,
     };
     write_json(&dir.join(MANIFEST_FILE), &manifest)?;
     Ok(manifest)
+}
+
+/// Reads the optional MusicXML source from a bundle directory, if it exists.
+///
+/// Returns `None` when no `score.musicxml` file is present.
+pub fn load_musicxml_from_bundle(dir: &Path) -> Result<Option<String>, StoreError> {
+    let path = dir.join(MUSICXML_FILE);
+    if !path.exists() {
+        return Ok(None);
+    }
+    let content = fs::read_to_string(&path).map_err(|source| StoreError::Io {
+        path: path.clone(),
+        source,
+    })?;
+    Ok(Some(content))
 }
 
 /// Reads a bundle from `dir`.

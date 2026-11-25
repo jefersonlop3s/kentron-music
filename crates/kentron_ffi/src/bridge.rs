@@ -7,6 +7,7 @@
 use notation_bundle::chord_naming::{Chord, Note};
 use notation_bundle::chordpro::{ChordProParser, Song};
 use notation_bundle::harmony::HarmonyEngine;
+use notation_bundle::musicxml;
 
 /// O resumo de uma cifra: o que a tela precisa para listar e abrir a música.
 #[derive(Debug, Clone)]
@@ -36,28 +37,8 @@ pub fn parse_song(input: String) -> Result<SongSummary, String> {
     if input.trim().is_empty() {
         return Err("cifra vazia: nada para ler".to_owned());
     }
-
     let song = ChordProParser::parse(&input)?;
-
-    let mut chords: Vec<String> = Vec::new();
-    for section in &song.sections {
-        for line in &section.lines {
-            for placement in &line.chords {
-                if !chords.contains(&placement.chord) {
-                    chords.push(placement.chord.clone());
-                }
-            }
-        }
-    }
-
-    Ok(SongSummary {
-        title: song.metadata.get("title").cloned().unwrap_or_default(),
-        key: song.metadata.get("key").cloned(),
-        artist: song.metadata.get("artist").cloned(),
-        sections: song.sections.len() as u32,
-        chords,
-        core: format!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION")),
-    })
+    Ok(summary(&song))
 }
 
 /// Onde um acorde cai sobre a letra: a coluna e o acorde.
@@ -131,6 +112,29 @@ pub fn transpose_song(input: String, to_key: String) -> Result<SongDetail, Strin
     let transposed =
         HarmonyEngine::transpose(&song, from, to).map_err(|error| error.to_string())?;
     Ok(detail(&transposed))
+}
+
+/// Lê uma cifra MusicXML e devolve o resumo que a interface usa.
+///
+/// Converte o MusicXML para o modelo interno [`Song`] e extrai o mesmo
+/// resumo de [`parse_song`].
+///
+/// # Errors
+///
+/// Devolve erro quando o XML é inválido ou o formato não é score-partwise.
+pub fn parse_musicxml(input: String) -> Result<SongSummary, String> {
+    let song = musicxml::parse(&input)?;
+    Ok(summary(&song))
+}
+
+/// Lê um MusicXML e devolve a estrutura completa, linha a linha.
+///
+/// # Errors
+///
+/// Devolve erro quando o XML é inválido ou o formato não é score-partwise.
+pub fn read_musicxml(input: String) -> Result<SongDetail, String> {
+    let song = musicxml::parse(&input)?;
+    Ok(detail(&song))
 }
 
 /// O portão de publicação da letra: o motor decide, o app obedece.
@@ -212,26 +216,7 @@ pub fn listar_biblioteca(base_dir: String) -> Result<Vec<SongSummary>, String> {
 
     Ok(library
         .iter()
-        .map(|bundle| SongSummary {
-            title: bundle.title().to_owned(),
-            key: bundle.key().map(|k| k.to_owned()),
-            artist: bundle.artist().map(|a| a.to_owned()),
-            sections: bundle.song().sections.len() as u32,
-            chords: {
-                let mut chords: Vec<String> = Vec::new();
-                for section in &bundle.song().sections {
-                    for line in &section.lines {
-                        for placement in &line.chords {
-                            if !chords.contains(&placement.chord) {
-                                chords.push(placement.chord.clone());
-                            }
-                        }
-                    }
-                }
-                chords
-            },
-            core: format!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION")),
-        })
+        .map(|bundle| summary(bundle.song()))
         .collect())
 }
 
@@ -247,6 +232,28 @@ pub fn remover_da_biblioteca(base_dir: String, id: String) -> Result<(), String>
         std::fs::remove_dir_all(&dir).map_err(|e| format!("erro ao remover: {e}"))?;
     }
     Ok(())
+}
+
+fn summary(song: &Song) -> SongSummary {
+    let mut chords: Vec<String> = Vec::new();
+    for section in &song.sections {
+        for line in &section.lines {
+            for placement in &line.chords {
+                if !chords.contains(&placement.chord) {
+                    chords.push(placement.chord.clone());
+                }
+            }
+        }
+    }
+
+    SongSummary {
+        title: song.metadata.get("title").cloned().unwrap_or_default(),
+        key: song.metadata.get("key").cloned(),
+        artist: song.metadata.get("artist").cloned(),
+        sections: song.sections.len() as u32,
+        chords,
+        core: format!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION")),
+    }
 }
 
 fn detail(song: &Song) -> SongDetail {

@@ -12,6 +12,9 @@ publish.workspace = true
 # índice da biblioteca e setlists. MIT/Apache-2.0, já cobertos por `deny.toml`.
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+# XML parser para MusicXML (R1.1). Rust puro, MIT/Apache-2.0 — mesma licença
+# do workspace. Uso mínimo: eventos em vez de DOM, sem XSD validation.
+quick-xml = "0.37"
 
 [lints]
 workspace = true
