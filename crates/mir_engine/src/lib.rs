@@ -134,11 +134,13 @@ pub fn analyze_com(
     // (medido: barra mediana de 5,08 s no corpus de 40, contra 1,90 s de troca de
     // acorde). A bateria dá a **fase**; a harmonia dá a **escala**.
     let cortes_harmonicos: Vec<f32> = chords.iter().skip(1).map(|t| t.inicio_s).collect();
-    let bumbo_caixa = percussao::medir(spectro, audio.taxa, &cortes_harmonicos);
-    let mut compasso = compasso::analisar(spectro, audio.taxa, &tempo);
-    compasso.leitura.reconciliar(&bumbo_caixa);
     // Stems de bateria: análise comparativa entre mix e stem isolado.
-    // Falha de leitura não aborta a análise — o mix completo já está calculado.
+    // Precisamos dela ANTES da reconciliação do compasso: quando o stem
+    // está disponível, seu `BumboCaixa` tem período e caixa limpos (sem
+    // contaminação do baixo na banda do bumbo). Usamos o stem para
+    // reconciliar o compasso, não o mix (medido 2026-11-24: período do
+    // mix 0.76s vs stem 3.08s — diferença de 4x que muda a dobra).
+    let bumbo_caixa = percussao::medir(spectro, audio.taxa, &cortes_harmonicos);
     let stems = stems::analisar_com_stems(spectro, audio.taxa, &cortes_harmonicos, drums_path)
         .unwrap_or_else(|_| stems::ComparativoStems {
             mix: bumbo_caixa.clone(),
@@ -146,6 +148,12 @@ pub fn analyze_com(
             pecas: None,
             caminho_stems: drums_path.map(|p| p.to_path_buf()),
         });
+    // Reconciliação: usa o stem de bateria quando disponível (período e
+    // caixa limpos), senão usa o mix. O `ComparativoStems` guarda ambos
+    // para o relatório — o mix continua visível para comparação.
+    let bumbo_para_reconciliar = stems.com_stems.as_ref().unwrap_or(&bumbo_caixa);
+    let mut compasso = compasso::analisar(spectro, audio.taxa, &tempo);
+    compasso.leitura.reconciliar(bumbo_para_reconciliar);
     let sections = structure::segment(spectro, &chroma, audio.taxa, opts.trecho_minimo_s);
     // O baixo é lido **fora** do croma: o croma dobrou o registro, e é o
     // registro que separa `C` de `C/E` (ADR-0014, bloco 4). Os trechos usam

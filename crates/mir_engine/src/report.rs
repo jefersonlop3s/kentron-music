@@ -158,6 +158,19 @@ impl Report {
         if self.percussao.bumbos > 0 {
             texto.push_str(&format!("percussão {}\n", self.percussao.regra));
         }
+        // Pecas: contagem de peças individuais do stem de bateria, quando disponível.
+        if let Some(ref pecas) = self.stems.pecas {
+            let contagem: Vec<String> = pecas
+                .contagem
+                .iter()
+                .map(|(k, v)| format!("{k}={v}"))
+                .collect();
+            texto.push_str(&format!(
+                "pecas    {} · período do bumbo {:.2} s\n",
+                contagem.join(", "),
+                pecas.kick_periodo_s
+            ));
+        }
         // Stems: quando o stem de bateria está disponível, mostra a comparação
         // lado a lado, destacando as diferenças que interessam.
         if let Some(ref stem) = self.stems.com_stems {
