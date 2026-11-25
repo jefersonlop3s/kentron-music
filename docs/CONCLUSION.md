@@ -1740,6 +1740,32 @@ compasso é a cena**: a fala atravessa a barra. A metáfora é do dono e ela é 
 explicação medida: a fase dos inícios melódicos é plana porque o texto não tem
 compasso.
 
+## R4 · Áudio real de voz cantada: transcrição, cifra e o tropeço das repetições (2026-11-25)
+
+Fonte: *"Teu Santo Nome — Gabriela Rocha (Cifra e Letra)"* (canal Adoração e Cifra), escolhida pelo dono. O vídeo é **estático paginado** (4 páginas trocadas em 19/49/76/104/131 s), **não** karaokê — medido: rolagem vertical **zero**, nenhum evento por linha, e o "destaque" que eu supus era a **luz de fundo** (fixa em y≈91). Minha hipótese de que o vídeo daria tempo de graça foi **refutada por medição**. Ele vale como **cifra e letra humanas**; os acordes saem por OCR (Vision, 720p) **mais o olho** — o OCR troca `Em`→`E` e `Final: C Am C`→`A`.
+
+### Transcrição em voz cantada real — a primeira medição
+
+- **Recall da letra: 91,4%** das palavras distintas — e **≈100% nas linhas cantadas** (as 9 ausentes são as **instruções** `C (Repete Até o final)` / `Final: C Am C` e um `pó`).
+- Palavras emitidas **fora do vocabulário da letra: 3,1%** (`bom`, `dorara`=dobrará, `musica`).
+- **Nenhum loop de invenção** — o modo de falha do `tiny`/`base` não aparece no `medium`.
+
+**Duas correções de rumo, as duas por conferir o instrumento:**
+1. A "precisão 58%" da primeira conta era **artefato**: a referência é **deduplicada** e a música **repete**, então as repetições contavam como invenção. O sinal honesto é o vocabulário (3,1% fora).
+2. O **WER 0,50 do tier sintético estava inflado pela construção**, não pelo modelo: a fala TTS não tem pausa entre palavras ("sobre nós" funde em "obranós"). Em áudio real cantado, com pausas, o `medium` **acerta**.
+
+### Cifra contra a cifra humana
+
+- **Tonalidade: `G`** — bate com a cifra humana (Am C G D Em ⇒ G maior). Motor: `G`, correlação **0,94**, margem 0,18, segunda `Em`.
+- **Raiz certa em 93,4%** dos trechos — A, C, G, D e E são **exatamente** as raízes da cifra humana.
+- **Rótulo exato em 29,2%** — o ruído está na **qualidade**: o motor emite `G5`, `C5`, `D5`, `Cmaj7`, `Am7` onde o humano escreve `G`, `C`, `D`, `Am`. É o mesmo defeito já registrado (potência e terça fraca), agora **quantificado contra referência humana**.
+
+### O tropeço — e é de produto
+
+A cifra/letra de **qualquer** fonte traz as linhas **distintas**, e a **gravação repete seções**. Alimentando o motor com as 17 linhas distintas e **sem as repetições**, o refrão foi alinhado à **introdução instrumental** (0–27,6 s, energia 0,31), onde **não há canto** — o vídeo mostra a página do refrão de 19 s a 49 s. **Consequência: "acorde sobre a sílaba" não é medível assim**, e o fluxo `--letra` precisa da **ordem cantada com as repetições** (ou de detecção de repetição). Sem isso, o alinhamento erra de seção inteira, e o acorde cai na sílaba errada por construção.
+
+**Nota de conteúdo:** letra, cifra, áudio e quadros **ficaram fora do repositório** (arte de terceiro); o áudio foi obtido pelo `yt-dlp` como **ato do dono** (ADR-0013). No repositório entram **só os números**.
+
 ## R4 · Timestamp de palavra do whisper: medido, e o "sílaba exata" não se sustenta (2026-11-25)
 
 O dono retomou a proposta: transcrever o áudio **em casa** (whisper local, sem API de

@@ -40,6 +40,16 @@ Encontrado ao tentar o push do spike de ASR — cujo diff é docs + um `.py`, **
 - **Dicionário × `--prompt`** (fala conectada, verdade conhecida, `medium`): `--prompt` com o **vocabulário da música** derruba o **WER** de **0,50→0,08 (pt), 0,50→0,00 (en), 0,25→0,00 (es)**; a **correção pós-hoc por dicionário** só chega a **0,42 / 0,42 / 0,17**. Motivo medido: os erros do baseline são **fusão de palavras** ("sobre nós"→"obanós", "over night"→"overnight") e inserções — um léxico não desfaz fusão; o viés de decodificação, sim.
 - **Peso:** o `--prompt` não custa artefato nem licença; o dicionário é um **asset por idioma** (MBs + licença de dado, que o projeto não adota sem decisão).
 
+## [spike] Áudio real cantado: transcrição, cifra e o gap das repetições (2026-11-25)
+
+Fonte: vídeo *Teu Santo Nome — Gabriela Rocha (Cifra e Letra)*, escolhido pelo dono. **Material fora do repo** (letra, cifra, áudio, quadros); áudio pelo `yt-dlp` como **ato do dono** (ADR-0013).
+
+- **O vídeo não serve como referência de tempo** — medido: páginas estáticas (rolagem vertical zero, sem evento por linha; o "destaque" que eu supus é a luz de fundo). Hipótese refutada.
+- **OCR (Vision, 720p) + olho:** o OCR recupera a letra e localiza os acordes, mas troca `Em`→`E` e `Final: C Am C`→`A` — "OCR localiza, olho fecha" (skill `ocr-em-digitalizacao`).
+- **Transcrição em voz cantada real (`medium`):** recall **91,4%** das palavras distintas (≈100% nas linhas cantadas); **3,1%** das palavras emitidas fora do vocabulário da letra; sem loop de invenção. **O WER 0,50 do tier sintético era artefato da construção** (TTS sem pausa entre palavras funde "sobre nós" em "obranós") — em áudio real, com pausas, o `medium` acerta.
+- **Cifra × cifra humana:** tonalidade **`G`** bate (motor: G, correlação 0,94, margem 0,18); **raiz certa em 93,4%** dos trechos; **rótulo exato em 29,2%** — o ruído está na **qualidade** (`5`/`7` onde o humano escreve tríade).
+- **GAP de produto (o achado que importa):** a cifra/letra traz as linhas **distintas** e a gravação **repete**; sem a ordem cantada, o refrão foi alinhado à **introdução instrumental** (0–27,6 s, energia 0,31). O `--letra` precisa aceitar a ordem cantada (ou detectar repetição) — sem isso "acorde sobre a sílaba" **não é medível**.
+
 ## [spike] Stem de voz não conserta o instrumento; `exportar_onnx.py` está quebrado (2026-11-25)
 
 - **Demucs/torch instalados e exercidos** (venv Python 3.11; `torch` 2.15.0, `demucs` 4.1.0). `htdemucs_6s` separou 90 s em **9 s** de CPU e os pesos baixados (`5c90dfd2-34c22ccb.th`) são **52,4 MB**, com **sha256 idêntico ao do `MANIFEST`**.
