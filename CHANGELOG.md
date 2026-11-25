@@ -71,15 +71,7 @@ Fonte: vídeo *Teu Santo Nome — Gabriela Rocha (Cifra e Letra)*, escolhido pel
 - **Demucs/torch instalados e exercidos** (venv Python 3.11; `torch` 2.15.0, `demucs` 4.1.0). `htdemucs_6s` separou 90 s em **9 s** de CPU e os pesos baixados (`5c90dfd2-34c22ccb.th`) são **52,4 MB**, com **sha256 idêntico ao do `MANIFEST`**.
 - **Hipótese refutada:** o stem de voz **não** faz o instrumento de acoplamento separar alinhamento fino. No mix os onsets de palavra nem caem na energia vocal (z=−0,7); no stem caem (z=+4,4), mas a **ladder de jitter fica plana de 0 a 400 ms** (a envelope de voz isolada é quase contínua → a métrica satura). **Conclusão:** validar o erro absoluto em voz cantada exige **referência anotada à mão**, não stem.
 - **GAP encontrado:** `scripts/exportar_onnx.py` **não funciona** — o `.th` é um bag (`klass/args/kwargs/state/...`) e o script faz `load_state_dict(state)` no dicionário errado (deveria ser `state['state']`). O caminho **ONNX/`ort` do motor não pode ser exercido** enquanto isso não for corrigido. **Não corrigido de propósito:** o arquivo é de `cline/f5ba4`.
-- **Exceção documentada de segurança:** o `semgrep` dispara no `torch.load` em si (a regra casa a chamada, não o `weights_only`). Recebeu `# nosemgrep` na linha, com a justificativa do pin (**bytes da URL do `MANIFEST`, sha256 conferido**) — sem isso, nenhum push passava, para todos.
-=======
-### P5 — Detector de ataque consolidado
-- **`crates/mir_engine/src/onset.rs`** — novo módulo compartilhado com `detectar()`, `detectar_banda()` e `fluxo_espectral()`.
-- **Detector único:** antes duplicado em `percussao::ataques()` e `pecas::ataques()`. Agora ambos delegam a `onset::detectar()`.
-- **Interpolação parabólica:** localização sub-quadro dos picos (técnica de `crate::percussao::periodo_dominante`). Resolução salta de 23 ms para ~1 ms.
-- **4 testes novos** no `onset` + 1 corrigido (sentido da interpolação).
-- **53 testes** no `mir_engine`, 0 falhas. `clippy` e `fmt` limpos.
->>>>>>> 290c620 (feat(adr-0017): P3/P4/P5 — MANIFEST ONNX, recalibragem compasso pelo stem, detector consolidado (onset.rs))
+- **Exceção documentada de segurança:** o `semgrep` dispara no `torch.load` em si (a regra casa a chamada, não o `weights_only`). Recebeu `# nosemgrep` na linha, com a justificativa do pin (**bytes da URL do `MANIFEST`, sha256 conferido**) — sem isso, nenhum push passava, para todos.(feat(adr-0017): P3/P4/P5 — MANIFEST ONNX, recalibragem compasso pelo stem, detector consolidado (onset.rs))
 
 ### Pendente
 - P1 (pipeline automático) e P2 (inferência ONNX via `ort`) — dependem da geração do modelo ONNX.
@@ -1554,3 +1546,6 @@ A janela não foi escolhida: foi medida. E o caso de 0,09 é a **prova negativa*
 ### Publicado
 - `main` enviada ao GitHub com `[skip ci]` no primeiro push.
 - Branch padrão do repositório alterada para `main`.
+=======
+#
+>>>>>>> 9b51987 (feat(adr-0017): P2 — inferência ONNX via crate ort + MANIFEST atualizado)

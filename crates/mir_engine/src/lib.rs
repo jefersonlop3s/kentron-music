@@ -27,6 +27,7 @@ pub mod report;
 pub mod sheet;
 pub mod spectrum;
 pub mod stems;
+pub mod stems_onnx;
 pub mod structure;
 pub mod tonality;
 pub mod uso;

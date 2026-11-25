@@ -29,6 +29,7 @@ notation_bundle = { path = "../notation_bundle", version = "0.0.0" }
 # dependência sem modificação. As otimizações SIMD trazem o `rustfft`, que já
 # está aqui pelo croma.
 symphonia = { version = "0.5", features = ["all"] }
+ort = "2.0.0-rc.15"
 
 [lints]
 workspace = true

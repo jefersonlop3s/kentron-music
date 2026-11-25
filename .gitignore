@@ -35,6 +35,7 @@ models/*.onnx
 models/*.ort
 models/*.tflite
 models/*.bin
+models/weights/
 
 # Editor / SO
 .DS_Store
