@@ -158,6 +158,10 @@ pub struct Leitura {
     /// De onde veio esta leitura: `envelope` (a `dobra` do `compasso`) ou
     /// `percussão` (a relação bumbo×caixa). Ver [`crate::compasso::Compasso::reconciliar`].
     pub fonte: String,
+    /// Razão entre o período harmônico (autocorrelação da novidade do croma)
+    /// e o período da percussão (tactus). Medido na escala de segundos
+    /// (Klapuri 2006, Peeters 2010): próximo de 2 → 6/8, 3 → 3/4, 4 → 4/4.
+    pub lag_ratio: f32,
     /// Por que esta leitura — a evidência, em uma linha.
     pub regra: String,
 }
@@ -250,18 +254,44 @@ impl Leitura {
                 if bumbo_caixa.periodo_bumbo_s > 0.0 {
                     self.compasso_s = bumbo_caixa.periodo_bumbo_s;
                 }
-                self.nome = None;
-                // **A oferta inclui o `3/4` — sempre.** Medido nos hinos com compasso
-                // declarado (2026-11-24): `Crer e observar` e `Noite feliz` **são
-                // `3/4`** e a caixa delas **não** caiu nos terços (`dobra = 2`) — um
-                // compasso ternário **se apresenta como binário**. A oferta sem `3/4`
-                // perderia a resposta certa, e a oferta é abstensão: **estreitar por
-                // conta própria é vender palpite.**
-                self.alternativas = vec!["3/4".to_owned(), "6/8".to_owned(), "4/4".to_owned()];
-                self.fonte = "percussão".to_owned();
-                self.regra = format!(
-                    "{evidencia} → duas metades: `3/4`, `6/8` ou `4/4`, e a percussão não separa"
-                );
+                // **Lag ratio: a harmonia separa 4/4 de 6/8.**
+                // Klapuri 2006 + medição 2026-11-24: quando a dobra=2
+                // (metades), a razão entre o período harmônico e o período
+                // percussivo indica o metro. ~4 → 4/4 (harmonia muda a cada
+                // 4 batidas), ~2 → 6/8 (harmonia muda a cada 2 batidas
+                // grandes), ~3 → 3/4 (mas já estamos em dobra=2, então
+                // isso é raro — oferta como alternativa por segurança).
+                let lag = self.lag_ratio;
+                if lag > 3.0 && lag < 5.0 {
+                    // Razão ~4: a harmonia muda a cada 4 batidas → 4/4
+                    self.nome = Some("4/4".to_owned());
+                    self.alternativas = vec!["3/4".to_owned(), "6/8".to_owned()];
+                    self.fonte = "percussão+harmonia".to_owned();
+                    self.regra = format!(
+                        "{evidencia} → duas metades e lag ratio {lag:.1} (~4): `4/4`"
+                    );
+                } else if lag > 1.5 && lag < 2.5 {
+                    // Razão ~2: a harmonia muda a cada 2 batidas grandes → 6/8
+                    self.nome = Some("6/8".to_owned());
+                    self.alternativas = vec!["3/4".to_owned(), "4/4".to_owned()];
+                    self.fonte = "percussão+harmonia".to_owned();
+                    self.regra = format!(
+                        "{evidencia} → duas metades e lag ratio {lag:.1} (~2): `6/8`"
+                    );
+                } else {
+                    self.nome = None;
+                    // **A oferta inclui o `3/4` — sempre.** Medido nos hinos com compasso
+                    // declarado (2026-11-24): `Crer e observar` e `Noite feliz` **são
+                    // `3/4`** e a caixa delas **não** caiu nos terços (`dobra = 2`) — um
+                    // compasso ternário **se apresenta como binário**. A oferta sem `3/4`
+                    // perderia a resposta certa, e a oferta é abstensão: **estreitar por
+                    // conta própria é vender palpite.**
+                    self.alternativas = vec!["3/4".to_owned(), "6/8".to_owned(), "4/4".to_owned()];
+                    self.fonte = "percussão".to_owned();
+                    self.regra = format!(
+                        "{evidencia} → duas metades e lag ratio {lag:.1} (inconclusivo): `3/4`, `6/8` ou `4/4`"
+                    );
+                }
             }
             _ => {}
         }
@@ -528,6 +558,52 @@ fn dobrar_em_dois_compassos(
 /// baixado para "acertar mais": **margem fina não é evidência**, e erro com
 /// margem fina seria pior que abstenção.
 const MARGEM_DOBRA: f32 = 0.05;
+
+/// Período dominante por autocorrelação, com interpolação parabólica.
+/// Mesmo método usado em `percussao::periodo_dominante`, aqui aplicado à
+/// novidade harmônica (croma) para calcular o lag ratio (Klapuri 2006).
+fn periodo_dominante_harm(novidade: &[f32], fps: f32, min_s: f32, max_s: f32) -> f32 {
+    if novidade.len() < 8 {
+        return 0.0;
+    }
+    let min_lag = (fps * min_s).round() as usize;
+    let max_lag = ((fps * max_s).round() as usize)
+        .min(novidade.len() / 2)
+        .max(min_lag + 2);
+    if max_lag <= min_lag + 1 {
+        return 0.0;
+    }
+    let media = novidade.iter().sum::<f32>() / novidade.len() as f32;
+    let curva: Vec<f32> = novidade.iter().map(|v| v - media).collect();
+    let correlacao = |lag: usize| -> f32 {
+        (0..curva.len() - lag)
+            .map(|i| curva[i] * curva[i + lag])
+            .sum()
+    };
+    let mut melhor = (min_lag, f32::MIN);
+    for lag in min_lag..max_lag {
+        let soma = correlacao(lag);
+        if soma > melhor.1 {
+            melhor = (lag, soma);
+        }
+    }
+    if melhor.1 <= f32::EPSILON {
+        return 0.0;
+    }
+    let lag = if melhor.0 > min_lag && melhor.0 + 1 < max_lag {
+        let (a, b, c) = (correlacao(melhor.0 - 1), melhor.1, correlacao(melhor.0 + 1));
+        let denominador = a - 2.0 * b + c;
+        if denominador.abs() > f32::EPSILON {
+            (melhor.0 as f32 + 0.5 * (a - c) / denominador)
+                .clamp(melhor.0 as f32 - 0.5, melhor.0 as f32 + 0.5)
+        } else {
+            melhor.0 as f32
+        }
+    } else {
+        melhor.0 as f32
+    };
+    lag / fps
+}
 
 /// Autocorrelação do envelope de novidade no deslocamento `lag_s`, corrigida
 /// pelo tamanho da janela.
@@ -896,6 +972,27 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
     let compasso_s = periodo * f32::from(melhor_m);
     let correlacao_meio = correlacao(&novidade, fps, compasso_s * 0.5);
     let correlacao_terco = correlacao(&novidade, fps, compasso_s / 3.0);
+    // **Lag ratio** — razão entre o período harmônico (mudanças de acorde) e
+    // o período da percussão (tactus). Klapuri 2006: a autocorrelação da
+    // novidade do croma revela a escala do compasso; dividida pelo período
+    // do tactus (60/BPM), a razão indica: ~2 → 6/8, ~3 → 3/4, ~4 → 4/4.
+    // Usamos a mesma `periodo_dominante` que o `percussao::medir` usa para
+    // o bumbo, mas sobre a novidade harmônica em vez da percussiva.
+    let periodo_percussao_s = if tempo.bpm > 0.0 {
+        60.0 / tempo.bpm
+    } else {
+        0.0
+    };
+    let lag_ratio = if periodo_percussao_s > 0.0 {
+        let harm_periodo = periodo_dominante_harm(&novidade_croma, fps, 0.5, 10.0);
+        if harm_periodo > 0.0 {
+            harm_periodo / periodo_percussao_s
+        } else {
+            0.0
+        }
+    } else {
+        0.0
+    };
     let margem_dobra = (correlacao_meio - correlacao_terco).abs();
     let dobra = if margem_dobra < MARGEM_DOBRA {
         Dobra::Indeterminada
@@ -944,6 +1041,7 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
                 compasso_s,
                 dobra,
                 margem_dobra,
+                lag_ratio,
                 nome: nome.map(str::to_owned),
                 alternativas: alternativas_de(melhor_m),
                 fonte: "envelope".to_owned(),
@@ -1312,6 +1410,7 @@ mod tests {
             compasso_s: 2.4,
             dobra: Dobra::EmDois,
             margem_dobra: 0.24,
+            lag_ratio: 0.0,
             nome: Some("6/8".into()),
             alternativas: vec!["3/4".into(), "6/8".into()],
             fonte: "percussão".into(),
@@ -1338,6 +1437,7 @@ mod tests {
             compasso_s: 2.4,
             dobra: Dobra::EmDois,
             margem_dobra: 0.24,
+            lag_ratio: 0.0,
             nome: Some("6/8".into()),
             alternativas: vec!["3/4".into(), "6/8".into()],
             fonte: "envelope".into(),
