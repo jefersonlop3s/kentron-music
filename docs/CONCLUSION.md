@@ -1766,6 +1766,17 @@ A cifra/letra de **qualquer** fonte traz as linhas **distintas**, e a **gravaç�
 
 **Nota de conteúdo:** letra, cifra, áudio e quadros **ficaram fora do repositório** (arte de terceiro); o áudio foi obtido pelo `yt-dlp` como **ato do dono** (ADR-0013). No repositório entram **só os números**.
 
+### Segundo vídeo (karaokê de cifra): mais um instrumento testado, e ele não separa (mesmo dia)
+
+O dono mandou um segundo vídeo, *"Cifra do louvor DIZ (YOU SAY) — Gabriela Rocha"*, dizendo que a cifra está sincronizada com o instrumento. Ele **mostra a letra** (ao contrário do que se supunha) e destaca o **acorde atual em verde** — os dois pelo criador. Testei os dois eixos:
+
+- **Tempo de palavra: não existe.** Medi o brilho ao longo da linha da letra em 16 quadros: **plano** (esquerda ≈ direita, constante). A letra troca **em bloco**, com fade — não há wipe palavra a palavra. Hipótese refutada por medição, como a do primeiro vídeo.
+- **Timeline de acordes: extraída, e a comparação não separa.** O destaque verde dá uma timeline (G, Bm, Em, C em ciclo). Contra o motor, a **raiz** coincide em **51,5%**, contra **41% de taxa-base** (a maioria "G" sozinha) — **~10 pontos acima do trivial**, e o lado da referência carrega o meu próprio ruído (OCR `Ei`/`Bi`/`c`, verde ausente em quadros). **Não reporto isso como acurácia do motor.**
+
+**Sinal de lado, esse sim informativo:** nesta música o motor declara **decisão frágil** (margem **0,035** sobre a segunda) e **não emite um único acorde menor** — nenhum `Bm`, nenhum `Em` — onde a cifra é `G Bm Em C`. É a "terça fraca" já registrada, agora vista de fora.
+
+**O que fica:** três instrumentos de referência tentados (marcação por orelha, stem de voz, destaque de vídeo) e **nenhum certificado**. O caminho não é achar um atalho — é **medir o atalho**: o destaque verde só vira referência depois de conferido contra marcas humanas. E a marcação do dono, além de destravar a letra na ordem cantada, serve exatamente para isso.
+
 ## R4 · Timestamp de palavra do whisper: medido, e o "sílaba exata" não se sustenta (2026-11-25)
 
 O dono retomou a proposta: transcrever o áudio **em casa** (whisper local, sem API de
