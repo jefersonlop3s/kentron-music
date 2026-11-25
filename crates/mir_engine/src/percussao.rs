@@ -16,6 +16,7 @@
 //! contaminado, e isso está medido: a banda de 30–110 Hz carrega o baixo, e a
 //! "barra do bumbo" sai **0,49–1,28 s** em vez dos 2–3 s de um compasso.
 
+use crate::onset;
 use crate::spectrum::Spectrogram;
 use serde::Serialize;
 
@@ -60,10 +61,6 @@ const DIVISORES: [f32; 4] = [1.0, 2.0, 3.0, 4.0];
 const EMPATE_ANCORA: f32 = 1.05;
 /// Tolerância para uma troca de acorde contar como **alinhada** ao ciclo.
 const ALINHAMENTO: f32 = 0.10;
-/// Piso do ataque, em desvios-padrão acima da média da própria banda.
-const PISO_ATAQUE: f32 = 1.5;
-/// Espaçamento mínimo entre ataques da mesma peça.
-const ESPACO_MIN_S: f32 = 0.08;
 /// Quantas fatias do ciclo do bumbo o histograma da caixa usa.
 pub const FATIAS: usize = 6;
 
@@ -164,42 +161,15 @@ fn periodo_dominante(novidade: &[f32], fps: f32, min_s: f32, max_s: f32) -> f32 
     lag / fps
 }
 
-/// Ataques de uma novidade: máximo local acima do piso, com espaçamento mínimo.
+/// Ataques de uma novidade: delega ao detector compartilhado `onset::detectar`.
 ///
-/// **Piso relativo à própria banda**, e é isso que faz o bumbo e a caixa serem
-/// comparáveis: o piso absoluto deixaria a banda mais energética dominar.
+/// Extrai só os tempos (descarta a energia do pico) para compatibilidade com
+/// os callers que usam `Vec<f32>`.
 fn ataques(novidade: &[f32], fps: f32) -> Vec<f32> {
-    if novidade.len() < 3 {
-        return Vec::new();
-    }
-    let media = novidade.iter().sum::<f32>() / novidade.len() as f32;
-    let variancia = novidade
+    onset::detectar(novidade, fps)
         .iter()
-        .map(|v| (v - media) * (v - media))
-        .sum::<f32>()
-        / novidade.len() as f32;
-    let piso = media + PISO_ATAQUE * variancia.sqrt();
-    // Sem variância não há ataque: a novidade constante (silêncio, ou banda
-    // vazia) passaria no piso e cada quadro viraria um ataque.
-    if variancia <= f32::EPSILON {
-        return Vec::new();
-    }
-    let espaco = (ESPACO_MIN_S * fps).round() as usize;
-    let mut saida: Vec<f32> = Vec::new();
-    let mut ultimo: Option<usize> = None;
-    for i in 1..novidade.len() - 1 {
-        if novidade[i] < piso || novidade[i] < novidade[i - 1] || novidade[i] < novidade[i + 1] {
-            continue;
-        }
-        if let Some(u) = ultimo {
-            if i - u < espaco {
-                continue;
-            }
-        }
-        ultimo = Some(i);
-        saida.push(i as f32 / fps);
-    }
-    saida
+        .map(|(t, _)| *t)
+        .collect()
 }
 
 /// O intervalo mediano entre trocas de acorde — **a escala em que a música anda**.
@@ -432,9 +402,9 @@ pub fn medir(spectro: &Spectrogram, taxa: u32, cortes: &[f32]) -> BumboCaixa {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
     use crate::spectrum::Spectrogram;
     use crate::wav::Audio;
+    use std::collections::HashMap;
 
     const TAXA: u32 = 22_050;
 

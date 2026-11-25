@@ -32,3 +32,21 @@ weights_url     = "https://dl.fbaipublicfiles.com/demucs/hybrid_transformer/5c90
 sha256          = "34c22ccb381c6f9fdbf324f04e1e2fe21aaaf293f5ded163a162697ff9a02ddd"
 format          = "pytorch"
 approved_in     = "ADR-0017"
+
+[[model]]
+id              = "htdemucs_6s_onnx"
+purpose         = "separação de fontes em ONNX: inferência pelo crate ort em Rust, sem Python"
+code_license    = "MIT"         # sevagh/demucs.onnx é MIT
+weights_license = "MIT"         # StemSplitio/htdemucs-6s-onnx (derivado MIT, confirmado na fonte HF)
+source_url      = "https://huggingface.co/StemSplitio/htdemucs-6s-onnx"
+weights_url     = "https://huggingface.co/StemSplitio/htdemucs-6s-onnx/resolve/main/htdemucs_6s_fp16weights.onnx"
+sha256          = "7ce55792e2231c93fbf92de95f5fd5b3a5e6c89f7db690dfd693e8f1dce56869"
+format          = "onnx"
+approved_in     = "ADR-0017 (P2 entregue 2026-11-25)"
+
+# Baixar:
+#   curl -L -o models/weights/htdemucs_6s/htdemucs_6s.onnx \\
+#     'https://huggingface.co/StemSplitio/htdemucs-6s-onnx/resolve/main/htdemucs_6s_fp16weights.onnx'
+# Fontes (índice, nome): 0 drums · 1 bass · 2 other · 3 vocals · 4 guitar · 5 piano
+# Input: (1, 2, 343980) float32, 7,8 s segment, 44 100 Hz
+# Output: (1, 6, 2, 343980) float32

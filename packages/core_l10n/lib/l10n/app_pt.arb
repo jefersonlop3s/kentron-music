@@ -21,5 +21,6 @@
   "stageProjectPrevious": "Seção anterior",
   "stageCopyProjectionLink": "Copiar link de projeção",
   "stageProjectionLinkCopied": "Link de projeção copiado",
-  "stageProjectionBlocked": "Publicação bloqueada: {reason}"
+  "stageProjectionBlocked": "Publicação bloqueada: {reason}",
+  "stageTime": "Compasso"
 }

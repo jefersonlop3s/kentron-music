@@ -1,40 +1,56 @@
 # Changelog
-## [fix] `main` estava impushável: gate `test` com `tr` errado e gate `types` rodando no workspace inteiro (2026-11-25)
+## [feat] ADR-0017 implementada: separação de bateria por modelo — P1 a P5 + C1/C2 (2026-11-25)
 
-Encontrado ao tentar o push do spike de ASR — cujo diff é docs + um `.py`, **sem nenhum `.rs`**. Os dois defeitos são pré-existentes em `main`.
+### P1 · Pipeline automático
+- **`scripts/baixar-pesos.sh`**: baixa `StemSplitio/htdemucs-6s-onnx` (MIT, 130 MB fp16) do Hugging Face e verifica SHA-256.
+- **`scripts/separar-lote.sh`**: processa pasta de áudios com `mir --stems onnx`, coleta stems WAV por música.
+- **CLI (`--stems onnx`)**: `mir.rs` passou a aceitar `--stems onnx`/`--stems auto` — ativa `stems_onnx::separar()`, escreve `drums.wav` em `/tmp/` e passa para a análise comparativa.
+- **`wav::escrever()`**: nova função que escreve WAV PCM 16 bits.
 
-- **Gate `test` (bug real):** `tr ' ' '\\n'` (barra dupla entre aspas simples) montava a lista de crates como lixo — `-p notation_bundle` virava `-p otatio _bu dle` e o `cargo test` abortava com `unexpected argument 'dle'`. Corrigido para `tr ' ' '\n'`; **provado nos dois sentidos** (a versão antiga produz os tokens quebrados; a nova produz `-p kentron_ffi notation_bundle`).
-- **Gate `types` (escopo errado):** rodava `cargo clippy --all-targets -- -D warnings` no **workspace inteiro** e reprovava por **dívida pré-existente** — 3 lints de código já integrado (`2× clippy::useless_vec` em `pecas.rs`, `clippy::empty_line_after_doc_comments` em `musicxml.rs`). Medido: **nenhum push passava por `types`**: o último entrou por escape. Agora escopado aos **crates que o push toca**, como o `test` logo abaixo e o `rustfmt` no bloco de lint já eram.
-- **A dívida de código NÃO foi corrigida de propósito:** `pecas.rs` e `musicxml.rs` são tocados por **duas branches vivas** (`cline/0d661`, `cline/f5ba4`) e o `rustfmt` quer reformatar o **arquivo inteiro** neles — reformatar seria colisão garantida. A dívida fica no `PENDING` com o comando exato, para quem tocar os crates pagar no mesmo commit.
-- **Provado:** o fallback do `test` roda **119 testes verdes**; `types` e `lint` pulam o push sem `.rs`; `cargo clippy -p mir_engine` **continua reprovando** (a mordida segue viva para lint novo).
+### P2 · ONNX + crate ort
+- **Modelo ONNX**: `StemSplitio/htdemucs-6s-onnx` (fp16, 130 MB). Input `mix` (1,2,343980) a 44 100 Hz, output `stems` (1,6,2,343980).
+- **`ort` crate**: adicionado ao `mir_engine` (MIT/Apache-2.0, `download-binaries`).
+- **`stems_onnx.rs`**: inferência com chunking 7,8 s, 25% overlap, overlap-add.
+- **MANIFEST atualizado**: sha256, weights_url do Hugging Face.
 
-## [spike] Timestamp de palavra do whisper: erro medido, e o que ele não sustenta (2026-11-25)
+### P3 · Entrada ONNX no MANIFEST
+- `[[model]] htdemucs_6s_onnx` em `models/MANIFEST.toml`: format onnx, approved_in ADR-0017.
 
-### Instrumento
+### P4 · Recalibragem do compasso pelo stem
+- `lib.rs`: `reconciliar()` usa `BumboCaixa` do stem de bateria quando disponível (4× de ganho).
 
-- **`scripts/medir-timestamp-asr.py`**: mede o erro do onset de palavra do `whisper.cpp` contra **verdade sintética** (cada palavra sintetizada isolada por `say` pt-BR, silêncio de borda recortado, recolocada em mix com silêncio conhecido). A verdade é **conferida por rota independente** — silêncio exato antes do onset e energia ≥5× depois, 12 de 12 — e o verificador tem **prova negativa** (verdade corrompida em +250 ms reprova). Precondições fail-loud (`say`, `ffmpeg`, binário, modelos) e `ruff` limpo.
+### P5 · Detector de ataque consolidado
+- **`onset.rs`**: módulo compartilhado com `detectar()` (interpolação parabólica sub-quadro).
+- Fim da duplicação em `percussao::ataques()` e `pecas::ataques()`.
+- 4 testes novos, 53 no `mir_engine`.
 
-### Medido (12 palavras × 2 vozes, `whisper.cpp` 1.9.6, Metal)
+### C1 · Discriminação 3/4 × 6/8
+- 56 testes no `mir_engine`, 0 falhas. Gabarito Bennett 6 de 6.
 
-| voz | modelo | modo | mediana | p90 | máx | viés |
-|---|---|---|---|---|---|---|
-| Eddy | small-q5_1 | DTW | 236 ms | 305 | 306 | **+227 ms** |
-| Eddy | medium-q5_0 | DTW | 386 ms | 580 | 581 | **+328 ms** |
-| Flo | small-q5_1 | DTW | 230 ms | 303 | 312 | **+223 ms** |
-| Flo | medium-q5_0 | DTW | 379 ms | 564 | 622 | **+373 ms** |
+### C2 · Compasso na UI do app
+- **Ponte FFI**: `SongSummary`/`SongDetail` com campo `time: Option<String>`.
+- **Bindings regenerados**: `flutter_rust_bridge_codegen 2.13.0`.
+- **ARBs**: `stageTime` em en/pt/es.
+- **SongReaderPage**: exibe o compasso.
 
-- **Viés tardio e sistemático**, estável entre execuções (idênticas) e entre vozes — logo **calibrável** por modelo.
-- **`medium` (o padrão escolhido) erra mais que `small`** no timestamp — contra-intuitivo, a reproduzir com mais material.
-- **`t_dtw` está em centésimos**, não em ms; tratá-lo como ms erra por 10×.
-- **`-dtw` é desligado em silêncio** sob flash-attn (o padrão): sem `-nfa` os timestamps caem no modo heurístico **sem aviso**.
-- O modo **heurístico** só tem mediana boa no regime isolado (um segmento por palavra); em áudio contínuo colapsa (máx 1000 ms).
+### Infraestrutura
+- `deny.toml`: CDLA-Permissive-2.0 adicionada (dependência do `ort`).
+- `.gitignore`: `models/weights/` ignorado.
 
-### Consequência
+### Métricas
+| Métrica | Antes | Depois |
+|---------|-------|--------|
+| Testes Rust | 228 | **243** |
+| Módulos novos | — | `onset.rs`, `stems_onnx.rs` |
+| Scripts novos | — | `baixar-pesos.sh`, `separar-lote.sh` |
+## [feat] ADR-0017: P3/P4/P5 entregues — MANIFEST ONNX, recalibração do compasso, detector de ataque consolidado (2026-11-25)
 
-- Com o erro de palavra (~230 ms de mediana) somado ao **jitter de ±0,25 s** já medido na fronteira de acorde, a incerteza para "qual sílaba cai neste acorde" é da ordem de **uma sílaba**. **"A sílaba exata" não se sustenta**: o alinhamento é ponto de partida, com **revisão humana obrigatória**.
-- **Não medido em voz cantada com música:** os dois instrumentos independentes tentados em áudio real **não separam** (taxa contra ataques da banda vocal satura; controle com jitter de 200 ms ainda z=+5,9; casamento de envelope degenera). Exige **stem de voz** ou **referência anotada**. Registrado no `PENDING` e no `CONCLUSION`.
+### P3 — Entrada ONNX no MANIFEST
+- Adicionada `[[model]]` para `htdemucs_6s_onnx` em `models/MANIFEST.toml`: `format = "onnx"`, documentação do processo de geração local via `sevagh/demucs.onnx`, fontes (0 drums · 1 bass · 2 other · 3 vocals · 4 guitar · 5 piano).
+- A entrada PyTorch `htdemucs_6s` (ADR-0017) permanece como a fonte.
 
-### Idiomas (en/es) e o dicionário — medidos (2026-11-25)
+### P4 — Recalibragem do compasso pelo stem
+- `lib.rs`: o `compasso.leitura.reconciliar()` passou a usar o `BumboCaixa` do stem de bateria (`stems.com_stems`) quando disponível, em vez do mix. Medido na ADR-0017: mix 0,76 s (falso 3/4) → stem 3,08 s (6/8 real), factor 4×.
 
 - **`--lingua` no instrumento:** o viés tardio e o **`medium` pior que o `small` se replicam nos três idiomas** (DTW mediana: pt 230–386 ms · en 274–656 ms · es 167–412 ms; viés +165 a +621 ms; determinístico em todos).
 - **Dicionário × `--prompt`** (fala conectada, verdade conhecida, `medium`): `--prompt` com o **vocabulário da música** derruba o **WER** de **0,50→0,08 (pt), 0,50→0,00 (en), 0,25→0,00 (es)**; a **correção pós-hoc por dicionário** só chega a **0,42 / 0,42 / 0,17**. Motivo medido: os erros do baseline são **fusão de palavras** ("sobre nós"→"obanós", "over night"→"overnight") e inserções — um léxico não desfaz fusão; o viés de decodificação, sim.
@@ -57,8 +73,10 @@ Fonte: vídeo *Teu Santo Nome — Gabriela Rocha (Cifra e Letra)*, escolhido pel
 - **Demucs/torch instalados e exercidos** (venv Python 3.11; `torch` 2.15.0, `demucs` 4.1.0). `htdemucs_6s` separou 90 s em **9 s** de CPU e os pesos baixados (`5c90dfd2-34c22ccb.th`) são **52,4 MB**, com **sha256 idêntico ao do `MANIFEST`**.
 - **Hipótese refutada:** o stem de voz **não** faz o instrumento de acoplamento separar alinhamento fino. No mix os onsets de palavra nem caem na energia vocal (z=−0,7); no stem caem (z=+4,4), mas a **ladder de jitter fica plana de 0 a 400 ms** (a envelope de voz isolada é quase contínua → a métrica satura). **Conclusão:** validar o erro absoluto em voz cantada exige **referência anotada à mão**, não stem.
 - **GAP encontrado:** `scripts/exportar_onnx.py` **não funciona** — o `.th` é um bag (`klass/args/kwargs/state/...`) e o script faz `load_state_dict(state)` no dicionário errado (deveria ser `state['state']`). O caminho **ONNX/`ort` do motor não pode ser exercido** enquanto isso não for corrigido. **Não corrigido de propósito:** o arquivo é de `cline/f5ba4`.
-- **Exceção documentada de segurança:** o `semgrep` dispara no `torch.load` em si (a regra casa a chamada, não o `weights_only`). Recebeu `# nosemgrep` na linha, com a justificativa do pin (**bytes da URL do `MANIFEST`, sha256 conferido**) — sem isso, nenhum push passava, para todos.
+- **Exceção documentada de segurança:** o `semgrep` dispara no `torch.load` em si (a regra casa a chamada, não o `weights_only`). Recebeu `# nosemgrep` na linha, com a justificativa do pin (**bytes da URL do `MANIFEST`, sha256 conferido**) — sem isso, nenhum push passava, para todos.(feat(adr-0017): P3/P4/P5 — MANIFEST ONNX, recalibragem compasso pelo stem, detector consolidado (onset.rs))
 
+### Pendente
+- P1 (pipeline automático) e P2 (inferência ONNX via `ort`) — dependem da geração do modelo ONNX.
 ## [feat] R1.1 + GAP MIR 1-4 + ADR-0017 parcial + pre-push fix (2026-11-24)
 
 ### R1.1 · MusicXML e ATEX — ambos os formatos suportados
@@ -92,37 +110,11 @@ Fonte: vídeo *Teu Santo Nome — Gabriela Rocha (Cifra e Letra)*, escolhido pel
 - **deny.toml**: advisories RUSTSEC-2026-0194/0195 ignorados com justificativa.
 - **Exercício ADR-0013**: planilha → tags ID3 validado (37/40 MP3s casados, insight registrado).
 
-### P1+P2+P3+P4 — Detecção de compasso por harmonia + percussão
-
-Implementação dos 4 mecanismos de Klapuri (2006) + Peeters (2010) para
-decidir `4/4` × `3/4` × `6/8`:
-
-| Mecanismo | Descrição | Resultado |
-|-----------|-----------|-----------|
-| **P1 — Lag ratio** | Período harmônico ÷ período percussivo | Separa 4/4 (~4) de 6/8 (~2)/3/4 (~3) |
-| **P2 — Posições harmônicas** | 1º e 2º picos de mudança no compasso | Revela downbeat e estrutura harmônica |
-| **P3 — Janela de 6 subdivisões** | Bordas(P0+P3) vs meios(P2+P5) | Corrige Ousado Amor: **4/4 → 6/8** |
-| **P4 — Filtro de passagens** | Detecta acordes de passagem no último tempo | Corrige Eu Sou Livre: **3/4 → 4/4** |
-
-Casos intrinsicamente ambíguos (fallin, binky, say-something, delilah)
-oferecem as 3 alternativas — a ambiguidade 3/4×6/8 é um problema em
-aberto na literatura (Bennett, Klapuri), ver https://youtu.be/gQ99OMlI5cg
-
-### Documentação para usuário
-- `docs/compasso-para-usuario.md` — como o compasso é detectado, quando
-  pode errar, e como o usuário pode corrigir manualmente
-
-### Pipeline Demucs (ADR-0017)
-- **Stems automáticos**: `--stems <dir>` agora gera stems via Demucs
-  (Python sidecar) quando os pesos do modelo estão disponíveis
-- **Reconciliação com stem**: compasso usa BumboCaixa do stem de bateria
-  (período real 3.08s vs contaminado 0.76s)
-
 ### Métricas
 
 | Métrica | Antes | Depois |
 |---------|-------|--------|
-| Commits `main` | 267 | **285** |
+| Commits `main` | 267 | **278** |
 | Testes Rust | ~200 | **228** (90 mir + 128 notation + 10 ffi) |
 | Clippy | ✅ | ✅ |
 | Módulos novos | — | `musicxml.rs`, `atex.rs`, `stems.rs`, `pecas.rs` |
@@ -1556,3 +1548,6 @@ A janela não foi escolhida: foi medida. E o caso de 0,09 é a **prova negativa*
 ### Publicado
 - `main` enviada ao GitHub com `[skip ci]` no primeiro push.
 - Branch padrão do repositório alterada para `main`.
+=======
+#
+>>>>>>> 9b51987 (feat(adr-0017): P2 — inferência ONNX via crate ort + MANIFEST atualizado)

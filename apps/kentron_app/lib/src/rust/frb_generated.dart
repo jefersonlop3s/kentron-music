@@ -4,11 +4,14 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'bridge.dart';
+
 import 'dart:async';
 import 'dart:convert';
+
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
+
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
@@ -64,7 +67,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 1070150335;
+  int get rustContentHash => 1556826576;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -87,9 +90,13 @@ abstract class RustLibApi extends BaseApi {
     required String baseDir,
   });
 
+  Future<SongSummary> crateBridgeParseMusicxml({required String input});
+
   Future<SongSummary> crateBridgeParseSong({required String input});
 
   Future<void> crateBridgePodePublicar({required String input});
+
+  Future<SongDetail> crateBridgeReadMusicxml({required String input});
 
   Future<SongDetail> crateBridgeReadSong({required String input});
 
@@ -214,7 +221,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<SongSummary> crateBridgeParseSong({required String input}) {
+  Future<SongSummary> crateBridgeParseMusicxml({required String input}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -224,6 +231,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             generalizedFrbRustBinding,
             serializer,
             funcId: 4,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_song_summary,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateBridgeParseMusicxmlConstMeta,
+        argValues: [input],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeParseMusicxmlConstMeta =>
+      const TaskConstMeta(debugName: "parse_musicxml", argNames: ["input"]);
+
+  @override
+  Future<SongSummary> crateBridgeParseSong({required String input}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(input, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 5,
             port: port_,
           );
         },
@@ -251,7 +286,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 6,
             port: port_,
           );
         },
@@ -270,6 +305,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "pode_publicar", argNames: ["input"]);
 
   @override
+  Future<SongDetail> crateBridgeReadMusicxml({required String input}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(input, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 7,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_song_detail,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateBridgeReadMusicxmlConstMeta,
+        argValues: [input],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeReadMusicxmlConstMeta =>
+      const TaskConstMeta(debugName: "read_musicxml", argNames: ["input"]);
+
+  @override
   Future<SongDetail> crateBridgeReadSong({required String input}) {
     return handler.executeNormal(
       NormalTask(
@@ -279,7 +342,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 8,
             port: port_,
           );
         },
@@ -311,7 +374,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 9,
             port: port_,
           );
         },
@@ -348,7 +411,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 10,
             port: port_,
           );
         },
@@ -383,7 +446,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 11,
             port: port_,
           );
         },
@@ -467,14 +530,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   SongDetail dco_decode_song_detail(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 5)
-      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
     return SongDetail(
       title: dco_decode_String(arr[0]),
       key: dco_decode_opt_String(arr[1]),
       artist: dco_decode_opt_String(arr[2]),
-      sections: dco_decode_list_song_section(arr[3]),
-      core: dco_decode_String(arr[4]),
+      time: dco_decode_opt_String(arr[3]),
+      sections: dco_decode_list_song_section(arr[4]),
+      core: dco_decode_String(arr[5]),
     );
   }
 
@@ -506,15 +570,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   SongSummary dco_decode_song_summary(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
     return SongSummary(
       title: dco_decode_String(arr[0]),
       key: dco_decode_opt_String(arr[1]),
       artist: dco_decode_opt_String(arr[2]),
-      sections: dco_decode_u_32(arr[3]),
-      chords: dco_decode_list_String(arr[4]),
-      core: dco_decode_String(arr[5]),
+      time: dco_decode_opt_String(arr[3]),
+      sections: dco_decode_u_32(arr[4]),
+      chords: dco_decode_list_String(arr[5]),
+      core: dco_decode_String(arr[6]),
     );
   }
 
@@ -635,12 +700,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_title = sse_decode_String(deserializer);
     var var_key = sse_decode_opt_String(deserializer);
     var var_artist = sse_decode_opt_String(deserializer);
+    var var_time = sse_decode_opt_String(deserializer);
     var var_sections = sse_decode_list_song_section(deserializer);
     var var_core = sse_decode_String(deserializer);
     return SongDetail(
       title: var_title,
       key: var_key,
       artist: var_artist,
+      time: var_time,
       sections: var_sections,
       core: var_core,
     );
@@ -668,6 +735,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_title = sse_decode_String(deserializer);
     var var_key = sse_decode_opt_String(deserializer);
     var var_artist = sse_decode_opt_String(deserializer);
+    var var_time = sse_decode_opt_String(deserializer);
     var var_sections = sse_decode_u_32(deserializer);
     var var_chords = sse_decode_list_String(deserializer);
     var var_core = sse_decode_String(deserializer);
@@ -675,6 +743,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       title: var_title,
       key: var_key,
       artist: var_artist,
+      time: var_time,
       sections: var_sections,
       chords: var_chords,
       core: var_core,
@@ -806,6 +875,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.title, serializer);
     sse_encode_opt_String(self.key, serializer);
     sse_encode_opt_String(self.artist, serializer);
+    sse_encode_opt_String(self.time, serializer);
     sse_encode_list_song_section(self.sections, serializer);
     sse_encode_String(self.core, serializer);
   }
@@ -830,6 +900,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_String(self.title, serializer);
     sse_encode_opt_String(self.key, serializer);
     sse_encode_opt_String(self.artist, serializer);
+    sse_encode_opt_String(self.time, serializer);
     sse_encode_u_32(self.sections, serializer);
     sse_encode_list_String(self.chords, serializer);
     sse_encode_String(self.core, serializer);

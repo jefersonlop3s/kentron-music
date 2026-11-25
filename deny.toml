@@ -15,6 +15,9 @@ allow = [
     "Unicode-3.0",
     # Copyleft por arquivo: só como dependência sem modificação (ex.: alphaTab).
     "MPL-2.0",
+    # ort (ONNX Runtime) traz webpki-root-certs (CDLA-Permissive-2.0),
+    # que é uma licença de dados permissiva sem restrições — aceitável.
+    "CDLA-Permissive-2.0",
 ]
 confidence-threshold = 0.9
 # O workspace ainda não tem dependências externas: não avisar por licença permitida sem uso.
