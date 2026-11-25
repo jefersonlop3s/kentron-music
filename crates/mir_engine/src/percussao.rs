@@ -475,6 +475,7 @@ mod tests {
 
     fn medir_amostras(amostras: Vec<f32>) -> BumboCaixa {
         let audio = Audio {
+            metadados: HashMap::new(),
             amostras,
             taxa: TAXA,
             canais: 1,
@@ -536,6 +537,7 @@ mod tests {
         // subdivisão é da harmonia, e o contraste não a faria: medido, ele
         // degenera no denominador nulo e prefere o ciclo longo.
         let audio = Audio {
+            metadados: HashMap::new(),
             amostras,
             taxa: TAXA,
             canais: 1,

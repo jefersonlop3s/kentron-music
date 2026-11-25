@@ -4,6 +4,8 @@
 //! teste mede o motor e não a música. Nenhum material de terceiros entra aqui.
 #![allow(dead_code)]
 
+use std::collections::HashMap;
+
 pub const TAXA: u32 = 44_100;
 
 /// Frequência da nota MIDI (69 = A4 = 440 Hz).
@@ -71,6 +73,7 @@ pub fn power_chord_com_voz_em(terca: i32, ganho: f32) -> mir_engine::wav::Audio 
         bloco_power(&mut amostras, [48, 55], terca, ganho, 2.0);
     }
     mir_engine::wav::Audio {
+        metadados: HashMap::new(),
         taxa: TAXA,
         canais: 1,
         amostras,
@@ -114,6 +117,7 @@ pub fn cantar_quatro_frases() -> mir_engine::wav::Audio {
         bloco(&mut amostras, *triade, voz, 4.8);
     }
     mir_engine::wav::Audio {
+        metadados: HashMap::new(),
         taxa: TAXA,
         canais: 1,
         amostras,
@@ -130,6 +134,7 @@ pub fn ruido(segundos: usize) -> mir_engine::wav::Audio {
         })
         .collect();
     mir_engine::wav::Audio {
+        metadados: HashMap::new(),
         taxa: TAXA,
         canais: 1,
         amostras,

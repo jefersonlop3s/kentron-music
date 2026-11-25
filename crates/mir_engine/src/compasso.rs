@@ -1131,6 +1131,7 @@ mod tests {
 
     fn medir(amostras: Vec<f32>, tempo: &Tempo) -> Compasso {
         let audio = Audio {
+            metadados: HashMap::new(),
             amostras,
             taxa: TAXA,
             canais: 1,

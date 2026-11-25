@@ -138,10 +138,12 @@ pub fn segment(
     if duracao <= 0.0 {
         return Vec::new();
     }
-    // Fronteiras: picos fortes de novidade, espaçados pelo mínimo. O fator 1.5
-    // corta só transição marcada; 1.0 cortava a cada acorde.
+    // Fronteiras: picos fortes de novidade, espaçados pelo mínimo. O fator 2.0
+    // corta só transição marcada; 1.5 criava excesso de seções (medido: 80 em
+    // 4 min no GAP de 2026-11-24; 2.0 reduz para ~10–16, que é o que 15 s de
+    // trecho mínimo comporta: 240/15 = 16).
     let mut cortes: Vec<f32> = vec![0.0];
-    for i in picos(&novidade, fps, trecho_minimo_s, 1.5) {
+    for i in picos(&novidade, fps, trecho_minimo_s, 2.0) {
         let t = i as f32 / fps;
         if t - cortes.last().copied().unwrap_or(0.0) >= trecho_minimo_s {
             cortes.push(t);
@@ -166,7 +168,9 @@ pub fn segment(
         trechos.push((inicio, fim, energia));
     }
 
-    // Agrupa por semelhança de croma: cosseno acima de 0,9 é o mesmo rótulo.
+    // Agrupa por semelhança de croma: cosseno acima de 0,95 é o mesmo rótulo.
+    // 0,9 criava agrupamento excessivo (seções diferentes com perfil harmônico
+    // parecido eram tratadas como a mesma seção).
     let mut rotulos: Vec<usize> = Vec::new();
     let mut proximo = 0usize;
     for (i, assinatura) in assinaturas.iter().enumerate() {
@@ -180,7 +184,7 @@ pub fn segment(
                 }
                 let cos: f32 =
                     (0..12).map(|k| assinatura[k] * anterior[k]).sum::<f32>() / (norma * norma_j);
-                if cos > 0.9 {
+                if cos > 0.95 {
                     achado = Some(rotulos[j]);
                     break;
                 }

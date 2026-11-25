@@ -5,6 +5,8 @@
 //! vive; fora dela, baixo fundamental e brilho de prato só atrapalham o
 //! casamento por template.
 
+#[cfg(test)]
+use std::collections::HashMap;
 use rustfft::FftPlanner;
 use rustfft::num_complex::Complex;
 
@@ -336,6 +338,7 @@ mod tests {
             k += 1;
         }
         Audio {
+        metadados: HashMap::new(),
             amostras,
             taxa,
             canais: 1,
@@ -395,6 +398,7 @@ mod tests {
             })
             .collect();
         Audio {
+            metadados: HashMap::new(),
             taxa,
             canais: 1,
             amostras,

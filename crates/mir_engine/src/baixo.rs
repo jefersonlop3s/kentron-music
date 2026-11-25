@@ -257,6 +257,7 @@ mod tests {
 
     fn analisar(amostras: Vec<f32>) -> Baixo {
         let audio = Audio {
+            metadados: HashMap::new(),
             amostras,
             taxa: 44_100,
             canais: 1,

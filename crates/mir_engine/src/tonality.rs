@@ -67,6 +67,10 @@ pub struct Tonalidade {
     pub correlacao: f32,
     /// Quanto o vencedor passou a segunda colocada. Baixa = decisão frágil.
     pub margem: f32,
+    /// Nome da segunda melhor tônica — `None` quando indeterminada.
+    pub segunda_nome: Option<String>,
+    /// Correlação da segunda colocada.
+    pub segunda_correlacao: f32,
     /// Classes de altura com energia relevante (0–12).
     pub classes_presentes: u8,
     /// A regra que produziu o resultado — não é decoração.
@@ -80,6 +84,8 @@ impl Tonalidade {
             nome: None,
             correlacao: 0.0,
             margem: 0.0,
+            segunda_nome: None,
+            segunda_correlacao: 0.0,
             classes_presentes,
             regra: format!("indeterminada: {motivo}"),
         }
@@ -169,18 +175,23 @@ pub fn analisar(chroma: &Chroma) -> Tonalidade {
     }
     candidatos.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
     let (melhor, tonica, modo) = candidatos[0];
-    let segunda = candidatos[1].0;
-    let margem = (melhor - segunda).max(0.0);
+    let (segunda_corr, segunda_tonica, segunda_modo) = candidatos[1];
+    let margem = (melhor - segunda_corr).max(0.0);
     let sufixo = if modo == Modo::Menor { "m" } else { "" };
+    let segunda_sufixo = if segunda_modo == Modo::Menor { "m" } else { "" };
     Tonalidade {
         nome: Some(format!("{}{sufixo}", chords::nome_da_classe(tonica))),
         correlacao: melhor,
         margem,
+        segunda_nome: Some(format!("{}{}", chords::nome_da_classe(segunda_tonica), segunda_sufixo)),
+        segunda_correlacao: segunda_corr,
         classes_presentes,
         regra: format!(
             "perfil de Krumhansl–Schmuckler ({}) em 24 candidatos: correlação {melhor:.3}, \
-             margem {margem:.3} sobre a segunda",
-            modo.nome()
+             margem {margem:.3} sobre {}{} ({segunda_corr:.3})",
+            modo.nome(),
+            chords::nome_da_classe(segunda_tonica),
+            segunda_sufixo
         ),
     }
 }

@@ -351,18 +351,21 @@ fn main() -> ExitCode {
             }
         }
     } else if chordpro {
+        // Título das tags do arquivo, com fallback para nome do arquivo.
+        let titulo_src = audio.metadados.get("title").or_else(|| audio.metadados.get("Title"));
+        let titulo = titulo_src.map_or_else(
+            || {
+                caminho.file_stem().map_or_else(
+                    || "sem título".to_owned(),
+                    |s| s.to_string_lossy().into_owned(),
+                )
+            },
+            String::clone,
+        );
         if alinhadas.is_empty() {
-            let titulo = caminho.file_stem().map_or_else(
-                || "sem título".to_owned(),
-                |s| s.to_string_lossy().into_owned(),
-            );
             print!("{}", relatorio.para_chordpro(&titulo));
             return ExitCode::SUCCESS;
         }
-        let titulo = caminho.file_stem().map_or_else(
-            || "sem título".to_owned(),
-            |s| s.to_string_lossy().into_owned(),
-        );
         let ficha = Ficha {
             titulo,
             origem: letra

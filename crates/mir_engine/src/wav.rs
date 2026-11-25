@@ -11,6 +11,7 @@
 //! coisa — WAV comprimido, cabeçalho torto, formato desconhecido — devolve erro
 //! explícito, em vez de número silenciosamente errado.
 
+use std::collections::HashMap;
 use std::path::Path;
 
 /// Áudio mono em ponto flutuante, com a taxa de amostragem.
@@ -20,6 +21,9 @@ pub struct Audio {
     pub canais: u16,
     /// Amostras mono, em `[-1.0, 1.0]`.
     pub amostras: Vec<f32>,
+    /// Metadados extraídos do arquivo (tags ID3/MP4), quando disponíveis.
+    /// Chaves comuns: "title", "artist", "album", "date".
+    pub metadados: HashMap<String, String>,
 }
 
 impl Audio {
@@ -89,6 +93,7 @@ pub fn ler(bytes: &[u8]) -> Result<Audio, String> {
     }
     let mono = decodificar(dados, formato, canais, bits)?;
     Ok(Audio {
+        metadados: HashMap::new(),
         taxa,
         canais,
         amostras: mono,

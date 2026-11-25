@@ -10,6 +10,7 @@
 
 use mir_engine::wav::{self, Audio};
 use mir_engine::{Opts, analyze};
+use std::collections::HashMap;
 
 const TAXA: u32 = 44_100;
 
@@ -57,6 +58,7 @@ fn sintetizar() -> Audio {
         amostras.push(0.7 * queda * amostra / 3.9);
     }
     Audio {
+        metadados: HashMap::new(),
         taxa: TAXA,
         canais: 1,
         amostras,

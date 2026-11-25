@@ -12,6 +12,7 @@
 //! erro explícito com o motivo; converter é decisão do usuário, não do produto.
 
 use std::io::Cursor;
+use std::collections::HashMap;
 use std::path::Path;
 
 use symphonia::core::audio::{AudioBuffer, Signal};
@@ -60,7 +61,7 @@ pub fn decodificar(bytes: &[u8], extensao: Option<&str>) -> Result<Audio, String
     if let Some(ext) = extensao {
         dica.with_extension(ext);
     }
-    let sondado = get_probe()
+    let mut sondado = get_probe()
         .format(
             &dica,
             fonte,
@@ -68,6 +69,19 @@ pub fn decodificar(bytes: &[u8], extensao: Option<&str>) -> Result<Audio, String
             &MetadataOptions::default(),
         )
         .map_err(|erro| format!("formato não reconhecido: {erro}"))?;
+    // Extrai metadados das tags do arquivo (ID3/MP4).
+    use symphonia::core::meta::Value as MetaValue;
+    let mut metadados = HashMap::new();
+    if let Some(meta_rev) = sondado.format.metadata().current() {
+        for tag in meta_rev.tags() {
+            if let MetaValue::String(ref v) = tag.value {
+                if !v.is_empty() {
+                    metadados.insert(tag.key.to_owned(), v.clone());
+                }
+            }
+        }
+    }
+
     let mut formato = sondado.format;
     let faixa = formato
         .default_track()
@@ -119,6 +133,7 @@ pub fn decodificar(bytes: &[u8], extensao: Option<&str>) -> Result<Audio, String
         return Err("o arquivo não produziu amostra nenhuma".to_owned());
     }
     Ok(Audio {
+        metadados,
         taxa,
         canais: u16::try_from(canais).unwrap_or(u16::MAX),
         amostras,
