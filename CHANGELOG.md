@@ -1,4 +1,14 @@
 # Changelog
+## [spike] Alinhamento por linha medido contra marcação humana da letra (2026-11-25)
+
+O dono marcou a letra de *Teu Santo Nome* na **ordem cantada, com as repetições** e o início de cada linha (40 linhas) — a primeira referência humana de tempo por linha do projeto.
+
+- **Erro do início de linha: mediana 9,7 s · p90 16,2 s · máx 32,0 s**; **viés global −0,2 s** (a média esconde o erro).
+- **Erro estruturado:** ~20 primeiras linhas **adiantadas** (refrão alinhado a 7,2 s, dentro da introdução instrumental sem canto), ~20 últimas **atrasadas** até **+32 s**. Confiança 0,40–0,75.
+- **O motor reconhece as repetições** (24 linhas `repete`) — o problema **não é o insumo**, é o **alinhamento**.
+- **Consequência:** a 70 BPM, 9,7 s são **~8 compassos**. O gargalo do "acorde sobre a sílaba" é o alinhamento de linha, **não** o timestamp de palavra (230 ms) — uma ordem de grandeza maior.
+- **Confirmação de graça:** as marcas humanas de seção (19/50/77/104/132 s) batem com as **trocas de página do vídeo** (19/49/76/104/131) **dentro de 1 s** — a paginação do vídeo estava sincronizada; minha suspeita de timer estava errada. As fronteiras do motor ficam a 0,2–7,4 s, mas **perdem a primeira troca** e super-segmentam.
+
 ## [feat] ADR-0017 implementada: separação de bateria por modelo — P1 a P5 + C1/C2 (2026-11-25)
 
 ### P1 · Pipeline automático

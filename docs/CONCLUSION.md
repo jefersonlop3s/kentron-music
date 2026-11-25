@@ -1740,6 +1740,27 @@ compasso é a cena**: a fala atravessa a barra. A metáfora é do dono e ela é 
 explicação medida: a fase dos inícios melódicos é plana porque o texto não tem
 compasso.
 
+## R4 · A letra na ordem cantada: o alinhamento por linha medido contra marcação humana (2026-11-25)
+
+O dono marcou a letra do primeiro vídeo — **40 linhas na ordem cantada, com as repetições e o instante de início de cada uma**. Isso deu a **primeira referência humana de tempo por linha** do projeto, e ela mede justamente a base do "acorde sobre a sílaba": o alinhamento de linha.
+
+**Resultado (motor × marcação humana):**
+
+| | |
+|---|---|
+| Linhas casadas | **40 de 40** — e o motor **reconheceu as repetições** (24 linhas marcadas `repete`) |
+| **Erro do início de linha** | **mediana 9,7 s · p90 16,2 s · máx 32,0 s** |
+| **Viés global** | **−0,2 s** — a média **esconde** o erro |
+| Confiança do alinhamento | 0,40–0,75 (baixa) |
+
+**O erro é estruturado, não ruído:** as ~20 primeiras linhas saem **adiantadas** — o refrão foi alinhado a **7,2 s**, dentro da *introdução instrumental* que o próprio motor rotula sem canto; as ~20 últimas saem **atrasadas**, acumulando até **+32 s**. Ou seja: começa adiantado, termina atrasado, e **a média dá zero**. Quem olhasse só o viés concluiria "alinhado".
+
+**Por que isto decide:** a 70 BPM, **9,7 s de mediana são ~8 compassos**. Nenhuma promessa de "acorde sobre a sílaba" sobrevive a isso — e o gargalo **não é o timestamp de palavra** (230 ms), é o **alinhamento de linha** (9,7 s), uma ordem de grandeza maior. Confirma e **quantifica** o `PENDING` "afinar o detector de frase vocal", que estava calibrado em dois casos.
+
+**Confirmação de graça, e uma correção minha:** as marcas humanas de seção (**19 / 50 / 77 / 104 / 132 s**) batem com as **trocas de página do primeiro vídeo** (**19 / 49 / 76 / 104 / 131**) **dentro de 1 s**. A paginação do vídeo **estava sincronizada** — minha suspeita de "timer" estava errada. Contra ela, as fronteiras de seção do motor ficam a **0,2–7,4 s**, mas **perdem a primeira troca (19 s)** e super-segmentam (12 fronteiras para 7 seções humanas).
+
+**Nota de conteúdo:** a letra marcada é arte de terceiro e **ficou fora do repositório** (`~/Downloads`); aqui só os números.
+
 ## R4 · Áudio real de voz cantada: transcrição, cifra e o tropeço das repetições (2026-11-25)
 
 Fonte: *"Teu Santo Nome — Gabriela Rocha (Cifra e Letra)"* (canal Adoração e Cifra), escolhida pelo dono. O vídeo é **estático paginado** (4 páginas trocadas em 19/49/76/104/131 s), **não** karaokê — medido: rolagem vertical **zero**, nenhum evento por linha, e o "destaque" que eu supus era a **luz de fundo** (fixa em y≈91). Minha hipótese de que o vídeo daria tempo de graça foi **refutada por medição**. Ele vale como **cifra e letra humanas**; os acordes saem por OCR (Vision, 720p) **mais o olho** — o OCR troca `Em`→`E` e `Final: C Am C`→`A`.
