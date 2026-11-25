@@ -14,6 +14,7 @@
 //! | Chimbau     | 6,5–13 k      | < 50 ms    | Ruído, sizzle curto      |
 //! | Prato       | 8–18 k        | > 500 ms   | Ruído, wash longo        |
 
+use crate::onset;
 use crate::spectrum::Spectrogram;
 use serde::Serialize;
 use std::collections::HashMap;
@@ -23,7 +24,7 @@ use std::collections::HashMap;
 // definidas localmente para as demais peças.
 // ---------------------------------------------------------------------------
 
-use crate::percussao::{BUMBO_DE_HZ, BUMBO_ATE_HZ, CAIXA_DE_HZ, CAIXA_ATE_HZ};
+use crate::percussao::{BUMBO_ATE_HZ, BUMBO_DE_HZ, CAIXA_ATE_HZ, CAIXA_DE_HZ};
 
 /// Surdo / floor tom.
 const FLOOR_TOM_DE_HZ: f32 = 60.0;
@@ -45,12 +46,10 @@ const CRASH_ATE_HZ: f32 = 18000.0;
 // Parâmetros de detecção (mesmos valores do módulo percussao).
 // ---------------------------------------------------------------------------
 
-/// Piso do ataque: desvios-padrão acima da média da própria banda.
-const PISO_ATAQUE: f32 = 1.5;
-/// Espaçamento mínimo entre ataques da mesma peça.
-const ESPACO_MIN_S: f32 = 0.08;
 /// Tolerância para agrupar candidatos de diferentes bandas no mesmo golpe.
 const JANELA_AGRUPAMENTO_S: f32 = 0.06;
+/// Espaçamento mínimo entre kicks consecutivos para o período do bumbo.
+const KICK_ESPACO_MIN_S: f32 = 0.08;
 /// Decaimento máximo da caixa do chimbau para confirmar classificação (s).
 const HIHAT_DEC_ELEGIVEL_S: f32 = 0.08;
 /// Decaimento mínimo do prato para confirmar classificação (s).
@@ -114,13 +113,34 @@ pub fn identificar(spectro: &Spectrogram, taxa: u32) -> MapaPecas {
 
     // ---- 1. Energia de cada banda ----
     let bandas: Vec<(&str, Vec<f32>)> = vec![
-        ("kick",       spectro.energia_banda(taxa, BUMBO_DE_HZ,         BUMBO_ATE_HZ)),
-        ("snare",      spectro.energia_banda(taxa, CAIXA_DE_HZ,         CAIXA_ATE_HZ)),
-        ("snare_fios", spectro.energia_banda(taxa, SNARE_WIRES_DE_HZ,   SNARE_WIRES_ATE_HZ)),
-        ("floor_tom",  spectro.energia_banda(taxa, FLOOR_TOM_DE_HZ,    FLOOR_TOM_ATE_HZ)),
-        ("rack_tom",   spectro.energia_banda(taxa, RACK_TOM_DE_HZ,     RACK_TOM_ATE_HZ)),
-        ("hihat",      spectro.energia_banda(taxa, HIHAT_DE_HZ,        HIHAT_ATE_HZ)),
-        ("crash",      spectro.energia_banda(taxa, CRASH_DE_HZ,        CRASH_ATE_HZ)),
+        (
+            "kick",
+            spectro.energia_banda(taxa, BUMBO_DE_HZ, BUMBO_ATE_HZ),
+        ),
+        (
+            "snare",
+            spectro.energia_banda(taxa, CAIXA_DE_HZ, CAIXA_ATE_HZ),
+        ),
+        (
+            "snare_fios",
+            spectro.energia_banda(taxa, SNARE_WIRES_DE_HZ, SNARE_WIRES_ATE_HZ),
+        ),
+        (
+            "floor_tom",
+            spectro.energia_banda(taxa, FLOOR_TOM_DE_HZ, FLOOR_TOM_ATE_HZ),
+        ),
+        (
+            "rack_tom",
+            spectro.energia_banda(taxa, RACK_TOM_DE_HZ, RACK_TOM_ATE_HZ),
+        ),
+        (
+            "hihat",
+            spectro.energia_banda(taxa, HIHAT_DE_HZ, HIHAT_ATE_HZ),
+        ),
+        (
+            "crash",
+            spectro.energia_banda(taxa, CRASH_DE_HZ, CRASH_ATE_HZ),
+        ),
     ];
 
     // ---- 2. Detectar ataques em cada banda ----
@@ -139,7 +159,7 @@ pub fn identificar(spectro: &Spectrogram, taxa: u32) -> MapaPecas {
         let mx = energia.iter().copied().fold(0.0f32, f32::max);
         max_por_banda.insert(banda, mx);
 
-        for (tempo_s, pico_energia) in ataques(energia, fps) {
+        for (tempo_s, pico_energia) in onset::detectar(energia, fps) {
             let pico_idx = (tempo_s * fps).round() as usize;
             let pico_idx = pico_idx.min(energia.len().saturating_sub(1));
             let decaimento = medir_decaimento(energia, fps, pico_idx);
@@ -195,7 +215,9 @@ pub fn identificar(spectro: &Spectrogram, taxa: u32) -> MapaPecas {
             .filter(|c| c.banda == "hihat" && c.decaimento_s <= HIHAT_DEC_ELEGIVEL_S)
             .collect();
         if !hihat_cand.is_empty() {
-            escolhido = hihat_cand.into_iter().max_by(|a, b| a.energia.total_cmp(&b.energia));
+            escolhido = hihat_cand
+                .into_iter()
+                .max_by(|a, b| a.energia.total_cmp(&b.energia));
         }
 
         // Prioridade 2: prato com decaimento longo
@@ -205,7 +227,9 @@ pub fn identificar(spectro: &Spectrogram, taxa: u32) -> MapaPecas {
                 .filter(|c| c.banda == "crash" && c.decaimento_s >= CRASH_DEC_ELEGIVEL_S)
                 .collect();
             if !crash_cand.is_empty() {
-                escolhido = crash_cand.into_iter().max_by(|a, b| a.energia.total_cmp(&b.energia));
+                escolhido = crash_cand
+                    .into_iter()
+                    .max_by(|a, b| a.energia.total_cmp(&b.energia));
             }
         }
 
@@ -244,7 +268,7 @@ pub fn identificar(spectro: &Spectrogram, taxa: u32) -> MapaPecas {
         let mut intervalos: Vec<f32> = kick_tempos
             .windows(2)
             .map(|w| w[1] - w[0])
-            .filter(|&d| d > ESPACO_MIN_S)
+            .filter(|&d| d > KICK_ESPACO_MIN_S)
             .collect();
         if intervalos.is_empty() {
             0.0
@@ -271,46 +295,6 @@ pub fn identificar(spectro: &Spectrogram, taxa: u32) -> MapaPecas {
 // ---------------------------------------------------------------------------
 // Detectores auxiliares
 // ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
-// Detectores auxiliares (continuação)
-// ---------------------------------------------------------------------------
-
-/// Detecta ataques num envelope de energia: máximos locais acima de um limiar
-/// adaptativo (média + `PISO_ATAQUE` desvios-padrão), com espaçamento mínimo.
-///
-/// Devolve pares `(tempo_s, energia_de_pico)`.
-fn ataques(energia: &[f32], fps: f32) -> Vec<(f32, f32)> {
-    if energia.len() < 3 {
-        return Vec::new();
-    }
-    let media = energia.iter().sum::<f32>() / energia.len() as f32;
-    let variancia = energia
-        .iter()
-        .map(|v| (v - media) * (v - media))
-        .sum::<f32>()
-        / energia.len() as f32;
-    if variancia <= f32::EPSILON {
-        return Vec::new();
-    }
-    let piso = media + PISO_ATAQUE * variancia.sqrt();
-    let espaco = (ESPACO_MIN_S * fps).round() as usize;
-    let mut saida: Vec<(f32, f32)> = Vec::new();
-    let mut ultimo: Option<usize> = None;
-    for i in 1..energia.len() - 1 {
-        if energia[i] < piso || energia[i] < energia[i - 1] || energia[i] < energia[i + 1] {
-            continue;
-        }
-        if let Some(u) = ultimo {
-            if i - u < espaco {
-                continue;
-            }
-        }
-        ultimo = Some(i);
-        saida.push((i as f32 / fps, energia[i]));
-    }
-    saida
-}
 
 /// Mede o tempo de decaimento: do pico até a energia cair a 1/10 do valor.
 ///
@@ -345,28 +329,6 @@ fn medir_decaimento(energia: &[f32], fps: f32, pico_idx: usize) -> f32 {
 mod tests {
     use super::*;
 
-    /// Envelope simples com dois picos para validar o detector de ataques.
-    #[test]
-    fn test_ataques_encontra_picos() {
-        // Dois picos bem acima do limiar adaptativo
-        let energia = vec![
-            0.1, 0.2, 0.6, 1.5, 1.8, 0.7, 0.3, 0.1, 0.1,
-            0.1, 0.1, 0.2, 0.8, 2.0, 1.5, 0.6, 0.2, 0.1,
-        ];
-        let encontrados = ataques(&energia, 10.0);
-        assert_eq!(encontrados.len(), 2, "deveria achar dois picos");
-        assert!((encontrados[0].0 - 0.4).abs() < 0.05, "pico 1 em 0.4 s");
-        assert!((encontrados[0].1 - 1.8).abs() < 0.01, "energia pico 1 = 1.8");
-        assert!((encontrados[1].0 - 1.3).abs() < 0.05, "pico 2 em 1.3 s");
-        assert!((encontrados[1].1 - 2.0).abs() < 0.01, "energia pico 2 = 2.0");
-    }
-
-    #[test]
-    fn test_ataques_silencio_nao_inventa() {
-        let encontrados = ataques(&[0.0; 100], 10.0);
-        assert!(encontrados.is_empty(), "silêncio não produz ataques");
-    }
-
     #[test]
     fn test_medir_decaimento_basico() {
         let mut energia = vec![0.1; 50];
@@ -377,7 +339,10 @@ mod tests {
         energia[14] = 0.12;
         energia[15] = 0.09; // abaixo de 0.1 (1/10 do pico)
         let d = medir_decaimento(&energia, 10.0, 10);
-        assert!((d - 0.5).abs() < 0.01, "decaimento devia ser 0.5 s, foi {d}");
+        assert!(
+            (d - 0.5).abs() < 0.01,
+            "decaimento devia ser 0.5 s, foi {d}"
+        );
     }
 
     #[test]
@@ -393,21 +358,29 @@ mod tests {
     fn test_classificacao_prioridade_hihat() {
         let grupo = vec![
             Candidato {
-                tempo_s: 1.0, peca: "kick".into(),
-                energia: 10.0, decaimento_s: 0.15,
-                pico_idx: 43, banda: "kick",
+                tempo_s: 1.0,
+                peca: "kick".into(),
+                energia: 10.0,
+                decaimento_s: 0.15,
+                pico_idx: 43,
+                banda: "kick",
             },
             Candidato {
-                tempo_s: 1.02, peca: "hihat".into(),
-                energia: 2.0, decaimento_s: 0.04,
-                pico_idx: 44, banda: "hihat",
+                tempo_s: 1.02,
+                peca: "hihat".into(),
+                energia: 2.0,
+                decaimento_s: 0.04,
+                pico_idx: 44,
+                banda: "hihat",
             },
         ];
-        let hihat_cand: Vec<&Candidato> = grupo.iter()
+        let hihat_cand: Vec<&Candidato> = grupo
+            .iter()
             .filter(|c| c.banda == "hihat" && c.decaimento_s <= HIHAT_DEC_ELEGIVEL_S)
             .collect();
         assert!(!hihat_cand.is_empty(), "hihat deve ser elegível");
-        let escolhido = hihat_cand.into_iter()
+        let escolhido = hihat_cand
+            .into_iter()
             .max_by(|a, b| a.energia.total_cmp(&b.energia))
             .unwrap();
         assert_eq!(escolhido.peca, "hihat", "prioridade hihat deve vencer");
@@ -418,21 +391,29 @@ mod tests {
     fn test_classificacao_prioridade_crash() {
         let grupo = vec![
             Candidato {
-                tempo_s: 2.0, peca: "snare".into(),
-                energia: 8.0, decaimento_s: 0.15,
-                pico_idx: 86, banda: "snare",
+                tempo_s: 2.0,
+                peca: "snare".into(),
+                energia: 8.0,
+                decaimento_s: 0.15,
+                pico_idx: 86,
+                banda: "snare",
             },
             Candidato {
-                tempo_s: 2.01, peca: "crash".into(),
-                energia: 3.0, decaimento_s: 0.55,
-                pico_idx: 87, banda: "crash",
+                tempo_s: 2.01,
+                peca: "crash".into(),
+                energia: 3.0,
+                decaimento_s: 0.55,
+                pico_idx: 87,
+                banda: "crash",
             },
         ];
-        let crash_cand: Vec<&Candidato> = grupo.iter()
+        let crash_cand: Vec<&Candidato> = grupo
+            .iter()
             .filter(|c| c.banda == "crash" && c.decaimento_s >= CRASH_DEC_ELEGIVEL_S)
             .collect();
         assert!(!crash_cand.is_empty(), "crash deve ser elegível");
-        let escolhido = crash_cand.into_iter()
+        let escolhido = crash_cand
+            .into_iter()
             .max_by(|a, b| a.energia.total_cmp(&b.energia))
             .unwrap();
         assert_eq!(escolhido.peca, "crash", "prioridade crash deve vencer");
@@ -449,8 +430,7 @@ mod tests {
     fn test_identifica_pecas_no_stem() {
         use crate::spectrum::Spectrogram;
 
-        let caminho =
-            std::path::Path::new("/private/tmp/demucs/saida/htdemucs_6s/me30/drums.wav");
+        let caminho = std::path::Path::new("/private/tmp/demucs/saida/htdemucs_6s/me30/drums.wav");
         if !caminho.exists() {
             eprintln!("stem WAV não encontrado: {:?}", caminho);
             return;
@@ -466,7 +446,10 @@ mod tests {
         );
 
         let kick_count = mapa.contagem.get("kick").copied().unwrap_or(0);
-        assert!(kick_count >= 2, "esperado ao menos 2 bumbos, encontrado {kick_count}");
+        assert!(
+            kick_count >= 2,
+            "esperado ao menos 2 bumbos, encontrado {kick_count}"
+        );
 
         let snare_count = mapa.contagem.get("snare").copied().unwrap_or(0);
         let hihat_count = mapa.contagem.get("hihat").copied().unwrap_or(0);

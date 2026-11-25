@@ -20,6 +20,7 @@ pub mod dynamics;
 pub mod fichas;
 pub mod lyrics;
 pub mod melody;
+pub mod onset;
 pub mod pecas;
 pub mod percussao;
 pub mod report;
