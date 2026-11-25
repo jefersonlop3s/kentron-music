@@ -85,6 +85,10 @@ pub struct Report {
     /// bateria** — no mix o número sai contaminado pelo baixo. Ver
     /// `crate::percussao`.
     pub percussao: crate::percussao::BumboCaixa,
+    /// Análise comparativa com stem de bateria isolado, quando disponível.
+    /// O `mix` reflete o mesmo valor que `percussao`; `com_stems` só existe
+    /// quando um diretório de stems foi fornecido.
+    pub stems: crate::stems::ComparativoStems,
     /// Compasso e tempo 1 (ADR-0014, bloco 5). `batidas_por_compasso = 0` quando
     /// não há evidência para decidir — ver `crate::compasso`.
     pub compasso: crate::compasso::Compasso,
@@ -153,6 +157,45 @@ impl Report {
         });
         if self.percussao.bumbos > 0 {
             texto.push_str(&format!("percussão {}\n", self.percussao.regra));
+        }
+        // Stems: quando o stem de bateria está disponível, mostra a comparação
+        // lado a lado, destacando as diferenças que interessam.
+        if let Some(ref stem) = self.stems.com_stems {
+            let diff_periodo = (self.stems.mix.periodo_bumbo_s - stem.periodo_bumbo_s).abs();
+            let diff_68 = (self.stems.mix.escore_68 - stem.escore_68).abs();
+            let diff_34 = (self.stems.mix.escore_34 - stem.escore_34).abs();
+            let diff_dobra = self.stems.mix.dobra != stem.dobra;
+            texto.push_str(&format!(
+                "stems     mix  → período {:.2} s · escore 6/8 {:.2} · 3/4 {:.2} · dobra {}\n\
+                           stem → período {:.2} s · escore 6/8 {:.2} · 3/4 {:.2} · dobra {}\n",
+                self.stems.mix.periodo_bumbo_s,
+                self.stems.mix.escore_68,
+                self.stems.mix.escore_34,
+                self.stems.mix.dobra,
+                stem.periodo_bumbo_s,
+                stem.escore_68,
+                stem.escore_34,
+                stem.dobra,
+            ));
+            let mut diffs: Vec<String> = Vec::new();
+            if diff_periodo > 0.05 {
+                diffs.push(format!("período difere em {diff_periodo:.2} s"));
+            }
+            if diff_68 > 0.05 {
+                diffs.push(format!("escore 6/8 difere em {diff_68:.2}"));
+            }
+            if diff_34 > 0.05 {
+                diffs.push(format!("escore 3/4 difere em {diff_34:.2}"));
+            }
+            if diff_dobra {
+                diffs.push(format!(
+                    "dobra diverge: mix={} stem={}",
+                    self.stems.mix.dobra, stem.dobra
+                ));
+            }
+            if !diffs.is_empty() {
+                texto.push_str(&format!("           diferenças: {}\n", diffs.join(" · ")));
+            }
         }
         texto.push_str("\nestrutura (rótulo é repetição; papel é inferência):\n");
         for secao in &self.sections {

@@ -432,6 +432,7 @@ pub fn medir(spectro: &Spectrogram, taxa: u32, cortes: &[f32]) -> BumboCaixa {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
     use crate::spectrum::Spectrogram;
     use crate::wav::Audio;
 

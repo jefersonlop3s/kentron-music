@@ -24,10 +24,13 @@ pub mod percussao;
 pub mod report;
 pub mod sheet;
 pub mod spectrum;
+pub mod stems;
 pub mod structure;
 pub mod tonality;
 pub mod uso;
 pub mod wav;
+
+use std::path::Path;
 
 use wav::Audio;
 
@@ -75,15 +78,23 @@ fn energia_do_trecho(banda: &[f32], mediana: f32, fps: f32, inicio_s: f32, fim_s
 #[must_use]
 pub fn analyze(audio: &Audio, opts: &Opts) -> report::Report {
     let spectro = spectrum::Spectrogram::new(audio, opts.janela, opts.salto);
-    analyze_com(audio, opts, &spectro)
+    analyze_com(audio, opts, &spectro, None)
 }
 
 /// Analisa reaproveitando uma STFT já calculada.
 ///
 /// O alinhamento da letra olha o mesmo espectro, e recalcular a STFT para ele
 /// seria pagar duas vezes pelo mesmo trabalho num arquivo de seis minutos.
+///
+/// `drums_path` é um diretório opcional contendo `drums.wav` para análise
+/// comparativa de percussão entre o mix completo e o stem de bateria isolado.
 #[must_use]
-pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) -> report::Report {
+pub fn analyze_com(
+    audio: &Audio,
+    opts: &Opts,
+    spectro: &spectrum::Spectrogram,
+    drums_path: Option<&Path>,
+) -> report::Report {
     let chroma = spectro.chroma(audio.taxa);
     // A melodia é extraída antes dos acordes: ela arbitra a terça que o croma
     // perdeu na mixagem (ADR-0014, bloco 3).
@@ -125,6 +136,14 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
     let bumbo_caixa = percussao::medir(spectro, audio.taxa, &cortes_harmonicos);
     let mut compasso = compasso::analisar(spectro, audio.taxa, &tempo);
     compasso.leitura.reconciliar(&bumbo_caixa);
+    // Stems de bateria: análise comparativa entre mix e stem isolado.
+    // Falha de leitura não aborta a análise — o mix completo já está calculado.
+    let stems = stems::analisar_com_stems(spectro, audio.taxa, &cortes_harmonicos, drums_path)
+        .unwrap_or_else(|_| stems::ComparativoStems {
+            mix: bumbo_caixa.clone(),
+            com_stems: None,
+            caminho_stems: drums_path.map(|p| p.to_path_buf()),
+        });
     let sections = structure::segment(spectro, &chroma, audio.taxa, opts.trecho_minimo_s);
     // O baixo é lido **fora** do croma: o croma dobrou o registro, e é o
     // registro que separa `C` de `C/E` (ADR-0014, bloco 4). Os trechos usam
@@ -192,6 +211,7 @@ pub fn analyze_com(audio: &Audio, opts: &Opts, spectro: &spectrum::Spectrogram) 
         baixo: baixo_trechos,
         melodia: melodia_trechos,
         percussao: bumbo_caixa,
+        stems,
         compasso,
         sections,
     }
@@ -207,7 +227,7 @@ pub fn analyze_com_letra(
     letra: Option<&lyrics::Letra>,
 ) -> (report::Report, Vec<lyrics::LinhaAlinhada>) {
     let spectro = spectrum::Spectrogram::new(audio, opts.janela, opts.salto);
-    let relatorio = analyze_com(audio, opts, &spectro);
+    let relatorio = analyze_com(audio, opts, &spectro, None);
     let alinhadas = letra.map_or_else(Vec::new, |letra| {
         lyrics::alinhar(&relatorio, letra, &spectro, audio.taxa)
     });
