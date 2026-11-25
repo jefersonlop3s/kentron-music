@@ -567,6 +567,21 @@ if [ -f "scripts/verificar_fichas.py" ]; then
     run_gate fichas gate_fichas
 fi
 
+# ---------- Gate: documentação viva (ROADMAP + CHANGELOG) ----------
+# Se o push toca código (crates/ ou apps/), ROADMAP e CHANGELOG precisam
+# ser atualizados junto. Medido (2026-11-24): 9 commits de código foram
+# empurrados sem que ROADMAP ou CHANGELOG registrassem as entregas —
+# o problema não é o código, é o registro. Gate não é bloqueio: sinaliza
+# o que precisa ser registrado, para não acumular dívida documental.
+if [ -f "CHANGELOG.md" ] && [ -f "docs/ROADMAP.md" ]; then
+    tem_codigo=$(echo "$CHANGED_FILES" | grep -qE '^(crates/|apps/)' && echo 1 || echo 0)
+    tem_roadmap=$(echo "$CHANGED_FILES" | grep -qE '^(CHANGELOG\.md|docs/ROADMAP\.md)' && echo 1 || echo 0)
+    if [ "$tem_codigo" = "1" ] && [ "$tem_roadmap" = "0" ]; then
+        echo -e "${YELLOW}ℹ️  docs: código foi alterado, mas CHANGELOG.md ou ROADMAP.md não foram atualizados.${NC}"
+        echo -e "${YELLOW}   Registre as entregas nos dois documentos antes do merge.${NC}"
+    fi
+fi
+
 if [ -f "apps/kentron_app/pubspec.yaml" ]; then
     gate_flutter() {
         # Só roda se o push tocou o app Flutter. Medido (2026-11-24): o
