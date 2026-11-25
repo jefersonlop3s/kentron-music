@@ -32,11 +32,37 @@
 - **deny.toml**: advisories RUSTSEC-2026-0194/0195 ignorados com justificativa.
 - **Exercício ADR-0013**: planilha → tags ID3 validado (37/40 MP3s casados, insight registrado).
 
+### P1+P2+P3+P4 — Detecção de compasso por harmonia + percussão
+
+Implementação dos 4 mecanismos de Klapuri (2006) + Peeters (2010) para
+decidir `4/4` × `3/4` × `6/8`:
+
+| Mecanismo | Descrição | Resultado |
+|-----------|-----------|-----------|
+| **P1 — Lag ratio** | Período harmônico ÷ período percussivo | Separa 4/4 (~4) de 6/8 (~2)/3/4 (~3) |
+| **P2 — Posições harmônicas** | 1º e 2º picos de mudança no compasso | Revela downbeat e estrutura harmônica |
+| **P3 — Janela de 6 subdivisões** | Bordas(P0+P3) vs meios(P2+P5) | Corrige Ousado Amor: **4/4 → 6/8** |
+| **P4 — Filtro de passagens** | Detecta acordes de passagem no último tempo | Corrige Eu Sou Livre: **3/4 → 4/4** |
+
+Casos intrinsicamente ambíguos (fallin, binky, say-something, delilah)
+oferecem as 3 alternativas — a ambiguidade 3/4×6/8 é um problema em
+aberto na literatura (Bennett, Klapuri), ver https://youtu.be/gQ99OMlI5cg
+
+### Documentação para usuário
+- `docs/compasso-para-usuario.md` — como o compasso é detectado, quando
+  pode errar, e como o usuário pode corrigir manualmente
+
+### Pipeline Demucs (ADR-0017)
+- **Stems automáticos**: `--stems <dir>` agora gera stems via Demucs
+  (Python sidecar) quando os pesos do modelo estão disponíveis
+- **Reconciliação com stem**: compasso usa BumboCaixa do stem de bateria
+  (período real 3.08s vs contaminado 0.76s)
+
 ### Métricas
 
 | Métrica | Antes | Depois |
 |---------|-------|--------|
-| Commits `main` | 267 | **278** |
+| Commits `main` | 267 | **285** |
 | Testes Rust | ~200 | **228** (90 mir + 128 notation + 10 ffi) |
 | Clippy | ✅ | ✅ |
 | Módulos novos | — | `musicxml.rs`, `atex.rs`, `stems.rs`, `pecas.rs` |
