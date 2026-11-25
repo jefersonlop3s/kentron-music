@@ -1,4 +1,30 @@
 # Changelog
+## [spike] Timestamp de palavra do whisper: erro medido, e o que ele não sustenta (2026-11-25)
+
+### Instrumento
+
+- **`scripts/medir-timestamp-asr.py`**: mede o erro do onset de palavra do `whisper.cpp` contra **verdade sintética** (cada palavra sintetizada isolada por `say` pt-BR, silêncio de borda recortado, recolocada em mix com silêncio conhecido). A verdade é **conferida por rota independente** — silêncio exato antes do onset e energia ≥5× depois, 12 de 12 — e o verificador tem **prova negativa** (verdade corrompida em +250 ms reprova). Precondições fail-loud (`say`, `ffmpeg`, binário, modelos) e `ruff` limpo.
+
+### Medido (12 palavras × 2 vozes, `whisper.cpp` 1.9.6, Metal)
+
+| voz | modelo | modo | mediana | p90 | máx | viés |
+|---|---|---|---|---|---|---|
+| Eddy | small-q5_1 | DTW | 236 ms | 305 | 306 | **+227 ms** |
+| Eddy | medium-q5_0 | DTW | 386 ms | 580 | 581 | **+328 ms** |
+| Flo | small-q5_1 | DTW | 230 ms | 303 | 312 | **+223 ms** |
+| Flo | medium-q5_0 | DTW | 379 ms | 564 | 622 | **+373 ms** |
+
+- **Viés tardio e sistemático**, estável entre execuções (idênticas) e entre vozes — logo **calibrável** por modelo.
+- **`medium` (o padrão escolhido) erra mais que `small`** no timestamp — contra-intuitivo, a reproduzir com mais material.
+- **`t_dtw` está em centésimos**, não em ms; tratá-lo como ms erra por 10×.
+- **`-dtw` é desligado em silêncio** sob flash-attn (o padrão): sem `-nfa` os timestamps caem no modo heurístico **sem aviso**.
+- O modo **heurístico** só tem mediana boa no regime isolado (um segmento por palavra); em áudio contínuo colapsa (máx 1000 ms).
+
+### Consequência
+
+- Com o erro de palavra (~230 ms de mediana) somado ao **jitter de ±0,25 s** já medido na fronteira de acorde, a incerteza para "qual sílaba cai neste acorde" é da ordem de **uma sílaba**. **"A sílaba exata" não se sustenta**: o alinhamento é ponto de partida, com **revisão humana obrigatória**.
+- **Não medido em voz cantada com música:** os dois instrumentos independentes tentados em áudio real **não separam** (taxa contra ataques da banda vocal satura; controle com jitter de 200 ms ainda z=+5,9; casamento de envelope degenera). Exige **stem de voz** ou **referência anotada**. Registrado no `PENDING` e no `CONCLUSION`.
+
 ## [feat] R1.1 + GAP MIR 1-4 + ADR-0017 parcial + pre-push fix (2026-11-24)
 
 ### R1.1 · MusicXML e ATEX — ambos os formatos suportados

@@ -1739,3 +1739,81 @@ não nomeia o metro em música cantada porque **a sílaba conta a história e o
 compasso é a cena**: a fala atravessa a barra. A metáfora é do dono e ela é a
 explicação medida: a fase dos inícios melódicos é plana porque o texto não tem
 compasso.
+
+## R4 · Timestamp de palavra do whisper: medido, e o "sílaba exata" não se sustenta (2026-11-25)
+
+O dono retomou a proposta: transcrever o áudio **em casa** (whisper local, sem API de
+terceiros) e alinhar o acorde **exatamente sobre a sílaba**. Antes de decidir o
+transcritor (a ADR própria que o `PENDING` exige), mediu-se o que a proposta promete
+e ainda não existia como número: a **precisão temporal do timestamp de palavra**.
+
+### Instrumento, e a verdade conferida
+
+`scripts/medir-timestamp-asr.py` (versionado, `ruff` limpo, precondições fail-loud).
+A verdade é **sintética**: cada palavra é sintetizada isolada (`say`, voz pt-BR), o
+silêncio de borda é recortado e a palavra é recolocada num mix com silêncio conhecido
+— o onset verdadeiro é a posição onde a amostra foi colada. Isso não basta: a verdade
+é **conferida por rota independente** — silêncio exato antes do onset (RMS 0) e
+energia ≥5× depois — e **12 de 12** palavras passam. A prova negativa ataca o
+verificador: verdade corrompida em +250 ms **reprova**.
+
+### Números (12 palavras × 2 vozes, `whisper.cpp` 1.9.6, Metal)
+
+| voz | modelo | modo | mediana | p90 | máx | viés |
+|---|---|---|---|---|---|---|
+| Eddy | small-q5_1 | DTW | 236 ms | 305 | 306 | **+227 ms** |
+| Eddy | medium-q5_0 | DTW | 386 ms | 580 | 581 | **+328 ms** |
+| Flo | small-q5_1 | DTW | 230 ms | 303 | 312 | **+223 ms** |
+| Flo | medium-q5_0 | DTW | 379 ms | 564 | 622 | **+373 ms** |
+
+**O que decide:**
+- O erro é **sistemático e tardio** — o timestamp marca *depois* do onset — e é
+  **estável**: duas execuções dão timestamps idênticos, e o viés quase não muda entre
+  vozes. Viés estável é viés **calibrável** por modelo.
+- **`medium` — o padrão já escolhido para transcrição — erra mais no timestamp que o
+  `small`** (+328/+373 contra +227/+223 ms). Achado contra-intuitivo; fica como
+  hipótese a reproduzir, não como conclusão.
+- **`t_dtw` está em centésimos de segundo**, não em ms. Tratá-lo como ms erra por 10×.
+- **`-dtw` é desligado em silêncio** quando o flash-attn está ligado (o padrão): sem
+  `-nfa` os timestamps voltam ao modo heurístico **sem aviso**. O spike mediu o modo
+  errado até o log de alta verbosidade revelar a linha
+  `dtw_token_timestamps is not supported with flash_attn - disabling`.
+- O modo **heurístico** tem mediana melhor (63–122 ms) **só no regime de palavras
+  isoladas** — artefato: com silêncio entre palavras o modelo emite um segmento por
+  palavra. Em áudio contínuo o segmento abrange a frase e ele colapsa (máx 1000 ms).
+
+### Consequência para o produto
+
+O motor já tem **±0,25 s** de jitter na fronteira de acorde (registrado). Somado a um
+erro de palavra de **~230 ms de mediana**, a incerteza para responder "qual sílaba cai
+neste acorde" é da ordem de **uma sílaba** a 120 BPM. A promessa de **"exatamente a
+sílaba" não se sustenta**: o timestamp de palavra melhora o alinhamento por frase que
+já existe (`lyrics::`), mas o resultado é **ponto de partida com revisão humana
+obrigatória** — o que a ADR-0012, aliás, já exigia.
+
+### O que não foi medido — e por que é limite, não hipótese
+
+**Erro em voz cantada com música não foi medido.** Dois instrumentos independentes
+foram construídos e **nenhum separa**:
+
+1. taxa de acerto do onset de palavra contra ataques da banda vocal (200–3500 Hz):
+   **satura** — com ~9,5 ataques/s e tolerância de ±100 ms, o real (0,52) empata com
+   o nulo de deslocamento circular (0,48);
+2. o controle com *jitter* de até **200 ms** ainda dá **z = +5,9**, provando que a
+   medida enxerga "estar numa parte alta da música", não alinhamento fino;
+3. casamento de envelope de palavra em fala conectada **degenera** (todas as palavras
+   casam no mesmo ponto; `monotona = False`).
+
+Falta o **stem de voz** (o Demucs da ADR-0017 não está instalado nesta máquina) ou uma
+**referência anotada à mão** — decisão do dono. Também **descartada** a comparação
+DTW × heurístico em áudio real *por índice*: a transcrição deriva ao longo dos 400 s
+(p10 de −41,6 s) e o número mede a deriva, não o timestamp.
+
+### Aprendizado de método
+
+**A primeira prova negativa passou por engano.** Ela comparava o erro *absoluto* com a
+referência deslocada em 500 ms — e um viés tardio de +227 ms, deslocado, vira um viés
+adiantado de −264 ms: o `|·|` **não sente**. A prova foi reescrita para atacar o
+verificador (verdade corrompida tem de reprovar), que é o que de fato precisa ser
+provado. **Fixar a métrica antes de olhar o número é o que impede o instrumento de
+mentir a favor da hipótese.**
