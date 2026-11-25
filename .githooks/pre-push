@@ -331,13 +331,32 @@ if [ -f "Cargo.toml" ]; then
     # sobre o mesmo alvo (`--all-targets`, testes inclusive). `-D warnings`: lint
     # novo reprova o push — a dívida conhecida (33 lints) foi zerada junto com a
     # entrada deste gate, em 2026-09-13.
+    # `clippy` escopado aos crates que o push toca, pelo mesmo motivo do `test`
+    # logo abaixo e do rustfmt no bloco de lint: dívida pré-existente não pode
+    # virar bloqueio retroativo de todo push. Medido em 2026-11-25: `origin/main`
+    # reprovava `cargo clippy --all-targets -- -D warnings` com 3 lints de código
+    # já integrado (2× `useless_vec` em `crates/mir_engine/src/pecas.rs`, 1 doc
+    # comment órfã em `crates/notation_bundle/src/musicxml.rs`), de modo que
+    # NENHUM push passava por `types` — o último entrou por escape. Escopar
+    # mantém a mordida: lint NOVO num crate que o push toca continua reprovando.
     gate_types() {
         precisa_de cargo "https://rustup.rs" || return 127
         if ! cargo clippy --version >/dev/null 2>&1; then
             echo "   clippy ausente — instale com: rustup component add clippy"
             return 127
         fi
-        cargo clippy --offline --all-targets -- -D warnings
+        local crates=''
+        while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            local crate
+            crate=$(echo "$f" | grep -oE '^crates/[^/]+' | head -1)
+            [ -n "$crate" ] && crates="$crates -p $(basename "$crate")"
+        done <<< "$CHANGED_FILES"
+        [ -z "$crates" ] && { echo "nenhum crate no push"; return 0; }
+        local uniq
+        uniq=$(echo "$crates" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+        # shellcheck disable=SC2086
+        cargo clippy --offline $uniq --all-targets -- -D warnings
     }
     run_gate types gate_types
 
@@ -361,7 +380,7 @@ if [ -f "Cargo.toml" ]; then
         fi
         # `sort -u` remove duplicatas de crate que apareceu em vários arquivos
         local uniq
-        uniq=$(echo "$crates" | tr ' ' '\\n' | sort -u | tr '\\n' ' ')
+        uniq=$(echo "$crates" | tr ' ' '\n' | sort -u | tr '\n' ' ')
         # shellcheck disable=SC2086
         cargo test --offline $uniq
     }

@@ -1,4 +1,13 @@
 # Changelog
+## [fix] `main` estava impushável: gate `test` com `tr` errado e gate `types` rodando no workspace inteiro (2026-11-25)
+
+Encontrado ao tentar o push do spike de ASR — cujo diff é docs + um `.py`, **sem nenhum `.rs`**. Os dois defeitos são pré-existentes em `main`.
+
+- **Gate `test` (bug real):** `tr ' ' '\\n'` (barra dupla entre aspas simples) montava a lista de crates como lixo — `-p notation_bundle` virava `-p otatio _bu dle` e o `cargo test` abortava com `unexpected argument 'dle'`. Corrigido para `tr ' ' '\n'`; **provado nos dois sentidos** (a versão antiga produz os tokens quebrados; a nova produz `-p kentron_ffi notation_bundle`).
+- **Gate `types` (escopo errado):** rodava `cargo clippy --all-targets -- -D warnings` no **workspace inteiro** e reprovava por **dívida pré-existente** — 3 lints de código já integrado (`2× clippy::useless_vec` em `pecas.rs`, `clippy::empty_line_after_doc_comments` em `musicxml.rs`). Medido: **nenhum push passava por `types`**: o último entrou por escape. Agora escopado aos **crates que o push toca**, como o `test` logo abaixo e o `rustfmt` no bloco de lint já eram.
+- **A dívida de código NÃO foi corrigida de propósito:** `pecas.rs` e `musicxml.rs` são tocados por **duas branches vivas** (`cline/0d661`, `cline/f5ba4`) e o `rustfmt` quer reformatar o **arquivo inteiro** neles — reformatar seria colisão garantida. A dívida fica no `PENDING` com o comando exato, para quem tocar os crates pagar no mesmo commit.
+- **Provado:** o fallback do `test` roda **119 testes verdes**; `types` e `lint` pulam o push sem `.rs`; `cargo clippy -p mir_engine` **continua reprovando** (a mordida segue viva para lint novo).
+
 ## [spike] Timestamp de palavra do whisper: erro medido, e o que ele não sustenta (2026-11-25)
 
 ### Instrumento

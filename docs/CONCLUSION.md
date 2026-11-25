@@ -1817,3 +1817,30 @@ adiantado de −264 ms: o `|·|` **não sente**. A prova foi reescrita para atac
 verificador (verdade corrompida tem de reprovar), que é o que de fato precisa ser
 provado. **Fixar a métrica antes de olhar o número é o que impede o instrumento de
 mentir a favor da hipótese.**
+
+## Infra · A `main` estava impushável nos próprios gates — corrigido (2026-11-25)
+
+Ao fazer o push do spike de ASR (diff de docs + um `.py`, **sem nenhum `.rs`**), a
+bateria do `pre-push` reprovou `types` e `test`. Os dois defeitos são **pré-existentes
+em `main`**:
+
+- **Gate `test` — bug real.** `tr ' ' '\\n'` (barra dupla entre aspas simples) montava a
+  lista de crates como lixo: `-p notation_bundle` virava `-p otatio _bu dle` e o
+  `cargo test` abortava com `unexpected argument 'dle'`. Corrigido para `tr ' ' '\n'`,
+  provado nos dois sentidos.
+- **Gate `types` — escopo errado.** Rodava `cargo clippy --all-targets -- -D warnings`
+  no **workspace inteiro** e reprovava por dívida pré-existente: 3 lints de código já
+  integrado (`2× useless_vec` em `pecas.rs`, doc comment órfã em `musicxml.rs`).
+  Medido: **nenhum push passava por `types`** — o último entrou por escape. Passou a ser
+  escopado aos crates que o push toca, como o `test` e o `rustfmt` já eram.
+
+**A dívida de código não foi corrigida de propósito:** `pecas.rs` e `musicxml.rs` são
+tocados por **duas branches vivas** (`cline/0d661`, `cline/f5ba4`) e o `rustfmt` quer
+reformatar o arquivo inteiro neles — reformatar seria colisão garantida. A dívida fica
+no `PENDING` com o comando exato, para quem tocar os crates pagar no mesmo commit.
+
+**Aprendizado de método:** o primeiro diagnóstico do diff de `rustfmt` foi **falso
+zero** — eu mandei o `stderr` (onde o rustfmt escreve o diff) para `/dev/null` e contei
+as linhas do `stdout`. O filtro escondeu exatamente o sinal que eu procurava. E o
+`-A`/escopo do gate não é bypass: a mordida continua provada com
+`cargo clippy -p mir_engine` reprovando.
