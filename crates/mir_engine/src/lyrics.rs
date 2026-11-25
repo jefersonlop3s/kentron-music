@@ -554,7 +554,18 @@ pub fn frases_vocais(spectro: &Spectrogram, taxa: u32) -> Vec<(f32, f32)> {
     if pico <= f32::EPSILON {
         return Vec::new();
     }
-    let piso = pico * 0.02;
+    // Piso por PROEMINENCIA GLOBAL: a frase tem de ficar acima do nivel mediano
+    // da propria faixa vocal NO CONJUNTO da musica, nao so acima do maximo local.
+    // Sem isso, uma introducao instrumental sustentada abre frase — medido em
+    // 2026-11-25: frase falsa em 7,2 s-15,4 s numa introducao sem canto (o canto
+    // comeca a 19 s), e as primeiras linhas da letra caiam ~12 s adiantadas. O
+    // piso antigo (2% do pico) ficava ABAIXO do nivel da introducao (que esta no
+    // percentil 32 da faixa, contra o refrao no 49). Constante medida em UMA
+    // musica com gabarito humano — reconferir no repertorio (PENDING).
+    let mut ordem = suave.clone();
+    ordem.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let mediana = ordem[ordem.len() / 2];
+    let piso = mediana.max(pico * 0.02);
     // Janela e limiares: medidos nos dois casos que existem (áudio sintetizado com
     // quatro blocos cantados e uma música real). Mais largos, o motor devolve
     // frases longas demais (`16,7 s` onde há verso); mais estreitos, ele picota a
@@ -652,7 +663,12 @@ pub fn alinhar(
         // Toda frase recebe ao menos uma linha, e cada frase seguinte ainda
         // precisa da sua — o resto não pode ser consumido de uma vez.
         let maximo = restantes.saturating_sub(frases.len() - i - 1).max(1);
-        let escolhidas = alvo.clamp(1, maximo.min(restantes));
+        // Frase curta demais para caber uma linha (a letra canta ~2-4 s por
+        // linha) NAO pode receber uma so por educacao: uma frase falsa de 1,0 s
+        // na introducao consumia a primeira linha e empurrava TODAS as demais
+        // (medido 2026-11-25). Sem linha, ela simplesmente nao aparece.
+        let minimo = usize::from(pesos[i] >= 1.5);
+        let escolhidas = alvo.clamp(minimo, maximo.min(restantes));
         quantas[i] = escolhidas;
         restantes -= escolhidas;
     }

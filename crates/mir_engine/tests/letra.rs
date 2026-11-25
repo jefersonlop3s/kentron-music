@@ -12,7 +12,7 @@ use mir_engine::{Opts, analyze_com_letra};
 use notation_bundle::chordpro::{ChordProParser, write};
 
 mod common;
-use common::cantar_quatro_frases;
+use common::{INTRO_S, cantar_quatro_frases, intro_quieta_e_canto};
 
 #[test]
 fn corpus_de_dominio_publico_tem_procedencia_e_recusa_o_que_nao_pode() {
@@ -345,5 +345,39 @@ fn alinha_a_letra_as_frases_e_poe_o_acorde_na_silaba() {
         relatorio.chords.len() >= 3,
         "o detector de acorde não achou a progressão: {}",
         relatorio.chords.len()
+    );
+}
+
+/// A introdução instrumental quieta **não** pode receber linha da letra.
+///
+/// Falha de 2026-11-25, medida com gabarito humano numa música real (mediana de
+/// 9,7 s, com o refrão caindo dentro da introdução): o detector de frase vocal
+/// abria frase na introdução porque o piso era 2% do pico — **abaixo** do nível
+/// da própria introdução. O piso passou a ser a **mediana** da faixa vocal na
+/// música, e frase curta demais para caber uma linha (menos de 1,5 s) deixou de
+/// receber uma. Este teste critica o observável: **onde a primeira linha cai**.
+#[test]
+fn introducao_instrumental_quieta_nao_recebe_linha() {
+    let audio = intro_quieta_e_canto();
+    let letra = lyrics::do_usuario(
+        "primeira linha cantada\nsegunda linha cantada\nterceira linha cantada\n",
+        None,
+    );
+    let opts = Opts {
+        trecho_minimo_s: 4.0,
+        ..Opts::default()
+    };
+    let (_, alinhadas) = analyze_com_letra(&audio, &opts, Some(&letra), None, None);
+
+    assert!(
+        alinhadas.len() >= 2,
+        "poucas linhas alinhadas: {}",
+        alinhadas.len()
+    );
+    assert!(
+        alinhadas[0].inicio_s >= INTRO_S - 0.6,
+        "a primeira linha caiu na introdução instrumental (silêncio de canto): {:.1}s, \
+         e a introdução vai até {INTRO_S:.1}s",
+        alinhadas[0].inicio_s
     );
 }

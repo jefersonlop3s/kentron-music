@@ -1,4 +1,17 @@
 # Changelog
+## [fix] Alinhamento de linha: mediana 9,7 s → 1,0 s contra gabarito humano (2026-11-25)
+
+Medido com a letra que o dono marcou à mão em *Teu Santo Nome* — 40 linhas na ordem cantada, com as repetições. Duas causas, as duas de **mecanismo**:
+
+- **Detector de frase vocal** (`lyrics::frases_vocais`): o piso era **2% do pico**, **abaixo** do nível da própria **introdução instrumental** — que então abria frase sem canto. Medido: a introdução está no **percentil 32** da faixa vocal e o refrão mais baixo no **49**. O piso passou a ser a **mediana** da faixa na música inteira: *frase tem de ser proeminente na música, não só acima do máximo local*.
+- **Alocação de linha** (`lyrics::alinhar`): toda frase recebia **ao menos uma linha** (`clamp(1, …)`), e uma frase falsa de **1,0 s** consumia a primeira e **empurrava as 39 seguintes**. Frase curta demais para caber uma linha (**< 1,5 s**) passou a receber **zero**.
+
+**Medido** (verificador `scripts/medir-alinhamento.py`, gabarito fora do repo): erro do início de linha **mediana 9,7 s → 1,0 s**, p90 **16,2 → 2,6 s**, máximo **32,0 → 4,5 s**, viés **−0,2 → +0,7 s**.
+
+**Teste do repo:** `introducao_instrumental_quieta_nao_recebe_linha` com a fixture `intro_quieta_e_canto`, **provado no sentido negativo** — revertida a correção, a primeira linha volta a 0,0 s e o teste reprova.
+
+**De carona:** os **11 lints** de `clippy` que a `main` carregava em `mir_engine` (do trabalho da ADR-0017, em `stems_onnx.rs`, `wav.rs` e `pecas.rs`) — todos mecânicos. Sem isso o push não passava por `types`, porque o gate é escopado ao crate e este push toca `mir_engine`.
+
 ## [spike] Alinhamento por linha medido contra marcação humana da letra (2026-11-25)
 
 O dono marcou a letra de *Teu Santo Nome* na **ordem cantada, com as repetições** e o início de cada linha (40 linhas) — a primeira referência humana de tempo por linha do projeto.

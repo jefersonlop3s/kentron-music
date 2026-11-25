@@ -1740,6 +1740,21 @@ compasso é a cena**: a fala atravessa a barra. A metáfora é do dono e ela é 
 explicação medida: a fase dos inícios melódicos é plana porque o texto não tem
 compasso.
 
+## R4 · O alinhamento de linha, medido e corrigido: 9,7 s → 1,0 s (2026-11-25)
+
+Com a letra marcada à mão pelo dono na **ordem cantada** (40 linhas, com repetições), o alinhamento do motor ficou medível — e o erro, **estruturado**. Duas causas apareceram, e as duas eram de **mecanismo**, não de limiar:
+
+1. **O detector de frase vocal abria frase na introdução instrumental.** O piso era **2% do pico**, **abaixo** do nível da introdução (percentil 32 da faixa vocal, contra 49 do refrão mais baixo). Trocado pela **mediana** da faixa vocal na música inteira — "a frase tem de ser proeminente na música, não só acima do máximo local".
+2. **Toda frase recebia ao menos uma linha.** Uma frase falsa de **1,0 s** na introdução consumia a primeira linha e **empurrava as 39 seguintes**, o que explica o erro crescer de −12 s para +32 s ao longo da música. Frase curta demais para caber uma linha (< 1,5 s) passou a receber **zero**.
+
+**Medido:** mediana **9,7 → 1,0 s**; p90 **16,2 → 2,6 s**; máximo **32,0 → 4,5 s**; viés **−0,2 → +0,7 s**. A 70 BPM, 1,0 s é **menos de um compasso** — a diferença entre "inutilizável" e "revisável".
+
+**Prova negativa:** revertida a correção, a primeira linha volta a **0,0 s** e o teste `introducao_instrumental_quieta_nao_recebe_linha` **reprova**.
+
+**Onde ainda erra, e é honesto dizer:** o pior caso (4,5 s) está nas últimas repetições da ponte, e o erro cresce para o fim. O modelo é **proporcional** — distribui as linhas por duração de frase e por número de sílabas —, **sem nenhuma evidência acústica por linha**: é de onde vem o piso de ~1 s que sobra. E as constantes (a mediana como piso, o corte de 1,5 s) foram medidas em **UMA** música com gabarito — reconferir no repertório.
+
+**Método:** o gabarito humano virou **verificador** (`scripts/medir-alinhamento.py`, que o consome por caminho, fora do repo) e **teste do repo** (fixture sintética, independente de material de terceiro). Duas escalas, uma para o produto e uma para o gate.
+
 ## R4 · A letra na ordem cantada: o alinhamento por linha medido contra marcação humana (2026-11-25)
 
 O dono marcou a letra do primeiro vídeo — **40 linhas na ordem cantada, com as repetições e o instante de início de cada uma**. Isso deu a **primeira referência humana de tempo por linha** do projeto, e ela mede justamente a base do "acorde sobre a sílaba": o alinhamento de linha.

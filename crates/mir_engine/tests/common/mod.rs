@@ -102,6 +102,55 @@ fn bloco_power(saida: &mut Vec<f32>, notas: [i32; 2], voz: i32, ganho: f32, dura
     }
 }
 
+/// Duração da introdução instrumental de [`intro_quieta_e_canto`].
+pub const INTRO_S: f32 = 3.2;
+
+/// Introdução instrumental **quieta** seguida de canto forte.
+///
+/// Regressão de 2026-11-25, medida com gabarito humano numa música real: o
+/// detector de frase vocal abria frase na introdução — energia de banda
+/// sustentada, sem canto nenhum — porque o piso era 2% do pico, **abaixo** do
+/// nível da própria introdução. As primeiras linhas da letra caíam ~12 s
+/// adiantadas. O piso passou a ser a **mediana** da faixa vocal na música
+/// inteira; a proporção aqui imita a música real (introdução curta contra muito
+/// canto), porque com introdução dominante a mediana cai dentro dela e o teste
+/// mediria uma fixture, não o mecanismo.
+pub fn intro_quieta_e_canto() -> mir_engine::wav::Audio {
+    let mut amostras: Vec<f32> = Vec::new();
+    for _ in 0..2 {
+        senoides(&mut amostras, 1.6, 0.03); // introdução: 1/25 da energia do canto
+    }
+    silencio(&mut amostras, 0.8);
+    for _ in 0..3 {
+        senoides(&mut amostras, 4.8, 0.15); // canto
+    }
+    mir_engine::wav::Audio {
+        metadados: HashMap::new(),
+        taxa: TAXA,
+        canais: 1,
+        amostras,
+    }
+}
+
+/// Senoides PURAS dentro da banda da voz (300/600/900 Hz).
+///
+/// A intensidade da banda passa a ser o quadrado da amplitude — sem o ruído de
+/// banda larga que `bloco_power` acrescenta com ganho fixo, e que fazia a
+/// "introdução quieta" ter a mesma energia da banda que o canto.
+fn senoides(saida: &mut Vec<f32>, duracao: f32, amp: f32) {
+    let taxa_f = TAXA as f32;
+    let n = (duracao * taxa_f) as usize;
+    for i in 0..n {
+        let t = i as f32 / taxa_f;
+        let ataque = (i as f32 / (0.05 * taxa_f)).min(1.0);
+        let mut s = 0.0f32;
+        for (k, hz) in [300.0f32, 600.0, 900.0].iter().enumerate() {
+            s += (2.0 * std::f32::consts::PI * hz * t).sin() / (k as f32 + 1.0);
+        }
+        saida.push(amp * ataque * s / 1.8);
+    }
+}
+
 /// Quatro blocos cantados, separados por pausa longa: C, G, Am, F.
 ///
 /// Cada bloco é o que uma linha cantada é — acorde sustentado e voz por cima, com
