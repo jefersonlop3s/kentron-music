@@ -843,12 +843,7 @@ impl ScorePartParser {
 // ---------------------------------------------------------------------------
 
 /// ATEX module stub for future tablature export.
-pub mod atex {
-    /// Placeholder — will convert Song to ASCII tab.
-    pub fn render(_song: &super::Song) -> String {
-        String::new()
-    }
-}
+
 
 
 // ---------------------------------------------------------------------------
@@ -1042,15 +1037,6 @@ mod tests {
         assert_eq!(fifths_to_key(-4), "Ab");
         assert_eq!(fifths_to_key(-5), "Db");
         assert_eq!(fifths_to_key(-6), "Gb");
-    }
-
-    #[test]
-    fn test_atex_stub() {
-        let result = atex::render(&Song {
-            metadata: HashMap::new(),
-            sections: vec![],
-        });
-        assert_eq!(result, "");
     }
 
     #[test]
