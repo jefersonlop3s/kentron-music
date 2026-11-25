@@ -34,6 +34,19 @@ Encontrado ao tentar o push do spike de ASR — cujo diff é docs + um `.py`, **
 - Com o erro de palavra (~230 ms de mediana) somado ao **jitter de ±0,25 s** já medido na fronteira de acorde, a incerteza para "qual sílaba cai neste acorde" é da ordem de **uma sílaba**. **"A sílaba exata" não se sustenta**: o alinhamento é ponto de partida, com **revisão humana obrigatória**.
 - **Não medido em voz cantada com música:** os dois instrumentos independentes tentados em áudio real **não separam** (taxa contra ataques da banda vocal satura; controle com jitter de 200 ms ainda z=+5,9; casamento de envelope degenera). Exige **stem de voz** ou **referência anotada**. Registrado no `PENDING` e no `CONCLUSION`.
 
+### Idiomas (en/es) e o dicionário — medidos (2026-11-25)
+
+- **`--lingua` no instrumento:** o viés tardio e o **`medium` pior que o `small` se replicam nos três idiomas** (DTW mediana: pt 230–386 ms · en 274–656 ms · es 167–412 ms; viés +165 a +621 ms; determinístico em todos).
+- **Dicionário × `--prompt`** (fala conectada, verdade conhecida, `medium`): `--prompt` com o **vocabulário da música** derruba o **WER** de **0,50→0,08 (pt), 0,50→0,00 (en), 0,25→0,00 (es)**; a **correção pós-hoc por dicionário** só chega a **0,42 / 0,42 / 0,17**. Motivo medido: os erros do baseline são **fusão de palavras** ("sobre nós"→"obanós", "over night"→"overnight") e inserções — um léxico não desfaz fusão; o viés de decodificação, sim.
+- **Peso:** o `--prompt` não custa artefato nem licença; o dicionário é um **asset por idioma** (MBs + licença de dado, que o projeto não adota sem decisão).
+
+## [spike] Stem de voz não conserta o instrumento; `exportar_onnx.py` está quebrado (2026-11-25)
+
+- **Demucs/torch instalados e exercidos** (venv Python 3.11; `torch` 2.15.0, `demucs` 4.1.0). `htdemucs_6s` separou 90 s em **9 s** de CPU e os pesos baixados (`5c90dfd2-34c22ccb.th`) são **52,4 MB**, com **sha256 idêntico ao do `MANIFEST`**.
+- **Hipótese refutada:** o stem de voz **não** faz o instrumento de acoplamento separar alinhamento fino. No mix os onsets de palavra nem caem na energia vocal (z=−0,7); no stem caem (z=+4,4), mas a **ladder de jitter fica plana de 0 a 400 ms** (a envelope de voz isolada é quase contínua → a métrica satura). **Conclusão:** validar o erro absoluto em voz cantada exige **referência anotada à mão**, não stem.
+- **GAP encontrado:** `scripts/exportar_onnx.py` **não funciona** — o `.th` é um bag (`klass/args/kwargs/state/...`) e o script faz `load_state_dict(state)` no dicionário errado (deveria ser `state['state']`). O caminho **ONNX/`ort` do motor não pode ser exercido** enquanto isso não for corrigido. **Não corrigido de propósito:** o arquivo é de `cline/f5ba4`.
+- **Exceção documentada de segurança:** o `semgrep` dispara no `torch.load` em si (a regra casa a chamada, não o `weights_only`). Recebeu `# nosemgrep` na linha, com a justificativa do pin (**bytes da URL do `MANIFEST`, sha256 conferido**) — sem isso, nenhum push passava, para todos.
+
 ## [feat] R1.1 + GAP MIR 1-4 + ADR-0017 parcial + pre-push fix (2026-11-24)
 
 ### R1.1 · MusicXML e ATEX — ambos os formatos suportados

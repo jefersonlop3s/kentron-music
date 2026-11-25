@@ -41,21 +41,59 @@ import wave
 
 SR = 16000
 LIMIAR_BORDA = 0.06
-FRASE_PADRAO = [
-    "graça",
-    "sobre",
-    "nós",
-    "eterno",
-    "amor",
-    "desce",
-    "tua",
-    "mão",
-    "santo",
-    "canto",
-    "paz",
-    "rei",
-]
-VOZES_PADRAO = ["Eddy", "Flo"]
+# Uma frase por idioma. As palavras sao curtas e variadas (fricativa, plosiva,
+# nasal, ditongo) de proposito: o onset medido depende do ataque da palavra.
+FRASES_PADRAO = {
+    "pt": [
+        "graça",
+        "sobre",
+        "nós",
+        "eterno",
+        "amor",
+        "desce",
+        "tua",
+        "mão",
+        "santo",
+        "canto",
+        "paz",
+        "rei",
+    ],
+    "en": [
+        "grace",
+        "over",
+        "night",
+        "eternal",
+        "love",
+        "descend",
+        "your",
+        "hand",
+        "holy",
+        "song",
+        "peace",
+        "king",
+    ],
+    "es": [
+        "gracia",
+        "sobre",
+        "noche",
+        "eterno",
+        "amor",
+        "desciende",
+        "tu",
+        "mano",
+        "santo",
+        "canto",
+        "paz",
+        "rey",
+    ],
+}
+# Vozes pt-BR/en-US/es-ES instaladas no macOS. Nomes com espaco e parentese
+# entram entre aspas na chamada do `say`; aqui vao separados por virgula.
+VOZES_PADRAO = {
+    "pt": ["Eddy", "Flo"],
+    "en": ["Eddy (English (US))", "Flo (English (US))"],
+    "es": ["Eddy (Spanish (Spain))", "Flo (Spanish (Spain))"],
+}
 GAP_MS_PADRAO = 600
 LEAD_MS = 1000
 DESLOC_PROVA_MS = 500
@@ -154,7 +192,9 @@ def valida_verdade(wav: str, verdade: list[dict]) -> None:
         )
 
 
-def roda(whisper: str, modelo: str, wav: str, tag: str, dtw: str | None) -> str | None:
+def roda(
+    whisper: str, modelo: str, wav: str, tag: str, dtw: str | None, lingua: str
+) -> str | None:
     cmd = [
         whisper,
         "-m",
@@ -162,7 +202,7 @@ def roda(whisper: str, modelo: str, wav: str, tag: str, dtw: str | None) -> str 
         "-f",
         wav,
         "-l",
-        "pt",
+        lingua,
         "-ojf",
         "-t",
         "8",
@@ -227,14 +267,19 @@ def main() -> int:
     )
     ap.add_argument("--whisper", required=True, help="caminho do whisper-cli")
     ap.add_argument("--modelo-dir", required=True, help="diretorio com ggml-*.bin")
-    ap.add_argument("--vozes", default=",".join(VOZES_PADRAO))
+    ap.add_argument("--lingua", default="pt", choices=sorted(FRASES_PADRAO))
+    ap.add_argument("--vozes", default=None, help="padrao depende da lingua")
+    ap.add_argument("--frase", default=None, help="palavras separadas por virgula")
     ap.add_argument("--prova-negativa", action="store_true")
     args = ap.parse_args()
 
-    exige("say", "vozes pt-BR do macOS")
+    exige("say", "vozes do macOS")
     exige("ffmpeg", "conversao para 16 kHz")
     if not os.access(args.whisper, os.X_OK):
         raise SystemExit(f"whisper-cli nao executavel: {args.whisper}")
+
+    frase = args.frase.split(",") if args.frase else FRASES_PADRAO[args.lingua]
+    vozes = args.vozes.split(",") if args.vozes else VOZES_PADRAO[args.lingua]
 
     modelos = []
     for nome, preset in (("small-q5_1", "small"), ("medium-q5_0", "medium")):
@@ -245,20 +290,33 @@ def main() -> int:
         raise SystemExit(f"nenhum modelo ggml-* em {args.modelo_dir}")
 
     pasta = tempfile.mkdtemp(prefix="spike-asr-")
-    print(f"# instrumento em {pasta} | modelos: {', '.join(m[0] for m in modelos)}")
+    print(
+        f"# lingua={args.lingua} instrumento em {pasta} | "
+        f"modelos: {', '.join(m[0] for m in modelos)}"
+    )
     print("voz\tmodelo\tmodo\tn\tmediana_ms\tp90_ms\tmax_ms\tvies_ms\tdeterministico")
 
-    for voz in args.vozes.split(","):
+    for voz in vozes:
         voz = voz.strip()
-        wav, verdade = constroi(voz, FRASE_PADRAO, pasta, GAP_MS_PADRAO)
+        wav, verdade = constroi(voz, frase, pasta, GAP_MS_PADRAO)
         valida_verdade(wav, verdade)
         for nome, preset, caminho in modelos:
             for rot, dtw in (("dtw", preset), ("heur", None)):
                 j1 = roda(
-                    args.whisper, caminho, wav, f"{pasta}/a_{voz}_{nome}_{rot}", dtw
+                    args.whisper,
+                    caminho,
+                    wav,
+                    f"{pasta}/a_{voz}_{nome}_{rot}",
+                    dtw,
+                    args.lingua,
                 )
                 j2 = roda(
-                    args.whisper, caminho, wav, f"{pasta}/b_{voz}_{nome}_{rot}", dtw
+                    args.whisper,
+                    caminho,
+                    wav,
+                    f"{pasta}/b_{voz}_{nome}_{rot}",
+                    dtw,
+                    args.lingua,
                 )
                 if not j1 or not j2:
                     continue

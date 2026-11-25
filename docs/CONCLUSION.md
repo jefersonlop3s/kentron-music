@@ -1818,6 +1818,20 @@ verificador (verdade corrompida tem de reprovar), que é o que de fato precisa s
 provado. **Fixar a métrica antes de olhar o número é o que impede o instrumento de
 mentir a favor da hipótese.**
 
+### Outros idiomas, e a ideia do dicionário (mesmo dia)
+
+Com `--lingua`, o mesmo viés **se replica em inglês e espanhol** (DTW mediana: pt 230–386 ms · en 274–656 ms · es 167–412 ms) — inclusive o achado contra-intuitivo **`medium` pior que `small`** nos três. Deixa de ser artefato de um idioma.
+
+Sobre o **dicionário de palavras** para validar a inferência (ideia do dono): medido em **fala conectada** com verdade conhecida, o `--prompt` com o **vocabulário da música** derruba o **WER de 0,50→0,08 (pt), 0,50→0,00 (en), 0,25→0,00 (es)**, enquanto a **correção pós-hoc por léxico** chega só a **0,42 / 0,42 / 0,17**. O motivo é medido: **o erro dominante é a fusão de palavras** ("sobre nós"→"obanós"; "over night"→"overnight") e a inserção — nada disso se conserta por ortografia, porque não há palavra errada para corrigir: há **duas palavras viradas uma**. **O peso é assimétrico:** o `--prompt` não custa arquivo nem licença; o léxico custa um asset por idioma. A prática inverte o instinto: **não corrigir depois, condicionar antes.** A versão dura da ideia — restringir a saída ao léxico por **gramática** (`--grammar`, GBNF) — fica como o próximo teste, porque ela muda o modo de falha (troca "erro" por "abstenção") e isso precisa ser medido, não presumido.
+
+**Limite honesto:** n = uma frase por idioma, 12 palavras, voz sintetizada — a direção é forte, o número é de brinquedo. E o `--prompt` no caso ideal usa a letra que já se tem; numa música desconhecida o vocabulário vem do repertório e do contexto, não da letra que ainda não existe.
+
+### O stem de voz não conserta o instrumento — hipótese refutada (mesmo dia)
+
+Instalei Demucs/torch e exercitei o `htdemucs_6s` (a separação dos 90 s saiu em **9 s** de CPU; os pesos baixados têm **52,4 MB e sha256 idêntico ao do `MANIFEST`**). A hipótese era que o **stem de voz** removeria o confundidor e faria o teste de acoplamento enxergar alinhamento fino. **Não faz.** No mix os onsets de palavra **nem caem** na energia vocal (z=−0,7); no stem caem (z=+4,4) — mas a **ladder de jitter fica plana de 0 a 400 ms**: a envelope de voz isolada é quase contínua, então qualquer onset cai em energia e a métrica satura. **A validação do erro absoluto em voz cantada exige referência anotada à mão** — o stem resolveu o confundidor da bateria e não o da continuidade. Hipótese registrada como refutada, com o número de cada lado.
+
+E um GAP que só apareceu por exercer a ferramenta: **`scripts/exportar_onnx.py` não funciona.** O `.th` é um *bag* (`klass/args/kwargs/state/training_args/metrics`) e o script entrega o dicionário errado ao `load_state_dict` — o ONNX do motor não sai. Não corrigi porque o arquivo é de outra sessão (`cline/f5ba4`, que trabalha exatamente no caminho ONNX).
+
 ## Infra · A `main` estava impushável nos próprios gates — corrigido (2026-11-25)
 
 Ao fazer o push do spike de ASR (diff de docs + um `.py`, **sem nenhum `.rs`**), a
