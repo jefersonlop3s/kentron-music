@@ -20,6 +20,7 @@ pub mod dynamics;
 pub mod fichas;
 pub mod lyrics;
 pub mod melody;
+pub mod pecas;
 pub mod percussao;
 pub mod report;
 pub mod sheet;
@@ -142,6 +143,7 @@ pub fn analyze_com(
         .unwrap_or_else(|_| stems::ComparativoStems {
             mix: bumbo_caixa.clone(),
             com_stems: None,
+            pecas: None,
             caminho_stems: drums_path.map(|p| p.to_path_buf()),
         });
     let sections = structure::segment(spectro, &chroma, audio.taxa, opts.trecho_minimo_s);

@@ -20,8 +20,8 @@ use crate::spectrum::Spectrogram;
 use serde::Serialize;
 
 /// Faixa do bumbo. O baixo vive aqui também — ver o cabeçalho.
-const BUMBO_DE_HZ: f32 = 30.0;
-const BUMBO_ATE_HZ: f32 = 110.0;
+pub const BUMBO_DE_HZ: f32 = 30.0;
+pub const BUMBO_ATE_HZ: f32 = 110.0;
 /// Faixa da caixa: a **pele**, não os fios.
 ///
 /// Medido em 2026-11-24, no `binky`: com os fios (1,5–5 kHz) o histograma da
@@ -30,8 +30,8 @@ const BUMBO_ATE_HZ: f32 = 110.0;
 /// em **todas** as bandas no mesmo instante (medido: pele `52% 21% 13%`, fios
 /// `32% 29% 17%`, prato `25% 35% 18%` — a mesma forma). A pele da caixa
 /// (150–450 Hz) é onde o corpo dela vive e o prato não tem energia.
-const CAIXA_DE_HZ: f32 = 150.0;
-const CAIXA_ATE_HZ: f32 = 450.0;
+pub const CAIXA_DE_HZ: f32 = 150.0;
+pub const CAIXA_ATE_HZ: f32 = 450.0;
 /// Tolerância para considerar que uma caixa **coincide** com o bumbo e descartá-la.
 ///
 /// O ataque do bumbo vaza para a banda da caixa, e a caixa real fica encoberta

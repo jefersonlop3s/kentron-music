@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
+use crate::pecas;
 use crate::percussao::{self, BumboCaixa};
 use crate::spectrum::Spectrogram;
 
@@ -19,6 +20,8 @@ pub struct ComparativoStems {
     pub mix: BumboCaixa,
     /// Análise de percussão no stem de bateria apenas, quando disponível.
     pub com_stems: Option<BumboCaixa>,
+    /// Mapa de peças individuais identificadas no stem de bateria.
+    pub pecas: Option<pecas::MapaPecas>,
     /// O diretório de stems usado, se houver.
     pub caminho_stems: Option<PathBuf>,
 }
@@ -43,19 +46,21 @@ pub fn analisar_com_stems(
 ) -> Result<ComparativoStems, String> {
     let mix = percussao::medir(spectro, taxa, cortes);
 
-    let (com_stems, caminho_stems) = if let Some(caminho) = drums_path {
+    let (com_stems, pecas_map, caminho_stems) = if let Some(caminho) = drums_path {
         let drums_wav = caminho.join("drums.wav");
         let audio = crate::wav::ler_arquivo(&drums_wav)?;
         let spectro_stem = Spectrogram::new(&audio, 4096, 1024);
         let resultado = percussao::medir(&spectro_stem, taxa, cortes);
-        (Some(resultado), Some(caminho.to_path_buf()))
+        let pecas_map = pecas::identificar(&spectro_stem, taxa);
+        (Some(resultado), Some(pecas_map), Some(caminho.to_path_buf()))
     } else {
-        (None, None)
+        (None, None, None)
     };
 
     Ok(ComparativoStems {
         mix,
         com_stems,
+        pecas: pecas_map,
         caminho_stems,
     })
 }
