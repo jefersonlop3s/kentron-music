@@ -96,6 +96,20 @@ pub fn analyze_com(
     spectro: &spectrum::Spectrogram,
     drums_path: Option<&Path>,
 ) -> report::Report {
+    analyze_com_com_audio(audio, opts, spectro, drums_path, None)
+}
+
+/// Como [`analyze_com`], mas também aceita `audio_path` para geração
+/// automática de stems via Demucs quando `drums_path` é especificado
+/// mas `drums.wav` ainda não existe.
+#[must_use]
+pub fn analyze_com_com_audio(
+    audio: &Audio,
+    opts: &Opts,
+    spectro: &spectrum::Spectrogram,
+    drums_path: Option<&Path>,
+    audio_path: Option<&Path>,
+) -> report::Report {
     let chroma = spectro.chroma(audio.taxa);
     // A melodia é extraída antes dos acordes: ela arbitra a terça que o croma
     // perdeu na mixagem (ADR-0014, bloco 3).
@@ -141,13 +155,18 @@ pub fn analyze_com(
     // reconciliar o compasso, não o mix (medido 2026-11-24: período do
     // mix 0.76s vs stem 3.08s — diferença de 4x que muda a dobra).
     let bumbo_caixa = percussao::medir(spectro, audio.taxa, &cortes_harmonicos);
-    let stems = stems::analisar_com_stems(spectro, audio.taxa, &cortes_harmonicos, drums_path)
-        .unwrap_or_else(|_| stems::ComparativoStems {
-            mix: bumbo_caixa.clone(),
-            com_stems: None,
-            pecas: None,
-            caminho_stems: drums_path.map(|p| p.to_path_buf()),
-        });
+    let stems = stems::analisar_com_stems(
+        spectro,
+        audio.taxa,
+        &cortes_harmonicos,
+        drums_path,
+        audio_path,
+    ).unwrap_or_else(|_| stems::ComparativoStems {
+        mix: bumbo_caixa.clone(),
+        com_stems: None,
+        pecas: None,
+        caminho_stems: drums_path.map(|p| p.to_path_buf()),
+    });
     // Reconciliação: usa o stem de bateria quando disponível (período e
     // caixa limpos), senão usa o mix. O `ComparativoStems` guarda ambos
     // para o relatório — o mix continua visível para comparação.
@@ -240,9 +259,10 @@ pub fn analyze_com_letra(
     opts: &Opts,
     letra: Option<&lyrics::Letra>,
     drums_path: Option<&Path>,
+    audio_path: Option<&Path>,
 ) -> (report::Report, Vec<lyrics::LinhaAlinhada>) {
     let spectro = spectrum::Spectrogram::new(audio, opts.janela, opts.salto);
-    let relatorio = analyze_com(audio, opts, &spectro, drums_path);
+    let relatorio = analyze_com_com_audio(audio, opts, &spectro, drums_path, audio_path);
     let alinhadas = letra.map_or_else(Vec::new, |letra| {
         lyrics::alinhar(&relatorio, letra, &spectro, audio.taxa)
     });

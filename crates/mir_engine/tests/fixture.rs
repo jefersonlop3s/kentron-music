@@ -21,7 +21,7 @@ fn caminho_da_fixture() -> std::path::PathBuf {
 fn fixture_dourada_da_cifra_com_letra() {
     let audio = cantar_quatro_frases();
     let letra = lyrics::do_corpus("amazing").expect("corpus de domínio público");
-    let (relatorio, alinhadas) = analyze_com_letra(&audio, &Opts::default(), Some(&letra), None);
+    let (relatorio, alinhadas) = analyze_com_letra(&audio, &Opts::default(), Some(&letra), None, None);
     let musica = sheet::montar(
         &relatorio,
         &alinhadas,
@@ -61,7 +61,7 @@ fn fixture_dourada_da_cifra_com_letra() {
 fn sem_voz_no_audio_a_confianca_cai_e_o_motor_nao_inventa() {
     let audio = ruido(6);
     let letra = lyrics::do_corpus("rock of ages").expect("corpus");
-    let (_, alinhadas) = analyze_com_letra(&audio, &Opts::default(), Some(&letra), None);
+    let (_, alinhadas) = analyze_com_letra(&audio, &Opts::default(), Some(&letra), None, None);
     assert_eq!(
         alinhadas.len(),
         letra.linhas.len(),
@@ -80,7 +80,7 @@ fn sem_voz_no_audio_a_confianca_cai_e_o_motor_nao_inventa() {
 #[test]
 fn sem_letra_nao_ha_linha_nenhuma() {
     let audio = cantar_quatro_frases();
-    let (_, alinhadas) = analyze_com_letra(&audio, &Opts::default(), None, None);
+    let (_, alinhadas) = analyze_com_letra(&audio, &Opts::default(), None, None, None);
     assert!(alinhadas.is_empty(), "sem letra, nada de linha");
 }
 
@@ -96,7 +96,7 @@ fn extracao_do_usuario_bloqueia_publicacao() {
         },
         linhas: vec!["linha extraída do áudio".to_owned()],
     };
-    let (relatorio, alinhadas) = analyze_com_letra(&audio, &Opts::default(), Some(&letra), None);
+    let (relatorio, alinhadas) = analyze_com_letra(&audio, &Opts::default(), Some(&letra), None, None);
     let musica = sheet::montar(
         &relatorio,
         &alinhadas,

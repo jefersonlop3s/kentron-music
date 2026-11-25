@@ -344,7 +344,7 @@ fn main() -> ExitCode {
     let stems_dir = valor_de("--stems").map(std::path::PathBuf::from);
 
     let (relatorio, alinhadas) =
-        mir_engine::analyze_com_letra(&audio, &Opts::default(), letra.as_ref(), stems_dir.as_deref());
+        mir_engine::analyze_com_letra(&audio, &Opts::default(), letra.as_ref(), stems_dir.as_deref(), Some(&caminho));
     if json {
         match relatorio.para_json() {
             Ok(texto) => println!("{texto}"),
