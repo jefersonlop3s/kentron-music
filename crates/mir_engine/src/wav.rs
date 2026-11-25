@@ -38,7 +38,43 @@ impl Audio {
     }
 }
 
-/// Lê um arquivo WAV PCM do disco.
+/// Escreve um arquivo WAV PCM (16 bits, canais do Audio, taxa do Audio).
+///
+/// O `Audio` carrega as amostras intercaladas (L,R,L,R,...) quando `canais > 1`.
+/// Usa formato PCM 16 bits — qualidade suficiente para stems de bateria e
+/// aceito por toda ferramenta de áudio.
+///
+/// # Errors
+///
+/// Falha de escrita no disco.
+pub fn escrever(audio: &Audio, caminho: &Path) -> Result<(), String> {
+    let n_amostras = audio.amostras.len();
+    let taxa = audio.taxa;
+    let canais = audio.canais as u16;
+    let dados_len = n_amostras * 2; // 16 bits
+    let file_size = 36 + dados_len;
+    let mut buf = Vec::with_capacity(file_size + 8);
+    buf.extend_from_slice(b"RIFF");
+    buf.extend_from_slice(&file_size.to_le_bytes());
+    buf.extend_from_slice(b"WAVEfmt ");
+    buf.extend_from_slice(&16u32.to_le_bytes()); // chunk size
+    buf.extend_from_slice(&1u16.to_le_bytes()); // PCM
+    buf.extend_from_slice(&canais.to_le_bytes());
+    buf.extend_from_slice(&taxa.to_le_bytes());
+    let byte_rate = taxa * canais as u32 * 2u32;
+    buf.extend_from_slice(&byte_rate.to_le_bytes());
+    let block_align = canais * 2u16;
+    buf.extend_from_slice(&block_align.to_le_bytes());
+    buf.extend_from_slice(&16u16.to_le_bytes()); // bits per sample
+    buf.extend_from_slice(b"data");
+    buf.extend_from_slice(&dados_len.to_le_bytes());
+    for s in &audio.amostras {
+        let amostra = (s.max(-1.0).min(1.0) * 32_768.0) as i16;
+        buf.extend_from_slice(&amostra.to_le_bytes());
+    }
+    std::fs::write(caminho, &buf).map_err(|erro| format!("{caminho:?}: {erro}"))?;
+    Ok(())
+}
 ///
 /// # Errors
 ///

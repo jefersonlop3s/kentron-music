@@ -341,9 +341,53 @@ fn main() -> ExitCode {
     }
 
     // Diretório opcional com stems de bateria (drums.wav) para análise comparativa.
-    let stems_dir = valor_de("--stems").map(std::path::PathBuf::from);
+    // `--stems onnx` ativa a inferência ONNX (Demucs via crate ort).
+    // `--stems <dir>` usa stems já separados em disco.
+    let stems_dir_raw = valor_de("--stems");
+    let stems_dir: Option<std::path::PathBuf> = if let Some(v) = stems_dir_raw {
+        if v == "onnx" || v == "auto" {
+            // Inferência ONNX: separa os stems, escreve drums.wav em temp
+            let model_path = mir_engine::stems_onnx::caminho_padrao();
+            if !model_path.exists() {
+                eprintln!(
+                    "modelo ONNX não encontrado em {:?}",
+                    model_path.to_string_lossy()
+                );
+                eprintln!("baixe com: scripts/baixar-pesos.sh");
+                return ExitCode::FAILURE;
+            }
+            let stems = mir_engine::stems_onnx::separar(&audio, &model_path);
+            if let Err(erro) = stems {
+                eprintln!("erro na separação ONNX: {erro}");
+                return ExitCode::FAILURE;
+            }
+            let stems = stems.unwrap();
+            let stem_name = caminho
+                .file_stem()
+                .map_or("audio".to_owned(), |s| s.to_string_lossy().into_owned());
+            let tmp = std::path::Path::new("/tmp")
+                .join("kentron-stems")
+                .join(stem_name);
+            std::fs::create_dir_all(&tmp).ok();
+            for (nome, stem_audio) in stems {
+                if nome == "drums" {
+                    let drums_path = tmp.join("drums.wav");
+                    mir_engine::wav::escrever(&stem_audio, &drums_path).ok();
+                    eprintln!(
+                        "stems ONNX: drums.wav escrito em {:?}",
+                        drums_path.to_string_lossy()
+                    );
+                }
+            }
+            Some(tmp)
+        } else {
+            Some(std::path::PathBuf::from(v))
+        }
+    } else {
+        None
+    };
 
-    let (relatorio, alinhadas) =
+let (relatorio, alinhadas) =
         mir_engine::analyze_com_letra(&audio, &Opts::default(), letra.as_ref(), stems_dir.as_deref(), Some(&caminho));
     if json {
         match relatorio.para_json() {
@@ -355,7 +399,10 @@ fn main() -> ExitCode {
         }
     } else if chordpro {
         // Título das tags do arquivo, com fallback para nome do arquivo.
-        let titulo_src = audio.metadados.get("title").or_else(|| audio.metadados.get("Title"));
+        let titulo_src = audio
+            .metadados
+            .get("title")
+            .or_else(|| audio.metadados.get("Title"));
         let titulo = titulo_src.map_or_else(
             || {
                 caminho.file_stem().map_or_else(
