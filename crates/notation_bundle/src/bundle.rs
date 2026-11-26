@@ -86,6 +86,10 @@ pub enum BundleError {
     DuplicateSetlistEntry(SongId),
     /// The setlist references a song the library does not hold.
     MissingSong(SongId),
+    /// The tablature name is not usable as a single path segment.
+    InvalidTabName(String),
+    /// The bundle already holds a tablature with this name.
+    DuplicateTab(String),
 }
 
 impl BundleError {
@@ -99,6 +103,8 @@ impl BundleError {
             Self::DuplicateSong(_) => "bundle.song.duplicate",
             Self::DuplicateSetlistEntry(_) => "setlist.entry.duplicate",
             Self::MissingSong(_) => "setlist.song.missing",
+            Self::InvalidTabName(_) => "bundle.tab.name.invalid",
+            Self::DuplicateTab(_) => "bundle.tab.duplicate",
         }
     }
 }
@@ -112,21 +118,91 @@ impl fmt::Display for BundleError {
             Self::DuplicateSong(id) => write!(f, "song id already in library: {id}"),
             Self::DuplicateSetlistEntry(id) => write!(f, "song already in setlist: {id}"),
             Self::MissingSong(id) => write!(f, "song not in library: {id}"),
+            Self::InvalidTabName(nome) => {
+                write!(f, "tablature name is not a path segment: {nome:?}")
+            }
+            Self::DuplicateTab(nome) => write!(f, "tablature name already in bundle: {nome:?}"),
         }
     }
 }
 
 impl std::error::Error for BundleError {}
 
+/// Uma tablatura da obra: o nome que a identifica dentro do pacote e a fonte
+/// **verbatim** do arquivo `tabs/<nome>.atex`.
+///
+/// A fonte é guardada como texto, não como [`Song`] parseado: o parser de GPIF
+/// descarta o que não cabe na cifra (pausas, notas de ornamento, trilhas além da
+/// primeira, seções sem nome — ver [`crate::atex`]). Regravar a partir do modelo
+/// perderia tudo isso, então o bundle preserva os bytes que chegaram.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Tablatura {
+    nome: String,
+    atex: String,
+}
+
+impl Tablatura {
+    /// Cria uma tablatura, exigindo um nome que sirva de **um único segmento de
+    /// caminho** (vira `tabs/<nome>.atex`).
+    ///
+    /// # Errors
+    ///
+    /// [`BundleError::InvalidTabName`] para nome vazio, com separador de caminho
+    /// (`/`, `\`), com dois-pontos (inválido em NTFS) ou `.`/`..`.
+    pub fn nova(nome: impl Into<String>, atex: impl Into<String>) -> Result<Self, BundleError> {
+        let nome = nome.into();
+        let nome = validar_nome_tablatura(&nome)?;
+        Ok(Self {
+            nome,
+            atex: atex.into(),
+        })
+    }
+
+    /// Nome da tablatura, sem extensão.
+    #[must_use]
+    pub fn nome(&self) -> &str {
+        &self.nome
+    }
+
+    /// Fonte ATEX, byte a byte como chegou.
+    #[must_use]
+    pub fn atex(&self) -> &str {
+        &self.atex
+    }
+}
+
+/// Aceita apenas o que pode ser um nome de arquivo único: um segmento, sem
+/// separadores, sem `.`/`..` e sem `:` (que o NTFS recusa).
+fn validar_nome_tablatura(nome: &str) -> Result<String, BundleError> {
+    let nome = nome.trim();
+    if nome.is_empty()
+        || nome == "."
+        || nome == ".."
+        || nome.contains('/')
+        || nome.contains('\\')
+        || nome.contains(':')
+    {
+        return Err(BundleError::InvalidTabName(nome.to_owned()));
+    }
+    Ok(nome.to_owned())
+}
+
 /// One song package: identity, tags and the canonical [`Song`].
 ///
 /// Title, artist and key are read from the song metadata, so they are never
 /// duplicated in the bundle.
+///
+/// O bundle também carrega as **fontes** que o layout da ADR-0006 prevê ao lado do
+/// ChordPro: a partitura MusicXML opcional (`score.musicxml`) e as tablaturas
+/// (`tabs/<nome>.atex`). As duas ficam verbatim — ver [`Tablatura`] para o porquê
+/// de o modelo parseado não bastar.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SongBundle {
     id: SongId,
     song: Song,
     tags: Vec<String>,
+    musicxml: Option<String>,
+    tabs: Vec<Tablatura>,
 }
 
 impl SongBundle {
@@ -137,6 +213,8 @@ impl SongBundle {
                 id,
                 song,
                 tags: Vec::new(),
+                musicxml: None,
+                tabs: Vec::new(),
             }),
             _ => Err(BundleError::MissingTitle),
         }
@@ -188,6 +266,51 @@ impl SongBundle {
         if !self.tags.iter().any(|existing| existing == trimmed) {
             self.tags.push(trimmed.to_owned());
         }
+    }
+
+    /// Declara a partitura MusicXML da obra. Fonte em branco não declara nada.
+    ///
+    /// Guardada verbatim: o bundle é o lugar onde o arquivo fica, e reescrevê-lo a
+    /// partir do [`Song`] parseado descartaria todo elemento que o parser ignora.
+    #[must_use]
+    pub fn com_musicxml(mut self, fonte: impl Into<String>) -> Self {
+        let fonte = fonte.into();
+        if !fonte.trim().is_empty() {
+            self.musicxml = Some(fonte);
+        }
+        self
+    }
+
+    /// Fonte MusicXML, quando o bundle carrega uma.
+    #[must_use]
+    pub fn musicxml(&self) -> Option<&str> {
+        self.musicxml.as_deref()
+    }
+
+    /// Anexa uma tablatura, recusando nome que o bundle já usa.
+    ///
+    /// Nome repetido daria o **mesmo caminho** em disco (`tabs/<nome>.atex`), e uma
+    /// das duas se perderia na gravação. O bundle recusa em vez de escolher sozinho.
+    ///
+    /// # Errors
+    ///
+    /// [`BundleError::DuplicateTab`] quando o nome já está tomado.
+    pub fn com_tablatura(mut self, tablatura: Tablatura) -> Result<Self, BundleError> {
+        if self
+            .tabs
+            .iter()
+            .any(|existente| existente.nome() == tablatura.nome())
+        {
+            return Err(BundleError::DuplicateTab(tablatura.nome().to_owned()));
+        }
+        self.tabs.push(tablatura);
+        Ok(self)
+    }
+
+    /// Tablaturas na ordem de inserção.
+    #[must_use]
+    pub fn tabs(&self) -> &[Tablatura] {
+        &self.tabs
     }
 }
 
@@ -730,5 +853,73 @@ mod tests {
         assert!(setlist.remove(&id));
         assert!(!setlist.remove(&id));
         assert!(setlist.entries().is_empty());
+    }
+
+    #[test]
+    fn tablatura_recusa_nome_que_nao_e_um_segmento_de_caminho() {
+        for invalido in ["", "   ", ".", "..", "solo/parte2", "solo\\parte2", "c:tab"] {
+            let erro =
+                Tablatura::nova(invalido, "<GPIF/>").expect_err("nome inválido deve reprovar");
+            assert_eq!(erro.message_key(), "bundle.tab.name.invalid");
+            assert_eq!(
+                erro,
+                BundleError::InvalidTabName(invalido.trim().to_owned())
+            );
+        }
+    }
+
+    #[test]
+    fn tablatura_aceita_nome_simples() {
+        let tab = Tablatura::nova("  solo  ", "<GPIF/>").expect("nome simples serve");
+        assert_eq!(tab.nome(), "solo");
+        assert_eq!(tab.atex(), "<GPIF/>");
+    }
+
+    #[test]
+    fn tablatura_recusa_nome_repetido() {
+        let bundle = bundle("santo", "Santo")
+            .com_tablatura(Tablatura::nova("solo", "<GPIF id=\"1\"/>").expect("tab"))
+            .expect("primeira tablatura");
+
+        let erro = bundle
+            .com_tablatura(Tablatura::nova("solo", "<GPIF id=\"2\"/>").expect("tab"))
+            .expect_err("nome repetido deve reprovar");
+
+        assert_eq!(erro.message_key(), "bundle.tab.duplicate");
+        assert_eq!(erro, BundleError::DuplicateTab("solo".to_owned()));
+    }
+
+    #[test]
+    fn tablaturas_ficam_na_ordem_de_insercao() {
+        // Inseridas em ordem **não** alfabética: ordenar não pode passar por ordem.
+        let bundle = bundle("santo", "Santo")
+            .com_tablatura(Tablatura::nova("solo", "<GPIF id=\"2\"/>").expect("tab"))
+            .expect("primeira")
+            .com_tablatura(Tablatura::nova("base", "<GPIF id=\"1\"/>").expect("tab"))
+            .expect("segunda");
+
+        assert_eq!(
+            bundle
+                .tabs()
+                .iter()
+                .map(Tablatura::nome)
+                .collect::<Vec<_>>(),
+            ["solo", "base"]
+        );
+    }
+
+    #[test]
+    fn musicxml_em_branco_nao_declara_partitura() {
+        assert_eq!(bundle("santo", "Santo").musicxml(), None);
+        assert_eq!(
+            bundle("santo", "Santo").com_musicxml("   \n ").musicxml(),
+            None
+        );
+        assert_eq!(
+            bundle("santo", "Santo")
+                .com_musicxml("<score-partwise/>")
+                .musicxml(),
+            Some("<score-partwise/>")
+        );
     }
 }
