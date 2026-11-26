@@ -1746,7 +1746,7 @@ O alinhamento tinha **um** gabarito — 40 linhas marcadas à mão numa música 
 
 ### O que o benchmark tem, e por que ele vale
 
-`crates/mir_engine/tests/alinhamento.rs`: cinco desenhos sintéticos com **início de linha conhecido** — blocos separados, introdução instrumental, canto sem pausa, **repetição** e **duração desigual**.
+`crates/mir_engine/tests/alinhamento.rs`: **seis** desenhos sintéticos com **início de linha conhecido** — blocos separados, introdução instrumental, canto sem pausa, **repetição**, **duração desigual** e **ataques densos**. O último é a **classe difícil** que faltava: os demais têm um ataque por linha (tom contínuo), e é por isso que o banco aprovou um mecanismo que o material real reprovou.
 
 **A primeira versão não prestava**, e isso é o achado. Com quatro casos uniformes, todos deram **0,00–0,02 s**: o modelo proporcional acerta quando as linhas têm a mesma duração e o mesmo texto. Um conjunto assim mede a imaginação de quem o montou. O sinal veio de **fabricar o caso difícil**: linhas com o **mesmo texto** (mesmas sílabas) e durações de **1 s e 5 s** alternadas — onde o modelo proporcional *tem* de errar. Deu **1,65 s**. É o caso que dá sentido ao banco.
 
@@ -1765,7 +1765,7 @@ O primeiro é o caso que justifica o banco inteiro: melhorou o gabarito humano (
 
 O mecanismo de **fronteiras pelos maiores intervalos entre ataques** fez o banco ir a **0,01 s nos cinco casos** (1,65 s → 0,01 s no caso que separa) e **piorou as caudas no material real** (p90 2,6 → **7,1 s**, máximo 4,5 → **8,6 s**). Rejeitado — e o veredito é do material do produto.
 
-O que isso revela é uma **lacuna de cobertura no próprio banco**: os cinco casos têm ataques **limpos e bem separados**; no áudio real os ataques são densos, e "o maior intervalo" deixa de distinguir fronteira de sílaba. **O conjunto que eu construí não tem a classe difícil** — e um gabarito de terceiros, mesmo de **uma** música, pegou o que o conjunto sintético aprovou. É a lição do `conjunto-de-teste-de-fora` com o meu conjunto no papel de "conjunto próprio": ele mede a minha imaginação.
+O que isso revela é uma **lacuna de cobertura no próprio banco**: os cinco casos de então tinham ataques **limpos e bem separados**; no áudio real os ataques são densos, e "o maior intervalo" deixa de distinguir fronteira de sílaba. **O conjunto que eu construí não tem a classe difícil** — e um gabarito de terceiros, mesmo de **uma** música, pegou o que o conjunto sintético aprovou. É a lição do `conjunto-de-teste-de-fora` com o meu conjunto no papel de "conjunto próprio": ele mede a minha imaginação.
 
 **O que o banco pagou mesmo assim:** achou **um bug meu** — eu deixava o intervalo **até o fim da frase** entrar como candidato a corte, o que mandava uma fronteira para o fim do trecho (5,00 s em vez de 1,65 s). Em segundos de `cargo test`. E separou, nos casos uniformes, um erro de 0,02 s de um de 1,65 s — o que é o mínimo que um instrumento precisa fazer.
 

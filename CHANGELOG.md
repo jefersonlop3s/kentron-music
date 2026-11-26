@@ -3,7 +3,7 @@
 
 O alinhamento tinha **um** gabarito — 40 linhas marcadas à mão numa música real — e ele vive **fora** do repositório. Sem gabarito, qualquer tentativa vira ajuste no escuro. Faltava instrumento, então o instrumento foi construído:
 
-- **`crates/mir_engine/tests/alinhamento.rs`**: cinco casos **sintéticos** com o início de cada linha **conhecido** — blocos separados, introdução instrumental, canto sem pausa, **repetição** e **duração desigual**. Sem material de terceiros, roda em `cargo test`.
+- **`crates/mir_engine/tests/alinhamento.rs`**: **seis** casos **sintéticos** com o início de cada linha **conhecido** — blocos separados, introdução instrumental, canto sem pausa, **repetição**, **duração desigual** e **ataques densos** (sílabas, a classe que faltava: os outros têm um ataque por linha, e é por isso que aprovavam um mecanismo que o material real reprova). Sem material de terceiros, roda em `cargo test`.
 - **O conjunto só vale porque tem o caso que separa.** Os quatro primeiros dão **0,00–0,02 s**: o modelo proporcional acerta onde as linhas são uniformes. O caso **`duracao_desigual`** (linhas de 1 s e 5 s alternadas, **com o mesmo texto**) dá **1,65 s** de mediana — é ele que mede o defeito, e é o teto que o teste protege.
 - **Lição de método:** a primeira versão do benchmark, só com casos uniformes, dava **0,00 s em todos** e não discriminava nada — um conjunto escolhido por quem construiu, com a classe fácil, mede a imaginação do autor. Foi preciso **fabricar o caso difícil** (mesmo texto, durações desiguais) para o instrumento ter sinal.
 
@@ -16,7 +16,7 @@ O alinhamento tinha **um** gabarito — 40 linhas marcadas à mão numa música 
 
 O segundo é o mais instrutivo dos dois. Ele **zera o benchmark** — 1,65 s → 0,01 s no caso que separa — e **piora as caudas no material real**. O veredito é do material do produto: **rejeitado**.
 
-**E isso expôs uma lacuna de cobertura no próprio benchmark:** os cinco casos têm ataques **limpos e bem separados**, e no áudio real os ataques são densos — "o maior intervalo" deixa de ser fronteira. **O benchmark não tem a classe difícil**, e o gabarito de terceiros, mesmo sendo **uma** música, pegou o que o conjunto sintético aprovou. É a lição do `conjunto-de-teste-de-fora` outra vez, agora com o meu conjunto no papel do conjunto próprio.
+**E isso expôs uma lacuna de cobertura no próprio benchmark:** os cinco casos de então tinham ataques **limpos e bem separados**, e no áudio real os ataques são densos — "o maior intervalo" deixa de ser fronteira. **O benchmark não tem a classe difícil**, e o gabarito de terceiros, mesmo sendo **uma** música, pegou o que o conjunto sintético aprovou. É a lição do `conjunto-de-teste-de-fora` outra vez, agora com o meu conjunto no papel do conjunto próprio.
 
 **O que o benchmark pagou mesmo assim:** ele achou **um bug meu de implementação** — eu deixava o intervalo **até o fim da frase** entrar como candidato a corte, e isso mandava uma fronteira para o fim do trecho (o mesmo mecanismo dava 5,00 s em vez de 1,65 s). Em segundos de `cargo test`, sem gastar o gabarito de terceiro.
 

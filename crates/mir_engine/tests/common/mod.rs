@@ -231,6 +231,42 @@ pub fn canto_continuo_desigual() -> (mir_engine::wav::Audio, Vec<f32>) {
     )
 }
 
+/// Linhas com **ataques densos** (sílabas), como no áudio real.
+///
+/// Os outros casos deste banco têm **um** ataque por linha (tom contínuo) — e foi
+/// por isso que ele aprovou um mecanismo (fronteiras pelos maiores intervalos)
+/// que o gabarito humano reprovou: com ataques limpos e bem separados, "o maior
+/// intervalo" acha a fronteira; no áudio real, com sílabas, não acha.
+///
+/// Aqui cada linha tem **seis** sílabas (ataques) e as sílabas duram diferente
+/// por linha — então o número de sílabas é **igual** (o prior proporcional não
+/// ajuda) e a duração da linha é **diferente**.
+///
+/// Devolve o áudio e os inícios conhecidos.
+pub fn canto_com_silabas() -> (mir_engine::wav::Audio, Vec<f32>) {
+    let mut amostras: Vec<f32> = Vec::new();
+    let mut inicios = Vec::new();
+    for (i, dur_silaba) in [0.12f32, 0.30, 0.15, 0.40].iter().enumerate() {
+        if i > 0 {
+            senoides(&mut amostras, 0.5, 0.0); // pausa de linha (< 0.6 s: funde)
+        }
+        inicios.push(amostras.len() as f32 / TAXA as f32);
+        for _ in 0..6 {
+            senoides(&mut amostras, *dur_silaba, 0.15);
+            senoides(&mut amostras, 0.08, 0.0);
+        }
+    }
+    (
+        mir_engine::wav::Audio {
+            metadados: HashMap::new(),
+            taxa: TAXA,
+            canais: 1,
+            amostras,
+        },
+        inicios,
+    )
+}
+
 /// Quatro blocos cantados, separados por pausa longa: C, G, Am, F.
 ///
 /// Cada bloco é o que uma linha cantada é — acorde sustentado e voz por cima, com

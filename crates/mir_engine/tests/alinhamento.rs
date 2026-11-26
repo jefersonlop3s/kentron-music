@@ -15,8 +15,8 @@ use mir_engine::{Opts, analyze_com_letra};
 
 mod common;
 use common::{
-    INTRO_S, cantar_quatro_frases, canto_com_repeticao, canto_continuo_desigual, canto_sem_pausa,
-    intro_quieta_e_canto,
+    INTRO_S, cantar_quatro_frases, canto_com_repeticao, canto_com_silabas, canto_continuo_desigual,
+    canto_sem_pausa, intro_quieta_e_canto,
 };
 
 struct Caso {
@@ -61,6 +61,7 @@ fn casos() -> Vec<Caso> {
     let (audio_sem_pausa, inicios_sem_pausa) = canto_sem_pausa(4);
     let (audio_repeticao, inicios_repeticao) = canto_com_repeticao();
     let (audio_desigual, inicios_desigual) = canto_continuo_desigual();
+    let (audio_silabas, inicios_silabas) = canto_com_silabas();
     vec![
         Caso {
             nome: "blocos_separados",
@@ -86,6 +87,11 @@ fn casos() -> Vec<Caso> {
             nome: "duracao_desigual",
             audio: audio_desigual,
             inicios: inicios_desigual,
+        },
+        Caso {
+            nome: "ataques_densos",
+            audio: audio_silabas,
+            inicios: inicios_silabas,
         },
     ]
 }
