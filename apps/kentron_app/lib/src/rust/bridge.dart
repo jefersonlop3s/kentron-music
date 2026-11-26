@@ -4,10 +4,9 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import 'frb_generated.dart';
-
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `detail`, `evento`, `key_note`, `song_key`, `summary`
+// These functions are ignored because they are not marked as `pub`: `detail`, `evento`, `indice_atual`, `key_note`, `song_key`, `summary`
 // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Lê uma cifra ChordPro e devolve o resumo que a interface usa.
@@ -84,13 +83,17 @@ Future<List<String>> keyChoices() =>
 
 /// Salva uma cifra no diretório da biblioteca local.
 ///
-/// Cria o diretório `base_dir/id/` com `meta.json` e `song.cho`.
-/// O `id` é um identificador estável (slug do título, por exemplo).
+/// Cria o diretório `base_dir/id/` com `meta.json` e `song.cho`, e **mantém o
+/// índice** (`library.json`) que a biblioteca e a agenda leem. O `id` é um
+/// identificador estável (slug do título, por exemplo); salvar de novo o mesmo
+/// `id` atualiza a obra em vez de duplicá-la no índice.
 ///
 /// # Errors
 ///
 /// Devolve erro quando o diretório não pode ser criado, o JSON não pode
-/// ser escrito ou o ChordPro não é válido.
+/// ser escrito, o ChordPro não é válido ou o índice existente está corrompido
+/// (índice ilegível não é recriado em silêncio: recriá-lo apagaria as obras que
+/// ele lista).
 Future<void> salvarNaBiblioteca({
   required String baseDir,
   required String id,
@@ -126,9 +129,14 @@ Future<List<SongSummary>> listarBiblioteca({required String baseDir}) =>
 
 /// Remove uma cifra da biblioteca local.
 ///
+/// Recusa a remoção enquanto uma agenda citar a obra: apagar o bundle deixaria
+/// `load_setlists` falhando alto e a agenda inteira ilegível. O índice é
+/// reescrito sem a obra, senão a leitura seguinte acusa bundle ausente.
+///
 /// # Errors
 ///
-/// Devolve erro quando o diretório não pode ser removido.
+/// Devolve erro quando a obra é usada por um evento, quando o índice não pode
+/// ser lido ou quando o diretório não pode ser removido.
 Future<void> removerDaBiblioteca({
   required String baseDir,
   required String id,

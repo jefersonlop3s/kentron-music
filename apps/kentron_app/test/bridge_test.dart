@@ -139,4 +139,102 @@ void main() {
     expect(tons, contains('C'));
     expect(tons, contains('Bb'));
   });
+
+  // ── Agenda e biblioteca: o app lendo o que ele mesmo gravou ─────────────
+  //
+  // Antes desta correção, `salvar_na_biblioteca` deixava só `<id>/meta.json` e
+  // `<id>/song.cho`: a leitura seguinte respondia
+  // "missing file: .../library.json" e nem a biblioteca nem a agenda listavam
+  // nada. Estes testes usam o cdylib real e o sistema de arquivos real.
+
+  Directory diretorioDeTeste() {
+    final dir = Directory.systemTemp.createTempSync('kentron-bridge-');
+    addTearDown(() {
+      if (dir.existsSync()) dir.deleteSync(recursive: true);
+    });
+    return dir;
+  }
+
+  const cifraCurta = '{title: Santo}\n{key: C}\n\n[Verse]\n[C]texto\n';
+
+  test('a biblioteca que o app salva fica listável e removível', () async {
+    final dir = diretorioDeTeste();
+
+    await salvarNaBiblioteca(baseDir: dir.path, id: 'santo', chordpro: cifraCurta);
+    await salvarNaBiblioteca(
+      baseDir: dir.path,
+      id: 'hino-3',
+      chordpro: '{title: Hino 3}\n{key: G}\n\n[Verse]\n[G]texto\n',
+    );
+
+    final salvas = await listarBiblioteca(baseDir: dir.path);
+    expect(salvas.map((SongSummary s) => s.title), <String>['Hino 3', 'Santo']);
+
+    await removerDaBiblioteca(baseDir: dir.path, id: 'hino-3');
+    final restantes = await listarBiblioteca(baseDir: dir.path);
+    expect(restantes.map((SongSummary s) => s.title), <String>['Santo']);
+  });
+
+  test('listar_agenda atravessa a ponte e devolve o evento do disco', () async {
+    final dir = diretorioDeTeste();
+    await salvarNaBiblioteca(baseDir: dir.path, id: 'santo', chordpro: cifraCurta);
+
+    // A agenda ainda não tem função de escrita na ponte (fica para o próximo
+    // incremento): o teste grava o arquivo no formato que o núcleo lê
+    // (`schema_version` 2, execução = obra + versão + tom).
+    final setlists = Directory('${dir.path}/setlists')..createSync();
+    File('${setlists.path}/culto-1.json').writeAsStringSync(
+      '{"schema_version":2,"id":"culto-1","name":"Culto da manhã",'
+      '"data":"2026-11-22","tipo":"culto",'
+      '"entries":[{"song":"santo","versao":"versão do coral","tom":"D"}]}',
+    );
+
+    final eventos = await listarAgenda(baseDir: dir.path);
+
+    expect(eventos, hasLength(1));
+    final culto = eventos.single;
+    expect(culto.id, 'culto-1');
+    expect(culto.nome, 'Culto da manhã');
+    expect(culto.data, '2026-11-22');
+    expect(culto.tipo, 'culto');
+    expect(culto.execucoes, hasLength(1));
+    expect(culto.execucoes.single.songId, 'santo');
+    expect(culto.execucoes.single.titulo, 'Santo');
+    expect(culto.execucoes.single.versao, 'versão do coral');
+    expect(culto.execucoes.single.tom, 'D');
+    expect(culto.core, startsWith('kentron_ffi '));
+  });
+
+  test('listar_agenda em pasta inexistente vira exceção, não lista vazia', () async {
+    final dir = diretorioDeTeste();
+
+    await expectLater(
+      listarAgenda(baseDir: '${dir.path}/nao-existe'),
+      throwsA(predicate((Object erro) => '$erro'.contains('não existe'))),
+    );
+  });
+
+  test('biblioteca sem agenda devolve zero eventos, e não erro', () async {
+    final dir = diretorioDeTeste();
+    await salvarNaBiblioteca(baseDir: dir.path, id: 'santo', chordpro: cifraCurta);
+
+    expect(await listarAgenda(baseDir: dir.path), isEmpty);
+  });
+
+  test('remover obra usada por um evento é recusado pela ponte', () async {
+    final dir = diretorioDeTeste();
+    await salvarNaBiblioteca(baseDir: dir.path, id: 'santo', chordpro: cifraCurta);
+    final setlists = Directory('${dir.path}/setlists')..createSync();
+    File('${setlists.path}/culto-1.json').writeAsStringSync(
+      '{"schema_version":2,"id":"culto-1","name":"Culto da manhã",'
+      '"entries":[{"song":"santo","versao":null,"tom":null}]}',
+    );
+
+    await expectLater(
+      removerDaBiblioteca(baseDir: dir.path, id: 'santo'),
+      throwsA(predicate((Object erro) => '$erro'.contains('Culto da manhã'))),
+    );
+    // A obra e o evento continuam legíveis.
+    expect(await listarAgenda(baseDir: dir.path), hasLength(1));
+  });
 }

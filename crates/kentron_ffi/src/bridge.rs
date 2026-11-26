@@ -174,25 +174,61 @@ pub fn key_choices() -> Vec<String> {
 }
 /// Salva uma cifra no diretório da biblioteca local.
 ///
-/// Cria o diretório `base_dir/id/` com `meta.json` e `song.cho`.
-/// O `id` é um identificador estável (slug do título, por exemplo).
+/// Cria o diretório `base_dir/id/` com `meta.json` e `song.cho`, e **mantém o
+/// índice** (`library.json`) que a biblioteca e a agenda leem. O `id` é um
+/// identificador estável (slug do título, por exemplo); salvar de novo o mesmo
+/// `id` atualiza a obra em vez de duplicá-la no índice.
 ///
 /// # Errors
 ///
 /// Devolve erro quando o diretório não pode ser criado, o JSON não pode
-/// ser escrito ou o ChordPro não é válido.
+/// ser escrito, o ChordPro não é válido ou o índice existente está corrompido
+/// (índice ilegível não é recriado em silêncio: recriá-lo apagaria as obras que
+/// ele lista).
 pub fn salvar_na_biblioteca(base_dir: String, id: String, chordpro: String) -> Result<(), String> {
     let song = ChordProParser::parse(&chordpro).map_err(|e| format!("ChordPro inválido: {e}"))?;
-    let bundle = notation_bundle::bundle::SongBundle::new(
-        notation_bundle::bundle::SongId::new(&id).map_err(|e| format!("id inválido: {e}"))?,
-        song,
-    )
-    .map_err(|e| format!("bundle inválido: {e}"))?;
+    let song_id =
+        notation_bundle::bundle::SongId::new(&id).map_err(|e| format!("id inválido: {e}"))?;
+    let bundle = notation_bundle::bundle::SongBundle::new(song_id.clone(), song)
+        .map_err(|e| format!("bundle inválido: {e}"))?;
 
     let path: &std::path::Path = base_dir.as_ref();
     notation_bundle::bundle_store::save_bundle(&path.join(&id), &bundle, None)
         .map_err(|e| format!("erro ao salvar: {e}"))?;
+
+    // Sem este passo o app salva a obra e a lista continua dizendo que não há
+    // índice nenhum: `listarBiblioteca`/`listarAgenda` respondem
+    // "missing file: .../library.json" (medido com o cdylib real).
+    let mut library = indice_atual(path)?;
+    library.remove(&song_id);
+    library
+        .add(bundle)
+        .map_err(|e| format!("erro ao indexar a obra: {e}"))?;
+    notation_bundle::bundle_store::save_library(path, &library)
+        .map_err(|e| format!("erro ao salvar o índice: {e}"))?;
     Ok(())
+}
+
+/// Lê o índice da biblioteca tratando **apenas** o índice ausente como vazio.
+///
+/// A primeira gravação acontece num diretório sem `library.json`, então ausência
+/// ali é o caso normal. Qualquer outro erro — JSON corrompido, `schema_version`
+/// desconhecido, bundle que o índice lista e não existe — sobe como erro: tratar
+/// isso como "biblioteca vazia" recriaria o índice por cima e perderia as obras.
+fn indice_atual(dir: &std::path::Path) -> Result<Library, String> {
+    let ausente = notation_bundle::bundle_store::LIBRARY_FILE;
+    match notation_bundle::bundle_store::load_library(dir) {
+        Ok(library) => Ok(library),
+        Err(notation_bundle::bundle_store::StoreError::MissingFile { path })
+            if path == dir.join(ausente) =>
+        {
+            Ok(Library::new())
+        }
+        Err(erro) => Err(format!(
+            "erro ao ler a biblioteca: {erro} ({})",
+            erro.message_key()
+        )),
+    }
 }
 
 /// Carrega uma cifra da biblioteca local e devolve o ChordPro.
@@ -227,15 +263,46 @@ pub fn listar_biblioteca(base_dir: String) -> Result<Vec<SongSummary>, String> {
 
 /// Remove uma cifra da biblioteca local.
 ///
+/// Recusa a remoção enquanto uma agenda citar a obra: apagar o bundle deixaria
+/// `load_setlists` falhando alto e a agenda inteira ilegível. O índice é
+/// reescrito sem a obra, senão a leitura seguinte acusa bundle ausente.
+///
 /// # Errors
 ///
-/// Devolve erro quando o diretório não pode ser removido.
+/// Devolve erro quando a obra é usada por um evento, quando o índice não pode
+/// ser lido ou quando o diretório não pode ser removido.
 pub fn remover_da_biblioteca(base_dir: String, id: String) -> Result<(), String> {
     let path: &std::path::Path = base_dir.as_ref();
+    let song_id =
+        notation_bundle::bundle::SongId::new(&id).map_err(|e| format!("id inválido: {e}"))?;
+
+    let mut library = indice_atual(path)?;
+    let agendas = notation_bundle::bundle_store::load_setlists(path, &library).map_err(|erro| {
+        format!(
+            "erro ao ler a agenda em {}: {erro} ({})",
+            path.join("setlists").display(),
+            erro.message_key()
+        )
+    })?;
+    if let Some(evento) = agendas.iter().find(|agenda| {
+        agenda
+            .entries()
+            .iter()
+            .any(|execucao| execucao.song() == &song_id)
+    }) {
+        return Err(format!(
+            "obra usada na agenda: {} — remova a execução do evento primeiro",
+            evento.name()
+        ));
+    }
+
     let dir = path.join(&id);
     if dir.exists() {
         std::fs::remove_dir_all(&dir).map_err(|e| format!("erro ao remover: {e}"))?;
     }
+    library.remove(&song_id);
+    notation_bundle::bundle_store::save_library(path, &library)
+        .map_err(|e| format!("erro ao salvar o índice: {e}"))?;
     Ok(())
 }
 
@@ -687,6 +754,143 @@ mod tests {
 
         let eventos = listar_agenda(scratch.base_dir()).expect("sem agenda não é erro");
         assert!(eventos.is_empty(), "nenhum evento, e nenhum erro");
+    }
+
+    // ── A gravação mantém o índice ─────────────────────────────────────────
+    //
+    // Medido antes da correção: `salvar_na_biblioteca` deixava só
+    // `<base>/<id>/meta.json` e `<base>/<id>/song.cho`, e a leitura seguinte
+    // respondia "missing file: .../library.json". Sem índice, o app não lista o
+    // que ele mesmo salvou — nem a biblioteca, nem a agenda.
+
+    #[test]
+    fn saving_keeps_the_index_the_readers_use() {
+        let scratch = Scratch::new("indice-apos-salvar");
+        let base = scratch.base_dir();
+
+        salvar_na_biblioteca(
+            base.clone(),
+            "santo".to_owned(),
+            "{title: Santo}\n{key: C}\n\n[Verse]\n[C]texto\n".to_owned(),
+        )
+        .expect("salvar a primeira obra");
+        salvar_na_biblioteca(
+            base.clone(),
+            "hino-3".to_owned(),
+            "{title: Hino 3}\n{key: G}\n\n[Verse]\n[G]texto\n".to_owned(),
+        )
+        .expect("salvar a segunda obra");
+
+        assert!(
+            scratch.path().join("library.json").is_file(),
+            "o índice existe depois de salvar"
+        );
+        let titulos: Vec<String> = listar_biblioteca(base.clone())
+            .expect("listar o que foi salvo")
+            .into_iter()
+            .map(|musica| musica.title)
+            .collect();
+        assert_eq!(titulos, ["Hino 3", "Santo"], "ordem por id");
+
+        // E a agenda do mesmo diretório já é legível (sem evento ainda).
+        assert!(listar_agenda(base).expect("agenda vazia").is_empty());
+    }
+
+    #[test]
+    fn saving_the_same_id_updates_the_song_instead_of_duplicating_it() {
+        let scratch = Scratch::new("indice-atualizacao");
+        let base = scratch.base_dir();
+
+        salvar_na_biblioteca(
+            base.clone(),
+            "santo".to_owned(),
+            "{title: Santo}\n{key: C}\n\n[Verse]\n[C]texto\n".to_owned(),
+        )
+        .expect("salvar");
+        salvar_na_biblioteca(
+            base.clone(),
+            "santo".to_owned(),
+            "{title: Santo}\n{key: D}\n\n[Verse]\n[D]texto novo\n".to_owned(),
+        )
+        .expect("salvar de novo o mesmo id");
+
+        let musicas = listar_biblioteca(base.clone()).expect("listar");
+        assert_eq!(musicas.len(), 1, "o mesmo id não vira duas obras");
+        assert_eq!(
+            musicas[0].key.as_deref(),
+            Some("D"),
+            "a cifra foi atualizada"
+        );
+    }
+
+    #[test]
+    fn saving_refuses_a_corrupted_index_instead_of_recreating_it() {
+        let scratch = Scratch::new("indice-corrompido");
+        std::fs::write(scratch.path().join("library.json"), "{ não é JSON")
+            .expect("gravar índice torto");
+
+        let erro = salvar_na_biblioteca(
+            scratch.base_dir(),
+            "santo".to_owned(),
+            "{title: Santo}\n{key: C}\n\n[Verse]\n[C]texto\n".to_owned(),
+        )
+        .expect_err("índice ilegível não pode ser recriado por cima");
+        assert!(erro.contains("biblioteca"), "{erro}");
+        assert!(erro.contains("store.json"), "o erro traz a chave: {erro}");
+    }
+
+    #[test]
+    fn removing_a_song_drops_it_from_the_index() {
+        let scratch = Scratch::new("indice-remocao");
+        let base = scratch.base_dir();
+        for (id, titulo) in [("santo", "Santo"), ("hino-3", "Hino 3")] {
+            salvar_na_biblioteca(
+                base.clone(),
+                id.to_owned(),
+                format!("{{title: {titulo}}}\n{{key: C}}\n\n[Verse]\n[C]texto\n"),
+            )
+            .expect("salvar");
+        }
+
+        remover_da_biblioteca(base.clone(), "hino-3".to_owned()).expect("remover");
+
+        let titulos: Vec<String> = listar_biblioteca(base)
+            .expect("o índice continua legível")
+            .into_iter()
+            .map(|musica| musica.title)
+            .collect();
+        assert_eq!(titulos, ["Santo"]);
+    }
+
+    #[test]
+    fn removing_a_song_used_by_an_event_is_refused() {
+        let scratch = Scratch::new("indice-remocao-bloqueada");
+        let base = scratch.base_dir();
+        salvar_na_biblioteca(
+            base.clone(),
+            "santo".to_owned(),
+            "{title: Santo}\n{key: C}\n\n[Verse]\n[C]texto\n".to_owned(),
+        )
+        .expect("salvar");
+
+        let library = notation_bundle::bundle_store::load_library(scratch.path())
+            .expect("biblioteca com índice");
+        let mut culto = nova_agenda("culto-1", "Culto da manhã");
+        culto
+            .push(&library, SongId::new("santo").expect("id"))
+            .expect("execução");
+        agenda(scratch.path(), "culto-1.json", &culto);
+
+        let erro = remover_da_biblioteca(base.clone(), "santo".to_owned())
+            .expect_err("obra em uso não sai da biblioteca");
+        assert!(
+            erro.contains("Culto da manhã"),
+            "o erro nomeia o evento: {erro}"
+        );
+        assert!(
+            listar_agenda(base).expect("a agenda segue legível").len() == 1,
+            "a obra continua na biblioteca e o evento continua lendo"
+        );
     }
 
     #[test]
