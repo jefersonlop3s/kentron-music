@@ -27,27 +27,6 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
-### cline/gates-verdes — `main` de volta ao verde (fmt + clippy, partição por crate)
-- **Início**: 2026-11-26 21:04 (UTC) · **Última atualização**: 2026-11-26 21:04 (UTC)
-- **Repositórios**: `kentron-music` (`main` = `c9489d8`) · **Branches**: `chore/gates-verdes` · **Worktrees**: `~/.cline/worktrees/1bf9c/app-music`
-- **Demanda**: `./scripts/ci-local.sh` (portão principal da ADR-0004) **não passa na `main`**: `cargo fmt --all -- --check` → exit=1 em **14 arquivos** e `cargo clippy -p notation_bundle --all-targets -- -D warnings` → exit=101 (1 lint, `musicxml.rs:882`). O `pre-push` escopado ao que o push toca mascarava a dívida.
-- **Paths sob edição**: `crates/notation_bundle/src/musicxml.rs`, `crates/notation_bundle/src/atex.rs`, `crates/notation_bundle/src/lib.rs` (fmt + o lint)
-- **Status**: em andamento · **PRs**: —
-
-### cline-mir/letra-ordem-cantada — GAP das repetições: `--letra` na ordem cantada
-- **Início**: 2026-11-26 21:04 (UTC) · **Última atualização**: 2026-11-26 21:04 (UTC)
-- **Repositórios**: `kentron-music` (`main` = `c9489d8`) · **Branches**: `feat/letra-ordem-cantada` · **Worktrees**: `~/Develop/Projects/app-music-wt/letra-repeticao`
-- **Demanda**: a cifra/letra de qualquer fonte traz as linhas **distintas** e a gravação **repete**; sem a ordem cantada, o refrão é alinhado à introdução instrumental (0–27,6 s, sem canto) e "acorde sobre a sílaba" **não é medível por construção**. Aceitar a ordem cantada com repetições **ou** detectar a repetição. Fecha também a dívida de `cargo fmt`/`clippy` **do próprio crate**.
-- **Paths sob edição**: `crates/mir_engine/**` (inclui `src/lyrics.rs`, `src/sheet.rs`, `src/bin/mir.rs`, `tests/letra.rs`, `tests/alinhamento.rs`, `tests/common/mod.rs`)
-- **Status**: em andamento · **PRs**: —
-
-### cline-app/agenda-no-app — agenda do culto na interface (leitura) + ponte
-- **Início**: 2026-11-26 21:04 (UTC) · **Última atualização**: 2026-11-26 21:04 (UTC)
-- **Repositórios**: `kentron-music` (`main` = `c9489d8`) · **Branches**: `feat/agenda-no-app` · **Worktrees**: `~/Develop/Projects/app-music-wt/agenda-palco`
-- **Demanda**: o modelo de agenda é provado no núcleo (`bundle_store::load_setlists`, `Setlist`/`Execucao`, `schema_version` 2 com migração), mas **a ponte não expõe nada de agenda** — medido: `bridge.rs` tem só cifra/biblioteca. Primeiro incremento: expor a leitura da agenda (`listar_agenda`) na ponte, regerar os bindings (frb 2.13.0) e criar a tela que lista os eventos e abre o setlist no Modo Palco. "Repetir a agenda anterior com versões novas" fica para o incremento seguinte.
-- **Paths sob edição**: `crates/kentron_ffi/**` (inclui `src/bridge.rs` e o `frb_generated.rs` regerado), `apps/kentron_app/**`, `packages/core_l10n/lib/l10n/*.arb`
-- **Status**: em andamento · **PRs**: —
-
 ### cline/1dce1 — Trilha 1: o compasso no leitor (mostrar/perguntar/gravar)
 - **Início**: 2026-11-26 21:09 (UTC) · **Última atualização**: 2026-11-26 21:09 (UTC)
 - **Repositórios**: `kentron-music` (`main` = `9faf8e2`) · **Branches**: `cline/1dce1` · **Worktrees**: `~/.cline/worktrees/1dce1/app-music`
@@ -64,11 +43,57 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - **Higiene (2026-11-26, `cline/1dce1`):** havia um rascunho órfão em `$TMPDIR/sovereign-quadro-501.md`, **byte a byte igual** ao quadro de `c9489d8` (blob `0f7c1e37`) e sem o arquivo `.base` — resíduo da sessão do `asr-timestamp`, que **travava o `quadro.sh editar`** de qualquer worktree. Removido (nada se perde: o conteúdo é de um commit).
 - **A `main` está vermelha em `apps/kentron_app/lib/src/stage/song_reader_page.dart`**: erro de sintaxe (dois `),` órfãos) introduzido por `b6a9864` — `dart format` reprova em `linha 324`. A frente `agenda-no-app` já corrigiu na branch (`a17b5c4`, "a main nao compila"); falta integrar.
 
+- **Sessão `cline` — fechamento (2026-11-26):** as **três frentes** abertas às 21:04 foram **integradas na `main`**: `885aaad` (agenda), `6a036aa` (gates verdes), `99eae1f` (letra/ordem cantada) e o fechamento documental em `ef56b35`. A `main` ficou **17 commits à frente de `origin/main`** (inclui os 2 de `cline/1dce1`) — **não empurrei**: o push publicaria também o trabalho da outra sessão e não foi pedido; **`origin/main` segue em `c9489d8`**. **Branches e worktrees mantidos** (remoção de branch é autoridade do dono): `feat/agenda-no-app` + `~/Develop/Projects/app-music-wt/agenda-palco`, `feat/letra-ordem-cantada` + `.../letra-repeticao`, `chore/gates-verdes`, `docs/fechamento-frentes-0-2-3` — todas **mergeadas** (prova: `git log --oneline main..<branch>` vazio) e prontas para limpeza quando o dono autorizar.
+- **`cline/1dce1` está destravado:** (1) a `main` **compila de novo** — o bloco órfão de `song_reader_page.dart` foi corrigido em `a17b5c4`, já integrado; (2) **`apps/kentron_app/lib/src/stage/song_reader_page.dart` está livre agora**: a frente `agenda-no-app` terminou e nenhum path de `apps/**` está sob edição; (3) as chaves de ARB da agenda entraram **sem tocar** em `stageTime` (`5a31d82`/`c459ed8`), e a paridade dos três idiomas está verde (`tools/check_arb.py`). A Trilha 1 pode começar.
+- **Achado de passagem, não corrigido (para o dono do verificador):** `python3 .harness/verificar_refs.py` **reprova na `main`** por `` `AGENTS.md` `` **em prosa** em `docs/CONCLUSION.md:2013` — o verificador trata código em linha como caminho e resolve para `docs/AGENTS.md`. **Não é do guard** (que roda `documentation.py --root … check`, verde) e é **pré-existente** (mesmo resultado no checkout principal antes das minhas mudanças).
+
 ## 🟡 Interrompido / órfão
 
 Nenhum.
 
 ## 🟢 Concluído recentemente
+
+### cline-app/agenda-no-app — agenda do culto na interface (leitura) + ponte
+- **Início**: 2026-11-26 21:04 (UTC) · **Última atualização**: 2026-11-26 21:32 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `885aaad`, merge `--no-ff`) · **Branches**: `feat/agenda-no-app` (integrada; **não apagada** — remoção de branch é autoridade do dono) · **Worktrees**: `~/Develop/Projects/app-music-wt/agenda-palco` (mantido)
+- **Demanda**: cumprida — a agenda do culto chegou à interface **sem** depender do dono.
+- **Paths sob edição**: nenhum (concluído).
+- **Status**: concluído.
+- **PRs**: nenhum (merge local `--no-ff`).
+
+**Feito — 6 commits** (`34b0681`, `a17b5c4`, `0cecab5`, `5a31d82`, `c459ed8`, `a0b6f56`): `listar_agenda` + `EventoAgenda`/`ExecucaoAgenda` na ponte, bindings **frb 2.13.0** regerados, `AgendaPage` (carregando/vazio/erro/lista) abrindo o setlist no Modo Palco, 7 chaves de ARB nos três idiomas-base, e o **defeito de produto pré-existente**: `salvar_na_biblioteca` não mantinha `library.json` — o app **não listava o que ele mesmo salvava** (e a remoção deixava a obra pendurada; agora é **recusada** enquanto uma agenda citar a obra).
+
+**Provado (no integrado, pelo integrador):** `cargo test -p kentron_ffi` **21 testes**; `flutter analyze` **sem achados**; `flutter test` **71 passando** (antes: **5 arquivos nem carregavam**); `tools/check_arb.py` verde; bateria completa verde. Sentido negativo, no commit: revertida a manutenção do índice, **5** reprovam; revertido o bloqueio da remoção, **2**.
+
+**Aberto:** escrever a agenda na interface, **"repetir a agenda anterior com versões novas"** e o `--relatorio-uso` na tela (no `PENDING`).
+
+### cline-mir/letra-ordem-cantada — GAP das repetições: `--letra` na ordem cantada
+- **Início**: 2026-11-26 21:04 (UTC) · **Última atualização**: 2026-11-26 21:32 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `99eae1f`, merge `--no-ff`) · **Branches**: `feat/letra-ordem-cantada` (integrada; não apagada) · **Worktrees**: `~/Develop/Projects/app-music-wt/letra-repeticao` (mantido)
+- **Demanda**: cumprida — o **insumo** do "acorde sobre a sílaba" destravado (era o GAP aberto desde 25/11).
+- **Paths sob edição**: nenhum (concluído).
+- **Status**: concluído.
+- **PRs**: nenhum (merge local `--no-ff`).
+
+**Feito — 2 commits** (`17a75fa` fmt de 10 arquivos do crate; `80cd180` o mecanismo): `{bloco X}`…`{fim}` + `{canta X}` + sufixo `(Nx)` no texto da letra, expansão para a **ordem cantada** antes de alinhar, e diretiva malformada **reprova com a linha e o motivo** (3 casos com asserção de mensagem); `(Aleluia)`/`(x)` **não** viram marcador. Fixtures novas: `intro_e_canto_repetido` e o caso `intro_repeticao` no benchmark.
+
+**Provado:** no caso sintético (A B A B depois de introdução sem canto), **2 de 4 → 4 de 4** ocorrências alinhadas, erro ≤ **0,02 s** (`[4,02 · 6,80 · 9,61 · 12,40]` contra verdade `[4,0 · 6,8 · 9,6 · 12,4]`); `tests/letra.rs` **13 testes**; bench `intro_repeticao` mediana **0,01 s**; `cargo fmt`/`clippy -p mir_engine` = 0.
+
+**Aberto:** detectar a repetição **sem** a declaração; medir a expansão no repertório real.
+
+### cline/gates-verdes — `main` de volta ao verde (fmt + clippy, partição por crate)
+- **Início**: 2026-11-26 21:04 (UTC) · **Última atualização**: 2026-11-26 21:32 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `6a036aa`, merge `--no-ff`; fechamento documental em `ef56b35`) · **Branches**: `chore/gates-verdes` e `docs/fechamento-frentes-0-2-3` (ambas integradas; não apagadas) · **Worktrees**: `~/.cline/worktrees/1bf9c/app-music`
+- **Demanda**: cumprida — o **portão principal** (`./scripts/ci-local.sh`, ADR-0004) não passava na `main`, e a razão de fundo era mais grave que o `fmt`: **o app não compilava**.
+- **Paths sob edição**: nenhum (concluído).
+- **Status**: concluído.
+- **PRs**: nenhum (merge local `--no-ff`).
+
+**Feito — 2 commits** (`23b168a` código; `0dfae5c` fechamento documental): `notation_bundle` formatado (3 arquivos) e o lint `empty_line_after_doc_comments` pago (era comentário de doc **órfão** sobre o módulo de testes, em `musicxml.rs:882`). O `fmt` do workspace foi **particionado por dono do crate** — este + `mir_engine` + `kentron_ffi` — sem colisão de arquivo.
+
+**Provado (no integrado):** `cargo fmt --all -- --check` = **0**; `cargo clippy --workspace --all-targets -- -D warnings` = **0**; `./scripts/ci-local.sh` **verde de ponta a ponta** (`BATERIA_EXIT=0`, "todos os portões passaram").
+
+**Aberto:** o gate `flutter` **não barra** erro de sintaxe que chega à `main` por merge/`update-ref` (item novo no `PENDING`, com plano de medição) — foi assim que o app ficou quebrado na `main` com `cargo test --workspace` verde.
 
 ### cline/1dce1 — Limpeza: worktree `57a70` e branch `cline/1bf9c` encerrados
 - **Início**: 2026-11-26 21:09 (UTC) · **Última atualização**: 2026-11-26 21:09 (UTC)
