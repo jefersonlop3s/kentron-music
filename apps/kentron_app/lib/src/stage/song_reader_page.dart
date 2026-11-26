@@ -321,15 +321,13 @@ class _SongReaderPageState extends State<SongReaderPage> {
             ],
           ),
         ),
-        ),
-            ),
           if (tempo != null && tempo.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
               child: Row(
                 children: <Widget>[
                   Text('${l10n.stageTime}: ', style: _mono.copyWith(color: cor)),
-                  Text(tempo!, style: _mono.copyWith(color: _vibrantGold)),
+                  Text(tempo, style: _mono.copyWith(color: _vibrantGold)),
                 ],
               ),
             ),
