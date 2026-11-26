@@ -1,5 +1,5 @@
-//! Song bundle persistence: manifest, ChordPro source, library index and
-//! setlists (ADR-0006).
+//! Song bundle persistence: manifest, ChordPro source, MusicXML score and
+//! tablatures (ADR-0006).
 //!
 //! Layout of a bundle directory:
 //!
@@ -11,10 +11,16 @@
 //!   tabs/*.atex      optional
 //! ```
 //!
+//! **The manifest is the inventory.** It declares every content file the
+//! directory holds, and loading cross-checks the two directions: a declared file
+//! that is absent, a declared file this build cannot read, and a `score.musicxml`
+//! or `tabs/*.atex` on disk that the manifest does not declare all fail loudly —
+//! never a silent skip.
+//!
 //! Every JSON file carries `schema_version`. A version this build does not know
 //! **fails loudly** ([`StoreError::UnsupportedSchema`]) instead of being read
 //! partially, and the migration chain walks one step per version when a step
-//! exists. Today the chain is empty because v1 is the first schema.
+//! exists.
 //!
 //! The model in [`crate::bundle`] stays free of serialization attributes: the
 //! wire structs here are private, and every value re-enters the model through
@@ -28,7 +34,9 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::bundle::{BundleError, Execucao, Library, Setlist, SetlistId, SongBundle, SongId};
+use crate::bundle::{
+    BundleError, Execucao, Library, Setlist, SetlistId, SongBundle, SongId, Tablatura,
+};
 use crate::chordpro::{self, ChordProParser};
 
 /// Schema version written by this build.
@@ -39,6 +47,10 @@ pub const MANIFEST_FILE: &str = "meta.json";
 pub const SONG_FILE: &str = "song.cho";
 /// Optional MusicXML source file name inside a bundle directory (R1.1).
 pub const MUSICXML_FILE: &str = "score.musicxml";
+/// Directory holding the tablatures inside a bundle directory (ADR-0006).
+pub const TABLATURE_DIR: &str = "tabs";
+/// Extension of a tablature file inside [`TABLATURE_DIR`].
+pub const TABLATURE_EXT: &str = "atex";
 /// Library index file name, next to the bundle directories.
 pub const LIBRARY_FILE: &str = "library.json";
 /// Directory holding the agendas (one file per event), next to the library.
@@ -60,6 +72,10 @@ pub enum StoreError {
     ChordPro { path: PathBuf, message: String },
     /// The manifest does not declare the ChordPro source it must carry.
     UndeclaredSong { path: PathBuf },
+    /// The manifest declares a content file this build cannot read.
+    UnsupportedFile { path: PathBuf, declarado: String },
+    /// The directory holds a content file the manifest does not declare.
+    UndeclaredFile { path: PathBuf },
     /// `schema_version` is absent or not an unsigned integer.
     InvalidSchemaVersion { path: PathBuf },
     /// `schema_version` is not one this build can read or migrate.
@@ -78,6 +94,8 @@ impl StoreError {
             Self::MissingFile { .. } => "store.file.missing",
             Self::ChordPro { .. } => "store.chordpro",
             Self::UndeclaredSong { .. } => "store.manifest.undeclared_song",
+            Self::UnsupportedFile { .. } => "store.manifest.unsupported_file",
+            Self::UndeclaredFile { .. } => "store.manifest.undeclared_file",
             Self::InvalidSchemaVersion { .. } => "store.schema.invalid",
             Self::UnsupportedSchema { .. } => "store.schema.unsupported",
             Self::Bundle(error) => error.message_key(),
@@ -107,6 +125,16 @@ impl fmt::Display for StoreError {
                     path.display()
                 )
             }
+            Self::UnsupportedFile { path, declarado } => write!(
+                f,
+                "{}: manifest declares {declarado}, which this build does not read",
+                path.display()
+            ),
+            Self::UndeclaredFile { path } => write!(
+                f,
+                "{}: content file is not declared in {MANIFEST_FILE}",
+                path.display()
+            ),
             Self::InvalidSchemaVersion { path } => write!(
                 f,
                 "{}: schema_version is absent or not an unsigned integer",
@@ -128,6 +156,12 @@ impl std::error::Error for StoreError {}
 /// `id` is a plain string on the wire; the validated [`SongId`] is built from it
 /// on load. `files` is the declared inventory of the directory and must list the
 /// ChordPro source, so a hand-edited manifest that forgot it fails loudly.
+///
+/// The inventory lists, in this order, what the directory holds: [`SONG_FILE`]
+/// always, [`MUSICXML_FILE`] when the song has a score, and
+/// `tabs/<nome>.atex` for each tablature — the tablature order is the insertion
+/// order of [`crate::bundle::SongBundle::tabs`], so saving and loading give back
+/// the same list. Paths are `/`-separated and relative to the bundle directory.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BundleManifest {
     /// Schema version of this file.
@@ -287,28 +321,28 @@ fn write_json<T: Serialize>(path: &Path, value: &T) -> Result<(), StoreError> {
     write_file(path, &json)
 }
 
+/// Caminho declarado de uma tablatura dentro do bundle: `tabs/<nome>.atex`.
+///
+/// Sempre com `/`, mesmo no Windows: o manifesto é um arquivo JSON e o inventário
+/// não pode depender do separador da plataforma que gravou.
+#[must_use]
+pub fn caminho_da_tablatura(nome: &str) -> String {
+    format!("{TABLATURE_DIR}/{nome}.{TABLATURE_EXT}")
+}
+
 /// Writes a bundle into `dir`, creating the directory when needed.
 ///
 /// Returns the manifest that was written. `updated_at` is stored verbatim — the
-/// core owns no clock, so the caller decides the timestamp. The declared
-/// inventory lists what this build writes: the ChordPro source.
+/// core owns no clock, so the caller decides the timestamp.
 ///
-/// When `musicxml_source` is provided, it is saved as `score.musicxml` and
-/// declared in the manifest (R1.1).
+/// Writes everything the bundle carries, and declares it all in the manifest: the
+/// ChordPro source (always, re-serialized from the model), `score.musicxml` when
+/// [`SongBundle::musicxml`] is set, and `tabs/<nome>.atex` for each
+/// [`SongBundle::tabs`] entry, in insertion order.
 pub fn save_bundle(
     dir: &Path,
     bundle: &SongBundle,
     updated_at: Option<&str>,
-) -> Result<BundleManifest, StoreError> {
-    save_bundle_with_musicxml(dir, bundle, updated_at, None)
-}
-
-/// Like [`save_bundle`], but also writes an optional MusicXML source file.
-pub fn save_bundle_with_musicxml(
-    dir: &Path,
-    bundle: &SongBundle,
-    updated_at: Option<&str>,
-    musicxml_source: Option<&str>,
 ) -> Result<BundleManifest, StoreError> {
     fs::create_dir_all(dir).map_err(|source| StoreError::Io {
         path: dir.to_path_buf(),
@@ -317,9 +351,22 @@ pub fn save_bundle_with_musicxml(
     write_file(&dir.join(SONG_FILE), &chordpro::write(bundle.song()))?;
 
     let mut files = vec![SONG_FILE.to_owned()];
-    if let Some(mxml) = musicxml_source {
-        write_file(&dir.join(MUSICXML_FILE), mxml)?;
+    if let Some(musicxml) = bundle.musicxml() {
+        write_file(&dir.join(MUSICXML_FILE), musicxml)?;
         files.push(MUSICXML_FILE.to_owned());
+    }
+
+    if !bundle.tabs().is_empty() {
+        let tab_dir = dir.join(TABLATURE_DIR);
+        fs::create_dir_all(&tab_dir).map_err(|source| StoreError::Io {
+            path: tab_dir.clone(),
+            source,
+        })?;
+        for tablatura in bundle.tabs() {
+            let declarado = caminho_da_tablatura(tablatura.nome());
+            write_file(&dir.join(&declarado), tablatura.atex())?;
+            files.push(declarado);
+        }
     }
 
     let manifest = BundleManifest {
@@ -332,7 +379,29 @@ pub fn save_bundle_with_musicxml(
     Ok(manifest)
 }
 
+/// Like [`save_bundle`], but also writes an optional MusicXML source file.
+///
+/// Kept for callers that hold the score outside the bundle. `musicxml_source`
+/// **overrides** whatever the bundle already carries; `None` means "keep the
+/// bundle's own score", which is what [`save_bundle`] does.
+pub fn save_bundle_with_musicxml(
+    dir: &Path,
+    bundle: &SongBundle,
+    updated_at: Option<&str>,
+    musicxml_source: Option<&str>,
+) -> Result<BundleManifest, StoreError> {
+    match musicxml_source {
+        Some(source) => save_bundle(dir, &bundle.clone().com_musicxml(source), updated_at),
+        None => save_bundle(dir, bundle, updated_at),
+    }
+}
+
 /// Reads the optional MusicXML source from a bundle directory, if it exists.
+///
+/// This reads the file straight from disk and **does not consult the manifest** — it
+/// is the raw helper, not the reconciling path. [`load_bundle`] is the one that
+/// checks the inventory and hands the score back inside the model; a bundle that
+/// passes through it always agrees with this function.
 ///
 /// Returns `None` when no `score.musicxml` file is present.
 pub fn load_musicxml_from_bundle(dir: &Path) -> Result<Option<String>, StoreError> {
@@ -340,36 +409,140 @@ pub fn load_musicxml_from_bundle(dir: &Path) -> Result<Option<String>, StoreErro
     if !path.exists() {
         return Ok(None);
     }
-    let content = fs::read_to_string(&path).map_err(|source| StoreError::Io {
-        path: path.clone(),
-        source,
-    })?;
-    Ok(Some(content))
+    read_required(&path).map(Some)
 }
 
-/// Reads a bundle from `dir`.
-///
-/// Fails loudly when the manifest is absent, carries an unknown schema, does not
-/// declare the ChordPro source, or when the source does not parse.
-pub fn load_bundle(dir: &Path) -> Result<SongBundle, StoreError> {
-    let manifest_path = dir.join(MANIFEST_FILE);
-    let manifest: BundleManifest = parse_json(&manifest_path)?;
+/// What a path declared in the manifest is, in this build.
+enum Declarado {
+    /// The ChordPro source, [`SONG_FILE`].
+    Cancao,
+    /// The MusicXML score, [`MUSICXML_FILE`].
+    Partitura,
+    /// A tablature; carries the name, without directory or extension.
+    Tablatura(String),
+}
 
-    if !manifest.files.iter().any(|file| file == SONG_FILE) {
-        return Err(StoreError::UndeclaredSong {
-            path: manifest_path,
-        });
+/// Classifies a declared path; `Err` carries whatever this build does not read.
+fn classificar(declarado: &str) -> Result<Declarado, String> {
+    if declarado == SONG_FILE {
+        return Ok(Declarado::Cancao);
+    }
+    if declarado == MUSICXML_FILE {
+        return Ok(Declarado::Partitura);
+    }
+    if let [dir, arquivo] = declarado.split('/').collect::<Vec<_>>()[..] {
+        if dir == TABLATURE_DIR {
+            let sufixo = format!(".{TABLATURE_EXT}");
+            if let Some(nome) = arquivo
+                .strip_suffix(&sufixo)
+                .filter(|nome| !nome.is_empty() && *nome != "." && *nome != "..")
+            {
+                return Ok(Declarado::Tablatura(nome.to_owned()));
+            }
+        }
+    }
+    Err(declarado.to_owned())
+}
+
+/// Confere que todo arquivo de conteúdo do diretório está declarado no manifesto.
+///
+/// O manifesto é o inventário: `score.musicxml` ou `tabs/*.atex` presente em disco e
+/// fora dele **reprova**, em vez de ser ignorado em silêncio. Nome de arquivo que
+/// não é UTF-8 também reprova — o manifesto é JSON, e o que não cabe nele não pode
+/// ser declarado.
+fn conferir_inventario(dir: &Path, manifest: &BundleManifest) -> Result<(), StoreError> {
+    let declarado = |caminho: &str| manifest.files.iter().any(|entry| entry == caminho);
+
+    let partitura = dir.join(MUSICXML_FILE);
+    if partitura.is_file() && !declarado(MUSICXML_FILE) {
+        return Err(StoreError::UndeclaredFile { path: partitura });
     }
 
+    let tab_dir = dir.join(TABLATURE_DIR);
+    if !tab_dir.is_dir() {
+        return Ok(());
+    }
+    for entrada in fs::read_dir(&tab_dir).map_err(|source| StoreError::Io {
+        path: tab_dir.clone(),
+        source,
+    })? {
+        let entrada = entrada.map_err(|source| StoreError::Io {
+            path: tab_dir.clone(),
+            source,
+        })?;
+        let caminho = entrada.path();
+        if !entrada
+            .file_type()
+            .map_err(|source| StoreError::Io {
+                path: caminho.clone(),
+                source,
+            })?
+            .is_file()
+        {
+            continue;
+        }
+        let nome = caminho
+            .file_name()
+            .and_then(|nome| nome.to_str())
+            .ok_or_else(|| StoreError::UndeclaredFile {
+                path: caminho.clone(),
+            })?;
+        if !declarado(&format!("{TABLATURE_DIR}/{nome}")) {
+            return Err(StoreError::UndeclaredFile { path: caminho });
+        }
+    }
+    Ok(())
+}
+
+/// Reads a bundle from `dir`, with everything the manifest declares.
+///
+/// Fails loudly when the manifest is absent, carries an unknown schema, does not
+/// declare the ChordPro source, declares a file this build does not read or that is
+/// not on disk, when the directory holds a content file the manifest omits, or when
+/// the ChordPro source does not parse.
+///
+/// The model comes back with its sources: [`SongBundle::musicxml`] and
+/// [`SongBundle::tabs`] carry the very bytes that were on disk.
+pub fn load_bundle(dir: &Path) -> Result<SongBundle, StoreError> {
+    let manifest: BundleManifest = parse_json(&dir.join(MANIFEST_FILE))?;
+    conferir_inventario(dir, &manifest)?;
+
+    let mut fonte: Option<String> = None;
+    let mut musicxml: Option<String> = None;
+    let mut tablaturas: Vec<Tablatura> = Vec::new();
+    for declarado in &manifest.files {
+        let caminho = dir.join(declarado);
+        match classificar(declarado).map_err(|declarado| StoreError::UnsupportedFile {
+            path: caminho.clone(),
+            declarado,
+        })? {
+            Declarado::Cancao => fonte = Some(read_required(&caminho)?),
+            Declarado::Partitura => musicxml = Some(read_required(&caminho)?),
+            Declarado::Tablatura(nome) => {
+                let atex = read_required(&caminho)?;
+                tablaturas.push(Tablatura::nova(nome, atex)?);
+            }
+        }
+    }
+
+    let fonte = fonte.ok_or_else(|| StoreError::UndeclaredSong {
+        path: dir.join(MANIFEST_FILE),
+    })?;
     let song_path = dir.join(SONG_FILE);
-    let source = read_required(&song_path)?;
-    let song = ChordProParser::parse(&source).map_err(|message| StoreError::ChordPro {
+    let song = ChordProParser::parse(&fonte).map_err(|message| StoreError::ChordPro {
         path: song_path,
         message,
     })?;
 
     let id = SongId::new(manifest.id)?;
-    Ok(SongBundle::new(id, song)?)
+    let mut bundle = SongBundle::new(id, song)?;
+    if let Some(musicxml) = musicxml {
+        bundle = bundle.com_musicxml(musicxml);
+    }
+    for tablatura in tablaturas {
+        bundle = bundle.com_tablatura(tablatura)?;
+    }
+    Ok(bundle)
 }
 
 /// Writes the library index next to the bundle directories.

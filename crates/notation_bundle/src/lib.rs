@@ -2,9 +2,10 @@
 //!
 //! Implemented: [`chord_naming`], [`chordpro`], [`harmony`], the in-memory
 //! [`bundle`] model (library and setlists) and its persistence ([`bundle_store`],
-//! ADR-0006). The bundle is a directory with `meta.json` and `song.cho`; the
-//! optional `score.musicxml` and `tabs/*.atex` still arrive later, as does the
-//! projection-friendly verse pagination.
+//! ADR-0006). The bundle is a directory with `meta.json`, the ChordPro source, the
+//! optional `score.musicxml` and the optional `tabs/*.atex` — the manifest declares
+//! the inventory, and saving/loading round-trips all three byte for byte. The
+//! projection-friendly verse pagination still arrives later.
 //!
 //! This crate is domain only: no FFI, and `unsafe_code = "forbid"` holds. The
 //! Rust ↔ Flutter boundary lives in the `kentron_ffi` crate (ADR-0007).
