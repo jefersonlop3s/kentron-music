@@ -34,27 +34,6 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - **Paths sob edição**: nenhum ainda — **colide** com a frente `agenda-no-app` em `apps/kentron_app/**` (`song_reader_page.dart` é dela); combinar antes de editar.
 - **Status**: aguardando decisão do dono · **PRs**: —
 
-### cline-nb/bundle-formatos — Song Bundle: `score.musicxml` e `tabs/*.atex` dentro do bundle (ADR-0006)
-- **Início**: 2026-11-26 21:38 (UTC) · **Última atualização**: 2026-11-26 21:38 (UTC)
-- **Repositórios**: `kentron-music` (`main` = `33e2e3a`) · **Branches**: `feat/bundle-formatos` · **Worktrees**: `~/Develop/Projects/app-music-wt/bundle-formatos`
-- **Demanda**: a ADR-0006 **prevê** `score.musicxml` e `tabs/*.atex` no bundle, mas o v1 grava **só o `.cho`** — existem `save_bundle_with_musicxml`/`load_musicxml_from_bundle` e nenhum caminho para as tabs nem no `save_bundle` genérico. Empacotar os dois com round-trip provado, resolver a cadeia de `schema_version` (bump + migração, fail-loud) e declarar o que fica aberto (contêiner de arquivo único/zip, com o custo medido — não inventar formato sem registrar).
-- **Paths sob edição**: `crates/notation_bundle/**` (inclui `src/bundle.rs`, `src/bundle_store.rs`, `tests/**`)
-- **Status**: em andamento · **PRs**: —
-
-### cline-inst/instrumentos — P1 da ADR-0017 provado ponta a ponta e o CLI sem fallback silencioso
-- **Início**: 2026-11-26 21:38 (UTC) · **Última atualização**: 2026-11-26 21:38 (UTC)
-- **Repositórios**: `kentron-music` (`main` = `33e2e3a`) · **Branches**: `feat/instrumentos-infra` · **Worktrees**: `~/Develop/Projects/app-music-wt/instrumentos`
-- **Demanda**: o P1 da ADR-0017 (`397ff22`) está na `main` **sem prova ponta a ponta** — `models/weights/` não existe neste clone e o `bin/mir.rs` engole falha com `.ok()` em `create_dir_all` e em `wav::escrever` (viola a regra 1 do `AGENTS.md`: nenhum fallback silencioso). Provar o pipeline com um áudio curto, tirar os `.ok()`, documentar no `README` o pré-requisito de **regerar bindings** e provar-ou-parar no `scripts/exportar_onnx.py` (`load_state_dict(state['state'])`) — **sem deletar** o script: se não fechar, reportar.
-- **Paths sob edição**: `scripts/**`, `models/**`, `README.md`, `crates/mir_engine/src/bin/mir.rs`, `crates/mir_engine/src/stems_onnx.rs`
-- **Status**: em andamento · **PRs**: —
-
-### cline/gates-flutter — por onde o erro de sintaxe Dart passou por todos os gates
-- **Início**: 2026-11-26 21:38 (UTC) · **Última atualização**: 2026-11-26 21:38 (UTC)
-- **Repositórios**: `kentron-music` (`main` = `33e2e3a`) · **Branches**: `chore/gate-flutter` · **Worktrees**: `~/.cline/worktrees/1bf9c/app-music`
-- **Demanda**: `apps/kentron_app/lib/src/stage/song_reader_page.dart` ficou com sintaxe quebrada na `main` (`b6a9864`) e **nenhum gate reprovou** — `cargo test --workspace` não enxerga Dart. Medir por onde entrou (gate escopado? merge? `update-ref`?) e instalar um verificador barato **se** o custo couber em todo movimento da `main`; se não couber, entregar a medição e a proposta, **não** o gate.
-- **Paths sob edição**: `.githooks/**`, `tools/**`
-- **Status**: em andamento · **PRs**: —
-
 ## 📌 Notas entre agentes
 
 - **Partição de paths feita para não haver colisão** (decidida em 2026-11-26, ao abrir as três frentes): `notation_bundle` é da `gates-verdes`; `mir_engine` é da `letra-ordem-cantada`; `kentron_ffi` + `apps/kentron_app` + `core_l10n` são da `agenda-no-app`. **Nenhum arquivo é compartilhado** — o `fmt` da `main` é pago em três pedaços, um por dono do crate.
@@ -71,11 +50,54 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - **Rodada 2 do mesmo plano (2026-11-26, logo depois de a rodada 1 fechar):** partição nova, também **sem arquivo compartilhado** — frente 1 = `crates/notation_bundle/**`; frente 4 = `scripts/**` + `models/**` + `README.md` + `crates/mir_engine/src/bin/mir.rs` + `src/stems_onnx.rs`; a curta dos gates = `.githooks/**` + `tools/**`. As três entradas da **rodada 1** estão em "Concluído recentemente" com os hashes. **A frente 5 (web) segue de fora**: mexe em arquivo **gerado** do frb e exige confirmação antes.
 - **Ainda sem push (2026-11-26):** `main` = `33e2e3a`, **18 commits à frente de `origin/main`**; o push publicaria também os commits da sessão `cline/1dce1` e **não foi pedido**. As 4 branches da rodada 1 estão mergeadas (0 commits fora da `main`) e **não** foram apagadas — remoção de branch é autoridade do dono.
 
+- **Rodada 2 fechada (2026-11-26 21:56):** as três frentes integradas — `ec5ac47` (gate `dart` na guarda da ref), `73d3a06` (bundle com MusicXML/tabs), `b38c6d6` (P1 da ADR-0017 provado) — mais os registros em `40a97c5`/`a1e99fa`. **Bateria completa verde no integrado: `BATERIA_EXIT=0`** ("todos os portões passaram"). O que a rodada 2 pagou de verdade: **três defeitos reais** num caminho que estava na `main` sem nunca ter rodado (RIFF inválido, erro engolido, `len / canais` truncando) e o buraco de sintaxe Dart — todos com prova.
+- **Estado das branches/worktrees e do push:** `main` = `a1e99fa`, **38 commits à frente de `origin/main`** (`c9489d8`) e **ainda sem push** — publica também os commits da sessão `cline/1dce1` e não foi pedido. **Sete branches mergeadas** (`chore/gates-verdes`, `feat/letra-ordem-cantada`, `feat/agenda-no-app`, `docs/fechamento-frentes-0-2-3`, `chore/gate-flutter`, `feat/bundle-formatos`, `feat/instrumentos-infra`) e **quatro worktrees** em `~/Develop/Projects/app-music-wt/*`, todos com 0 commits fora da `main` (prova: `git log --oneline main..<branch>` vazio). **Nada apagado**: remoção de branch é autoridade do dono.
+- **Próximo passo sugerido (frentes 1/4/5 do plano original ficaram assim):** a **5 (web, dupla carga do `wasm_bindgen`)** é a única que resta do trio, e mexe em arquivo **gerado** do frb — precisa de confirmação antes; a **ASR** (calibrar o viés do timestamp por modelo, reproduzir `medium` pior que `small`, testar `--grammar`) é a maior frente de medição ainda intacta e não depende de decisão do dono; e a **frente 2 do produto** (escrever a agenda no app — montar/editar e "repetir a agenda anterior com versões novas") é o próximo incremento natural da `agenda-no-app`.
+
 ## 🟡 Interrompido / órfão
 
 Nenhum.
 
 ## 🟢 Concluído recentemente
+
+### cline-nb/bundle-formatos — Song Bundle: `score.musicxml` e `tabs/*.atex` dentro do bundle (ADR-0006)
+- **Início**: 2026-11-26 21:38 (UTC) · **Última atualização**: 2026-11-26 21:56 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `73d3a06`, merge `--no-ff`) · **Branches**: `feat/bundle-formatos` (integrada; **não apagada** — remoção de branch é autoridade do dono) · **Worktrees**: `~/Develop/Projects/app-music-wt/bundle-formatos` (mantido)
+- **Paths sob edição**: nenhum (concluído).
+- **Status**: concluído.
+- **PRs**: nenhum (merge local `--no-ff`).
+
+**Feito — 6 commits** (`379d415`, `87b248b`, `f6adcdb`, `9c1b148`, `ba91214`, `e5c10ce`): `save_bundle` escreve **tudo** que o `SongBundle` carrega e **declara tudo no manifesto** (`song.cho`, `score.musicxml`, `tabs/<nome>.atex`, com `/` mesmo no Windows — o manifesto é JSON); `load_bundle` lê o manifesto e devolve as fontes no modelo; cadeia de `schema_version` respeitada (bundle antigo carrega, teste com o **literal** da versão anterior e não com a constante); os **órfãos** que a regravação deixa em disco são **recusados** (`UndeclaredFile`), com a decisão documentada e testada na saída; e `load_setlists` parou de engolir com `filter_map(Result::ok)` o erro de leitura de uma entrada da pasta de agendas.
+
+**Provado (na branch e no integrado):** `fmt -p notation_bundle --check` = 0; `clippy -p notation_bundle --all-targets -- -D warnings` = 0; `cargo test -p notation_bundle` verde; bateria completa verde depois do merge. **Limite declarado pela própria frente:** o conserto do `load_setlists` **não tem prova negativa** (exigiria injeção de falha no sistema de arquivos).
+
+**Aberto:** contêiner de arquivo único (zip), com o custo medido — no `PENDING`.
+
+### cline-inst/instrumentos — P1 da ADR-0017 provado ponta a ponta e o CLI sem fallback silencioso
+- **Início**: 2026-11-26 21:38 (UTC) · **Última atualização**: 2026-11-26 21:56 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `b38c6d6`, merge `--no-ff`) · **Branches**: `feat/instrumentos-infra` (integrada; não apagada) · **Worktrees**: `~/Develop/Projects/app-music-wt/instrumentos` (mantido)
+- **Paths sob edição**: nenhum (concluído).
+- **Status**: concluído.
+- **PRs**: nenhum (merge local `--no-ff`).
+
+**Feito — 6 commits** (`89bfbf2`, `7f6744e`, `a77210a`, `4ae5c4f`, `be47d6e`, `58049d4`) e **três defeitos reais** no caminho que nunca tinha rodado: **(1)** `wav::escrever` gravava **RIFF inválido** (tamanhos em `usize`: 8 bytes onde o formato exige 4) — nenhum leitor aceitava, nem o `ler` do próprio módulo nem o `ffprobe`; tinha **um chamador e nenhum teste**. **(2)** `analyze_com_letra` engolia o erro de stems num `.unwrap_or_else(|_| …)` (`com_stems: null` sem uma palavra) — foi o que **escondeu** o WAV quebrado; agora o motivo vai para o stderr e o `bin/mir.rs` **reprova em vez de anunciar "escrito em"**. **(3)** o `preparar_audio` da separação ONNX supunha amostras intercaladas (`len / canais`) e `Audio.amostras` é **mono** — 20 s viravam 10 s de stem com metade da música em cada canal (comparava material diferente); e o EP do CoreML entrava sozinho no `ort` 2.0.0-rc.15 e **não compila** o `htdemucs_6s` na ANE, com `PreferCPU` como o único EP que sustenta o escopo 3 da ADR-0017.
+
+**Provado:** `mir musica.wav --stems onnx --json` escreve os **6 stems** (20 s, 3,5 MB cada) e o relatório traz `stems.com_stems` com período de bumbo **3,086 s no stem contra 0,765 s no mix**; `fmt`/`clippy -p mir_engine` = 0, `cargo test -p mir_engine` verde, `shellcheck scripts/*.sh` = 0. O `exportar_onnx.py` ficou **honesto**: pesos carregam (525 chaves, `strict`), mas o export do modelo inteiro reprova com `SymbolicValueError: STFT does not currently support complex types` — não foi apagado nem "consertado" com um conserto que não exporta.
+
+**Aberto:** decisão do dono sobre manter ou remover o `exportar_onnx.py` (o caminho do motor é o ONNX de terceiro); a frente **não** tocou os itens de ASR (ficam para a próxima rodada).
+
+### cline/gates-flutter — por onde o erro de sintaxe Dart passou por todos os gates
+- **Início**: 2026-11-26 21:38 (UTC) · **Última atualização**: 2026-11-26 21:56 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `ec5ac47`, merge `--no-ff`) · **Branches**: `chore/gate-flutter` (integrada; não apagada) · **Worktrees**: `~/.cline/worktrees/1bf9c/app-music`
+- **Paths sob edição**: nenhum (concluído).
+- **Status**: concluído.
+- **PRs**: nenhum (merge local `--no-ff`).
+
+**Feito — 2 commits** (`9b23adf` código; `0822eee` registros): a **forense** de por onde a sintaxe quebrada passou (quatro hipóteses refutadas por medição — `dart format` pega parse, o gate `flutter` morde, `precisa_de` não pula gate, e **nenhum log preservado contém o erro**) e o **gate `dart`** na guarda da ref (`tools/verificar_dart.sh`, lido da árvore nova, sem export, **0,04 s** em 25 arquivos, reprovando **só** erro de parse — `rc=1` é formatação e **12 de 25** arquivos já estão fora do padrão), com `HARNESS_SKIP=dart` e recusa de movimento que remova o próprio verificador.
+
+**Provado:** no **real**, `--novo b6a9864 --atual 397ff22` → **rc=1** com `line 324, column 9 … Expected to find ';'`, e o estado corrigido → **rc=0**; no **hermético**, o caso **A12** do `test_ref_main.sh` → **SUITE_EXIT=0** (4 asserções, com stub do `dart` usando os três rc medidos no real: 0/1/65).
+
+**Aberto (declarado no `CHANGELOG`/`PENDING`):** o verificador não vê tipo, import quebrado nem teste vermelho; e um push de clone sem `core.hooksPath` (ou `--no-verify`) não passa por hook local nenhum — esse caminho é do CI.
 
 ### cline-app/agenda-no-app — agenda do culto na interface (leitura) + ponte
 - **Início**: 2026-11-26 21:04 (UTC) · **Última atualização**: 2026-11-26 21:32 (UTC)
