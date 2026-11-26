@@ -32,16 +32,19 @@ fn preparar_audio(audio: &Audio) -> Result<Vec<Vec<f32>>, String> {
             TAXA_MODELO, audio.taxa
         ));
     }
-    let n = audio.amostras.len() / audio.canais as usize;
-    if audio.canais == 1 {
-        Ok(vec![audio.amostras.clone(), audio.amostras.clone()])
-    } else if audio.canais >= 2 {
-        let ch0 = audio.amostras[..n].to_vec();
-        let ch1 = audio.amostras[n..(2 * n).min(audio.amostras.len())].to_vec();
-        Ok(vec![ch0, ch1])
-    } else {
-        Err(format!("canais insuficientes: {}", audio.canais))
+    if audio.amostras.is_empty() {
+        return Err("áudio vazio".to_owned());
     }
+    // `Audio.amostras` é **mono em todo o motor**: o decodificador mistura os
+    // canais (`decode.rs`) e `canais` só registra quantos havia na origem. O
+    // modelo pede duas entradas, então vai o mesmo mono nas duas. O código
+    // anterior supunha amostras intercaladas e fazia `amostras.len() / canais`,
+    // fatiando o buffer em dois "canais" **disjuntos**: medido em 2026-11-26,
+    // uma entrada de 20 s produzia stems de 10 s, o canal 0 com os primeiros
+    // 10 s e o canal 1 com os últimos — a análise comparava materiais
+    // diferentes. O estéreo verdadeiro se perde antes disto, no `decode`, e
+    // recuperá-lo é outra frente.
+    Ok(vec![audio.amostras.clone(), audio.amostras.clone()])
 }
 
 pub fn separar(audio: &Audio, model_path: &Path) -> Result<Vec<(String, Audio)>, String> {
@@ -53,10 +56,24 @@ pub fn separar(audio: &Audio, model_path: &Path) -> Result<Vec<(String, Audio)>,
 
     // Carrega o modelo ONNX
     let env = ort::init().build().map_err(|e| e.to_string())?;
-    use ort::session::Session;
+    use ort::session::{Session, builder::AutoDevicePolicy};
+    // O `ort` 2.0.0-rc.15 **registra o CoreML EP sozinho no macOS** — o padrão
+    // do `AutoDevicePolicy` é `MaxEfficiency`. O `htdemucs_6s` não compila na
+    // ANE; medido em 2026-11-26 com o peso do MANIFEST:
+    //
+    //   Error compiling model: compiler error: Espresso exception: "Invalid
+    //   argument": generic_general_slice: Invalid values 2048 in begin_ids for
+    //   input_shape 1
+    //
+    // `PreferCPU` desliga o EP automático (o de CPU é o que sobra, e é o que o
+    // `sevagh/demucs.onnx` usa). Ele também é o único que sustenta o escopo 3 da
+    // ADR-0017: mesmos pesos e mesma entrada dão a mesma saída — a ANE calcula
+    // em fp16 e não dá essa garantia.
     let mut sess = Session::builder(&env)
         .map_err(|e| e.to_string())?
         .with_intra_threads(2)
+        .map_err(|e| e.to_string())?
+        .with_auto_device(AutoDevicePolicy::PreferCPU)
         .map_err(|e| e.to_string())?
         .commit_from_file(model_path)
         .map_err(|e| e.to_string())?;
@@ -180,6 +197,24 @@ mod tests {
                 "    'https://huggingface.co/StemSplitio/htdemucs-6s-onnx/resolve/main/htdemucs_6s_fp16weights.onnx'"
             );
         }
+    }
+
+    #[test]
+    fn o_mono_do_motor_vai_inteiro_para_os_dois_canais() {
+        // `Audio.amostras` é mono mesmo quando o arquivo é estéreo (o
+        // decodificador mistura). A entrada do modelo tem de ter a duração
+        // inteira e os dois canais iguais: antes ela saía pela metade, com cada
+        // canal levando um pedaço diferente da música.
+        let mut audio = audio_sint(44_100, 2.0);
+        audio.canais = 2; // estéreo na origem, decodificado para mono
+        let canais = preparar_audio(&audio).expect("preparar");
+        assert_eq!(canais.len(), 2);
+        assert_eq!(
+            canais[0].len(),
+            audio.amostras.len(),
+            "entrada do modelo saiu pela metade"
+        );
+        assert_eq!(canais[0], canais[1]);
     }
 
     #[test]

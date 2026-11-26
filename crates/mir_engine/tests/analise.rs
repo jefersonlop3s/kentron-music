@@ -65,34 +65,23 @@ fn sintetizar() -> Audio {
     }
 }
 
-/// Escreve WAV PCM 16 bits mono — usado para a contraprova externa.
+/// Escreve WAV PCM 16 bits pelo **próprio motor** — é ele que o teste mede.
 ///
-/// A escala é 32768 nas duas pontas (escrita e leitura), como o leitor faz:
-/// usar 32767 aqui criava erro de mais de um passo na volta.
+/// Antes isto era uma cópia local do cabeçalho RIFF, e a cópia acertava o que o
+/// `wav::escrever` errava (tamanhos em `usize` = u64, "WAVE" no byte 12): o
+/// teste chamado `le_de_volta_o_wav_que_escreveu` aprovava a cópia, não a
+/// função de produção. O defeito só apareceu quando a CLI escreveu o primeiro
+/// stem de verdade (2026-11-26) — a cópia é que estava sendo testada.
 fn como_wav(audio: &Audio) -> Vec<u8> {
-    let dados: Vec<u8> = audio
-        .amostras
-        .iter()
-        .flat_map(|s| {
-            let q = (s.clamp(-1.0, 1.0) * 32_768.0).round();
-            (q.clamp(-32_768.0, 32_767.0) as i16).to_le_bytes()
-        })
-        .collect();
-    let mut bytes = Vec::new();
-    bytes.extend_from_slice(b"RIFF");
-    bytes.extend_from_slice(&(36 + dados.len() as u32).to_le_bytes());
-    bytes.extend_from_slice(b"WAVEfmt ");
-    bytes.extend_from_slice(&16u32.to_le_bytes());
-    bytes.extend_from_slice(&1u16.to_le_bytes()); // PCM
-    bytes.extend_from_slice(&1u16.to_le_bytes()); // mono
-    bytes.extend_from_slice(&audio.taxa.to_le_bytes());
-    bytes.extend_from_slice(&(audio.taxa * 2).to_le_bytes()); // byte rate
-    bytes.extend_from_slice(&2u16.to_le_bytes()); // block align
-    bytes.extend_from_slice(&16u16.to_le_bytes()); // bits
-    bytes.extend_from_slice(b"data");
-    bytes.extend_from_slice(&(dados.len() as u32).to_le_bytes());
-    bytes.extend_from_slice(&dados);
-    bytes
+    // Nome com PID e contador: `/tmp` é compartilhado entre sessões.
+    static N: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let caminho = std::env::temp_dir().join(format!(
+        "kentron-mir-como-wav-{}-{n}.wav",
+        std::process::id()
+    ));
+    wav::escrever(audio, &caminho).expect("escrever o WAV pelo motor");
+    std::fs::read(&caminho).expect("ler os bytes escritos")
 }
 
 #[test]

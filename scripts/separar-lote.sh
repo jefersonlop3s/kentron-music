@@ -6,6 +6,11 @@
 #   <pasta-de-saida>/<nome-do-audio>/ (drums.wav, bass.wav, etc.)
 #
 # Requer: modelo ONNX baixado (scripts/baixar-pesos.sh)
+#
+# Nenhuma falha é engolida: o motor sai com código ≠ 0 quando não escreve os
+# stems, e se ele sair com 0 sem arquivo em /tmp/kentron-stems/<nome>/ o
+# áudio conta como FALHA — antes daqui o `|| true` fazia o script imprimir
+# "✓" sem nada ter sido escrito.
 
 set -euo pipefail
 
@@ -19,6 +24,9 @@ if [ ! -d "$PASTA_IN" ]; then
     echo "✗ pasta não encontrada: $PASTA_IN" >&2
     exit 1
 fi
+
+# Onde o motor (`mir --stems onnx`) escreve os stems — ver bin/mir.rs.
+STEMS_TMP="/tmp/kentron-stems"
 
 # Verifica se o modelo ONNX existe
 MODELO="models/weights/htdemucs_6s/htdemucs_6s.onnx"
@@ -53,21 +61,54 @@ for i in "${!ARQUIVOS[@]}"; do
     nome="$(basename "$arquivo")"
     nome_sem_ext="${nome%.*}"
     saida="$PASTA_OUT/$nome_sem_ext"
-    mkdir -p "$saida"
 
-    echo "[$((i+1))/$total] $nome → $saida/"
-    if cargo run -p mir_engine --release -- "$arquivo" --stems onnx --json > /dev/null 2>&1; then
-        # Move os stems do /tmp para o diretório de saída
-        src_stem="/tmp/kentron-stems/$nome_sem_ext"
-        if [ -d "$src_stem" ]; then
-            cp "$src_stem"/*.wav "$saida/" 2>/dev/null || true
-        fi
-        echo "  ✓"
-        ((ok++))
-    else
-        echo "  ✗ falha"
-        ((falha++))
+    echo "[$((i + 1))/$total] $nome → $saida/"
+
+    if ! mkdir -p "$saida"; then
+        echo "  ✗ não foi possível criar $saida" >&2
+        falha=$((falha + 1))
+        continue
     fi
+
+    # O stderr do motor é preservado: é ele que diz por que a separação falhou.
+    erro_log="$(mktemp)"
+    if cargo run -p mir_engine --release --quiet -- "$arquivo" --stems onnx --json \
+        > /dev/null 2>"$erro_log"; then
+        rm -f "$erro_log"
+    else
+        echo "  ✗ falha na separação" >&2
+        sed 's/^/    /' "$erro_log" >&2
+        rm -f "$erro_log"
+        falha=$((falha + 1))
+        continue
+    fi
+
+    src_stem="$STEMS_TMP/$nome_sem_ext"
+    if [ ! -d "$src_stem" ]; then
+        echo "  ✗ o motor saiu com sucesso mas não escreveu nada em $src_stem" >&2
+        falha=$((falha + 1))
+        continue
+    fi
+
+    copiados=0
+    for wav in "$src_stem"/*.wav; do
+        [ -e "$wav" ] || continue
+        if ! cp "$wav" "$saida/"; then
+            echo "  ✗ falha ao copiar $wav para $saida/" >&2
+            falha=$((falha + 1))
+            continue 2
+        fi
+        copiados=$((copiados + 1))
+    done
+
+    if [ "$copiados" -eq 0 ]; then
+        echo "  ✗ nenhum .wav em $src_stem" >&2
+        falha=$((falha + 1))
+        continue
+    fi
+
+    echo "  ✓ ($copiados stem(s))"
+    ok=$((ok + 1))
 done
 
 echo ""

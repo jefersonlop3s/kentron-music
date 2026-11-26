@@ -51,9 +51,19 @@ pub fn escrever(audio: &Audio, caminho: &Path) -> Result<(), String> {
     let n_amostras = audio.amostras.len();
     let taxa = audio.taxa;
     let canais = audio.canais;
-    let dados_len = n_amostras * 2; // 16 bits
-    let file_size = 36 + dados_len;
-    let mut buf = Vec::with_capacity(file_size + 8);
+    // Os dois campos de tamanho do RIFF são **u32**. Escritos como `usize`
+    // (u64 nesta plataforma) eles ocupavam 8 bytes onde o formato exige 4: o
+    // "WAVE" ia para o byte 12, o cabeçalho saía com 52 bytes e **nenhum**
+    // leitor aceitava o arquivo — nem o `ler` deste módulo, nem o ffprobe
+    // (medido em 2026-11-26: "riff form is not wave"/"Invalid data found").
+    // O `try_from` mantém o limite do formato explícito: acima de 4 GB o RIFF
+    // não representa o arquivo, e isso é erro — não truncamento silencioso.
+    let dados_len = u32::try_from(n_amostras.saturating_mul(2))
+        .map_err(|_| format!("{n_amostras} amostras não cabem num RIFF (u32)"))?;
+    let file_size = dados_len
+        .checked_add(36)
+        .ok_or_else(|| format!("{dados_len} bytes de dados não cabem num RIFF (u32)"))?;
+    let mut buf = Vec::with_capacity(file_size as usize + 8);
     buf.extend_from_slice(b"RIFF");
     buf.extend_from_slice(&file_size.to_le_bytes());
     buf.extend_from_slice(b"WAVEfmt ");
@@ -175,4 +185,71 @@ fn decodificar(dados: &[u8], formato: u16, canais: u16, bits: u16) -> Result<Vec
         mono.push(soma / f32::from(canais));
     }
     Ok(mono)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn audio_de_teste(canais: u16, quadros: usize) -> Audio {
+        Audio {
+            metadados: HashMap::new(),
+            taxa: 44_100,
+            canais,
+            amostras: (0..quadros * usize::from(canais))
+                .map(|i| {
+                    let t = i as f32 / 44_100.0;
+                    (2.0 * std::f32::consts::PI * 440.0 * t).sin() * 0.5
+                })
+                .collect(),
+        }
+    }
+
+    /// O gate que faltava: `escrever` não tinha **nenhum** teste e **um** único
+    /// chamador (a escrita dos stems ONNX), que nunca havia rodado. O arquivo
+    /// saía com o "WAVE" no byte 12 e o `ler` deste próprio módulo o recusava —
+    /// e a falha era engolida por `.ok()` no chamador.
+    #[test]
+    fn escrever_produz_riff_valido_e_o_leitor_le_de_volta() {
+        let original = audio_de_teste(2, 500);
+        let caminho = std::env::temp_dir().join("kentron-wav-ida-e-volta.wav");
+        escrever(&original, &caminho).expect("escrever");
+        let bytes = std::fs::read(&caminho).expect("ler os bytes escritos");
+
+        assert_eq!(&bytes[0..4], b"RIFF");
+        assert_eq!(&bytes[8..12], b"WAVE", "o \"WAVE\" não está no byte 8");
+        assert_eq!(
+            bytes.len(),
+            44 + original.amostras.len() * 2,
+            "44 bytes de cabeçalho + 2 por amostra"
+        );
+        assert_eq!(
+            u32::from_le_bytes(bytes[4..8].try_into().unwrap()) as usize,
+            bytes.len() - 8,
+            "o tamanho declarado no RIFF tem de fechar com o arquivo"
+        );
+
+        let lido = ler(&bytes).expect("ler o que o módulo escreveu");
+        assert_eq!(lido.taxa, original.taxa);
+        assert_eq!(lido.canais, original.canais);
+        // `ler` mistura para mono: um quadro = média dos dois canais.
+        assert_eq!(lido.amostras.len(), original.amostras.len() / 2);
+        for (i, obtido) in lido.amostras.iter().enumerate() {
+            let esperado = (original.amostras[i * 2] + original.amostras[i * 2 + 1]) / 2.0;
+            assert!(
+                (obtido - esperado).abs() < 1.0 / 32_768.0,
+                "quadro {i}: {obtido} != {esperado}"
+            );
+        }
+    }
+
+    #[test]
+    fn escrever_e_ler_em_mono() {
+        let original = audio_de_teste(1, 100);
+        let caminho = std::env::temp_dir().join("kentron-wav-mono.wav");
+        escrever(&original, &caminho).expect("escrever");
+        let lido = ler(&std::fs::read(&caminho).expect("bytes")).expect("ler");
+        assert_eq!(lido.canais, 1);
+        assert_eq!(lido.amostras.len(), 100);
+    }
 }

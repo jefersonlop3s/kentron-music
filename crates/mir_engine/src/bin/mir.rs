@@ -375,29 +375,42 @@ fn main() -> ExitCode {
                 eprintln!("baixe com: scripts/baixar-pesos.sh");
                 return ExitCode::FAILURE;
             }
-            let stems = mir_engine::stems_onnx::separar(&audio, &model_path);
-            if let Err(erro) = stems {
-                eprintln!("erro na separação ONNX: {erro}");
-                return ExitCode::FAILURE;
-            }
-            let stems = stems.unwrap();
+            let stems = match mir_engine::stems_onnx::separar(&audio, &model_path) {
+                Ok(stems) => stems,
+                Err(erro) => {
+                    eprintln!("erro na separação ONNX: {erro}");
+                    return ExitCode::FAILURE;
+                }
+            };
             let stem_name = caminho
                 .file_stem()
                 .map_or("audio".to_owned(), |s| s.to_string_lossy().into_owned());
             let tmp = std::path::Path::new("/tmp")
                 .join("kentron-stems")
                 .join(stem_name);
-            std::fs::create_dir_all(&tmp).ok();
-            for (nome, stem_audio) in stems {
-                if nome == "drums" {
-                    let drums_path = tmp.join("drums.wav");
-                    mir_engine::wav::escrever(&stem_audio, &drums_path).ok();
-                    eprintln!(
-                        "stems ONNX: drums.wav escrito em {:?}",
-                        drums_path.to_string_lossy()
-                    );
+            // Falha ao criar o diretório **reprova** (AGENTS.md, regra 1): o
+            // `scripts/separar-lote.sh` copia daqui, e um "escrito em ..." sem
+            // arquivo no disco é exatamente a mentira que este caminho existe
+            // para evitar. Antes disto o erro era engolido por `.ok()`.
+            if let Err(erro) = std::fs::create_dir_all(&tmp) {
+                eprintln!("erro ao criar {:?}: {erro}", tmp.to_string_lossy());
+                return ExitCode::FAILURE;
+            }
+            // Todos os stems vão para o disco: o contrato do script de lote é
+            // `drums.wav, bass.wav, etc.`, e o `drums.wav` continua sendo o que
+            // a análise comparativa lê.
+            for (nome, stem_audio) in &stems {
+                let destino = tmp.join(format!("{nome}.wav"));
+                if let Err(erro) = mir_engine::wav::escrever(stem_audio, &destino) {
+                    eprintln!("erro ao escrever o stem: {erro}");
+                    return ExitCode::FAILURE;
                 }
             }
+            eprintln!(
+                "stems ONNX: {} arquivo(s) escrito(s) em {:?}",
+                stems.len(),
+                tmp.to_string_lossy()
+            );
             Some(tmp)
         } else {
             Some(std::path::PathBuf::from(v))
