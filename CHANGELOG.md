@@ -1,4 +1,29 @@
 # Changelog
+## [feat] Sintaxe Dart deixa de entrar na `main` sem gate (2026-11-26)
+
+Fecha a classe de defeito que apareceu nesta sessão: **o app não compilava na `main` e nenhum gate viu**. Medido antes de mexer:
+
+| pergunta | resposta medida |
+|---|---|
+| o que entrou | `song_reader_page.dart` com dois `),` a mais (`b6a9864`) — `dart format` devolve **rc=65** (erro de parse) nesse blob |
+| o gate `flutter` do pre-push morde? | **morde** — há log preservado em que ele reprova por dois `info` de `analyze` |
+| então por que passou? | o gate só roda **no push** e só quando a faixa enviada toca `apps/`; **nenhum log preservado contém o erro de parse** — o gate nunca viu esse push. A `main` também anda por `merge`/`update-ref`, e por aí a guarda da ref só validava **documentação** |
+| quanto custa um verificador barato? | `dart format` em **25 arquivos = 0,04 s**, lendo o **blob** do commit (sem export da árvore) |
+
+**O que entrou:** `tools/verificar_dart.sh` (verificador novo) + o gate **`dart`** na **guarda da ref** (`.githooks/reference-transaction`), que é o único ponto por onde passa **todo** movimento da `main` — merge, `update-ref`, reset.
+
+- **Reprova só erro de parse** (rc do `dart format` ≥ 2; medido 65). `rc=1` é "o formatador mudaria o arquivo" — **12 de 25** arquivos do app já estão fora do padrão: reprovar formatação travaria a `main` por dívida pré-existente.
+- O verificador é lido **da árvore nova** (`git cat-file`/`git show`): um worktree atrasado não fica sem gate, e o gate que governa o movimento é o que o próprio movimento traz.
+- `dart` ausente = **sem verificação, sem movimento** (mesmo princípio do `precisa_de` do pre-push), com a exceção nomeada **`HARNESS_SKIP=dart`**.
+- Um movimento que **remova** `tools/verificar_dart.sh` e altere `.dart` é recusado: um gate não se desliga no movimento que ele guarda.
+
+**Provas, nos dois sentidos:**
+- **Real, contra o incidente:** `tools/verificar_dart.sh --repo … --novo b6a9864 --atual 397ff22` → **rc=1**, apontando `apps/kentron_app/lib/src/stage/song_reader_page.dart: line 324, column 9 … Expected to find ';'`; o mesmo contra o estado corrigido (`main` × `c9489d8`) → **rc=0**.
+- **Hermética:** `.agents/test_ref_main.sh` → **SUITE_EXIT=0**, com o caso **A12** em quatro asserções (recusa por `update-ref` citando o gate; a mensagem com **arquivo e linha**; `HARNESS_SKIP=dart` pulando só ele; e `rc=1` de formatação **não** bloqueando, com asserção de que a `main` avança de verdade para o caso não passar vazio). O `dart` do teste é um stub com os **três rc medidos no dart real** (0/1/65).
+- `bash -n` e `shellcheck` limpos nos três arquivos.
+
+**Limites declarados:** o verificador **não** substitui `flutter analyze`/`flutter test` (não vê tipo, import quebrado nem teste vermelho); e um push de **clone sem `core.hooksPath`** — ou com `--no-verify` — não passa por hook local nenhum: esse caminho é do CI, que roda em PR e semanal, não no push.
+
 ## [fix] A `main` estava vermelha no portão principal — e no app (2026-11-26)
 
 O `./scripts/ci-local.sh` (portão principal da ADR-0004) **não passava** na `main`, e o Dart escondia a pior parte. Medido antes de mexer:
