@@ -151,6 +151,86 @@ fn senoides(saida: &mut Vec<f32>, duracao: f32, amp: f32) {
     }
 }
 
+/// Duração de uma linha cantada nas fixtures de alinhamento.
+pub const LINHA_S: f32 = 2.0;
+
+/// Linhas cantadas **sem pausa** entre elas — o caso que o detector lê como
+/// frase única, e onde o alinhamento proporcional mais erra.
+///
+/// Devolve o áudio e os inícios **conhecidos** de cada linha.
+pub fn canto_sem_pausa(n: usize) -> (mir_engine::wav::Audio, Vec<f32>) {
+    let mut amostras: Vec<f32> = Vec::new();
+    let mut inicios = Vec::new();
+    for _ in 0..n {
+        inicios.push(amostras.len() as f32 / TAXA as f32);
+        senoides(&mut amostras, LINHA_S, 0.15);
+        senoides(&mut amostras, 0.10, 0.0); // respiração mínima
+    }
+    (
+        mir_engine::wav::Audio {
+            metadados: HashMap::new(),
+            taxa: TAXA,
+            canais: 1,
+            amostras,
+        },
+        inicios,
+    )
+}
+
+/// Estrutura com **repetição**: A B A B, cada bloco com pausa antes.
+///
+/// Devolve o áudio e os inícios conhecidos.
+pub fn canto_com_repeticao() -> (mir_engine::wav::Audio, Vec<f32>) {
+    let mut amostras: Vec<f32> = Vec::new();
+    let mut inicios = Vec::new();
+    for _ in 0..2 {
+        for amp in [0.15f32, 0.15] {
+            silencio(&mut amostras, 0.8);
+            inicios.push(amostras.len() as f32 / TAXA as f32);
+            senoides(&mut amostras, LINHA_S, amp);
+        }
+    }
+    (
+        mir_engine::wav::Audio {
+            metadados: HashMap::new(),
+            taxa: TAXA,
+            canais: 1,
+            amostras,
+        },
+        inicios,
+    )
+}
+
+/// Canto **contínuo com linhas de durações muito desiguais**.
+///
+/// É o caso que separa: as linhas têm o **mesmo texto** (mesmo número de
+/// sílabas), mas durações de 1 s e 5 s alternadas. O modelo proporcional — que
+/// reparte o tempo pelo número de sílabas — **tem** de errar aqui, e é isso que
+/// um benchmark precisa de ter. As pausas de 0,4 s ficam abaixo do limiar de
+/// fusão das frases (0,6 s), então o detector lê tudo como **uma** frase.
+///
+/// Devolve o áudio e os inícios conhecidos.
+pub fn canto_continuo_desigual() -> (mir_engine::wav::Audio, Vec<f32>) {
+    let mut amostras: Vec<f32> = Vec::new();
+    let mut inicios = Vec::new();
+    for i in 0..8 {
+        if i > 0 {
+            senoides(&mut amostras, 0.4, 0.0);
+        }
+        inicios.push(amostras.len() as f32 / TAXA as f32);
+        senoides(&mut amostras, if i % 2 == 0 { 1.0 } else { 5.0 }, 0.15);
+    }
+    (
+        mir_engine::wav::Audio {
+            metadados: HashMap::new(),
+            taxa: TAXA,
+            canais: 1,
+            amostras,
+        },
+        inicios,
+    )
+}
+
 /// Quatro blocos cantados, separados por pausa longa: C, G, Am, F.
 ///
 /// Cada bloco é o que uma linha cantada é — acorde sustentado e voz por cima, com

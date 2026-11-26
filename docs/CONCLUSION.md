@@ -1740,6 +1740,27 @@ compasso é a cena**: a fala atravessa a barra. A metáfora é do dono e ela é 
 explicação medida: a fase dos inícios melódicos é plana porque o texto não tem
 compasso.
 
+## R4 · O alinhamento ganha um banco de provas: verdade conhecida, dentro do repo (2026-11-26)
+
+O alinhamento tinha **um** gabarito — 40 linhas marcadas à mão numa música real — e ele vive **fora** do repositório, é conteúdo de terceiro. Medição que depende de material de terceiro não vira gate, e tentativa sem medição vira ajuste no escuro. Construí o instrumento que faltava.
+
+### O que o benchmark tem, e por que ele vale
+
+`crates/mir_engine/tests/alinhamento.rs`: cinco desenhos sintéticos com **início de linha conhecido** — blocos separados, introdução instrumental, canto sem pausa, **repetição** e **duração desigual**.
+
+**A primeira versão não prestava**, e isso é o achado. Com quatro casos uniformes, todos deram **0,00–0,02 s**: o modelo proporcional acerta quando as linhas têm a mesma duração e o mesmo texto. Um conjunto assim mede a imaginação de quem o montou. O sinal veio de **fabricar o caso difícil**: linhas com o **mesmo texto** (mesmas sílabas) e durações de **1 s e 5 s** alternadas — onde o modelo proporcional *tem* de errar. Deu **1,65 s**. É o caso que dá sentido ao banco.
+
+### Dois mecanismos novos, os dois rejeitados pelo banco
+
+| mecanismo | benchmark | gabarito humano |
+|---|---|---|
+| encaixe no ataque precedido da **maior pausa** | `duracao_desigual` **inalterado** (1,65 s) | **0,7 s** — melhora |
+| fronteiras pelos **maiores intervalos** entre ataques | `sem_pausa` **2,09 s**; `duracao_desigual` **5,00 s** | pior |
+
+O primeiro é o caso que justifica o banco inteiro: melhorou o gabarito humano (**1,0 → 0,7 s**) e **não fez o que prometia** no caso que separa. O encaixe **refina um palpite errado** — a janela de 1,2 s nem alcança um erro de 1,9 s. Sem o benchmark, o ganho de 0,3 s teria entrado como correção, e a próxima sessão herdaria um mecanismo que mente.
+
+**Somatório honesto:** **sete** mecanismos de alinhamento medidos nestas duas sessões (dois entraram — o piso por proeminência e a frase curta sem linha; cinco saíram). O erro segue em **mediana 1,0 s** no gabarito humano, e o banco agora **reprova** as ideias óbvias em segundos de `cargo test`, sem gastar o gabarito de terceiro.
+
 ## R4 · Alinhamento: as constantes em escala, e três hipóteses refutadas (2026-11-25)
 
 Depois de baixar o erro de **9,7 s para 1,0 s**, sobraram três pendências. Medi cada uma — contra o gabarito humano e contra **24 músicas** do repertório — e o resultado foi mais mapa do que número.
