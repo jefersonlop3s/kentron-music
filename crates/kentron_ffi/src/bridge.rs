@@ -4,6 +4,7 @@
 //! e o equivalente em Dart) é gerado por `flutter_rust_bridge_codegen` a partir
 //! deste módulo — não se escreve FFI à mão.
 
+use notation_bundle::bundle::{Library, Setlist};
 use notation_bundle::chord_naming::{Chord, Note};
 use notation_bundle::chordpro::{ChordProParser, Song};
 use notation_bundle::harmony::HarmonyEngine;
@@ -238,6 +239,114 @@ pub fn remover_da_biblioteca(base_dir: String, id: String) -> Result<(), String>
     Ok(())
 }
 
+/// Uma execução da agenda: a obra **e a versão tocada naquele evento**.
+///
+/// A obra vem identificada pelo `song_id` (não pelo título): é esse identificador
+/// que a tela passa de volta à biblioteca para abrir a cifra. O título acompanha
+/// porque a lista da agenda o mostra na ordem do evento.
+#[derive(Debug, Clone)]
+pub struct ExecucaoAgenda {
+    /// Identificador da obra na biblioteca — por ele a tela abre a cifra.
+    pub song_id: String,
+    /// Título da obra, lido do bundle correspondente.
+    pub titulo: String,
+    /// Versão declarada para o evento (arranjo, gravação), quando existe.
+    pub versao: Option<String>,
+    /// Tom declarado para o evento, quando existe. É o tom **daquele culto**,
+    /// não o tom original da cifra.
+    pub tom: Option<String>,
+}
+
+/// Um evento da agenda: a playlist do culto, do ensaio ou do evento.
+#[derive(Debug, Clone)]
+pub struct EventoAgenda {
+    /// Identificador do evento, como declarado na agenda.
+    pub id: String,
+    /// Nome do evento.
+    pub nome: String,
+    /// Data do evento (`AAAA-MM-DD`), quando declarada.
+    pub data: Option<String>,
+    /// Tipo do evento (`culto`, `ensaio`, `evento`), quando declarado.
+    pub tipo: Option<String>,
+    /// As execuções na ordem da agenda. O **número de músicas é
+    /// `execucoes.len()`** — a contagem não é um campo à parte para não poder
+    /// divergir da lista que a tela desenha.
+    pub execucoes: Vec<ExecucaoAgenda>,
+    /// Qual núcleo respondeu, no formato `kentron_ffi <versão>`.
+    pub core: String,
+}
+
+/// Lista a agenda local: os eventos e as execuções de cada um.
+///
+/// Lê a biblioteca (`library.json` + um diretório por obra) e as agendas
+/// (`setlists/*.json`) do diretório base, reusando `notation_bundle` — a ponte
+/// não reconstrói o modelo. A ordem dos eventos e das músicas é a do núcleo
+/// (nome do arquivo da agenda; ordem das execuções dentro dela).
+///
+/// # Errors
+///
+/// Falha — em vez de devolver lista vazia — quando o diretório base não existe,
+/// quando a biblioteca não pode ser lida (índice ausente, JSON corrompido,
+/// `schema_version` não suportado) ou quando uma agenda é ilegível ou aponta
+/// para obra fora da biblioteca. **Lista vazia significa, e só significa,
+/// biblioteca sem agenda**: é o estado "nenhum evento ainda", não um erro
+/// disfarçado.
+pub fn listar_agenda(base_dir: String) -> Result<Vec<EventoAgenda>, String> {
+    let path: &std::path::Path = base_dir.as_ref();
+    if !path.is_dir() {
+        return Err(format!(
+            "diretório da biblioteca não existe: {base_dir} — nada para listar"
+        ));
+    }
+
+    let library = notation_bundle::bundle_store::load_library(path)
+        .map_err(|erro| format!("erro ao ler a biblioteca: {erro} ({})", erro.message_key()))?;
+    // `load_setlists` já recusa qualquer agenda ilegível ou pendurada; o `map_err`
+    // acrescenta onde a agenda foi procurada, o que o erro do núcleo não traz (o
+    // `StoreError::Bundle` de uma execução pendurada não carrega caminho).
+    let agendas = notation_bundle::bundle_store::load_setlists(path, &library).map_err(|erro| {
+        format!(
+            "erro ao ler a agenda em {}: {erro} ({})",
+            path.join("setlists").display(),
+            erro.message_key()
+        )
+    })?;
+
+    agendas
+        .iter()
+        .map(|agenda| evento(agenda, &library))
+        .collect()
+}
+
+fn evento(agenda: &Setlist, library: &Library) -> Result<EventoAgenda, String> {
+    // `Setlist::songs` falha alto quando a agenda aponta para obra ausente; o
+    // erro nomeia o evento para a tela não precisar adivinhar qual quebrou.
+    let obras = agenda
+        .songs(library)
+        .map_err(|erro| format!("agenda {}: {erro}", agenda.id().as_str()))?;
+
+    let execucoes = agenda
+        .entries()
+        .iter()
+        .zip(obras)
+        .map(|(entrada, obra)| ExecucaoAgenda {
+            song_id: entrada.song().as_str().to_owned(),
+            titulo: obra.title().to_owned(),
+            versao: entrada.versao().map(str::to_owned),
+            tom: entrada.tom().map(str::to_owned),
+        })
+        .collect();
+
+    Ok(EventoAgenda {
+        id: agenda.id().as_str().to_owned(),
+        nome: agenda.name().to_owned(),
+        data: agenda.data().map(str::to_owned),
+        tipo: agenda.tipo().map(str::to_owned),
+        execucoes,
+        core: format!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION")),
+    })
+}
+
 fn summary(song: &Song) -> SongSummary {
     let mut chords: Vec<String> = Vec::new();
     for section in &song.sections {
@@ -432,5 +541,225 @@ mod tests {
         assert_eq!(keys[0], "C");
         assert!(keys.contains(&"Bb".to_owned()));
         assert!(!keys.contains(&"A#".to_owned()), "a tela escreve bemóis");
+    }
+
+    // ── Agenda: a leitura passa pelo armazenamento de verdade ──────────────
+    //
+    // Cada teste monta uma biblioteca real num diretório único do temp do
+    // sistema (índice + bundles + arquivos de agenda), chama a função da ponte e
+    // confere o que voltou. Não há dublê de armazenamento: o que se prova é o
+    // caminho `bridge → notation_bundle → disco`.
+
+    use notation_bundle::bundle::{Execucao, SetlistId, SongBundle, SongId};
+    use std::path::{Path, PathBuf};
+    use std::sync::atomic::{AtomicU32, Ordering};
+
+    static COUNTER: AtomicU32 = AtomicU32::new(0);
+
+    /// Diretório único sob o temp do sistema, removido ao cair.
+    struct Scratch(PathBuf);
+
+    impl Scratch {
+        fn new(name: &str) -> Self {
+            let unique = COUNTER.fetch_add(1, Ordering::Relaxed);
+            let path = std::env::temp_dir().join(format!(
+                "kentron-ffi-{}-{unique}-{name}",
+                std::process::id()
+            ));
+            std::fs::create_dir_all(&path).unwrap_or_else(|erro| panic!("scratch: {erro}"));
+            Self(path)
+        }
+
+        fn path(&self) -> &Path {
+            &self.0
+        }
+
+        fn base_dir(&self) -> String {
+            self.0.to_string_lossy().into_owned()
+        }
+    }
+
+    impl Drop for Scratch {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    /// Escreve uma biblioteca de verdade: os bundles e o índice `library.json`.
+    fn biblioteca(dir: &Path) {
+        let obras = [
+            ("santo", "Santo"),
+            ("hino-3", "Hino 3"),
+            ("arranjo-coral", "Santo (arranjo do coral)"),
+        ];
+        let mut library = Library::new();
+        for (id, titulo) in obras {
+            let fonte = format!("{{title: {titulo}}}\n{{key: C}}\n\n[Verse]\n[C]texto\n");
+            let song = ChordProParser::parse(&fonte).expect("fixture deve parsear");
+            let bundle = SongBundle::new(SongId::new(id).expect("id válido"), song)
+                .expect("fixture tem título");
+            notation_bundle::bundle_store::save_bundle(&dir.join(id), &bundle, None)
+                .expect("salvar bundle");
+            library.add(bundle).expect("biblioteca sem duplicata");
+        }
+        notation_bundle::bundle_store::save_library(dir, &library).expect("salvar índice");
+    }
+
+    /// Escreve uma agenda de verdade (`<dir>/setlists/<arquivo>`).
+    fn agenda(dir: &Path, arquivo: &str, setlist: &Setlist) {
+        let agenda_dir = dir.join("setlists");
+        std::fs::create_dir_all(&agenda_dir).expect("criar setlists/");
+        notation_bundle::bundle_store::save_setlist(&agenda_dir.join(arquivo), setlist)
+            .expect("salvar agenda");
+    }
+
+    fn nova_agenda(id: &str, nome: &str) -> Setlist {
+        Setlist::new(SetlistId::new(id).expect("id da agenda"), nome).expect("nome da agenda")
+    }
+
+    #[test]
+    fn lists_every_event_with_titles_in_event_order() {
+        let scratch = Scratch::new("agenda-cheia");
+        biblioteca(scratch.path());
+        let library =
+            notation_bundle::bundle_store::load_library(scratch.path()).expect("biblioteca");
+
+        let mut culto = nova_agenda("culto-1", "Culto da manhã")
+            .com_data("2026-11-22")
+            .com_tipo("culto");
+        culto
+            .push(&library, SongId::new("santo").expect("id"))
+            .expect("primeira execução");
+        culto
+            .push_execucao(
+                &library,
+                Execucao::new(SongId::new("arranjo-coral").expect("id"))
+                    .com_versao("versão do coral")
+                    .com_tom("D"),
+            )
+            .expect("segunda execução");
+        agenda(scratch.path(), "culto-1.json", &culto);
+
+        let mut ensaio = nova_agenda("ensaio-0", "Ensaio de quinta").com_tipo("ensaio");
+        ensaio
+            .push(&library, SongId::new("hino-3").expect("id"))
+            .expect("execução");
+        agenda(scratch.path(), "ensaio-0.json", &ensaio);
+
+        let eventos = listar_agenda(scratch.base_dir()).expect("listar agenda");
+
+        assert_eq!(eventos.len(), 2, "duas agendas no disco");
+        // Ordem do núcleo: nome do arquivo — `culto-1.json` antes de `ensaio-0.json`.
+        assert_eq!(eventos[0].id, "culto-1");
+        assert_eq!(eventos[0].nome, "Culto da manhã");
+        assert_eq!(eventos[0].data.as_deref(), Some("2026-11-22"));
+        assert_eq!(eventos[0].tipo.as_deref(), Some("culto"));
+        assert_eq!(eventos[0].execucoes.len(), 2);
+
+        let santo = &eventos[0].execucoes[0];
+        assert_eq!(santo.song_id, "santo");
+        assert_eq!(santo.titulo, "Santo");
+        assert_eq!(santo.versao, None, "versão não declarada não é inventada");
+        assert_eq!(santo.tom, None);
+
+        let coral = &eventos[0].execucoes[1];
+        assert_eq!(coral.song_id, "arranjo-coral");
+        assert_eq!(coral.titulo, "Santo (arranjo do coral)");
+        assert_eq!(coral.versao.as_deref(), Some("versão do coral"));
+        assert_eq!(coral.tom.as_deref(), Some("D"));
+
+        assert!(
+            eventos[0].core.starts_with("kentron_ffi "),
+            "{}",
+            eventos[0].core
+        );
+
+        assert_eq!(eventos[1].id, "ensaio-0");
+        assert_eq!(eventos[1].data, None, "ensaio sem data declarada");
+        assert_eq!(eventos[1].execucoes[0].song_id, "hino-3");
+        assert_eq!(eventos[1].execucoes[0].titulo, "Hino 3");
+    }
+
+    #[test]
+    fn a_library_without_agenda_is_zero_events_and_not_an_error() {
+        let scratch = Scratch::new("agenda-ausente");
+        biblioteca(scratch.path());
+
+        let eventos = listar_agenda(scratch.base_dir()).expect("sem agenda não é erro");
+        assert!(eventos.is_empty(), "nenhum evento, e nenhum erro");
+    }
+
+    #[test]
+    fn refuses_an_absent_base_directory_instead_of_returning_an_empty_list() {
+        let scratch = Scratch::new("agenda-sem-base");
+        let ausente = scratch.path().join("nao-existe");
+
+        let erro = listar_agenda(ausente.to_string_lossy().into_owned())
+            .expect_err("pasta inexistente deve falhar");
+        assert!(erro.contains("não existe"), "{erro}");
+        assert!(
+            erro.contains("nao-existe"),
+            "o erro nomeia o caminho: {erro}"
+        );
+    }
+
+    #[test]
+    fn refuses_a_library_without_index_instead_of_listing_nothing() {
+        let scratch = Scratch::new("agenda-sem-indice");
+
+        // O diretório existe, mas não tem `library.json`: lista vazia seria mentira.
+        let erro = listar_agenda(scratch.base_dir()).expect_err("índice ausente deve falhar");
+        assert!(erro.contains("biblioteca"), "{erro}");
+        assert!(
+            erro.contains("library.json"),
+            "o erro nomeia o arquivo: {erro}"
+        );
+    }
+
+    #[test]
+    fn refuses_a_corrupted_agenda_file_instead_of_swallowing_it() {
+        let scratch = Scratch::new("agenda-corrompida");
+        biblioteca(scratch.path());
+        let agenda_dir = scratch.path().join("setlists");
+        std::fs::create_dir_all(&agenda_dir).expect("criar setlists/");
+        std::fs::write(agenda_dir.join("culto-1.json"), "{ isto não é JSON")
+            .expect("gravar arquivo torto");
+
+        let erro = listar_agenda(scratch.base_dir()).expect_err("JSON torto deve falhar");
+        assert!(erro.contains("agenda"), "{erro}");
+        assert!(
+            erro.contains("culto-1.json"),
+            "o erro nomeia o arquivo: {erro}"
+        );
+        assert!(erro.contains("store.json"), "o erro traz a chave: {erro}");
+    }
+
+    #[test]
+    fn refuses_an_agenda_pointing_at_a_song_outside_the_library() {
+        let scratch = Scratch::new("agenda-pendurada");
+        biblioteca(scratch.path());
+        let agenda_dir = scratch.path().join("setlists");
+        std::fs::create_dir_all(&agenda_dir).expect("criar setlists/");
+        std::fs::write(
+            agenda_dir.join("culto-1.json"),
+            r#"{"schema_version":2,"id":"culto-1","name":"Culto","data":"2026-11-22",
+                "tipo":"culto","entries":[{"song":"fantasma","versao":null,"tom":null}]}"#,
+        )
+        .expect("gravar agenda com obra fora da biblioteca");
+
+        // A entrada pendurada não pode virar uma agenda mais curta e silenciosa.
+        // O erro do núcleo nomeia a obra e a chave estável; a ponte acrescenta
+        // onde procurou. O arquivo da agenda não entra na mensagem — o
+        // `StoreError` de uma execução pendurada não carrega caminho.
+        let erro = listar_agenda(scratch.base_dir()).expect_err("obra ausente deve falhar");
+        assert!(erro.contains("fantasma"), "o erro nomeia a obra: {erro}");
+        assert!(
+            erro.contains("setlist.song.missing"),
+            "o erro traz a chave estável: {erro}"
+        );
+        assert!(
+            erro.contains("setlists"),
+            "o erro diz onde a agenda foi procurada: {erro}"
+        );
     }
 }
