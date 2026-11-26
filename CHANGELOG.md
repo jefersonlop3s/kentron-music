@@ -1,4 +1,26 @@
 # Changelog
+## [spike] Alinhamento: as constantes medidas em escala, e três hipóteses refutadas (2026-11-25)
+
+Contra o gabarito humano de *Teu Santo Nome* (40 linhas marcadas à mão) e contra **24 músicas** do repertório, medi o que faltava das três pendências do alinhamento — e o resultado útil foi metade número, metade mapa do que **não** funciona.
+
+**Em escala (`scripts/medir-frases-lote.py`, 24 músicas):**
+
+- **A cobertura não cai:** mediana **77%**, mínima **54%** e **0 de 24 abaixo de 30%**. O piso por **mediana** (correção anterior) **não corta voz em música nenhuma** — a constante generaliza nessa dimensão.
+- **O problema estrutural é outro, e é a norma:** **21 de 24** músicas têm frase acima de **20 s**, com frases de **133,6 s · 91,4 s · 91,2 s · 86,3 s · 84,3 s**. O detector junta trechos cantados inteiros; o alinhamento então espalha linhas por spans enormes.
+
+**Três hipóteses, três medições, três rejeições:**
+
+| hipótese | mecanismo | mediana no gabarito | veredito |
+|---|---|---|---|
+| cortar frase longa no **ataque mais forte** | energia do ataque | **4,0 s** (era 1,0) | pior — rejeitada |
+| cortar frase longa na **maior pausa** | intervalo entre ataques | **3,2 s** | pior — rejeitada |
+| encaixar o início da linha no **ataque mais próximo** | janela de 1,2 s | **1,0 s** (sem ganho) | inócuo — rejeitada |
+| encaixar no ataque **precedido da maior pausa** | idem, com o intervalo | **0,7 s** (melhor) | **rejeitada mesmo assim** — piorou a asserção de verdade **conhecida** |
+
+A quarta é a que ensina: melhorou o gabarito e **piorou a fixture sintética**, cuja verdade é conhecida (a primeira linha saiu de `inicio_s < 1,0 s` e a asserção do repo reprovou). **Correção que melhora um lado e piora o lado de verdade conhecida não se mantém** — e o número fica registrado.
+
+**O que fica de pé:** alinhamento em **mediana 1,0 s · p90 2,6 · máx 4,5** no único gabarito humano disponível, com as três pendências abertas e agora com o mapa do que **não** é o caminho.
+
 ## [fix] Alinhamento de linha: mediana 9,7 s → 1,0 s contra gabarito humano (2026-11-25)
 
 Medido com a letra que o dono marcou à mão em *Teu Santo Nome* — 40 linhas na ordem cantada, com as repetições. Duas causas, as duas de **mecanismo**:

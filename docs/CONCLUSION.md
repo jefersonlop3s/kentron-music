@@ -1740,6 +1740,33 @@ compasso é a cena**: a fala atravessa a barra. A metáfora é do dono e ela é 
 explicação medida: a fase dos inícios melódicos é plana porque o texto não tem
 compasso.
 
+## R4 · Alinhamento: as constantes em escala, e três hipóteses refutadas (2026-11-25)
+
+Depois de baixar o erro de **9,7 s para 1,0 s**, sobraram três pendências. Medi cada uma — contra o gabarito humano e contra **24 músicas** do repertório — e o resultado foi mais mapa do que número.
+
+### O que a escala diz sobre a constante
+
+`scripts/medir-frases-lote.py`, 24 músicas: a **cobertura** das frases tem mediana **77%** e mínima **54%**, com **0 de 24 abaixo de 30%**. Ou seja, o piso por **mediana** — a correção que baixou o erro — **não corta voz em música nenhuma**. A constante generaliza nessa dimensão, e isso era a pergunta certa a fazer.
+
+### O que a escala revelou, e não era o que eu esperava
+
+**21 de 24 músicas têm frase acima de 20 s**, com frases de **133,6 s**, 91,4 s, 91,2 s, 86,3 s. O detector junta trechos cantados inteiros — e o alinhamento, sendo proporcional, então espalha linhas por spans enormes. **O problema estrutural não é de uma música: é a norma.**
+
+### Três hipóteses refutadas, com o número de cada lado
+
+| hipótese | mediana no gabarito | veredito |
+|---|---|---|
+| cortar a frase longa no **ataque mais forte** | 4,0 s (era 1,0) | pior |
+| cortar a frase longa na **maior pausa** | 3,2 s | pior |
+| encaixar o início da linha no **ataque mais próximo** | 1,0 s | inócuo |
+| encaixar no ataque **precedido da maior pausa** | 0,7 s | melhor no gabarito, **pior na verdade conhecida** |
+
+A quarta hipótese é a lição. Ela melhorou o gabarito humano (mediana **1,0 → 0,7 s**, p90 **2,6 → 2,3**) — e **quebrou a asserção de verdade conhecida** da fixture sintética (a primeira linha saiu de `inicio_s < 1,0 s`). **Quando um ganho num conjunto pago e uma perda no conjunto de verdade conhecida aparecem juntos, o ganho não é o que parece** — foi revertida, e o número fica registrado para não ser retentada como ideia óbvia.
+
+### O que fica
+
+O alinhamento em **mediana 1,0 s · p90 2,6 s · máx 4,5 s** no único gabarito humano disponível. As três pendências seguem abertas — e agora com o mapa de três caminhos que **não** são o caminho. O que a evidência aponta como próximo é diferente dos três: o problema é a **frase de 20 a 133 s**, e cortá-la por sinal de voz (ataque ou pausa) não funcionou; o que falta é uma camada que o motor **já calcula** e o alinhamento ignora — as **seções**.
+
 ## R4 · O alinhamento de linha, medido e corrigido: 9,7 s → 1,0 s (2026-11-25)
 
 Com a letra marcada à mão pelo dono na **ordem cantada** (40 linhas, com repetições), o alinhamento do motor ficou medível — e o erro, **estruturado**. Duas causas apareceram, e as duas eram de **mecanismo**, não de limiar:
