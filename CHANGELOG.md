@@ -1,4 +1,48 @@
 # Changelog
+## [fix] A `main` estava vermelha no portão principal — e no app (2026-11-26)
+
+O `./scripts/ci-local.sh` (portão principal da ADR-0004) **não passava** na `main`, e o Dart escondia a pior parte. Medido antes de mexer:
+
+| sintoma | medido | por que passava |
+|---|---|---|
+| `cargo fmt --all -- --check` | **exit=1** em **14 arquivos** (3 crates) | o `pre-push` é **escopado aos crates que o push toca** — dívida pré-existente não bloqueia retroativo |
+| `cargo clippy -p notation_bundle --all-targets -- -D warnings` | **exit=101** (1 lint, `musicxml.rs:882`) | idem |
+| `flutter analyze` | **exit=1** — bloco órfão em `apps/kentron_app/lib/src/stage/song_reader_page.dart` (dois `),` a mais, de `b6a9864`) | gate `flutter` também é escopado — e **nenhum gate Rust enxerga sintaxe Dart** |
+| `flutter test` | **5 arquivos de teste nem carregavam** | idem |
+
+**O conserto foi particionado por dono do crate** (declarado no quadro **antes** de editar), para três frentes rodarem em paralelo sem colisão de arquivo: `notation_bundle` (o `fmt` + o lint), `mir_engine` (`fmt` de 10 arquivos) e `kentron_ffi` + app + ARBs (o `fmt` do crate, o defeito de sintaxe e o `library.json` abaixo).
+
+**Resultado medido:** `cargo fmt --all -- --check` = **0**; `cargo clippy --workspace --all-targets -- -D warnings` = **0**; `flutter analyze` sem achados; **71 testes** de Flutter passando (antes, nenhum dos 5 arquivos carregava).
+
+**Lição:** `cargo test --workspace` verde **não** é "projeto verde" — o defeito que quebrava o app era um erro de sintaxe no Dart, invisível a todo gate Rust.
+
+## [feat] Agenda do culto: `listar_agenda` na ponte e a tela no app (2026-11-26)
+
+O modelo de agenda existia e era provado no núcleo (`Setlist`/`Execucao`, `schema_version` 2 com cadeia de migração), mas **a ponte não expunha nada de agenda** — o app não tinha como mostrar o culto. Primeiro incremento, o caminho de **leitura**:
+
+- **Ponte:** `listar_agenda(base_dir) -> Result<Vec<EventoAgenda>, String>` (`EventoAgenda`/`ExecucaoAgenda`) lendo `bundle_store::load_setlists`; pasta inexistente ou índice corrompido devolve **erro com mensagem**, nunca lista vazia. Bindings regerados com **frb 2.13.0** (pinado).
+- **Tela:** `AgendaPage` com carregando/vazio/erro/lista e abertura do setlist no **Modo Palco**, alcançável da biblioteca e da tela inicial. Sete chaves novas de ARB nos **três** idiomas-base (`tools/check_arb.py` verde).
+- **Defeito pré-existente que apareceu de carona — e é de produto:** `salvar_na_biblioteca` **não mantinha `library.json`**, então o app **não listava o que ele mesmo salvava** (`erro ao listar: missing file: .../library.json`) e a remoção deixava a obra pendurada no índice; a agenda herdava a falha. Corrigido: o índice nasce na primeira gravação, é **atualizado** em vez de duplicado, é reescrito na remoção, e **a remoção é recusada enquanto uma agenda citar a obra**. Índice ilegível **não** é recriado em silêncio — só a ausência do arquivo conta como biblioteca vazia.
+- **Provas:** `cargo test -p kentron_ffi` **21 testes**; **5 testes Rust + 5 de ponte no Dart** carregando o cdylib real (biblioteca salva listável/removível, agenda lida do disco, pasta inexistente virando exceção, biblioteca sem agenda = zero eventos, remoção recusada). Sentido negativo: revertida a manutenção do índice, **5** reprovam; revertido o bloqueio da remoção, **2** reprovam.
+- **Aberto:** montar/editar a agenda no app, **"repetir a agenda anterior com versões novas"** e o relatório de uso na tela.
+
+## [feat] O GAP das repetições: a letra declara a ordem cantada (2026-11-26)
+
+Medido em 2026-11-25: a cifra/letra de qualquer fonte traz as linhas **distintas**, a gravação **repete**, e o refrão acabava alinhado à **introdução instrumental**, onde não há canto — "acorde sobre a sílaba" **não era medível por construção**.
+
+**O mecanismo:** o texto da letra declara a ordem cantada — `{bloco X}` … `{fim}` define um bloco, `{canta X}` o canta na ordem, e uma linha aceita o sufixo **`(Nx)`**. O motor **expande** o texto para a ordem cantada antes de alinhar. Diretiva malformada (bloco sem `{fim}`, `{canta}` antes de ser definido, `(Nx)` sem linha para repetir) **reprova com a linha e o motivo**, em vez de sumir — os três casos têm asserção de mensagem.
+
+**Os números, no caso sintético (A B A B depois de introdução instrumental sem canto):**
+
+| insumo | ocorrências alinhadas |
+|---|---|
+| linhas distintas, **sem** ordem cantada (o que a fonte entrega) | **2 de 4** — a última é cantada aos **12,4 s** e o motor não tem onde pô-la |
+| com a ordem cantada | **4 de 4** — `[4,02 · 6,80 · 9,61 · 12,40]` contra a verdade `[4,0 · 6,8 · 9,6 · 12,4]` |
+
+O benchmark de alinhamento ganhou o caso **`intro_repeticao`** (mediana **0,01 s**, máximo **0,02 s**) e o teste afirma explicitamente que a **segunda** ocorrência do refrão cai **depois** da introdução e **não** cola na primeira. De carona, o `cargo fmt` do crate (10 arquivos).
+
+**Aberto:** detectar a repetição **sem** a declaração; medir a expansão no repertório real; e a marcação humana da letra na ordem cantada (a de *Teu Santo Nome* vive fora do repo) segue sendo o gabarito.
+
 ## [upstream] `guarda-de-transacao-de-ref` publicada no `sovereign-harness` 0.7.3 (2026-11-26)
 
 O conserto do falso positivo do `pack-refs` **não era só nosso**: ao clonar o kit, o template `templates/git/reference-transaction` apareceu com o **mesmo bug** — a checagem anterior tinha olhado o `.harness/` instalado, que não traz hooks, e não os `templates/`. Veredito corrigido, e o trabalho feito no padrão do kit:
