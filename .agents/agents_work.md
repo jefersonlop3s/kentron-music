@@ -34,6 +34,27 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - **Paths sob edição**: nenhum ainda — **colide** com a frente `agenda-no-app` em `apps/kentron_app/**` (`song_reader_page.dart` é dela); combinar antes de editar.
 - **Status**: aguardando decisão do dono · **PRs**: —
 
+### cline-nb/bundle-formatos — Song Bundle: `score.musicxml` e `tabs/*.atex` dentro do bundle (ADR-0006)
+- **Início**: 2026-11-26 21:38 (UTC) · **Última atualização**: 2026-11-26 21:38 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `33e2e3a`) · **Branches**: `feat/bundle-formatos` · **Worktrees**: `~/Develop/Projects/app-music-wt/bundle-formatos`
+- **Demanda**: a ADR-0006 **prevê** `score.musicxml` e `tabs/*.atex` no bundle, mas o v1 grava **só o `.cho`** — existem `save_bundle_with_musicxml`/`load_musicxml_from_bundle` e nenhum caminho para as tabs nem no `save_bundle` genérico. Empacotar os dois com round-trip provado, resolver a cadeia de `schema_version` (bump + migração, fail-loud) e declarar o que fica aberto (contêiner de arquivo único/zip, com o custo medido — não inventar formato sem registrar).
+- **Paths sob edição**: `crates/notation_bundle/**` (inclui `src/bundle.rs`, `src/bundle_store.rs`, `tests/**`)
+- **Status**: em andamento · **PRs**: —
+
+### cline-inst/instrumentos — P1 da ADR-0017 provado ponta a ponta e o CLI sem fallback silencioso
+- **Início**: 2026-11-26 21:38 (UTC) · **Última atualização**: 2026-11-26 21:38 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `33e2e3a`) · **Branches**: `feat/instrumentos-infra` · **Worktrees**: `~/Develop/Projects/app-music-wt/instrumentos`
+- **Demanda**: o P1 da ADR-0017 (`397ff22`) está na `main` **sem prova ponta a ponta** — `models/weights/` não existe neste clone e o `bin/mir.rs` engole falha com `.ok()` em `create_dir_all` e em `wav::escrever` (viola a regra 1 do `AGENTS.md`: nenhum fallback silencioso). Provar o pipeline com um áudio curto, tirar os `.ok()`, documentar no `README` o pré-requisito de **regerar bindings** e provar-ou-parar no `scripts/exportar_onnx.py` (`load_state_dict(state['state'])`) — **sem deletar** o script: se não fechar, reportar.
+- **Paths sob edição**: `scripts/**`, `models/**`, `README.md`, `crates/mir_engine/src/bin/mir.rs`, `crates/mir_engine/src/stems_onnx.rs`
+- **Status**: em andamento · **PRs**: —
+
+### cline/gates-flutter — por onde o erro de sintaxe Dart passou por todos os gates
+- **Início**: 2026-11-26 21:38 (UTC) · **Última atualização**: 2026-11-26 21:38 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `33e2e3a`) · **Branches**: `chore/gate-flutter` · **Worktrees**: `~/.cline/worktrees/1bf9c/app-music`
+- **Demanda**: `apps/kentron_app/lib/src/stage/song_reader_page.dart` ficou com sintaxe quebrada na `main` (`b6a9864`) e **nenhum gate reprovou** — `cargo test --workspace` não enxerga Dart. Medir por onde entrou (gate escopado? merge? `update-ref`?) e instalar um verificador barato **se** o custo couber em todo movimento da `main`; se não couber, entregar a medição e a proposta, **não** o gate.
+- **Paths sob edição**: `.githooks/**`, `tools/**`
+- **Status**: em andamento · **PRs**: —
+
 ## 📌 Notas entre agentes
 
 - **Partição de paths feita para não haver colisão** (decidida em 2026-11-26, ao abrir as três frentes): `notation_bundle` é da `gates-verdes`; `mir_engine` é da `letra-ordem-cantada`; `kentron_ffi` + `apps/kentron_app` + `core_l10n` são da `agenda-no-app`. **Nenhum arquivo é compartilhado** — o `fmt` da `main` é pago em três pedaços, um por dono do crate.
@@ -46,6 +67,9 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - **Sessão `cline` — fechamento (2026-11-26):** as **três frentes** abertas às 21:04 foram **integradas na `main`**: `885aaad` (agenda), `6a036aa` (gates verdes), `99eae1f` (letra/ordem cantada) e o fechamento documental em `ef56b35`. A `main` ficou **17 commits à frente de `origin/main`** (inclui os 2 de `cline/1dce1`) — **não empurrei**: o push publicaria também o trabalho da outra sessão e não foi pedido; **`origin/main` segue em `c9489d8`**. **Branches e worktrees mantidos** (remoção de branch é autoridade do dono): `feat/agenda-no-app` + `~/Develop/Projects/app-music-wt/agenda-palco`, `feat/letra-ordem-cantada` + `.../letra-repeticao`, `chore/gates-verdes`, `docs/fechamento-frentes-0-2-3` — todas **mergeadas** (prova: `git log --oneline main..<branch>` vazio) e prontas para limpeza quando o dono autorizar.
 - **`cline/1dce1` está destravado:** (1) a `main` **compila de novo** — o bloco órfão de `song_reader_page.dart` foi corrigido em `a17b5c4`, já integrado; (2) **`apps/kentron_app/lib/src/stage/song_reader_page.dart` está livre agora**: a frente `agenda-no-app` terminou e nenhum path de `apps/**` está sob edição; (3) as chaves de ARB da agenda entraram **sem tocar** em `stageTime` (`5a31d82`/`c459ed8`), e a paridade dos três idiomas está verde (`tools/check_arb.py`). A Trilha 1 pode começar.
 - **Achado de passagem, não corrigido (para o dono do verificador):** `python3 .harness/verificar_refs.py` **reprova na `main`** por `` `AGENTS.md` `` **em prosa** em `docs/CONCLUSION.md:2013` — o verificador trata código em linha como caminho e resolve para `docs/AGENTS.md`. **Não é do guard** (que roda `documentation.py --root … check`, verde) e é **pré-existente** (mesmo resultado no checkout principal antes das minhas mudanças).
+
+- **Rodada 2 do mesmo plano (2026-11-26, logo depois de a rodada 1 fechar):** partição nova, também **sem arquivo compartilhado** — frente 1 = `crates/notation_bundle/**`; frente 4 = `scripts/**` + `models/**` + `README.md` + `crates/mir_engine/src/bin/mir.rs` + `src/stems_onnx.rs`; a curta dos gates = `.githooks/**` + `tools/**`. As três entradas da **rodada 1** estão em "Concluído recentemente" com os hashes. **A frente 5 (web) segue de fora**: mexe em arquivo **gerado** do frb e exige confirmação antes.
+- **Ainda sem push (2026-11-26):** `main` = `33e2e3a`, **18 commits à frente de `origin/main`**; o push publicaria também os commits da sessão `cline/1dce1` e **não foi pedido**. As 4 branches da rodada 1 estão mergeadas (0 commits fora da `main`) e **não** foram apagadas — remoção de branch é autoridade do dono.
 
 ## 🟡 Interrompido / órfão
 
