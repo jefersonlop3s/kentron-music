@@ -1989,3 +1989,25 @@ zero** — eu mandei o `stderr` (onde o rustfmt escreve o diff) para `/dev/null`
 as linhas do `stdout`. O filtro escondeu exatamente o sinal que eu procurava. E o
 `-A`/escopo do gate não é bypass: a mordida continua provada com
 `cargo clippy -p mir_engine` reprovando.
+
+## Infra · O merge pode apagar seção do `CHANGELOG` — e agora não pode (2026-11-26)
+
+O dono pediu para conferir que tudo estava documentado. Conferi **por conteúdo**, não por `git log` — e a conferência pagou: **duas seções e uma subseção minhas tinham sumido** do `CHANGELOG` no `origin/main` (o timestamp do whisper, o fix dos gates e a subseção de idiomas).
+
+**O mecanismo não é o commit — é o arquivo.** O `CHANGELOG` é compartilhado e as sessões o **reescrevem**; num merge em que um dos lados não tem a seção, a ausência vence (deleção de um lado + nenhuma mudança do outro = deleção aplicada). E `git log A..B` continua dizendo que está tudo lá, porque o que se perde é **conteúdo dentro de arquivo**. Foi preciso comparar o **conteúdo** dos dois lados para ver.
+
+**O gate** (`.githooks/check_changelog.py`, ligado na guarda da ref e no `pre-commit`): recusa quando um título `## ` da base não existe no novo. **A primeira versão comparava contagem e não pegou nada** — o merge *aumentou* o total (trouxe oito seções de outra sessão) enquanto perdia três minhas. A própria prova negativa, rodada contra o incidente real, reprovou o verificador; é conjunto de títulos. Foi recolocado tudo do histórico, e o gate ficou provado nos dois sentidos: o incidente real **rc=1**, e `git update-ref refs/heads/main <commit-com-perda>` **recusado pela guarda**, com a `main` intacta.
+
+**Limite declarado:** cobre `## `; subseções `### ` não entram — são renomeadas com frequência, e a subseção perdida teve o conteúdo preservado aqui e no `PENDING`.
+
+## Infra · O falso positivo do `pack-refs`: reproduzido com 61 transações e corrigido (2026-11-26)
+
+Sintoma que apareceu **cinco vezes** nestas sessões e **não reproduzia sob demanda**: `❌ MAIN NÃO ATUALIZADA — Esta operação APAGARIA a branch main`, junto de `error: task 'pack-refs' failed`, depois de commit, merge ou push — **sem nada ser apagado**.
+
+O que destravou foi instrumentar o hook por `core.hooksPath` e capturar **61 transações**. Os dados mostraram o mecanismo: o **`git pack-refs`** emite, para cada ref que empacota, **três** transações na mesma execução — `0000 → sha` (recriação) e depois **`sha → 0000`** ("tira do loose, escreve no packed"). **A segunda é literalmente a assinatura de uma deleção**, e o hook a lia assim. Nenhum discriminador no ambiente: `GIT_REFLOG_ACTION` veio **vazio nas 61**.
+
+**O conserto** é uma marca escrita na transação de recriação, consumida pela "deleção" seguinte **apenas** se o sha for o da `main` atual e a marca tiver **menos de 5 s** — porque recriação e "deleção" acontecem no mesmo comando, em milissegundos.
+
+**As seis provas, e a que importa:** com `stdin` forjado, sem tocar o repositório. Deleção real → **bloqueia**; o par do `pack-refs` → **passa**; deleção real logo depois, com a marca já consumida → **bloqueia**; marca velha → **bloqueia**; avanço passa e recuo bloqueia (o que já funcionava); e ponta a ponta, `git pack-refs --all` com trabalho a fazer → **rc=0, sem saída, `main` intacta**. A prova que importa é a terceira: **o conserto não abriu buraco** — o falso positivo sumiu e a proteção de deleção real continua de pé.
+
+**Lição de instrumentação, que custou:** trocar `core.hooksPath` **desliga todos os outros hooks** — e um commit de sonda caiu **na `main`**, porque o gate que barra commit direto na `main` tinha sido substituído pelo meu instrumento. **O instrumento mudou o que estava sendo medido.** Restaurado com o escape nomeado e a `main` conferida; se eu não tivesse checado, teria publicado um commit de teste.

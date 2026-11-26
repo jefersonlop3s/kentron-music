@@ -1,4 +1,25 @@
 # Changelog
+## [fix] Falso positivo do `pack-refs` na guarda da `main`: reproduzido, isolado e corrigido (2026-11-26)
+
+O alarme "❌ MAIN NÃO ATUALIZADA — Esta operação APAGARIA a branch `main`" aparecia **sem nada ser apagado**, junto de `error: task 'pack-refs' failed`, depois de commit/merge/push. Cinco vezes nestas sessões, e **não reproduzia sob demanda** — até eu instrumentar o hook por `core.hooksPath` e capturar **61 transações**.
+
+**Mecanismo identificado nos dados:** o `git pack-refs` emite, para cada ref que empacota, **três** transações na mesma execução — `0000 → sha` (recriação) e depois `sha → 0000` (o "tira do loose, escreve no packed"). **A segunda é lida pelo hook como deleção.** Não há discriminador no ambiente: `GIT_REFLOG_ACTION` veio **vazio** em todas as 61.
+
+**O conserto:** marca da transação de recriação (mesmo comando), consumida pela "deleção" seguinte **só** se o sha for o da `main` atual e a marca tiver menos de 5 s.
+
+**As seis provas** (`stdin` forjado, sem mexer no repositório, mais uma ponta a ponta):
+
+| prova | esperado | medido |
+|---|---|---|
+| deleção **real** da `main`, linha única | bloqueia | **rc=1** |
+| o par do `pack-refs` (recriação, depois "deleção") | passa | **rc=0** |
+| deleção real logo depois, marca consumida | bloqueia | **rc=1** |
+| marca **velha** (fora da janela) | bloqueia | **rc=1** |
+| avanço normal / recuo | passa / bloqueia | **rc=0** / **rc=1** |
+| ponta a ponta: `git pack-refs --all` com trabalho a fazer | rc=0, sem saída | **rc=0**, saída vazia, `main` intacta |
+
+**Lição de instrumentação, registrada porque custou:** instrumentar por `git -c core.hooksPath=…` **desliga todos os outros hooks** — e um commit de sonda caiu **na `main`** porque o gate que barra commit direto na `main` tinha sido substituído. O instrumento mudou o que estava sendo medido. Restaurado com o escape nomeado (`HARNESS_SKIP=main-ref`), e a `main` conferida.
+
 ## [fix] O merge não pode mais apagar seção do `CHANGELOG` (2026-11-26)
 
 Caso de origem, medido: o merge `71a0b1b` apagou **duas seções e uma subseção** minhas do `CHANGELOG.md`, e o `origin/main` ficou sem elas até a conferência de hoje. O `git` **não acusa** — a deleção de um lado, sem mudança do outro, é aplicada — e `git log A..B` continua dizendo que está tudo lá, porque o que se perde é **conteúdo dentro de arquivo**, não commit.
