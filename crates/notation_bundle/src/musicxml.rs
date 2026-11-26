@@ -18,8 +18,8 @@
 //! - Microtones, ornaments, complex notations — ignored.
 //! - `<figured-bass>`, `<pedal>`, `<degree>`, `<functions>` — ignored.
 
-use quick_xml::events::Event;
 use quick_xml::Reader;
+use quick_xml::events::Event;
 
 use crate::chordpro::{ChordPlacement, Line, Section, Song};
 use std::collections::HashMap;
@@ -46,7 +46,8 @@ pub fn parse(input: &str) -> Result<Song, String> {
         return parse_mxl(input);
     }
     // Detect root element: score-timewise or score-partwise.
-    if input.contains("<score-timewise") || input.contains("score-timewise\"")
+    if input.contains("<score-timewise")
+        || input.contains("score-timewise\"")
         || input.contains("\"score-timewise\"")
     {
         return parse_timewise(input);
@@ -122,7 +123,6 @@ fn fifths_to_key(fifths: i32) -> String {
     }
 }
 
-
 // ---------------------------------------------------------------------------
 // MXL: ZIP decompression
 // ---------------------------------------------------------------------------
@@ -144,9 +144,12 @@ fn parse_mxl(data: &str) -> Result<Song, String> {
         let header_size = 30 + name_len + extra_len;
         let name_bytes = &bytes[pos + 30..pos + 30 + name_len];
         let name = String::from_utf8_lossy(name_bytes).to_string();
-        let compressed_size =
-            u32::from_le_bytes([bytes[pos + 18], bytes[pos + 19], bytes[pos + 20], bytes[pos + 21]])
-                as usize;
+        let compressed_size = u32::from_le_bytes([
+            bytes[pos + 18],
+            bytes[pos + 19],
+            bytes[pos + 20],
+            bytes[pos + 21],
+        ]) as usize;
 
         if compression == 0 {
             let data_start = pos + header_size;
@@ -212,7 +215,6 @@ struct TimewiseMeasure {
     parts: Vec<(String, String)>,
 }
 
-
 /// Collect measure elements from a score-timewise document.
 fn collect_timewise_measures(input: &str) -> Vec<TimewiseMeasure> {
     let mut measures = Vec::new();
@@ -233,19 +235,23 @@ fn collect_timewise_measures(input: &str) -> Vec<TimewiseMeasure> {
                 let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
                 if name == "measure" && depth == 2 {
                     in_measure = true;
-                    current_measure_num = e.attributes()
+                    current_measure_num = e
+                        .attributes()
                         .filter_map(Result::ok)
                         .find(|a| a.key.as_ref() == b"number")
                         .and_then(|a| a.unescape_value().ok())
-                        .unwrap_or_default().to_string();
+                        .unwrap_or_default()
+                        .to_string();
                     current_parts = Vec::new();
                 } else if name == "part" && in_measure {
                     in_part = true;
-                    current_part_id = e.attributes()
+                    current_part_id = e
+                        .attributes()
                         .filter_map(Result::ok)
                         .find(|a| a.key.as_ref() == b"id")
                         .and_then(|a| a.unescape_value().ok())
-                        .unwrap_or_default().to_string();
+                        .unwrap_or_default()
+                        .to_string();
                     part_content.clear();
                 }
             }
@@ -275,7 +281,7 @@ fn collect_timewise_measures(input: &str) -> Vec<TimewiseMeasure> {
                 depth -= 1;
             }
             Ok(Event::Eof) => break,
-            Err(_) => {},
+            Err(_) => {}
             _ => {}
         }
         buf.clear();
@@ -307,11 +313,13 @@ fn timewise_to_partwise(input: &str, measures: &[TimewiseMeasure]) -> String {
                 let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
                 if name == "score-part" {
                     in_score_part = true;
-                    current_id = e.attributes()
+                    current_id = e
+                        .attributes()
                         .filter_map(Result::ok)
                         .find(|a| a.key.as_ref() == b"id")
                         .and_then(|a| a.unescape_value().ok())
-                        .unwrap_or_default().to_string();
+                        .unwrap_or_default()
+                        .to_string();
                 } else if name == "part-name" && in_score_part {
                     in_pn = true;
                 }
@@ -327,11 +335,14 @@ fn timewise_to_partwise(input: &str, measures: &[TimewiseMeasure]) -> String {
             }
             Ok(Event::End(ref e)) => {
                 let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
-                if name == "score-part" { in_score_part = false; }
-                else if name == "part-name" { in_pn = false; }
+                if name == "score-part" {
+                    in_score_part = false;
+                } else if name == "part-name" {
+                    in_pn = false;
+                }
             }
             Ok(Event::Eof) => break,
-            Err(_) => {},
+            Err(_) => {}
             _ => {}
         }
         buf.clear();
@@ -365,7 +376,6 @@ fn timewise_to_partwise(input: &str, measures: &[TimewiseMeasure]) -> String {
     out.push_str("</score-partwise>\n");
     out
 }
-
 
 // ---------------------------------------------------------------------------
 // Score-partwise parser
@@ -454,7 +464,6 @@ impl ScorePartParser {
     }
 }
 
-
 impl ScorePartParser {
     /// First pass: read part-list and count harmonies per part.
     fn collect_part_info(&mut self) -> Result<(), String> {
@@ -473,22 +482,26 @@ impl ScorePartParser {
                     match name.as_str() {
                         "part-list" => in_part_list = true,
                         "score-part" if in_part_list => {
-                            current_id = e.attributes()
+                            current_id = e
+                                .attributes()
                                 .filter_map(Result::ok)
                                 .find(|a| a.key.as_ref() == b"id")
                                 .and_then(|a| a.unescape_value().ok())
-                                .unwrap_or_default().to_string();
+                                .unwrap_or_default()
+                                .to_string();
                         }
                         "part-name" if in_part_list && !current_id.is_empty() => {
                             in_part_name = true;
                         }
                         "part" => {
                             in_part = true;
-                            current_id = e.attributes()
+                            current_id = e
+                                .attributes()
                                 .filter_map(Result::ok)
                                 .find(|a| a.key.as_ref() == b"id")
                                 .and_then(|a| a.unescape_value().ok())
-                                .unwrap_or_default().to_string();
+                                .unwrap_or_default()
+                                .to_string();
                             if !self.all_part_ids.contains(&current_id) {
                                 self.all_part_ids.push(current_id.clone());
                                 self.all_parts_harmonies.push(0);
@@ -505,8 +518,8 @@ impl ScorePartParser {
                         if let Ok(text) = e.unescape() {
                             let trimmed = text.trim().to_owned();
                             if !current_id.is_empty() && !trimmed.is_empty() {
-                                if let Some(idx) = self.all_part_ids.iter()
-                                    .position(|id| id == &current_id)
+                                if let Some(idx) =
+                                    self.all_part_ids.iter().position(|id| id == &current_id)
                                 {
                                     while self.all_part_names.len() <= idx {
                                         self.all_part_names.push(String::new());
@@ -525,8 +538,8 @@ impl ScorePartParser {
                         "score-part" => current_id.clear(),
                         "part" => {
                             in_part = false;
-                            if let Some(idx) = self.all_part_ids.iter()
-                                .position(|id| id == &current_id)
+                            if let Some(idx) =
+                                self.all_part_ids.iter().position(|id| id == &current_id)
                             {
                                 self.all_parts_harmonies[idx] = harmony_count;
                             }
@@ -537,7 +550,7 @@ impl ScorePartParser {
                     }
                 }
                 Ok(Event::Eof) => break,
-                Err(_) => {},
+                Err(_) => {}
                 _ => {}
             }
             buf.clear();
@@ -550,7 +563,6 @@ impl ScorePartParser {
         Ok(())
     }
 }
-
 
 impl ScorePartParser {
     /// Second pass: parse the selected part's content.
@@ -597,18 +609,24 @@ impl ScorePartParser {
 
                     // Capture document-level metadata (before any <part>)
                     match name.as_str() {
-                        "work-title" | "movement-title" => { text.clear(); }
-                        "creator" => { text.clear(); }
+                        "work-title" | "movement-title" => {
+                            text.clear();
+                        }
+                        "creator" => {
+                            text.clear();
+                        }
                         _ => {}
                     }
 
                     match name.as_str() {
                         "part" => {
-                            let pid = e.attributes()
+                            let pid = e
+                                .attributes()
                                 .filter_map(Result::ok)
                                 .find(|a| a.key.as_ref() == b"id")
                                 .and_then(|a| a.unescape_value().ok())
-                                .unwrap_or_default().to_string();
+                                .unwrap_or_default()
+                                .to_string();
                             in_target = pid == target_id;
                         }
                         "measure" if in_target => {
@@ -616,33 +634,83 @@ impl ScorePartParser {
                             measure_time = 0.0;
                             meas_div = self.divisions.max(1.0);
                         }
-                        "attributes" if in_measure => { in_attr = true; in_key = false; }
-                        "divisions" if in_attr => { text.clear(); }
-                        "key" if in_attr => { in_key = true; }
-                        "fifths" if in_key => { text.clear(); }
-                        "time" if in_attr => { in_time = true; }
-                        "beats" if in_time => { text.clear(); }
-                        "beat-type" if in_time => { text.clear(); }
+                        "attributes" if in_measure => {
+                            in_attr = true;
+                            in_key = false;
+                        }
+                        "divisions" if in_attr => {
+                            text.clear();
+                        }
+                        "key" if in_attr => {
+                            in_key = true;
+                        }
+                        "fifths" if in_key => {
+                            text.clear();
+                        }
+                        "time" if in_attr => {
+                            in_time = true;
+                        }
+                        "beats" if in_time => {
+                            text.clear();
+                        }
+                        "beat-type" if in_time => {
+                            text.clear();
+                        }
                         "harmony" if in_measure => {
                             in_harmony = true;
-                            root_step.clear(); root_alter = 0;
+                            root_step.clear();
+                            root_alter = 0;
                             kind_str.clear();
-                            bass_step.clear(); bass_alter = 0;
-                            in_root = false; _in_kind = false; in_bass = false;
+                            bass_step.clear();
+                            bass_alter = 0;
+                            in_root = false;
+                            _in_kind = false;
+                            in_bass = false;
                         }
-                        "root" if in_harmony => { in_root = true; text.clear(); }
-                        "root-step" if in_root => { text.clear(); }
-                        "root-alter" if in_root => { text.clear(); }
-                        "kind" if in_harmony => { _in_kind = true; text.clear(); }
-                        "bass" if in_harmony => { in_bass = true; text.clear(); }
-                        "bass-step" if in_bass => { text.clear(); }
-                        "bass-alter" if in_bass => { text.clear(); }
-                        "note" if in_measure => { in_note = true; text.clear(); }
-                        "pitch" | "step" | "octave" | "alter" if in_note => { text.clear(); }
-                        "duration" if in_note => { text.clear(); }
-                        "lyric" if in_note => { in_lyric = true; text.clear(); }
-                        "syllabic" if in_lyric => { text.clear(); }
-                        "text" if in_lyric => { text.clear(); }
+                        "root" if in_harmony => {
+                            in_root = true;
+                            text.clear();
+                        }
+                        "root-step" if in_root => {
+                            text.clear();
+                        }
+                        "root-alter" if in_root => {
+                            text.clear();
+                        }
+                        "kind" if in_harmony => {
+                            _in_kind = true;
+                            text.clear();
+                        }
+                        "bass" if in_harmony => {
+                            in_bass = true;
+                            text.clear();
+                        }
+                        "bass-step" if in_bass => {
+                            text.clear();
+                        }
+                        "bass-alter" if in_bass => {
+                            text.clear();
+                        }
+                        "note" if in_measure => {
+                            in_note = true;
+                            text.clear();
+                        }
+                        "pitch" | "step" | "octave" | "alter" if in_note => {
+                            text.clear();
+                        }
+                        "duration" if in_note => {
+                            text.clear();
+                        }
+                        "lyric" if in_note => {
+                            in_lyric = true;
+                            text.clear();
+                        }
+                        "syllabic" if in_lyric => {
+                            text.clear();
+                        }
+                        "text" if in_lyric => {
+                            text.clear();
+                        }
                         "backup" if in_measure => {}
                         "forward" if in_measure => {}
                         _ => {}
@@ -658,43 +726,70 @@ impl ScorePartParser {
                     match name.as_str() {
                         // Document-level metadata captured when ending their elements
                         "work-title" if !in_target && !text.is_empty() => {
-                            self.metadata.entry("title".to_owned()).or_insert_with(|| text.trim().to_owned());
+                            self.metadata
+                                .entry("title".to_owned())
+                                .or_insert_with(|| text.trim().to_owned());
                         }
                         "movement-title" if !in_target && !text.is_empty() => {
-                            self.metadata.entry("title".to_owned()).or_insert_with(|| text.trim().to_owned());
+                            self.metadata
+                                .entry("title".to_owned())
+                                .or_insert_with(|| text.trim().to_owned());
                         }
                         "creator" if !in_target && !text.is_empty() => {
-                            self.metadata.entry("composer".to_owned()).or_insert_with(|| text.trim().to_owned());
+                            self.metadata
+                                .entry("composer".to_owned())
+                                .or_insert_with(|| text.trim().to_owned());
                         }
-                        "part" => { in_target = false; in_measure = false; }
-                        "measure" => { in_measure = false; }
-                        "attributes" => { in_attr = false; in_key = false; in_time = false; }
+                        "part" => {
+                            in_target = false;
+                            in_measure = false;
+                        }
+                        "measure" => {
+                            in_measure = false;
+                        }
+                        "attributes" => {
+                            in_attr = false;
+                            in_key = false;
+                            in_time = false;
+                        }
                         "divisions" if in_attr => {
                             self.divisions = text.trim().parse::<f64>().unwrap_or(1.0);
                             meas_div = self.divisions.max(1.0);
                         }
-                        "key" => { in_key = false; }
+                        "key" => {
+                            in_key = false;
+                        }
                         "fifths" if in_key => {
                             if let Ok(f) = text.trim().parse::<i32>() {
                                 _key_fifths = Some(f);
                                 self.metadata.insert("key".to_owned(), fifths_to_key(f));
                             }
                         }
-                        "time" => { in_time = false; }
+                        "time" => {
+                            in_time = false;
+                        }
                         "beats" if in_time => {
-                            self.metadata.insert("_time_beats".to_owned(), text.trim().to_owned());
+                            self.metadata
+                                .insert("_time_beats".to_owned(), text.trim().to_owned());
                         }
                         "beat-type" if in_time => {
-                            let beats = self.metadata.get("_time_beats").cloned().unwrap_or_default();
+                            let beats = self
+                                .metadata
+                                .get("_time_beats")
+                                .cloned()
+                                .unwrap_or_default();
                             let btype = text.trim().to_owned();
                             if !beats.is_empty() && !btype.is_empty() {
-                                self.metadata.insert("time".to_owned(), format!("{beats}/{btype}"));
+                                self.metadata
+                                    .insert("time".to_owned(), format!("{beats}/{btype}"));
                             }
                             self.metadata.insert("_time_beat_type".to_owned(), btype);
                         }
                         "harmony" if in_harmony => {
                             in_harmony = false;
-                            let chord = build_chord_text(&root_step, root_alter, &kind_str, &bass_step, bass_alter);
+                            let chord = build_chord_text(
+                                &root_step, root_alter, &kind_str, &bass_step, bass_alter,
+                            );
                             if !chord.is_empty() {
                                 self.events.push(PosEvent {
                                     time: measure_time,
@@ -702,7 +797,9 @@ impl ScorePartParser {
                                 });
                             }
                         }
-                        "root" => { in_root = false; }
+                        "root" => {
+                            in_root = false;
+                        }
                         "root-step" if in_root => {
                             root_step = text.trim().to_owned();
                         }
@@ -713,7 +810,9 @@ impl ScorePartParser {
                             _in_kind = false;
                             kind_str = text.trim().to_owned();
                         }
-                        "bass" => { in_bass = false; }
+                        "bass" => {
+                            in_bass = false;
+                        }
                         "bass-step" if in_bass => {
                             bass_step = text.trim().to_owned();
                         }
@@ -744,7 +843,7 @@ impl ScorePartParser {
                     _depth -= 1;
                 }
                 Ok(Event::Eof) => break,
-                Err(_) => {},
+                Err(_) => {}
                 _ => {}
             }
             buf_p.clear();
@@ -754,13 +853,18 @@ impl ScorePartParser {
     }
 }
 
-
 // ---------------------------------------------------------------------------
 // Chord text construction from MusicXML harmony elements
 // ---------------------------------------------------------------------------
 
 /// Build a chord text string from MusicXML harmony elements.
-fn build_chord_text(root: &str, alter: i32, kind_text: &str, bass: &str, bass_alter: i32) -> String {
+fn build_chord_text(
+    root: &str,
+    alter: i32,
+    kind_text: &str,
+    bass: &str,
+    bass_alter: i32,
+) -> String {
     if root.is_empty() {
         return String::new();
     }
@@ -797,7 +901,11 @@ impl ScorePartParser {
     fn build_song(&self) -> Result<Song, String> {
         // Sort events by time
         let mut sorted_events = self.events.clone();
-        sorted_events.sort_by(|a, b| a.time.partial_cmp(&b.time).unwrap_or(std::cmp::Ordering::Equal));
+        sorted_events.sort_by(|a, b| {
+            a.time
+                .partial_cmp(&b.time)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         // Build sections: collect harmony + lyrics into lines
         let mut sections = Vec::new();
@@ -811,7 +919,8 @@ impl ScorePartParser {
             let chords = self.events.len();
 
             // Collect chords in order
-            let chord_names: Vec<String> = sorted_events.iter()
+            let chord_names: Vec<String> = sorted_events
+                .iter()
                 .map(|e| {
                     let PosEventKind::Harmony(c) = &e.kind;
                     c.clone()
@@ -852,7 +961,10 @@ impl ScorePartParser {
                 text.push(' ');
             }
             if !chord_line.is_empty() {
-                lines.push(Line { chords: chord_line, text });
+                lines.push(Line {
+                    chords: chord_line,
+                    text,
+                });
             }
         }
 
@@ -874,14 +986,9 @@ impl ScorePartParser {
     }
 }
 
-
 // ---------------------------------------------------------------------------
 // ATEX — placeholder for ASCII-tab export
 // ---------------------------------------------------------------------------
-
-/// ATEX module stub for future tablature export.
-
-
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -982,8 +1089,6 @@ mod tests {
             Some("score.musicxml")
         );
     }
-
-
 
     #[test]
     fn test_parse_part_with_index() {

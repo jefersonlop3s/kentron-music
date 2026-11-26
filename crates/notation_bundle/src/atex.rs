@@ -20,8 +20,8 @@
 
 use std::collections::HashMap;
 
-use quick_xml::events::Event;
 use quick_xml::Reader;
+use quick_xml::events::Event;
 
 use crate::chordpro::{ChordPlacement, Line, Section, Song};
 
@@ -53,11 +53,24 @@ pub fn parse(input: &str) -> Result<Song, String> {
     #[derive(Clone, Copy)]
     enum Mode {
         Idle,
-        InScore, InTitle, InArtist,
-        InMasterTrack, InMasterBars, InMasterBar,
-        InTracks, InTrack, InTrackStaffProps,
-        InBars, InBar, InVoice, InBeat, InText,
-        InNotes, InNote, InNoteProperties, InRhythms,
+        InScore,
+        InTitle,
+        InArtist,
+        InMasterTrack,
+        InMasterBars,
+        InMasterBar,
+        InTracks,
+        InTrack,
+        InTrackStaffProps,
+        InBars,
+        InBar,
+        InVoice,
+        InBeat,
+        InText,
+        InNotes,
+        InNote,
+        InNoteProperties,
+        InRhythms,
     }
     use Mode::*;
 
@@ -112,21 +125,29 @@ pub fn parse(input: &str) -> Result<Song, String> {
                     }
 
                     InTracks => {
-                        if name == b"Track" { mode = InTrack; }
+                        if name == b"Track" {
+                            mode = InTrack;
+                        }
                     }
 
                     InTrack => {
-                        if name == b"Properties" { mode = InTrackStaffProps; }
+                        if name == b"Properties" {
+                            mode = InTrackStaffProps;
+                        }
                     }
 
                     InTrackStaffProps => {}
 
                     InBars => {
-                        if name == b"Bar" { mode = InBar; }
+                        if name == b"Bar" {
+                            mode = InBar;
+                        }
                     }
 
                     InBar => {
-                        if name == b"Voice" { mode = InVoice; }
+                        if name == b"Voice" {
+                            mode = InVoice;
+                        }
                     }
 
                     InVoice => {
@@ -146,11 +167,15 @@ pub fn parse(input: &str) -> Result<Song, String> {
                     },
 
                     InNotes => {
-                        if name == b"Note" { mode = InNote; }
+                        if name == b"Note" {
+                            mode = InNote;
+                        }
                     }
 
                     InNote => {
-                        if name == b"Properties" { mode = InNoteProperties; }
+                        if name == b"Properties" {
+                            mode = InNoteProperties;
+                        }
                     }
 
                     InNoteProperties => {
@@ -169,22 +194,24 @@ pub fn parse(input: &str) -> Result<Song, String> {
             Ok(Event::Text(ref e)) => {
                 let text = e.unescape().unwrap_or_default().to_string();
                 match mode {
-                    InTitle => { title.push_str(&text); }
-                    InArtist => { artist.push_str(&text); }
-                    InMasterBar if master_bar_count == 1 => {
-                        match current_child.as_deref() {
-                            Some(b"KeyAccidentals") => {
-                                key_fifths = text.trim().parse::<i32>().unwrap_or(0);
-                            }
-                            Some(b"TimeNumerator") => {
-                                time_num = text.trim().parse::<i32>().unwrap_or(4);
-                            }
-                            Some(b"TimeDenominator") => {
-                                time_den = text.trim().parse::<i32>().unwrap_or(4);
-                            }
-                            _ => {}
-                        }
+                    InTitle => {
+                        title.push_str(&text);
                     }
+                    InArtist => {
+                        artist.push_str(&text);
+                    }
+                    InMasterBar if master_bar_count == 1 => match current_child.as_deref() {
+                        Some(b"KeyAccidentals") => {
+                            key_fifths = text.trim().parse::<i32>().unwrap_or(0);
+                        }
+                        Some(b"TimeNumerator") => {
+                            time_num = text.trim().parse::<i32>().unwrap_or(4);
+                        }
+                        Some(b"TimeDenominator") => {
+                            time_den = text.trim().parse::<i32>().unwrap_or(4);
+                        }
+                        _ => {}
+                    },
                     InMasterTrack => {
                         if current_child.as_deref() == Some(b"Value") {
                             if let Some(bpm_str) = text.split_whitespace().next() {
@@ -215,8 +242,12 @@ pub fn parse(input: &str) -> Result<Song, String> {
             Ok(Event::CData(ref e)) => {
                 let text = String::from_utf8_lossy(e.as_ref()).to_string();
                 match mode {
-                    InTitle => { title.push_str(&text); }
-                    InArtist => { artist.push_str(&text); }
+                    InTitle => {
+                        title.push_str(&text);
+                    }
+                    InArtist => {
+                        artist.push_str(&text);
+                    }
                     InText if current_beat_idx.is_some() => {
                         let idx = current_beat_idx.unwrap();
                         if let Some(bt) = beat_texts.get_mut(idx) {
@@ -376,8 +407,7 @@ fn join_atex_lyrics(beat_texts: &[String]) -> String {
 /// Convert fifths (KeyAccidentals) to a key name.
 fn fifths_to_key_name(fifths: i32) -> String {
     const KEYS: &[&str] = &[
-        "Cb", "Gb", "Db", "Ab", "Eb", "Bb", "F", "C", "G", "D", "A", "E",
-        "B", "F#", "C#",
+        "Cb", "Gb", "Db", "Ab", "Eb", "Bb", "F", "C", "G", "D", "A", "E", "B", "F#", "C#",
     ];
     let index = (fifths + 7) as usize;
     if index < KEYS.len() {
@@ -418,10 +448,7 @@ fn detect_chord_from_pitches(pitches: &[i32]) -> Option<String> {
         return None;
     }
 
-    let mut classes: Vec<i32> = pitches
-        .iter()
-        .map(|p| p.rem_euclid(12))
-        .collect();
+    let mut classes: Vec<i32> = pitches.iter().map(|p| p.rem_euclid(12)).collect();
     classes.sort();
     classes.dedup();
 
@@ -447,10 +474,7 @@ fn detect_chord_from_pitches(pitches: &[i32]) -> Option<String> {
                 continue;
             }
 
-            let coverage = intervals
-                .iter()
-                .filter(|&&i| template.contains(&i))
-                .count();
+            let coverage = intervals.iter().filter(|&&i| template.contains(&i)).count();
 
             let is_better = match best_match {
                 Some((_, _, best_cov)) => coverage > best_cov,
@@ -522,8 +546,14 @@ mod tests {
     fn atex_gpif_song() {
         let song = parse(gpif_body()).expect("GPIF should parse successfully");
 
-        assert_eq!(song.metadata.get("title").map(String::as_str), Some("Sample Song"));
-        assert_eq!(song.metadata.get("artist").map(String::as_str), Some("Test Artist"));
+        assert_eq!(
+            song.metadata.get("title").map(String::as_str),
+            Some("Sample Song")
+        );
+        assert_eq!(
+            song.metadata.get("artist").map(String::as_str),
+            Some("Test Artist")
+        );
         assert_eq!(song.metadata.get("key").map(String::as_str), Some("C"));
         assert_eq!(song.metadata.get("time").map(String::as_str), Some("4/4"));
         assert_eq!(song.metadata.get("tempo").map(String::as_str), Some("120"));
@@ -531,7 +561,10 @@ mod tests {
         assert_eq!(song.sections.len(), 1, "one section");
         assert!(song.sections[0].name.is_none(), "unnamed section");
         assert_eq!(song.sections[0].lines.len(), 1, "one line");
-        assert_eq!(song.sections[0].lines[0].text, "Hello world", "lyrics grouped");
+        assert_eq!(
+            song.sections[0].lines[0].text, "Hello world",
+            "lyrics grouped"
+        );
 
         let chords = &song.sections[0].lines[0].chords;
         assert!(!chords.is_empty(), "chord detected");
