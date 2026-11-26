@@ -530,16 +530,24 @@ fn bundle_sem_fontes_nao_declara_arquivo_a_mais() {
 ///
 /// É o teste que sustenta a decisão de **não** subir `schema_version`: o formato novo
 /// é superconjunto do antigo, e o arquivo antigo continua sendo um arquivo válido.
+///
+/// A versão vai **literal** (`2`), não a constante `SCHEMA_VERSION`: medido em
+/// 2026-11-26, com a constante o teste acompanhava um bump em silêncio e passava
+/// (`SCHEMA_VERSION = 3` sem passo de migração deixava este teste verde). Literal, ele
+/// reprova no dia em que alguém subir a versão — que é o dia de escrever o degrau na
+/// cadeia `MIGRATIONS` e de reargumentar a decisão.
 #[test]
 fn bundle_antigo_desta_build_carrega_sem_as_fontes() {
+    assert_eq!(
+        SCHEMA_VERSION, 2,
+        "se a versao subiu, o degrau de migracao tem de existir na cadeia e este teste se ajusta"
+    );
     let scratch = Scratch::new("antigo-v2");
     let dir = scratch.path().join("santo");
     fs::create_dir_all(&dir).expect("dir");
     fs::write(
         dir.join(MANIFEST_FILE),
-        format!(
-            r#"{{"schema_version": {SCHEMA_VERSION}, "id": "santo", "updated_at": "2026-11-20T13:00:00Z", "files": ["song.cho"]}}"#
-        ),
+        r#"{"schema_version": 2, "id": "santo", "updated_at": "2026-11-20T13:00:00Z", "files": ["song.cho"]}"#,
     )
     .expect("write manifest");
     fs::write(dir.join(SONG_FILE), "{title: Santo}\n\n[C]texto\n").expect("write song");
