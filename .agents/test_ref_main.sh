@@ -75,6 +75,8 @@ for c in ruins:
     print(f"{c}: sem frontmatter")
 sys.exit(1 if ruins else 0)
 PY
+mkdir -p tools
+cp "$AQUI/../tools/verificar_dart.sh" tools/
 # Verificador de links do projeto: aqui, o documentation.py real do kit.
 cat > .githooks/check_doc_refs.py <<PY
 import subprocess, sys
@@ -198,6 +200,55 @@ out=$(git pack-refs --all 2>&1); rc=$?
 if [ "$rc" -eq 0 ] && [ -z "$out" ]; then ok "A11c pack-refs ponta a ponta não falha"; else nok "A11c pack-refs falhou (rc=$rc): $out"; fi
 prepara "apagar a branch solta" -- git branch -D solta-para-pack
 rm -f "$MARCA_REPACK"
+
+# --- A12: o gate dart — sintaxe Dart não entra na main por merge/update-ref ------
+# Caso de origem (2026-11-26): `song_reader_page.dart` ficou com sintaxe quebrada
+# na main (commit `b6a9864`) e NENHUM gate reprovou — `cargo test --workspace`
+# estava verde, porque nenhum gate Rust enxerga Dart. O verificador real usa o
+# `dart format`; aqui o `dart` é um stub com os TRÊS rc medidos no dart real:
+# 0 = formato, 1 = só formatação (12 de 25 arquivos do app estão assim hoje, e
+# isso NÃO pode bloquear), 65 = erro de parse (o caso do b6a9864).
+mkdir -p "$T/bin"
+cat > "$T/bin/dart" <<'SH'
+#!/usr/bin/env bash
+f="${*: -1}"
+if grep -q '@@PARSE@@' "$f"; then
+    echo "Could not format because the source could not be parsed:" >&2
+    echo "line 324, column 9 of $f: Expected to find ';'." >&2
+    exit 65
+fi
+grep -q '@@REFORMAT@@' "$f" && exit 1
+echo "Formatted no files in 0.01 seconds."
+exit 0
+SH
+chmod +x "$T/bin/dart"
+export PATH="$T/bin:$PATH"
+
+prepara "voltar à main para A12" -- git checkout -q main
+antes=$(main_sha)
+prepara "branch claude/dart-quebrado" -- git checkout -q -b claude/dart-quebrado main
+mkdir -p app/lib && printf 'void main() {\n  @@PARSE@@\n}\n' > app/lib/quebrado.dart
+git add app/lib/quebrado.dart
+prepara "commit do dart quebrado na branch" -- git commit -qm "dart quebrado"
+prepara "voltar à main" -- git checkout -q main
+tenta 1 "Gate dart" "A12a update-ref com .dart que não faz parse é recusado, citando o gate" -- git update-ref refs/heads/main claude/dart-quebrado "$antes"
+if [ "$(main_sha)" = "$antes" ]; then ok "A12 o .dart quebrado não entrou na main"; else nok "A12 .dart quebrado entrou"; git update-ref refs/heads/main "$antes"; fi
+tenta 1 "Expected to find" "A12b a recusa traz o motivo do parse (arquivo + linha), não só o nome do gate" -- git merge -q --ff-only claude/dart-quebrado
+git merge --abort >/dev/null 2>&1
+git restore --source=main --staged --worktree -- . >/dev/null 2>&1
+git checkout -q -f main >/dev/null 2>&1
+tenta 0 "dart pulado (HARNESS_SKIP)" "A12c HARNESS_SKIP=dart pula só o gate dart e diz que pulou" -- env HARNESS_SKIP=dart git update-ref refs/heads/main claude/dart-quebrado "$antes"
+HARNESS_SKIP=main-ref git update-ref refs/heads/main "$antes"
+
+prepara "branch claude/dart-fora-do-padrao" -- git checkout -q -b claude/dart-fora-do-padrao main
+mkdir -p app/lib && printf 'void main() {\n  @@REFORMAT@@\n}\n' > app/lib/reformat.dart
+git add app/lib/reformat.dart
+prepara "commit de dart só fora do padrão" -- git commit -qm "dart fora do padrao"
+prepara "voltar à main para A12d" -- git checkout -q main
+tenta 0 "" "A12d rc=1 (só formatação) NÃO bloqueia — dívida pré-existente não trava a main" -- git update-ref refs/heads/main claude/dart-fora-do-padrao "$antes"
+if [ "$(main_sha)" != "$antes" ]; then ok "A12d a main avançou de verdade com dart só fora do padrão (o caso não é vazio)"; else nok "A12d a main não avançou — a asserção acima passou vazia"; fi
+HARNESS_SKIP=main-ref git update-ref refs/heads/main "$antes"
+git checkout -q -f main >/dev/null 2>&1
 
 git checkout -q claude/trabalho
 b=$(git rev-parse HEAD)

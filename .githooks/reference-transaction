@@ -25,9 +25,15 @@
 #      SKILL.md alterado) e o verificador de links (`check_doc_refs.py --root`
 #      do projeto, senão `.harness/documentation.py check`) sobre um export da
 #      árvore nova, se algum .md mudou.
+#   4. árvore nova que leva `.dart` sem PARSE (desde 2026-11-26): `flutter
+#      analyze` só roda no push e só quando a faixa enviada toca `apps/`, então
+#      um merge/update-ref levava o app quebrado para a main sem verificação.
+#      O verificador é `tools/verificar_dart.sh` LIDO DA ÁRVORE NOVA, com o
+#      `dart format` (rc>=2 = erro de parse; rc=1 é só formatação e não bloqueia).
 #
 # Exceção consciente, no padrão do arquivo (aparece nomeada no terminal):
 #     HARNESS_SKIP=main-ref git ...       (HARNESS_SKIP=docrefs pula só os links)
+#     HARNESS_SKIP=dart ...               (pula só a sintaxe Dart)
 # =============================================================================
 set -uo pipefail
 
@@ -159,6 +165,44 @@ if [ -n "$mudou_md" ] && [ ${#verificador[@]} -gt 0 ]; then
         bloqueia "Gate docrefs reprovou a árvore nova:\n$saida"
     fi
 fi
+
+# =========================================================================
+# Gate dart — o movimento da main não pode levar .dart que não faz PARSE
+# =========================================================================
+# Caso de origem (2026-11-26): `song_reader_page.dart` ficou com sintaxe
+# quebrada na main (commit `b6a9864`) e NENHUM gate reprovou, porque `cargo
+# test --workspace` estava verde — nenhum gate Rust enxerga Dart. O gate
+# `flutter` do pre-push morde, mas só roda no PUSH e só quando a faixa enviada
+# toca `apps/`; a main também anda por merge/update-ref, e por aí o arquivo
+# quebrado passa sem verificação. A guarda da ref é o único ponto por onde TODO
+# movimento da main passa.
+#
+# O verificador é lido DA ÁRVORE NOVA (`git cat-file`/`git show`), não do disco:
+# um worktree atrasado não fica sem gate, e o gate que governa o movimento é o
+# que o próprio movimento traz. Custo medido: `dart format` em 25 arquivos =
+# 0,04 s, sem export da árvore. Reprova só ERRO DE PARSE (rc >= 2); `rc=1` é
+# formatação, e 12 de 25 arquivos já estão fora do padrão hoje.
+#
+# Exceção consciente, no padrão do arquivo: HARNESS_SKIP=dart
+case ",${HARNESS_SKIP:-}," in
+    *,dart,*|*,all,*) echo "main-ref: dart pulado (HARNESS_SKIP)" >&2 ;;
+    *)
+        if grep -qE '\.dart$' <<<"$mudou"; then
+            if git cat-file -e "$novo:tools/verificar_dart.sh" 2>/dev/null; then
+                vd=$(mktemp) || bloqueia "mktemp falhou — sem verificação de sintaxe Dart, a main não avança"
+                trap 'rm -rf "${tmp:-}" "$vd"' EXIT
+                if ! git show "$novo:tools/verificar_dart.sh" > "$vd" 2>/dev/null; then
+                    bloqueia "não consegui ler tools/verificar_dart.sh de ${novo:0:7}"
+                fi
+                if ! saida=$(cd "$raiz" && DART_BIN="${DART_BIN:-}" bash "$vd" --novo "$novo" ${atual:+--atual "$atual"} 2>&1); then
+                    bloqueia "Gate dart: este movimento da main leva .dart que NÃO faz parse.\\n$saida"
+                fi
+            elif [ -n "$atual" ] && git cat-file -e "$atual:tools/verificar_dart.sh" 2>/dev/null; then
+                bloqueia "Este movimento REMOVE \`tools/verificar_dart.sh\` e altera .dart.\\nUm gate não pode ser desligado pelo movimento que ele guarda. Se a remoção é\\nconsciente, use HARNESS_SKIP=dart."
+            fi
+        fi
+        ;;
+esac
 
 # =========================================================================
 # Gate changelog — o movimento da main NÃO pode APAGAR seção do CHANGELOG

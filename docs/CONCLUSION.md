@@ -2047,3 +2047,25 @@ Antes de abrir qualquer frente, mediu-se o estado real da `main`: `cargo fmt --a
 2. **A ordem do pipeline importa para a medição.** O primeiro `flutter analyze` desta sessão acusou 9 erros de `agendaTitle`/`stageTime` "não definidos" — **falso alarme meu**: os arquivos de localização são **gerados** (`gen-l10n`) e o `ci-local.sh` gera **antes** de analisar. Analisar sem gerar mede o cache, não o código.
 3. **`git merge` neste repositório leva mais de 30 s** — a guarda da ref roda os verificadores de documentação. Merge tem de rodar em background com log: a primeira tentativa foi cortada no meio pelo shell e parecia não ter acontecido (sem `MERGE_HEAD`, `main` intacta).
 4. **Saída condensada mente por omissão.** `git log --format='%ad'` filtrado pelo RTK devolveu **50** commits; remedido com `RTK_DISABLED=1`, eram **318**. Contagem se confere com o filtro desligado.
+
+## Infra · A sintaxe Dart quebrada na `main`: a forense, e o gate que fecha a classe (2026-11-26)
+
+O app **não compilava na `main`** e nenhum gate tinha visto. A forense partiu de uma pergunta só — *por onde passou?* — e cada hipótese foi medida até sobrar a que explica:
+
+| hipótese | veredito |
+|---|---|
+| `dart format` não pega erro de parse? | **refutada** — no blob do `b6a9864` ele devolve **rc=65** com `line 324, column 9 … Expected to find ';'`; em todas as outras revisões do arquivo, rc=1 (só formatação) |
+| o gate `flutter` do `pre-push` não morde? | **refutada** — há log preservado em que ele reprova por **dois `info`** de `analyze` |
+| o gate foi pulado por falta de ferramenta? | **refutada** — `precisa_de` devolve 127 e `run_gate` **conta como falha**; não existe skip silencioso ali |
+| o gate viu e passou? | **refutada** — **nenhum log preservado** dos gates contém o erro de parse |
+| então? | **sobrou o que explica**: o gate só roda **no push** e só quando a faixa enviada toca `apps/`, e a `main` também anda por `merge`/`update-ref` — onde a guarda da ref validava **documentação** e mais nada |
+
+**O gate que fecha a classe:** `tools/verificar_dart.sh` + o gate `dart` na guarda da ref. As decisões vieram de medição, não de preferência: reprova **só** erro de parse (rc ≥ 2), porque `rc=1` é formatação e **12 de 25** arquivos já estão fora do padrão — reprovar isso pararia a `main` por dívida; lê o **blob** (sem export), porque `update-ref` não toca o disco; custa **0,04 s** em 25 arquivos; `dart` ausente **não** é skip silencioso (sem verificação, sem movimento), com `HARNESS_SKIP=dart` nomeado no terminal.
+
+**Provas:** no real, contra o commit do incidente (**rc=1**, arquivo e linha na mensagem) e contra o estado corrigido (**rc=0**); no hermético, o caso **A12** do `test_ref_main.sh` (**SUITE_EXIT=0**), cobrindo a recusa por `update-ref`, a mensagem com arquivo e linha, o escape nomeado e o fato de que `rc=1` **não** bloqueia — com asserção de que a `main` avança de verdade, para o caso não passar vazio.
+
+**Lições de método:**
+1. **Sintoma intermitente não se conserta por plausibilidade — se instrumenta e se captura.** Foi assim com o `pack-refs` (61 transações) e foi assim aqui: o que decidiu foi **o log preservado do gate**, não o raciocínio sobre o hook.
+2. **O instrumento tem de ser medido nos dois lados.** `dart format` devolve 0, 1 e 65 para três situações diferentes; tratar 1 e 65 igual (como eu faria num primeiro impulso) transformaria dívida de formatação em bloqueio de todo movimento da `main`.
+3. **Falso alarme também se publica.** O primeiro `flutter analyze` desta sessão acusou 9 erros inexistentes porque eu rodei **sem** o `gen-l10n` que o `ci-local.sh` roda antes — o arquivo gerado estava velho. A medição estava errada, não o código.
+4. **Ao fechar um buraco, declare o que ele não cobre:** o verificador não vê tipo, import quebrado nem teste vermelho; e um push de clone sem `core.hooksPath` (ou `--no-verify`) não passa por hook local nenhum — essa parte é do CI, que roda em PR e semanal, não no push.
