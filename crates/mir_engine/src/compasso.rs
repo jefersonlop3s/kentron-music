@@ -326,9 +326,8 @@ impl Leitura {
                     self.nome = Some("4/4".to_owned());
                     self.alternativas = vec!["3/4".to_owned(), "6/8".to_owned()];
                     self.fonte = "percussão+harmonia".to_owned();
-                    self.regra = format!(
-                        "{evidencia} → duas metades e lag ratio {lag:.1} (~4): `4/4`"
-                    );
+                    self.regra =
+                        format!("{evidencia} → duas metades e lag ratio {lag:.1} (~4): `4/4`");
                 } else if lag > 1.5 && lag < 2.5 {
                     // Verifica P4: se o 2º pico cai no ÚLTIMO tempo do
                     // compasso (tempo 3 em 3/4, tempo 4 em 4/4), pode ser
@@ -1074,14 +1073,21 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
             let (mut p2, mut v2) = (0usize, f32::MIN);
             for (i, &v) in ph[..m].iter().enumerate() {
                 if v > v1 {
-                    p2 = p1; v2 = v1;
-                    p1 = i; v1 = v;
+                    p2 = p1;
+                    v2 = v1;
+                    p1 = i;
+                    v1 = v;
                 } else if v > v2 {
-                    p2 = i; v2 = v;
+                    p2 = i;
+                    v2 = v;
                 }
             }
             let razao = if v1 > f32::EPSILON { v2 / v1 } else { 0.0 };
-            (p1 as u8 + 1, if razao >= 0.5 { p2 as u8 + 1 } else { 0 }, razao)
+            (
+                p1 as u8 + 1,
+                if razao >= 0.5 { p2 as u8 + 1 } else { 0 },
+                razao,
+            )
         } else {
             (0, 0, 0.0)
         }
@@ -1207,8 +1213,8 @@ pub fn analisar(spectro: &Spectrogram, taxa: u32, tempo: &Tempo) -> Compasso {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
     use crate::wav::Audio;
+    use std::collections::HashMap;
     use std::f32::consts::PI;
 
     const TAXA: u32 = 44_100;

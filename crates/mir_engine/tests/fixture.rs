@@ -21,7 +21,8 @@ fn caminho_da_fixture() -> std::path::PathBuf {
 fn fixture_dourada_da_cifra_com_letra() {
     let audio = cantar_quatro_frases();
     let letra = lyrics::do_corpus("amazing").expect("corpus de domínio público");
-    let (relatorio, alinhadas) = analyze_com_letra(&audio, &Opts::default(), Some(&letra), None, None);
+    let (relatorio, alinhadas) =
+        analyze_com_letra(&audio, &Opts::default(), Some(&letra), None, None);
     let musica = sheet::montar(
         &relatorio,
         &alinhadas,
@@ -96,7 +97,8 @@ fn extracao_do_usuario_bloqueia_publicacao() {
         },
         linhas: vec!["linha extraída do áudio".to_owned()],
     };
-    let (relatorio, alinhadas) = analyze_com_letra(&audio, &Opts::default(), Some(&letra), None, None);
+    let (relatorio, alinhadas) =
+        analyze_com_letra(&audio, &Opts::default(), Some(&letra), None, None);
     let musica = sheet::montar(
         &relatorio,
         &alinhadas,

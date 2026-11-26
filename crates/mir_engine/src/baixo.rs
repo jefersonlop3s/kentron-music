@@ -237,8 +237,8 @@ impl Baixo {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
     use crate::wav::Audio;
+    use std::collections::HashMap;
     use std::f32::consts::PI;
 
     /// Soma de harmônicos com amplitudes 1/h, como um instrumento de corda.

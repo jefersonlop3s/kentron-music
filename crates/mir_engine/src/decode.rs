@@ -11,8 +11,8 @@
 //! O produto **não** embarca `ffmpeg` (ADR-0016). Formato fora da matriz vira
 //! erro explícito com o motivo; converter é decisão do usuário, não do produto.
 
-use std::io::Cursor;
 use std::collections::HashMap;
+use std::io::Cursor;
 use std::path::Path;
 
 use symphonia::core::audio::{AudioBuffer, Signal};

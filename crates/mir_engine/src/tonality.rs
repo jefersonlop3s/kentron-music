@@ -183,7 +183,11 @@ pub fn analisar(chroma: &Chroma) -> Tonalidade {
         nome: Some(format!("{}{sufixo}", chords::nome_da_classe(tonica))),
         correlacao: melhor,
         margem,
-        segunda_nome: Some(format!("{}{}", chords::nome_da_classe(segunda_tonica), segunda_sufixo)),
+        segunda_nome: Some(format!(
+            "{}{}",
+            chords::nome_da_classe(segunda_tonica),
+            segunda_sufixo
+        )),
         segunda_correlacao: segunda_corr,
         classes_presentes,
         regra: format!(
