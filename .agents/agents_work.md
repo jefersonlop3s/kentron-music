@@ -785,6 +785,21 @@ Nenhum.
 
 **Fichas do hinário puxadas do celular (2026-11-21).** As fotos novas (5, de 16:00–16:03) vieram de `DCIM/Camera` via `adb` — as 6 de 14:50 já eram as três fichas registradas (01, 03, 09). Lidas **4 fichas novas**, com número conferido contra a planilha do dono: **15 Exultação** (Crosby 1820-1915 / trad. Joseph Jones 1848-1927 / Doane 1832-1915 → PD desde 1998), **46 Jesus me transformou** (Rowe 1865-1933 / trad. Salomão Luiz Ginsburg 1867-1927 / Smith 1863-1918 → PD desde 2004), **92 Substituição** "Morri na cruz por ti" (Havergal 1836-1879 / trad. **D. M. Hazlett 1852-?** / Bliss 1838-1876 → autoria e melodia PD, **tradutor sem data no livro → veredito GAP**) e **385 Louvor** (**Manuel Avelino de Souza 1886-1962 → NÃO é domínio público até 2033**).
 
+### cline/57a70 — Limpeza de worktrees e branches cline
+- **Início**: 2026-11-26 00:00 (UTC) · **Última atualização**: 2026-11-26 00:00 (UTC)
+- **Repositórios:** kentron-music · **Branches:** nenhuma (main) · **Worktrees:** só 57a70
+- **Demanda:** encerrar worktrees e branches cline anteriores, validando conteúdo
+- **Paths sob edição:** nenhum (concluído)
+- **Status:** concluído
+
+**Validação:** todas as 6 branches cline verificadas — 0 commits exclusivos não cobertos por `origin/main`. O único commit aparentemente exclusivo (`7e7d569` ADR-0018) já está em `origin/main` via `a8163c4`.
+
+**Encerrados:**
+- Worktrees removidas: 0d661, 29ca4, b56a9, f5ba4
+- Branches deletadas: cline/0d661, cline/1c826, cline/29ca4, cline/57a70, cline/b56a9, cline/f5ba4
+- Diretórios órfãos: 0caf3, 1c826 — apagados
+
+**Estado final:** worktree 57a70 em `main` = `origin/main` (`c9489d8`). Nenhuma branch `cline/` restante.
 **Duas naturezas difíceis que o material real trouxe** — as duas eram hipótese de ADR e viraram dado: **obra protegida** (385, um dos hinos que o dono canta) e **tradutor sem data de falecimento** (92, com "1852-?" impresso pelo próprio editor). São elas que exigem **três vereditos** na tabela (PD com ano, protegido, GAP) em vez de dois. Correção de erro meu: eu havia dito que "Exultação | 015" era o hino 01 (Wright/Monk) — o 015 é o **hino 15**, e o 01 é *Antífona*; a foto do livro desfez a inferência. Faltam as páginas de **5 hinos** (291 Harpa, 377, 112 e os dois sem número da Harpa Cristã).
 
 **Últimas 4 fichas (16:21–16:24) — repertório com 9 de 10.** Puxadas de `DCIM/Camera` via `adb`: **377 Não Sei Por Que** (Whittle / trad. Nelson 1849-1931 / McGranahan → PD 2002), **112 Vencendo vem Jesus** (Howe 1819-1910 / trad. **Ricardo Pitrowsky 1891-1965 → protegido até 2036** / Steffe), **295 Tudo Entregarei** (Van de Venter / trad. Ginsburg / Weeden → PD 2010) e **135 Louvor** ("Louvamos-te, ó Deus"; MacKay / trad. Houston 1847-1929 / Husband → PD 2000).
