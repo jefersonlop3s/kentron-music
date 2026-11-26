@@ -22,5 +22,12 @@
   "stageCopyProjectionLink": "Copiar enlace de proyección",
   "stageProjectionLinkCopied": "Enlace de proyección copiado",
   "stageProjectionBlocked": "Publicación bloqueada: {reason}",
-  "stageTime": "Compás"
+  "stageTime": "Compás",
+  "agendaTitle": "Agenda del culto",
+  "agendaLoadFailed": "No se pudo cargar la agenda",
+  "agendaEmpty": "Todavía no hay eventos en la agenda.",
+  "agendaNoDate": "sin fecha",
+  "agendaNoType": "sin tipo",
+  "agendaRetry": "Reintentar",
+  "agendaOpenInStage": "Abrir en Modo Escenario"
 }

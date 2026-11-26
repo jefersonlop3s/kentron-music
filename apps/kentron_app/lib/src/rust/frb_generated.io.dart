@@ -4,13 +4,10 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'bridge.dart';
-
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
-
 import 'frb_generated.dart';
-
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
@@ -28,10 +25,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ChordMark dco_decode_chord_mark(dynamic raw);
 
   @protected
+  EventoAgenda dco_decode_evento_agenda(dynamic raw);
+
+  @protected
+  ExecucaoAgenda dco_decode_execucao_agenda(dynamic raw);
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
   List<ChordMark> dco_decode_list_chord_mark(dynamic raw);
+
+  @protected
+  List<EventoAgenda> dco_decode_list_evento_agenda(dynamic raw);
+
+  @protected
+  List<ExecucaoAgenda> dco_decode_list_execucao_agenda(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
@@ -76,10 +85,26 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ChordMark sse_decode_chord_mark(SseDeserializer deserializer);
 
   @protected
+  EventoAgenda sse_decode_evento_agenda(SseDeserializer deserializer);
+
+  @protected
+  ExecucaoAgenda sse_decode_execucao_agenda(SseDeserializer deserializer);
+
+  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
   List<ChordMark> sse_decode_list_chord_mark(SseDeserializer deserializer);
+
+  @protected
+  List<EventoAgenda> sse_decode_list_evento_agenda(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<ExecucaoAgenda> sse_decode_list_execucao_agenda(
+    SseDeserializer deserializer,
+  );
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
@@ -130,11 +155,32 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_chord_mark(ChordMark self, SseSerializer serializer);
 
   @protected
+  void sse_encode_evento_agenda(EventoAgenda self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_execucao_agenda(
+    ExecucaoAgenda self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_chord_mark(
     List<ChordMark> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_evento_agenda(
+    List<EventoAgenda> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_execucao_agenda(
+    List<ExecucaoAgenda> self,
     SseSerializer serializer,
   );
 

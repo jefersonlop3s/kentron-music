@@ -34,6 +34,12 @@ Future<SongDetail> transposeToKey(String input, String toKey) =>
 /// para o widget poder receber uma versão de mentira nos testes, sem tocar em FFI.
 Future<void> conferirPublicacao(String cifra) => podePublicar(input: cifra);
 
+/// Lê uma cifra da biblioteca pelo núcleo. Existe como função de topo porque o
+/// leitor (e a agenda que o abre) recebem este carregador por injeção: nos testes
+/// herméticos ele é um dublê, no app é a ponte.
+Future<String> lerCifraDaBiblioteca(String baseDir, String id) =>
+    carregarDaBiblioteca(baseDir: baseDir, id: id);
+
 /// Modo Palco: a cifra inteira na tela, acorde sobre a letra, transposição por tom.
 ///
 /// Carrega do núcleo Rust por injeção (`ler`), não por chamada direta: o widget
@@ -52,6 +58,8 @@ class SongReaderPage extends StatefulWidget {
     this.biblioteca,
     this.indiceNaBiblioteca = 0,
     this.diretorioBase,
+    this.carregarCifra = lerCifraDaBiblioteca,
+    this.idsBiblioteca,
   });
 
   /// A cifra em ChordPro, como veio do arquivo ou do exemplo.
@@ -79,6 +87,16 @@ class SongReaderPage extends StatefulWidget {
   /// Diretório base para carregar cifras da biblioteca.
   final String? diretorioBase;
 
+  /// De onde vem a cifra ao trocar de obra. Default: núcleo Rust.
+  final Future<String> Function(String baseDir, String id) carregarCifra;
+
+  /// Identificadores das obras, na ordem da lista que abriu o leitor.
+  ///
+  /// A agenda conhece o id de cada obra, então o informa e ele **vence o slug do
+  /// título** — que era a única forma de a `LibraryPage` reencontrar uma cifra.
+  /// Quando nulo, o id continua saindo do título, como antes.
+  final List<String>? idsBiblioteca;
+
   @override
   State<SongReaderPage> createState() => _SongReaderPageState();
 }
@@ -91,37 +109,47 @@ class _SongReaderPageState extends State<SongReaderPage> {
   bool _trocandoTom = false;
   late int _indiceBiblioteca = widget.indiceNaBiblioteca;
 
+  /// ChordPro da obra aberta por último: é dele que a transposição parte.
+  ///
+  /// Não é `widget.input`: quando o leitor abre a biblioteca (ou a agenda), o
+  /// `input` chega vazio — o texto vem do disco.
+  late String _fonteAtual = widget.input;
+
   @override
   void initState() {
     super.initState();
     _carregarAtual();
   }
 
-  bool get _temBiblioteca => widget.biblioteca != null && widget.biblioteca!.length > 1;
+  /// Quantas obras a lista que abriu o leitor traz (biblioteca ou agenda).
+  int get _total => widget.idsBiblioteca?.length ?? widget.biblioteca?.length ?? 0;
 
-  bool get _temAnterior => _temBiblioteca && _indiceBiblioteca > 0;
+  /// Com lista, a cifra vem do disco: `input` vazio não é cifra.
+  bool get _carregaDaLista => _total > 0;
 
-  bool get _temProxima => _temBiblioteca && _indiceBiblioteca < widget.biblioteca!.length - 1;
+  /// Setas e contador só fazem sentido com mais de uma obra.
+  bool get _mostraNavegacao => _total > 1;
+
+  bool get _temAnterior => _mostraNavegacao && _indiceBiblioteca > 0;
+
+  bool get _temProxima => _mostraNavegacao && _indiceBiblioteca < _total - 1;
 
   Future<void> _carregarAtual() async {
-    if (_temBiblioteca) {
-      await _carregarDaBiblioteca(_indiceBiblioteca);
+    if (_carregaDaLista) {
+      await _carregarDaLista(_indiceBiblioteca);
     } else {
       await _carregar(widget.input);
     }
   }
 
-  Future<void> _carregarDaBiblioteca(int indice) async {
-    final musica = widget.biblioteca![indice];
-    final id = musica.title.isNotEmpty
-        ? musica.title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-        : '';
-    if (id.isEmpty || widget.diretorioBase == null) {
+  Future<void> _carregarDaLista(int indice) async {
+    final id = _idDaObra(indice);
+    if (id == null || widget.diretorioBase == null) {
       setState(() => _erro = 'Música sem identificador');
       return;
     }
     try {
-      final chordpro = await _carregarCifra(id);
+      final chordpro = await widget.carregarCifra(widget.diretorioBase!, id);
       await _carregar(chordpro);
     } on Object catch (e) {
       if (!mounted) return;
@@ -129,9 +157,26 @@ class _SongReaderPageState extends State<SongReaderPage> {
     }
   }
 
-  Future<String> _carregarCifra(String id) async {
-    // Usa o pacote bridge diretamente
-    return carregarDaBiblioteca(baseDir: widget.diretorioBase!, id: id);
+  /// O identificador da obra na posição [indice].
+  ///
+  /// A agenda informa os ids; sem eles, o id é o slug do título — o mesmo que a
+  /// `LibraryPage` gera ao salvar a cifra. `null` significa que não há id, e a
+  /// tela diz isso em vez de abrir outra música.
+  String? _idDaObra(int indice) {
+    final ids = widget.idsBiblioteca;
+    if (ids != null) {
+      if (indice < 0 || indice >= ids.length) return null;
+      return ids[indice].isEmpty ? null : ids[indice];
+    }
+    final lista = widget.biblioteca;
+    if (lista == null || indice < 0 || indice >= lista.length) return null;
+    return _slugDoTitulo(lista[indice].title);
+  }
+
+  String? _slugDoTitulo(String titulo) {
+    if (titulo.isEmpty) return null;
+    final slug = titulo.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
+    return slug.isEmpty ? null : slug;
   }
 
   Future<void> _carregar(String chordpro) async {
@@ -143,6 +188,7 @@ class _SongReaderPageState extends State<SongReaderPage> {
         _cifra = cifra;
         _tons = tons;
         _erro = null;
+        _fonteAtual = chordpro;
       });
     } on Object catch (erro) {
       if (!mounted) return;
@@ -157,7 +203,7 @@ class _SongReaderPageState extends State<SongReaderPage> {
       _cifra = null;
       _erro = null;
     });
-    _carregarDaBiblioteca(_indiceBiblioteca);
+    _carregarDaLista(_indiceBiblioteca);
   }
 
   void _proxima() {
@@ -167,14 +213,14 @@ class _SongReaderPageState extends State<SongReaderPage> {
       _cifra = null;
       _erro = null;
     });
-    _carregarDaBiblioteca(_indiceBiblioteca);
+    _carregarDaLista(_indiceBiblioteca);
   }
 
   Future<void> _transporPara(String tom) async {
     if (_trocandoTom) return;
     setState(() => _trocandoTom = true);
     try {
-      final cifra = await widget.transpor(widget.input, tom);
+      final cifra = await widget.transpor(_fonteAtual, tom);
       if (!mounted) return;
       setState(() {
         _cifra = cifra;
@@ -233,7 +279,11 @@ class _SongReaderPageState extends State<SongReaderPage> {
         backgroundColor: _palco ? _slateInk : null,
         foregroundColor: _palco ? _paperWhite : null,
         title: Text(titulo),
-        leading: _temBiblioteca
+        // Voltar + anterior + próxima não cabem nos 56px do `leading` padrão: sem
+        // largura declarada o `Row` estoura 40px com duas obras na lista (medido
+        // no teste de widget). 3 × 48 = a largura que os três botões pedem.
+        leadingWidth: _mostraNavegacao ? 144 : null,
+        leading: _mostraNavegacao
             ? Row(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
@@ -257,12 +307,12 @@ class _SongReaderPageState extends State<SongReaderPage> {
               )
             : null,
         actions: <Widget>[
-          if (_temBiblioteca)
+          if (_mostraNavegacao)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Center(
                 child: Text(
-                  '${_indiceBiblioteca + 1} / ${widget.biblioteca!.length}',
+                  '${_indiceBiblioteca + 1} / $_total',
                   style: const TextStyle(fontSize: 14),
                 ),
               ),
@@ -321,15 +371,13 @@ class _SongReaderPageState extends State<SongReaderPage> {
             ],
           ),
         ),
-        ),
-            ),
           if (tempo != null && tempo.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
               child: Row(
                 children: <Widget>[
                   Text('${l10n.stageTime}: ', style: _mono.copyWith(color: cor)),
-                  Text(tempo!, style: _mono.copyWith(color: _vibrantGold)),
+                  Text(tempo, style: _mono.copyWith(color: _vibrantGold)),
                 ],
               ),
             ),

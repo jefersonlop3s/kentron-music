@@ -101,5 +101,33 @@
   "stageTime": "Time",
   "@stageTime": {
     "description": "Label of the time signature / compass display in Stage Mode."
+  },
+  "agendaTitle": "Service agenda",
+  "@agendaTitle": {
+    "description": "Title of the agenda screen: the list of services, rehearsals and events, each one with its songs."
+  },
+  "agendaLoadFailed": "Could not load the agenda",
+  "@agendaLoadFailed": {
+    "description": "Shown when the core fails to read the agenda. The core's message appears next to it; a failure never becomes an empty list."
+  },
+  "agendaEmpty": "No events in the agenda yet.",
+  "@agendaEmpty": {
+    "description": "Empty state of the agenda: the library has no agenda file. This is the only meaning of 'no events' — an error is shown as an error."
+  },
+  "agendaNoDate": "no date",
+  "@agendaNoDate": {
+    "description": "Stand-in for an event the agenda does not date. The screen says the date is missing instead of inventing one."
+  },
+  "agendaNoType": "no type",
+  "@agendaNoType": {
+    "description": "Stand-in for an event the agenda does not classify (culto, ensaio, evento)."
+  },
+  "agendaRetry": "Try again",
+  "@agendaRetry": {
+    "description": "Button that reloads the agenda after a failure."
+  },
+  "agendaOpenInStage": "Open in Stage Mode",
+  "@agendaOpenInStage": {
+    "description": "Opens an event's setlist in Stage Mode, song by song, in the order of the agenda."
   }
 }

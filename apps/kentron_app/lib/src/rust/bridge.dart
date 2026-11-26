@@ -4,11 +4,10 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import 'frb_generated.dart';
-
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `detail`, `key_note`, `song_key`, `summary`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These functions are ignored because they are not marked as `pub`: `detail`, `evento`, `indice_atual`, `key_note`, `song_key`, `summary`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Lê uma cifra ChordPro e devolve o resumo que a interface usa.
 ///
@@ -84,13 +83,17 @@ Future<List<String>> keyChoices() =>
 
 /// Salva uma cifra no diretório da biblioteca local.
 ///
-/// Cria o diretório `base_dir/id/` com `meta.json` e `song.cho`.
-/// O `id` é um identificador estável (slug do título, por exemplo).
+/// Cria o diretório `base_dir/id/` com `meta.json` e `song.cho`, e **mantém o
+/// índice** (`library.json`) que a biblioteca e a agenda leem. O `id` é um
+/// identificador estável (slug do título, por exemplo); salvar de novo o mesmo
+/// `id` atualiza a obra em vez de duplicá-la no índice.
 ///
 /// # Errors
 ///
 /// Devolve erro quando o diretório não pode ser criado, o JSON não pode
-/// ser escrito ou o ChordPro não é válido.
+/// ser escrito, o ChordPro não é válido ou o índice existente está corrompido
+/// (índice ilegível não é recriado em silêncio: recriá-lo apagaria as obras que
+/// ele lista).
 Future<void> salvarNaBiblioteca({
   required String baseDir,
   required String id,
@@ -126,9 +129,14 @@ Future<List<SongSummary>> listarBiblioteca({required String baseDir}) =>
 
 /// Remove uma cifra da biblioteca local.
 ///
+/// Recusa a remoção enquanto uma agenda citar a obra: apagar o bundle deixaria
+/// `load_setlists` falhando alto e a agenda inteira ilegível. O índice é
+/// reescrito sem a obra, senão a leitura seguinte acusa bundle ausente.
+///
 /// # Errors
 ///
-/// Devolve erro quando o diretório não pode ser removido.
+/// Devolve erro quando a obra é usada por um evento, quando o índice não pode
+/// ser lido ou quando o diretório não pode ser removido.
 Future<void> removerDaBiblioteca({
   required String baseDir,
   required String id,
@@ -136,6 +144,24 @@ Future<void> removerDaBiblioteca({
   baseDir: baseDir,
   id: id,
 );
+
+/// Lista a agenda local: os eventos e as execuções de cada um.
+///
+/// Lê a biblioteca (`library.json` + um diretório por obra) e as agendas
+/// (`setlists/*.json`) do diretório base, reusando `notation_bundle` — a ponte
+/// não reconstrói o modelo. A ordem dos eventos e das músicas é a do núcleo
+/// (nome do arquivo da agenda; ordem das execuções dentro dela).
+///
+/// # Errors
+///
+/// Falha — em vez de devolver lista vazia — quando o diretório base não existe,
+/// quando a biblioteca não pode ser lida (índice ausente, JSON corrompido,
+/// `schema_version` não suportado) ou quando uma agenda é ilegível ou aponta
+/// para obra fora da biblioteca. **Lista vazia significa, e só significa,
+/// biblioteca sem agenda**: é o estado "nenhum evento ainda", não um erro
+/// disfarçado.
+Future<List<EventoAgenda>> listarAgenda({required String baseDir}) =>
+    RustLib.instance.api.crateBridgeListarAgenda(baseDir: baseDir);
 
 /// Onde um acorde cai sobre a letra: a coluna e o acorde.
 class ChordMark {
@@ -157,6 +183,100 @@ class ChordMark {
           runtimeType == other.runtimeType &&
           position == other.position &&
           chord == other.chord;
+}
+
+/// Um evento da agenda: a playlist do culto, do ensaio ou do evento.
+class EventoAgenda {
+  /// Identificador do evento, como declarado na agenda.
+  final String id;
+
+  /// Nome do evento.
+  final String nome;
+
+  /// Data do evento (`AAAA-MM-DD`), quando declarada.
+  final String? data;
+
+  /// Tipo do evento (`culto`, `ensaio`, `evento`), quando declarado.
+  final String? tipo;
+
+  /// As execuções na ordem da agenda. O **número de músicas é
+  /// `execucoes.len()`** — a contagem não é um campo à parte para não poder
+  /// divergir da lista que a tela desenha.
+  final List<ExecucaoAgenda> execucoes;
+
+  /// Qual núcleo respondeu, no formato `kentron_ffi <versão>`.
+  final String core;
+
+  const EventoAgenda({
+    required this.id,
+    required this.nome,
+    this.data,
+    this.tipo,
+    required this.execucoes,
+    required this.core,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      nome.hashCode ^
+      data.hashCode ^
+      tipo.hashCode ^
+      execucoes.hashCode ^
+      core.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is EventoAgenda &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          nome == other.nome &&
+          data == other.data &&
+          tipo == other.tipo &&
+          execucoes == other.execucoes &&
+          core == other.core;
+}
+
+/// Uma execução da agenda: a obra **e a versão tocada naquele evento**.
+///
+/// A obra vem identificada pelo `song_id` (não pelo título): é esse identificador
+/// que a tela passa de volta à biblioteca para abrir a cifra. O título acompanha
+/// porque a lista da agenda o mostra na ordem do evento.
+class ExecucaoAgenda {
+  /// Identificador da obra na biblioteca — por ele a tela abre a cifra.
+  final String songId;
+
+  /// Título da obra, lido do bundle correspondente.
+  final String titulo;
+
+  /// Versão declarada para o evento (arranjo, gravação), quando existe.
+  final String? versao;
+
+  /// Tom declarado para o evento, quando existe. É o tom **daquele culto**,
+  /// não o tom original da cifra.
+  final String? tom;
+
+  const ExecucaoAgenda({
+    required this.songId,
+    required this.titulo,
+    this.versao,
+    this.tom,
+  });
+
+  @override
+  int get hashCode =>
+      songId.hashCode ^ titulo.hashCode ^ versao.hashCode ^ tom.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ExecucaoAgenda &&
+          runtimeType == other.runtimeType &&
+          songId == other.songId &&
+          titulo == other.titulo &&
+          versao == other.versao &&
+          tom == other.tom;
 }
 
 /// A cifra inteira, pronta para o Modo Palco desenhar.
