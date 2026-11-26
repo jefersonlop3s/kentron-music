@@ -97,6 +97,7 @@ def checar_variantes(
                 )
     return erros, avisos
 
+
 # `{name}` simples; ignora ramos de plural/select como `=0{Nenhuma}` ou `other{...}`.
 SIMPLE_PLACEHOLDER = re.compile(r"([=\w]*)\{(\w+)\}")
 
@@ -106,7 +107,9 @@ def message_keys(data: dict) -> list[str]:
 
 
 def used_placeholders(message: str) -> set[str]:
-    return {m.group(2) for m in SIMPLE_PLACEHOLDER.finditer(message) if m.group(1) == ""}
+    return {
+        m.group(2) for m in SIMPLE_PLACEHOLDER.finditer(message) if m.group(1) == ""
+    }
 
 
 def declared_placeholders(template: dict, key: str) -> set[str]:
@@ -114,7 +117,9 @@ def declared_placeholders(template: dict, key: str) -> set[str]:
     return set(meta.get("placeholders", {}))
 
 
-def check(directory: Path, variantes: Path | None = None) -> tuple[list[str], list[str]]:
+def check(
+    directory: Path, variantes: Path | None = None
+) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     files = sorted(directory.glob("app_*.arb"))
     if not files:
@@ -129,7 +134,9 @@ def check(directory: Path, variantes: Path | None = None) -> tuple[list[str], li
             errors.append(f"{path.name}: JSON inválido ({exc})")
             continue
         if data.get("@@locale") != locale:
-            errors.append(f"{path.name}: @@locale={data.get('@@locale')!r}, esperado {locale!r}")
+            errors.append(
+                f"{path.name}: @@locale={data.get('@@locale')!r}, esperado {locale!r}"
+            )
         loaded[locale] = data
 
     template = loaded.get(TEMPLATE)
@@ -141,11 +148,15 @@ def check(directory: Path, variantes: Path | None = None) -> tuple[list[str], li
         keys = set(message_keys(data))
         unknown = keys - template_keys
         if unknown:
-            errors.append(f"app_{locale}.arb: chaves que não existem no template: {sorted(unknown)}")
+            errors.append(
+                f"app_{locale}.arb: chaves que não existem no template: {sorted(unknown)}"
+            )
         if locale in TIER1:
             missing = template_keys - keys
             if missing:
-                errors.append(f"app_{locale}.arb: faltam chaves da faixa 1: {sorted(missing)}")
+                errors.append(
+                    f"app_{locale}.arb: faltam chaves da faixa 1: {sorted(missing)}"
+                )
         for key in keys & template_keys:
             message = data[key]
             if not isinstance(message, str):
@@ -156,13 +167,19 @@ def check(directory: Path, variantes: Path | None = None) -> tuple[list[str], li
             if expected:
                 missing_ph = {p for p in expected if f"{{{p}" not in message}
                 if missing_ph:
-                    errors.append(f"app_{locale}.arb: {key} sem placeholder(s) {sorted(missing_ph)}")
+                    errors.append(
+                        f"app_{locale}.arb: {key} sem placeholder(s) {sorted(missing_ph)}"
+                    )
             unexpected = found - expected
             if unexpected:
-                errors.append(f"app_{locale}.arb: {key} usa placeholder(s) não declarado(s) {sorted(unexpected)}")
+                errors.append(
+                    f"app_{locale}.arb: {key} usa placeholder(s) não declarado(s) {sorted(unexpected)}"
+                )
 
     erros_var, avisos = checar_variantes(
-        loaded, template_keys, carregar_variantes(VARIANTES_TSV if variantes is None else variantes)
+        loaded,
+        template_keys,
+        carregar_variantes(VARIANTES_TSV if variantes is None else variantes),
     )
     return errors + erros_var, avisos
 
@@ -183,7 +200,9 @@ def main() -> int:
     for aviso in avisos:
         print(f"AVISO: {aviso}")
     if avisos:
-        print(f"{len(avisos)} aviso(s) de variante — não reprova; é a chave que a variante ainda não cobre.")
+        print(
+            f"{len(avisos)} aviso(s) de variante — não reprova; é a chave que a variante ainda não cobre."
+        )
     return 0
 
 
