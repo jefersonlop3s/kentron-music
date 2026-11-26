@@ -104,5 +104,6 @@ Transversais (carregar sempre): `vies-de-plausibilidade`, `disciplina-de-validac
 | `relatorio-de-status` | quando o usuário perguntar "qual o status do projeto", "status", "como está o projeto", "progresso", ou qualquer variação |
 | `alfa-assistido-em-flutter-web` | ao planejar teste E2E de Flutter web — o canvas esconde seletores DOM; prefira `flutter test` nativo ou coordenadas de clique |
 | `ssh-no-windows` | ao configurar SSH por chave para uma VM Windows, ao depurar "Permission denied (publickey)" com a chave certa no lugar, e antes de escrever `authorized_keys` por PowerShell |
+| `guarda-de-transacao-de-ref` | ao escrever ou depurar hook `reference-transaction`; ao ver "APAGARIA a branch main" sem nada apagado; ao ver `error: task 'pack-refs' failed` |
 
 Toda lição que custou uma sessão vira skill (julgamento) ou gate (mecanismo) — skill `prosa-vira-gate`.

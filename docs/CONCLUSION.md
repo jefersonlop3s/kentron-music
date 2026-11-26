@@ -2010,4 +2010,6 @@ O que destravou foi instrumentar o hook por `core.hooksPath` e capturar **61 tra
 
 **As seis provas, e a que importa:** com `stdin` forjado, sem tocar o repositório. Deleção real → **bloqueia**; o par do `pack-refs` → **passa**; deleção real logo depois, com a marca já consumida → **bloqueia**; marca velha → **bloqueia**; avanço passa e recuo bloqueia (o que já funcionava); e ponta a ponta, `git pack-refs --all` com trabalho a fazer → **rc=0, sem saída, `main` intacta**. A prova que importa é a terceira: **o conserto não abriu buraco** — o falso positivo sumiu e a proteção de deleção real continua de pé.
 
+**Virou skill:** `guarda-de-transacao-de-ref` — a regra ("o valor da transação não é a ação"), o discriminador, a prova que impede a porta aberta e o custo de instrumentar por `core.hooksPath`. Registrada na tabela do `AGENTS.md`.
+
 **Lição de instrumentação, que custou:** trocar `core.hooksPath` **desliga todos os outros hooks** — e um commit de sonda caiu **na `main`**, porque o gate que barra commit direto na `main` tinha sido substituído pelo meu instrumento. **O instrumento mudou o que estava sendo medido.** Restaurado com o escape nomeado e a `main` conferida; se eu não tivesse checado, teria publicado um commit de teste.

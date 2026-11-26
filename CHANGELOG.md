@@ -1,4 +1,19 @@
 # Changelog
+## [docs] Skill `guarda-de-transacao-de-ref`: o valor da transação não é a ação (2026-11-26)
+
+O falso positivo do `pack-refs` **virou skill**, porque a lição atravessa o caso: uma guarda de `reference-transaction` infere a **ação** pelo **valor** (`new` zerado = deleção) — e **outro comando produz o mesmo valor para outra ação**. É por isso que a falha era um alarme de "APAGARIA a branch main" sem nada apagado.
+
+A skill fixa o que custou a sessão:
+
+- **sintoma intermitente não se conserta por plausibilidade — se instrumenta e se captura** (a reprodução só apareceu quando 61 transações foram capturadas, depois de quatro tentativas no escuro);
+- **procure o discriminador antes de afrouxar a regra** — afrouxar abriria a porta que a guarda fecha; o dado deu a recriação que precede a "deleção", no mesmo comando, em ms;
+- **não há discriminador no ambiente** (`GIT_REFLOG_ACTION` vazio nas 61) — perder tempo ali é chute;
+- **a prova que impede a porta aberta é a do caso real**: deleção real da `main` **continua** rc=1, e a marca não se reusa;
+- **prova com `stdin` forjado**, sem tocar ref nenhuma;
+- **`core.hooksPath` desliga TODOS os outros hooks** — no caso de origem um commit de sonda caiu **na `main`**, porque o gate que barra commit direto na `main` tinha sido substituído pelo instrumento. **O instrumento mudou o que estava sendo medido.**
+
+Registrada na tabela do `AGENTS.md` pelo gatilho. `PENDING` atualizado com a publicação no `sovereign-harness`, que segue pendente fora deste repositório.
+
 ## [fix] Falso positivo do `pack-refs` na guarda da `main`: reproduzido, isolado e corrigido (2026-11-26)
 
 O alarme "❌ MAIN NÃO ATUALIZADA — Esta operação APAGARIA a branch `main`" aparecia **sem nada ser apagado**, junto de `error: task 'pack-refs' failed`, depois de commit/merge/push. Cinco vezes nestas sessões, e **não reproduzia sob demanda** — até eu instrumentar o hook por `core.hooksPath` e capturar **61 transações**.
