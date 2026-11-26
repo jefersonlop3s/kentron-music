@@ -119,20 +119,20 @@ skill_ruim base && git add -A
 prepara "commit da skill sem frontmatter na branch" -- git commit -qm "skill sem frontmatter"
 prepara "voltar à main" -- git checkout -q main; antes=$(main_sha)
 tenta 1 "Gate skills reprovou a árvore nova" "A2a a guarda recusa citando o gate skills" -- git merge -q --ff-only claude/skill-quebrada
-[ "$(main_sha)" = "$antes" ] && ok "A2 merge FF de skill sem frontmatter é recusado (pre-commit não roda em merge)" || { nok "A2 skill quebrada entrou na main por merge"; git reset -q --hard "$antes"; }
+if [ "$(main_sha)" = "$antes" ]; then ok "A2 merge FF de skill sem frontmatter é recusado (pre-commit não roda em merge)"; else nok "A2 skill quebrada entrou na main por merge"; git reset -q --hard "$antes"; fi
 # Efeito colateral medido: o merge recusado já escreveu o conteúdo na árvore de trabalho.
 # A guarda lista os arquivos e manda restaurar só eles (nunca reset --hard no checkout principal).
 saida=$(git merge -q --ff-only claude/skill-quebrada 2>&1)
-grep -qF "git restore --source=main --staged --worktree" <<<"$saida" && grep -qF ".agents/skills/base/SKILL.md" <<<"$saida" && ok "A2b a recusa lista os arquivos e o restore seletivo" || nok "A2b a recusa não ensinou a restaurar: $saida"
+if grep -qF "git restore --source=main --staged --worktree" <<<"$saida" && grep -qF ".agents/skills/base/SKILL.md" <<<"$saida"; then ok "A2b a recusa lista os arquivos e o restore seletivo"; else nok "A2b a recusa não ensinou a restaurar: $saida"; fi
 git restore --source=main --staged --worktree -- .agents/skills/base/SKILL.md
-[ -z "$(git status --porcelain -- .agents/skills/base/SKILL.md)" ] && ok "A2c o restore sugerido limpa a árvore de trabalho" || nok "A2c o restore sugerido não limpou"
+if [ -z "$(git status --porcelain -- .agents/skills/base/SKILL.md)" ]; then ok "A2c o restore sugerido limpa a árvore de trabalho"; else nok "A2c o restore sugerido não limpou"; fi
 tenta 1 "Gate skills reprovou a árvore nova" "A3a merge --no-ff recusado pela guarda (gate skills)" -- git merge -q --no-ff -m "merge" claude/skill-quebrada
-[ "$(main_sha)" = "$antes" ] && ok "A3 merge --no-ff da mesma skill é recusado" || { nok "A3 merge commit levou a skill quebrada"; git reset -q --hard "$antes"; }
+if [ "$(main_sha)" = "$antes" ]; then ok "A3 merge --no-ff da mesma skill é recusado"; else nok "A3 merge commit levou a skill quebrada"; git reset -q --hard "$antes"; fi
 git merge --abort >/dev/null 2>&1
 git restore --source=main --staged --worktree -- .agents/skills/base/SKILL.md
 [ -z "$(git status --porcelain)" ] || nok "PREPARO: árvore suja antes do A4: $(git status --porcelain | tr '\n' ' ')"
 tenta 1 "Gate skills reprovou a árvore nova" "A4a update-ref recusado pela guarda (gate skills)" -- git update-ref refs/heads/main claude/skill-quebrada "$antes"
-[ "$(main_sha)" = "$antes" ] && ok "A4 update-ref (CAS) para a skill quebrada é recusado" || { nok "A4 update-ref levou a skill quebrada"; git update-ref refs/heads/main "$antes"; }
+if [ "$(main_sha)" = "$antes" ]; then ok "A4 update-ref (CAS) para a skill quebrada é recusado"; else nok "A4 update-ref levou a skill quebrada"; git update-ref refs/heads/main "$antes"; fi
 
 [ -z "$(git status --porcelain)" ] || nok "PREPARO: árvore suja antes do A5: $(git status --porcelain | tr '\n' ' ')"
 prepara "branch claude/link-quebrado" -- git checkout -q -b claude/link-quebrado main
@@ -140,7 +140,7 @@ printf '# Docs\n\n[x](nao-existe.md)\n' > docs/README.md
 prepara "commit do link quebrado na branch" -- env HARNESS_SKIP=docrefs git commit -qam "link quebrado"
 prepara "voltar à main" -- git checkout -q main
 tenta 1 "Gate docrefs reprovou a árvore nova" "A5a a guarda recusa citando o gate docrefs (check_doc_refs.py do projeto)" -- git update-ref refs/heads/main claude/link-quebrado "$antes"
-[ "$(main_sha)" = "$antes" ] && ok "A5 link quebrado é recusado (docrefs na árvore nova)" || { nok "A5 link quebrado entrou"; git update-ref refs/heads/main "$antes"; }
+if [ "$(main_sha)" = "$antes" ]; then ok "A5 link quebrado é recusado (docrefs na árvore nova)"; else nok "A5 link quebrado entrou"; git update-ref refs/heads/main "$antes"; fi
 mv .githooks/check_doc_refs.py "$T/check_doc_refs.py"
 tenta 1 "Gate docrefs reprovou a árvore nova" "A5b sem check_doc_refs.py, o fallback .harness/documentation.py recusa" -- git update-ref refs/heads/main claude/link-quebrado "$antes"
 [ "$(main_sha)" = "$antes" ] || { nok "A5b link quebrado entrou pelo fallback"; git update-ref refs/heads/main "$antes"; }
@@ -158,14 +158,46 @@ tenta 0 "" "A6 merge de skill nova válida avança a main" -- git merge -q --ff-
 
 antes=$(main_sha)
 tenta 1 "NÃO descende dela" "A7a a guarda recusa recuo explicando o motivo" -- git reset -q --hard HEAD~1
-[ "$(main_sha)" = "$antes" ] && ok "A7 reset --hard para trás na main é recusado" || { nok "A7 main andou para trás"; HARNESS_SKIP=main-ref git reset -q --hard "$antes"; }
+if [ "$(main_sha)" = "$antes" ]; then ok "A7 reset --hard para trás na main é recusado"; else nok "A7 main andou para trás"; HARNESS_SKIP=main-ref git reset -q --hard "$antes"; fi
 git reset -q --hard "$antes"
 tenta 1 "APAGARIA a branch" "A8a a guarda recusa apagar a main" -- git update-ref -d refs/heads/main
-git rev-parse -q --verify refs/heads/main >/dev/null && ok "A8 apagar a main é recusado" || { nok "A8 main apagada"; git update-ref refs/heads/main "$antes"; }
+if git rev-parse -q --verify refs/heads/main >/dev/null; then ok "A8 apagar a main é recusado"; else nok "A8 main apagada"; git update-ref refs/heads/main "$antes"; fi
 
 tenta 0 "guarda da main pulada (HARNESS_SKIP)" "A9 HARNESS_SKIP=main-ref deixa recuar e diz que pulou" -- env HARNESS_SKIP=main-ref git reset -q --hard HEAD~1
 [ "$(main_sha)" != "$antes" ] || nok "A9 a main não recuou com a exceção"
 HARNESS_SKIP=main-ref git reset -q --hard "$antes"
+
+# --- A11: o `git pack-refs` NÃO é deleção (falso positivo, medido 2026-11-26) ----
+# O que o `pack-refs` emite, na MESMA execução: `0000 -> sha` (recriação) e
+# depois `sha -> 0000` para cada ref — e a segunda é a assinatura de uma deleção.
+# A guarda bloqueava a segunda e a manutenção automática do git falhava
+# ("error: task 'pack-refs' failed") depois de commit/merge/push. Aqui os dois
+# lados: o par do re-pack passa, e a deleção real (A8) continua barrada.
+MARCA_REPACK="${TMPDIR:-/tmp}/sovereign-main-repack-$(id -u).stamp"
+rm -f "$MARCA_REPACK"
+sha=$(main_sha)
+if printf '0000000000000000000000000000000000000000 %s refs/heads/main\n' "$sha" \
+    | .githooks/reference-transaction prepared >/dev/null 2>&1; then
+    ok "A11a a recriação do pack-refs passa"
+else
+    nok "A11a a recriação do pack-refs foi recusada"
+fi
+if printf '%s 0000000000000000000000000000000000000000 refs/heads/main\n' "$sha" \
+    | .githooks/reference-transaction prepared >/dev/null 2>&1; then
+    ok "A11 o par do pack-refs NÃO é lido como deleção"
+else
+    nok "A11 falso positivo do pack-refs voltou"
+fi
+if [ -z "$(git -C "$R" rev-parse -q --verify main 2>/dev/null)" ]; then
+    nok "A11 a main sumiu"
+else
+    ok "A11b a main continua de pé"
+fi
+prepara "branch solta para o pack-refs ter trabalho" -- git branch solta-para-pack
+out=$(git pack-refs --all 2>&1); rc=$?
+if [ "$rc" -eq 0 ] && [ -z "$out" ]; then ok "A11c pack-refs ponta a ponta não falha"; else nok "A11c pack-refs falhou (rc=$rc): $out"; fi
+prepara "apagar a branch solta" -- git branch -D solta-para-pack
+rm -f "$MARCA_REPACK"
 
 git checkout -q claude/trabalho
 b=$(git rev-parse HEAD)
@@ -205,7 +237,7 @@ for i in $(seq 1 30); do
     printf '# Docs\n\n[x](nao-existe-%s.md)\n' "$i" > docs/README.md
     HARNESS_SKIP=docrefs git commit -qam "skip $i" >/dev/null 2>&1 && ok_skip=$((ok_skip + 1))
 done
-[ "$ok_skip" -eq 30 ] && ok "P1 HARNESS_SKIP=docrefs reconhecido em 30/30 commits" || nok "P1 skip do docrefs ignorado em $((30 - ok_skip))/30 commits"
+if [ "$ok_skip" -eq 30 ]; then ok "P1 HARNESS_SKIP=docrefs reconhecido em 30/30 commits"; else nok "P1 skip do docrefs ignorado em $((30 - ok_skip))/30 commits"; fi
 git checkout -q -f main
 prepara "branch claude/merge-grande" -- git checkout -q -b claude/merge-grande main
 mkdir -p massa && for i in $(seq 1 6000); do echo "$i" > "massa/f$i.txt"; done
