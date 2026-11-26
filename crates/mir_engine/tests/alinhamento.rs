@@ -118,11 +118,12 @@ fn alinhamento_sintetico_por_caso() {
                 trecho_minimo_s: 4.0,
                 ..Opts::default()
             };
-            let spectro = mir_engine::spectrum::Spectrogram::new(&caso.audio, opts.janela, opts.salto);
+            let spectro =
+                mir_engine::spectrum::Spectrogram::new(&caso.audio, opts.janela, opts.salto);
             let frases = mir_engine::lyrics::frases_vocais(&spectro, caso.audio.taxa);
-            let onsets = mir_engine::onset::detectar_banda(&spectro, caso.audio.taxa, 200.0, 3500.0);
-            let letra =
-                mir_engine::lyrics::do_usuario(&"linha de teste cantada\n".repeat(n), None);
+            let onsets =
+                mir_engine::onset::detectar_banda(&spectro, caso.audio.taxa, 200.0, 3500.0);
+            let letra = mir_engine::lyrics::do_usuario(&"linha de teste cantada\n".repeat(n), None);
             let (_, al) = analyze_com_letra(&caso.audio, &opts, Some(&letra), None, None);
             eprintln!("### {}", caso.nome);
             eprintln!("  verdade  {:?}", caso.inicios);
@@ -133,7 +134,10 @@ fn alinhamento_sintetico_por_caso() {
             eprintln!("  frases   {frases:?}");
             eprintln!(
                 "  ataques  {:?}",
-                onsets.iter().map(|&(t, _)| (t * 100.0).round() / 100.0).collect::<Vec<_>>()
+                onsets
+                    .iter()
+                    .map(|&(t, _)| (t * 100.0).round() / 100.0)
+                    .collect::<Vec<_>>()
             );
         }
         piores.push((caso.nome, med));
