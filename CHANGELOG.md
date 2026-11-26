@@ -7,14 +7,18 @@ O alinhamento tinha **um** gabarito — 40 linhas marcadas à mão numa música 
 - **O conjunto só vale porque tem o caso que separa.** Os quatro primeiros dão **0,00–0,02 s**: o modelo proporcional acerta onde as linhas são uniformes. O caso **`duracao_desigual`** (linhas de 1 s e 5 s alternadas, **com o mesmo texto**) dá **1,65 s** de mediana — é ele que mede o defeito, e é o teto que o teste protege.
 - **Lição de método:** a primeira versão do benchmark, só com casos uniformes, dava **0,00 s em todos** e não discriminava nada — um conjunto escolhido por quem construiu, com a classe fácil, mede a imaginação do autor. Foi preciso **fabricar o caso difícil** (mesmo texto, durações desiguais) para o instrumento ter sinal.
 
-**Mais dois mecanismos medidos e rejeitados** (o total vai a cinco), todos contra o benchmark **e** o gabarito humano:
+**Mais dois mecanismos medidos e rejeitados** (o total vai a sete), todos contra o benchmark **e** o gabarito humano:
 
-| mecanismo | benchmark | gabarito |
+| mecanismo | benchmark | gabarito humano |
 |---|---|---|
 | encaixe no ataque precedido da **maior pausa** | `duracao_desigual` **inalterado** (1,65 s) | 0,7 s (melhora **acidental**) |
-| fronteiras pelos **maiores intervalos** entre ataques | `sem_pausa` **2,09 s**, `duracao_desigual` **5,00 s** | pior |
+| fronteiras pelos **maiores intervalos** entre ataques | **0,01 s em todos os cinco** | mediana 1,0 s, **p90 2,6 → 7,1 s**, máx 4,5 → **8,6 s** |
 
-O primeiro é o que mais ensina: melhorava o gabarito humano e **não fazia o que prometia** no caso que separa — o encaixe refina um palpite errado, e a janela de 1,2 s nem alcança um erro de 1,9 s. **Nenhum dos dois entrou**, e o valor de ter o benchmark é exatamente este: ele reprova o engano antes de ele virar código.
+O segundo é o mais instrutivo dos dois. Ele **zera o benchmark** — 1,65 s → 0,01 s no caso que separa — e **piora as caudas no material real**. O veredito é do material do produto: **rejeitado**.
+
+**E isso expôs uma lacuna de cobertura no próprio benchmark:** os cinco casos têm ataques **limpos e bem separados**, e no áudio real os ataques são densos — "o maior intervalo" deixa de ser fronteira. **O benchmark não tem a classe difícil**, e o gabarito de terceiros, mesmo sendo **uma** música, pegou o que o conjunto sintético aprovou. É a lição do `conjunto-de-teste-de-fora` outra vez, agora com o meu conjunto no papel do conjunto próprio.
+
+**O que o benchmark pagou mesmo assim:** ele achou **um bug meu de implementação** — eu deixava o intervalo **até o fim da frase** entrar como candidato a corte, e isso mandava uma fronteira para o fim do trecho (o mesmo mecanismo dava 5,00 s em vez de 1,65 s). Em segundos de `cargo test`, sem gastar o gabarito de terceiro.
 
 ## [spike] Alinhamento: as constantes medidas em escala, e três hipóteses refutadas (2026-11-25)
 

@@ -1761,6 +1761,16 @@ O primeiro é o caso que justifica o banco inteiro: melhorou o gabarito humano (
 
 **Somatório honesto:** **sete** mecanismos de alinhamento medidos nestas duas sessões (dois entraram — o piso por proeminência e a frase curta sem linha; cinco saíram). O erro segue em **mediana 1,0 s** no gabarito humano, e o banco agora **reprova** as ideias óbvias em segundos de `cargo test`, sem gastar o gabarito de terceiro.
 
+### O banco aprovou o que o material real reprovou — e essa é a lição
+
+O mecanismo de **fronteiras pelos maiores intervalos entre ataques** fez o banco ir a **0,01 s nos cinco casos** (1,65 s → 0,01 s no caso que separa) e **piorou as caudas no material real** (p90 2,6 → **7,1 s**, máximo 4,5 → **8,6 s**). Rejeitado — e o veredito é do material do produto.
+
+O que isso revela é uma **lacuna de cobertura no próprio banco**: os cinco casos têm ataques **limpos e bem separados**; no áudio real os ataques são densos, e "o maior intervalo" deixa de distinguir fronteira de sílaba. **O conjunto que eu construí não tem a classe difícil** — e um gabarito de terceiros, mesmo de **uma** música, pegou o que o conjunto sintético aprovou. É a lição do `conjunto-de-teste-de-fora` com o meu conjunto no papel de "conjunto próprio": ele mede a minha imaginação.
+
+**O que o banco pagou mesmo assim:** achou **um bug meu** — eu deixava o intervalo **até o fim da frase** entrar como candidato a corte, o que mandava uma fronteira para o fim do trecho (5,00 s em vez de 1,65 s). Em segundos de `cargo test`. E separou, nos casos uniformes, um erro de 0,02 s de um de 1,65 s — o que é o mínimo que um instrumento precisa fazer.
+
+**Aberto, e agora com o alvo certo:** o banco precisa de uma **classe difícil** — ataques densos, como no áudio real —, e é ela que falta para ele poder arbitrar sozinho. Enquanto não existir, o gabarito humano continua sendo o árbitro, e é ele que vive fora do repositório.
+
 ## R4 · Alinhamento: as constantes em escala, e três hipóteses refutadas (2026-11-25)
 
 Depois de baixar o erro de **9,7 s para 1,0 s**, sobraram três pendências. Medi cada uma — contra o gabarito humano e contra **24 músicas** do repertório — e o resultado foi mais mapa do que número.
