@@ -143,6 +143,47 @@ Fonte: vídeo *Teu Santo Nome — Gabriela Rocha (Cifra e Letra)*, escolhido pel
 
 ### Pendente
 - P1 (pipeline automático) e P2 (inferência ONNX via `ort`) — dependem da geração do modelo ONNX.
+## [fix] `main` estava impushável: gate `test` com `tr` errado e gate `types` rodando no workspace inteiro (2026-11-25)
+
+Encontrado ao tentar o push do spike de ASR — cujo diff é docs + um `.py`, **sem nenhum `.rs`**. Os dois defeitos são pré-existentes em `main`.
+
+- **Gate `test` (bug real):** `tr ' ' '\\n'` (barra dupla entre aspas simples) montava a lista de crates como lixo — `-p notation_bundle` virava `-p otatio _bu dle` e o `cargo test` abortava com `unexpected argument 'dle'`. Corrigido para `tr ' ' '\n'`; **provado nos dois sentidos** (a versão antiga produz os tokens quebrados; a nova produz `-p kentron_ffi notation_bundle`).
+- **Gate `types` (escopo errado):** rodava `cargo clippy --all-targets -- -D warnings` no **workspace inteiro** e reprovava por **dívida pré-existente** — 3 lints de código já integrado (`2× clippy::useless_vec` em `pecas.rs`, `clippy::empty_line_after_doc_comments` em `musicxml.rs`). Medido: **nenhum push passava por `types`**: o último entrou por escape. Agora escopado aos **crates que o push toca**, como o `test` logo abaixo e o `rustfmt` no bloco de lint já eram.
+- **A dívida de código NÃO foi corrigida de propósito:** `pecas.rs` e `musicxml.rs` são tocados por **duas branches vivas** (`cline/0d661`, `cline/f5ba4`) e o `rustfmt` quer reformatar o **arquivo inteiro** neles — reformatar seria colisão garantida. A dívida fica no `PENDING` com o comando exato, para quem tocar os crates pagar no mesmo commit.
+- **Provado:** o fallback do `test` roda **119 testes verdes**; `types` e `lint` pulam o push sem `.rs`; `cargo clippy -p mir_engine` **continua reprovando** (a mordida segue viva para lint novo).
+
+## [spike] Timestamp de palavra do whisper: erro medido, e o que ele não sustenta (2026-11-25)
+
+### Instrumento
+
+- **`scripts/medir-timestamp-asr.py`**: mede o erro do onset de palavra do `whisper.cpp` contra **verdade sintética** (cada palavra sintetizada isolada por `say` pt-BR, silêncio de borda recortado, recolocada em mix com silêncio conhecido). A verdade é **conferida por rota independente** — silêncio exato antes do onset e energia ≥5× depois, 12 de 12 — e o verificador tem **prova negativa** (verdade corrompida em +250 ms reprova). Precondições fail-loud (`say`, `ffmpeg`, binário, modelos) e `ruff` limpo.
+
+### Medido (12 palavras × 2 vozes, `whisper.cpp` 1.9.6, Metal)
+
+| voz | modelo | modo | mediana | p90 | máx | viés |
+|---|---|---|---|---|---|---|
+| Eddy | small-q5_1 | DTW | 236 ms | 305 | 306 | **+227 ms** |
+| Eddy | medium-q5_0 | DTW | 386 ms | 580 | 581 | **+328 ms** |
+| Flo | small-q5_1 | DTW | 230 ms | 303 | 312 | **+223 ms** |
+| Flo | medium-q5_0 | DTW | 379 ms | 564 | 622 | **+373 ms** |
+
+- **Viés tardio e sistemático**, estável entre execuções (idênticas) e entre vozes — logo **calibrável** por modelo.
+- **`medium` (o padrão escolhido) erra mais que `small`** no timestamp — contra-intuitivo, a reproduzir com mais material.
+- **`t_dtw` está em centésimos**, não em ms; tratá-lo como ms erra por 10×.
+- **`-dtw` é desligado em silêncio** sob flash-attn (o padrão): sem `-nfa` os timestamps caem no modo heurístico **sem aviso**.
+- O modo **heurístico** só tem mediana boa no regime isolado (um segmento por palavra); em áudio contínuo colapsa (máx 1000 ms).
+
+### Consequência
+
+- Com o erro de palavra (~230 ms de mediana) somado ao **jitter de ±0,25 s** já medido na fronteira de acorde, a incerteza para "qual sílaba cai neste acorde" é da ordem de **uma sílaba**. **"A sílaba exata" não se sustenta**: o alinhamento é ponto de partida, com **revisão humana obrigatória**.
+- **Não medido em voz cantada com música:** os dois instrumentos independentes tentados em áudio real **não separam** (taxa contra ataques da banda vocal satura; controle com jitter de 200 ms ainda z=+5,9; casamento de envelope degenera). Exige **stem de voz** ou **referência anotada**. Registrado no `PENDING` e no `CONCLUSION`.
+
+### Idiomas (en/es) e o dicionário — medidos (2026-11-25)
+
+- **`--lingua` no instrumento:** o viés tardio e o **`medium` pior que o `small` se replicam nos três idiomas** (DTW mediana: pt 230–386 ms · en 274–656 ms · es 167–412 ms; viés +165 a +621 ms; determinístico em todos).
+- **Dicionário × `--prompt`** (fala conectada, verdade conhecida, `medium`): `--prompt` com o **vocabulário da música** derruba o **WER** de **0,50→0,08 (pt), 0,50→0,00 (en), 0,25→0,00 (es)**; a **correção pós-hoc por dicionário** só chega a **0,42 / 0,42 / 0,17**. Motivo medido: os erros do baseline são **fusão de palavras** ("sobre nós"→"obanós", "over night"→"overnight") e inserções — um léxico não desfaz fusão; o viés de decodificação, sim.
+- **Peso:** o `--prompt` não custa artefato nem licença; o dicionário é um **asset por idioma** (MBs + licença de dado, que o projeto não adota sem decisão).
+
 ## [feat] R1.1 + GAP MIR 1-4 + ADR-0017 parcial + pre-push fix (2026-11-24)
 
 ### R1.1 · MusicXML e ATEX — ambos os formatos suportados
