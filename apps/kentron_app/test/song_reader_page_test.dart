@@ -282,4 +282,148 @@ void main() {
     expect(find.text('Verse'), findsOneWidget);
     expect(find.text('2 / 3'), findsOneWidget);
   });
+
+  // ── O leitor abrindo do disco (biblioteca ou agenda) ───────────────────
+  //
+  // O `input` chega vazio nesse caminho: o texto vem do diretório base. Os
+  // dubles aqui carregam uma cifra de verdade e o leitor de mentira recusa
+  // cifra vazia, exatamente como o núcleo (`parse_song`).
+
+  const chordproDoDisco = '{title: Santo}\n{key: C}\n\n[Verse]\n[C]Santo, santo\n';
+
+  Future<SongDetail> lerComoONucleo(String input) async {
+    if (input.trim().isEmpty) throw StateError('cifra vazia: nada para ler');
+    return _cifra;
+  }
+
+  Future<String> carregarCifraDeMentira(String baseDir, String id) async =>
+      chordproDoDisco;
+
+  testWidgets('abre a música única da biblioteca em vez de recusar o input vazio', (
+    tester,
+  ) async {
+    String? pedido;
+    Future<String> carregarEspiao(String baseDir, String id) async {
+      pedido = '$baseDir|$id';
+      return chordproDoDisco;
+    }
+
+    await tester.pumpWidget(
+      _montar(
+        SongReaderPage(
+          input: '',
+          ler: lerComoONucleo,
+          transpor: _transpor,
+          tons: _tons,
+          biblioteca: const <SongSummary>[
+            SongSummary(title: 'Santo', sections: 1, chords: <String>[], core: 'falso'),
+          ],
+          diretorioBase: '/tmp/biblioteca',
+          carregarCifra: carregarEspiao,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(pedido, '/tmp/biblioteca|santo', reason: 'o id vem do título');
+    expect(find.text('Santo'), findsOneWidget);
+    expect(find.textContaining('Could not load'), findsNothing);
+  });
+
+  testWidgets('usa o id informado pela agenda em vez do slug do título', (
+    tester,
+  ) async {
+    String? pedido;
+    Future<String> carregarEspiao(String baseDir, String id) async {
+      pedido = id;
+      return chordproDoDisco;
+    }
+
+    await tester.pumpWidget(
+      _montar(
+        SongReaderPage(
+          input: '',
+          ler: lerComoONucleo,
+          transpor: _transpor,
+          tons: _tons,
+          // O título não é o id: só a agenda sabe que esta obra é `arranjo-coral`.
+          biblioteca: const <SongSummary>[
+            SongSummary(
+              title: 'Santo (arranjo do coral)',
+              sections: 1,
+              chords: <String>[],
+              core: 'falso',
+            ),
+          ],
+          idsBiblioteca: const <String>['arranjo-coral'],
+          diretorioBase: '/tmp/biblioteca',
+          carregarCifra: carregarEspiao,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(pedido, 'arranjo-coral');
+    expect(find.text('Santo'), findsOneWidget);
+  });
+
+  testWidgets('navega para a próxima obra da lista pelo id dela', (tester) async {
+    final pedidos = <String>[];
+    Future<String> carregarEspiao(String baseDir, String id) async {
+      pedidos.add(id);
+      return chordproDoDisco;
+    }
+
+    await tester.pumpWidget(
+      _montar(
+        SongReaderPage(
+          input: '',
+          ler: lerComoONucleo,
+          transpor: _transpor,
+          tons: _tons,
+          idsBiblioteca: const <String>['santo', 'arranjo-coral'],
+          diretorioBase: '/tmp/biblioteca',
+          carregarCifra: carregarEspiao,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 / 2'), findsOneWidget);
+    await tester.tap(find.byTooltip('Próxima'));
+    await tester.pumpAndSettle();
+
+    expect(pedidos, <String>['santo', 'arranjo-coral']);
+    expect(find.text('2 / 2'), findsOneWidget);
+  });
+
+  testWidgets('transpõe a obra aberta do disco, não o input vazio', (tester) async {
+    String? fonteDoPedido;
+    Future<SongDetail> transporEspiao(String input, String toKey) async {
+      fonteDoPedido = input;
+      return _transpor(input, toKey);
+    }
+
+    await tester.pumpWidget(
+      _montar(
+        SongReaderPage(
+          input: '',
+          ler: lerComoONucleo,
+          transpor: transporEspiao,
+          tons: _tons,
+          idsBiblioteca: const <String>['arranjo-coral'],
+          diretorioBase: '/tmp/biblioteca',
+          carregarCifra: carregarCifraDeMentira,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(DropdownButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('D').last);
+    await tester.pumpAndSettle();
+
+    expect(fonteDoPedido, chordproDoDisco, reason: 'transpõe o que está na tela');
+  });
 }
