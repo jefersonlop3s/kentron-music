@@ -2013,3 +2013,37 @@ O que destravou foi instrumentar o hook por `core.hooksPath` e capturar **61 tra
 **Virou skill:** `guarda-de-transacao-de-ref` — a regra ("o valor da transação não é a ação"), o discriminador, a prova que impede a porta aberta e o custo de instrumentar por `core.hooksPath`. Registrada na tabela do `AGENTS.md`.
 
 **Lição de instrumentação, que custou:** trocar `core.hooksPath` **desliga todos os outros hooks** — e um commit de sonda caiu **na `main`**, porque o gate que barra commit direto na `main` tinha sido substituído pelo meu instrumento. **O instrumento mudou o que estava sendo medido.** Restaurado com o escape nomeado e a `main` conferida; se eu não tivesse checado, teria publicado um commit de teste.
+
+## R1 · Agenda do culto: a ponte não lia agenda nenhuma — agora lê, e o app mostra (2026-11-26)
+
+O modelo de agenda (`Setlist`/`Execucao`, `schema_version` 2 com cadeia de migração) está provado no núcleo desde 21/11, mas **a ponte não expunha nada de agenda** — medido em `crates/kentron_ffi/src/bridge.rs`: só cifra, música e biblioteca. O app não tinha como mostrar o culto, e o `PENDING` pedia "a interface para montar a agenda".
+
+**O caminho de leitura foi entregue ponta a ponta:** `listar_agenda(base_dir) -> Result<Vec<EventoAgenda>, String>` (com `EventoAgenda`/`ExecucaoAgenda`) lendo `bundle_store::load_setlists`, bindings regerados com o **frb 2.13.0** pinado, `AgendaPage` com os quatro estados (carregando/vazio/erro/lista) abrindo o setlist no **Modo Palco**, e sete chaves de ARB nos **três** idiomas-base.
+
+**Prova:** `cargo test -p kentron_ffi` **21 testes**; **5 testes Rust + 5 de ponte no Dart** carregando o cdylib real (pasta inexistente virando exceção, agenda lida do disco, biblioteca sem agenda = zero eventos, remoção recusada); **71 testes** de Flutter verdes; `flutter analyze` sem achados; `tools/check_arb.py` verde.
+
+**O defeito de produto que apareceu de carona:** `salvar_na_biblioteca` **não mantinha `library.json`** — o app **não listava o que ele mesmo salvava** (`erro ao listar: missing file: .../library.json`), a remoção deixava a obra pendurada no índice e a agenda herdava a falha. Passou a manter o índice (nasce na primeira gravação, é atualizado em vez de duplicado, reescrito na remoção) e **recusa remover obra citada por uma agenda**; índice ilegível **não** é recriado em silêncio. Sentido negativo: revertida a manutenção, **5** testes reprovam; revertido o bloqueio, **2**.
+
+**Aberto:** escrever a agenda na interface, **"repetir a agenda anterior com versões novas"** e o relatório de uso na tela.
+
+## R4 · O GAP das repetições: a letra passa a declarar a ordem cantada (2026-11-26)
+
+O gargalo estava nomeado desde 25/11: a fonte entrega as linhas **distintas**, a gravação **repete seções**, e o refrão acabava alinhado à **introdução instrumental** — sem a ordem cantada, "acorde sobre a sílaba" **não era medível por construção**.
+
+**Mecanismo:** `{bloco X}` … `{fim}` define um bloco, `{canta X}` o canta na ordem e uma linha aceita o sufixo **`(Nx)`**; o motor **expande** o texto para a ordem cantada antes de alinhar. Diretiva malformada (bloco sem `{fim}`, `{canta}` antes de ser definido, `(Nx)` sem linha) **reprova com a linha e o motivo** — três casos com asserção de mensagem, e `(Aleluia)`/`(x)` **não** são marcadores (só `(Nx)`).
+
+**Números, no caso sintético (A B A B depois de introdução sem canto):** sem ordem cantada, **2 de 4** ocorrências alinhadas — a última é cantada aos **12,4 s** e o motor simplesmente não tem onde pô-la; com a ordem cantada, **4 de 4** em `[4,02 · 6,80 · 9,61 · 12,40]` contra a verdade `[4,0 · 6,8 · 9,6 · 12,4]`. O teste afirma explicitamente que a **segunda** ocorrência do refrão cai **depois** da introdução e **não** cola na primeira. O benchmark de alinhamento ganhou o caso `intro_repeticao` (mediana **0,01 s**, máximo **0,02 s**).
+
+**Aberto:** detectar a repetição **sem** a declaração; medir a expansão no repertório real; e o gabarito humano da ordem cantada (o de *Teu Santo Nome*) segue **fora do repositório**.
+
+## Infra · O portão principal estava vermelho — e o app não compilava (2026-11-26)
+
+Antes de abrir qualquer frente, mediu-se o estado real da `main`: `cargo fmt --all -- --check` **exit=1 em 14 arquivos**, `cargo clippy -p notation_bundle` **exit=101** (1 lint), `flutter analyze` **exit=1** (bloco órfão com dois `),` a mais em `song_reader_page.dart`, vindo do `b6a9864`) e **5 arquivos de teste de Flutter que nem carregavam**. E o achado que organiza tudo: `cargo test --workspace` estava **verde** — **nenhum gate Rust enxerga sintaxe Dart**.
+
+**Conserto em três frentes paralelas, particionadas por dono do crate** (`notation_bundle`, `mir_engine`, `kentron_ffi`+app+ARBs), com os paths declarados no quadro **antes** de editar: zero colisão de arquivo, zero rebase. Resultado no integrado: `cargo fmt --all -- --check` = **0**, `cargo clippy --workspace --all-targets -- -D warnings` = **0**, `flutter analyze` limpo, **71 testes** de Flutter e a **bateria completa** (`./scripts/ci-local.sh`) verde.
+
+**Quatro lições de método:**
+1. **A partição por dono do crate é o que faz o paralelismo valer.** A dívida de `fmt` era uma só, espalhada em três crates: cada frente pagou o seu pedaço **no commit que já tocava o crate**. Nenhum arquivo compartilhado — e o `fmt` do workspace saiu de vermelho para **0** como união de três commits independentes.
+2. **A ordem do pipeline importa para a medição.** O primeiro `flutter analyze` desta sessão acusou 9 erros de `agendaTitle`/`stageTime` "não definidos" — **falso alarme meu**: os arquivos de localização são **gerados** (`gen-l10n`) e o `ci-local.sh` gera **antes** de analisar. Analisar sem gerar mede o cache, não o código.
+3. **`git merge` neste repositório leva mais de 30 s** — a guarda da ref roda os verificadores de documentação. Merge tem de rodar em background com log: a primeira tentativa foi cortada no meio pelo shell e parecia não ter acontecido (sem `MERGE_HEAD`, `main` intacta).
+4. **Saída condensada mente por omissão.** `git log --format='%ad'` filtrado pelo RTK devolveu **50** commits; remedido com `RTK_DISABLED=1`, eram **318**. Contagem se confere com o filtro desligado.
