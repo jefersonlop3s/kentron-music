@@ -638,19 +638,25 @@ pub fn load_setlists(dir: &Path, library: &Library) -> Result<Vec<Setlist>, Stor
     if !agenda_dir.exists() {
         return Ok(Vec::new());
     }
-    let mut caminhos: Vec<PathBuf> = fs::read_dir(&agenda_dir)
-        .map_err(|source| StoreError::Io {
+    let mut caminhos: Vec<PathBuf> = Vec::new();
+    for entrada in fs::read_dir(&agenda_dir).map_err(|source| StoreError::Io {
+        path: agenda_dir.clone(),
+        source,
+    })? {
+        // Uma entrada ilegivel e' erro, nao um arquivo que some da lista: filtrada em
+        // silencio, ela viraria agenda ausente no relatorio de uso.
+        let entrada = entrada.map_err(|source| StoreError::Io {
             path: agenda_dir.clone(),
             source,
-        })?
-        .filter_map(Result::ok)
-        .map(|entrada| entrada.path())
-        .filter(|caminho| {
-            caminho
-                .extension()
-                .is_some_and(|extensao| extensao == "json")
-        })
-        .collect();
+        })?;
+        if entrada
+            .path()
+            .extension()
+            .is_some_and(|extensao| extensao == "json")
+        {
+            caminhos.push(entrada.path());
+        }
+    }
     caminhos.sort();
     caminhos
         .iter()
