@@ -100,12 +100,15 @@ const ATEX_SOLO: &str = r#"<GPIF>
 </GPIF>"#;
 
 /// Bundle com partitura e duas tablaturas — o caso que a R1.1 pede.
+///
+/// A ordem de inserção e' `solo` **depois** `base`, de proposito: invertida em
+/// relacao a ordem alfabetica, ela distingue "ordem de insercao" de "ordenado".
 fn bundle_com_fontes(id: &str, title: &str) -> SongBundle {
     bundle(id, title)
         .com_musicxml(MUSICXML_SANTO)
-        .com_tablatura(Tablatura::nova("base", ATEX_BASE).expect("tab válida"))
-        .expect("primeira tablatura")
         .com_tablatura(Tablatura::nova("solo", ATEX_SOLO).expect("tab válida"))
+        .expect("primeira tablatura")
+        .com_tablatura(Tablatura::nova("base", ATEX_BASE).expect("tab válida"))
         .expect("segunda tablatura")
 }
 
@@ -436,14 +439,14 @@ fn partitura_e_tablaturas_sobrevivem_ao_round_trip_byte_a_byte() {
         .expect("save must succeed");
 
     // O manifesto declara o inventário inteiro, na ordem em que o bundle o carrega:
-    // `.cho`, partitura, tablaturas na ordem de inserção.
+    // `.cho`, partitura, tablaturas na ordem de inserção — que **não** é alfabética.
     assert_eq!(
         manifest.files,
         [
             SONG_FILE.to_owned(),
             MUSICXML_FILE.to_owned(),
-            caminho_da_tablatura("base"),
             caminho_da_tablatura("solo"),
+            caminho_da_tablatura("base"),
         ]
     );
     assert!(dir.join(MUSICXML_FILE).is_file());
@@ -459,10 +462,10 @@ fn partitura_e_tablaturas_sobrevivem_ao_round_trip_byte_a_byte() {
     );
     assert_eq!(loaded.musicxml(), Some(MUSICXML_SANTO));
     assert_eq!(loaded.tabs().len(), 2);
-    assert_eq!(loaded.tabs()[0].nome(), "base");
-    assert_eq!(loaded.tabs()[0].atex(), ATEX_BASE);
-    assert_eq!(loaded.tabs()[1].nome(), "solo");
-    assert_eq!(loaded.tabs()[1].atex(), ATEX_SOLO);
+    assert_eq!(loaded.tabs()[0].nome(), "solo");
+    assert_eq!(loaded.tabs()[0].atex(), ATEX_SOLO);
+    assert_eq!(loaded.tabs()[1].nome(), "base");
+    assert_eq!(loaded.tabs()[1].atex(), ATEX_BASE);
 
     // E o modelo inteiro volta igual, o que inclui as fontes.
     assert_eq!(loaded, original);
@@ -499,10 +502,10 @@ fn as_fontes_guardadas_sao_arquivos_de_verdade() {
     let tab =
         notation_bundle::atex::parse(loaded.tabs()[0].atex()).expect("ATEX guardado deve parsear");
     assert_eq!(tab.metadata.get("title").map(String::as_str), Some("Santo"));
-    assert_eq!(tab.sections[0].lines[0].text, "Santo");
+    assert_eq!(tab.sections[0].lines[0].text, "Solo");
     assert_eq!(
         tab,
-        notation_bundle::atex::parse(ATEX_BASE).expect("origem")
+        notation_bundle::atex::parse(ATEX_SOLO).expect("origem")
     );
 }
 

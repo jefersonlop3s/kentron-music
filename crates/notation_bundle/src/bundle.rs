@@ -891,10 +891,11 @@ mod tests {
 
     #[test]
     fn tablaturas_ficam_na_ordem_de_insercao() {
+        // Inseridas em ordem **não** alfabética: ordenar não pode passar por ordem.
         let bundle = bundle("santo", "Santo")
-            .com_tablatura(Tablatura::nova("base", "<GPIF id=\"1\"/>").expect("tab"))
-            .expect("primeira")
             .com_tablatura(Tablatura::nova("solo", "<GPIF id=\"2\"/>").expect("tab"))
+            .expect("primeira")
+            .com_tablatura(Tablatura::nova("base", "<GPIF id=\"1\"/>").expect("tab"))
             .expect("segunda");
 
         assert_eq!(
@@ -903,7 +904,7 @@ mod tests {
                 .iter()
                 .map(Tablatura::nome)
                 .collect::<Vec<_>>(),
-            ["base", "solo"]
+            ["solo", "base"]
         );
     }
 
