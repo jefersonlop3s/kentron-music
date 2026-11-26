@@ -728,3 +728,40 @@ fn caminho_da_tablatura_usa_barra_do_manifesto() {
         format!("{TABLATURE_DIR}/base.atex")
     );
 }
+
+/// Gravar em cima de um bundle que **perdeu** as fontes não apaga os arquivos antigos:
+/// eles viram órfãos, e o próximo carregamento recusa em vez de ignora-los.
+///
+/// Este teste existe para fixar a decisão (não apagar conteúdo que o chamador não
+/// nomeou) e mostrar o custo dela: quem quiser remover uma fonte tem de remover o
+/// arquivo, ou gravar num diretório novo. Sem isso, o silêncio faria a obra perder a
+/// partitura sem ninguém saber.
+#[test]
+fn regravar_sem_as_fontes_deixa_orfao_que_o_proximo_carregamento_recusa() {
+    let scratch = Scratch::new("orfao");
+    let dir = scratch.path().join("santo");
+
+    bundle_store::save_bundle(&dir, &bundle_com_fontes("santo", "Santo"), None).expect("save");
+    let manifest =
+        bundle_store::save_bundle(&dir, &bundle("santo", "Santo"), None).expect("regravar");
+
+    // O manifesto novo volta a ser mínimo, mas o arquivo de antes continua em disco.
+    assert_eq!(manifest.files, [SONG_FILE.to_owned()]);
+    assert!(dir.join(MUSICXML_FILE).is_file());
+    assert!(dir.join(caminho_da_tablatura("solo")).is_file());
+
+    let error = bundle_store::load_bundle(&dir).expect_err("órfão deve reprovar, não sumir");
+    match &error {
+        StoreError::UndeclaredFile { path } => assert!(path.ends_with(MUSICXML_FILE)),
+        other => panic!("expected UndeclaredFile, got {other:?}"),
+    }
+
+    // Limpando os órfãos, o bundle carrega de novo — e sem as fontes.
+    fs::remove_file(dir.join(MUSICXML_FILE)).expect("remover partitura");
+    for nome in ["solo", "base"] {
+        fs::remove_file(dir.join(caminho_da_tablatura(nome))).expect("remover tablatura");
+    }
+    let loaded = bundle_store::load_bundle(&dir).expect("sem órfão, carrega");
+    assert_eq!(loaded.musicxml(), None);
+    assert!(loaded.tabs().is_empty());
+}

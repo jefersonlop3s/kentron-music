@@ -339,6 +339,13 @@ pub fn caminho_da_tablatura(nome: &str) -> String {
 /// ChordPro source (always, re-serialized from the model), `score.musicxml` when
 /// [`SongBundle::musicxml`] is set, and `tabs/<nome>.atex` for each
 /// [`SongBundle::tabs`] entry, in insertion order.
+///
+/// **Saving does not delete files it no longer writes.** A `score.musicxml` or
+/// `tabs/*.atex` left behind by an earlier save of the same directory becomes an
+/// orphan the manifest does not declare, and the next [`load_bundle`] refuses it
+/// with [`StoreError::UndeclaredFile`]. Loud on purpose: deleting content the caller
+/// did not name would be data loss, and ignoring the orphan would hide it. To drop a
+/// source, remove the file (or save into a fresh directory).
 pub fn save_bundle(
     dir: &Path,
     bundle: &SongBundle,
