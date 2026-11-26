@@ -1,12 +1,17 @@
 import 'dart:io';
 
+import 'package:core_l10n/core_l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:kentron_app/src/rust/bridge.dart';
+import 'package:kentron_app/src/stage/agenda_page.dart';
 import 'package:kentron_app/src/stage/song_reader_page.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Diretório da biblioteca local no sistema de arquivos.
-String _diretorioBase() {
+///
+/// É também onde a agenda vive (`<base>/setlists/*.json`), então a tela de
+/// agenda usa o mesmo caminho em vez de repetir a regra.
+String bibliotecaDir() {
   if (kIsWeb) return '/tmp/kentron-library';
   return '${Platform.environment['HOME'] ?? '/tmp'}/.kentron/library';
 }
@@ -33,7 +38,7 @@ class _LibraryPageState extends State<LibraryPage> {
   Future<void> _recarregar() async {
     setState(() { _carregando = true; _erro = null; });
     try {
-      final musicas = await listarBiblioteca(baseDir: _diretorioBase());
+      final musicas = await listarBiblioteca(baseDir: bibliotecaDir());
       if (!mounted) return;
       setState(() { _musicas = musicas; _carregando = false; });
     } on Object catch (e) {
@@ -50,7 +55,7 @@ class _LibraryPageState extends State<LibraryPage> {
       final id = resumo.title.isNotEmpty
           ? resumo.title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')
           : 'cifra-${DateTime.now().millisecondsSinceEpoch}';
-      await salvarNaBiblioteca(baseDir: _diretorioBase(), id: id, chordpro: chordpro);
+      await salvarNaBiblioteca(baseDir: bibliotecaDir(), id: id, chordpro: chordpro);
       await _recarregar();
     } on Object catch (e) {
       if (!mounted) return;
@@ -85,7 +90,7 @@ class _LibraryPageState extends State<LibraryPage> {
 
   Future<void> _removerCifra(String id) async {
     try {
-      await removerDaBiblioteca(baseDir: _diretorioBase(), id: id);
+      await removerDaBiblioteca(baseDir: bibliotecaDir(), id: id);
       await _recarregar();
     } on Object catch (e) {
       if (!mounted) return;
@@ -101,7 +106,7 @@ class _LibraryPageState extends State<LibraryPage> {
           input: '',
           biblioteca: _musicas,
           indiceNaBiblioteca: indice,
-          diretorioBase: _diretorioBase(),
+          diretorioBase: bibliotecaDir(),
         ),
       ),
     );
@@ -113,6 +118,13 @@ class _LibraryPageState extends State<LibraryPage> {
       appBar: AppBar(
         title: const Text('Biblioteca'),
         actions: <Widget>[
+          IconButton(
+            tooltip: CoreL10n.of(context).agendaTitle,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const AgendaPage()),
+            ),
+            icon: const Icon(Icons.event_note),
+          ),
           IconButton(tooltip: 'Adicionar cifra', onPressed: _adicionarCifra, icon: const Icon(Icons.add)),
           IconButton(tooltip: 'Recarregar', onPressed: _recarregar, icon: const Icon(Icons.refresh)),
         ],

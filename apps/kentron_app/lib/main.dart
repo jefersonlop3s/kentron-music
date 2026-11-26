@@ -4,6 +4,7 @@ import 'package:core_l10n/core_l10n.dart';
 import 'package:flutter/foundation.dart';
 import 'package:kentron_app/src/rust/bridge.dart';
 import 'package:kentron_app/src/rust/frb_generated.dart';
+import 'package:kentron_app/src/stage/agenda_page.dart';
 import 'package:kentron_app/src/stage/library_page.dart';
 import 'package:kentron_app/src/stage/projection_bootstrap.dart';
 import 'package:kentron_app/src/stage/projection_link.dart';
@@ -185,6 +186,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               child: const Text('Biblioteca'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const AgendaPage(),
+                ),
+              ),
+              child: Text(CoreL10n.of(context).agendaTitle),
             ),
           ],
         ),
