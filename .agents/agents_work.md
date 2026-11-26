@@ -48,17 +48,37 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - **Paths sob edição**: `crates/kentron_ffi/**` (inclui `src/bridge.rs` e o `frb_generated.rs` regerado), `apps/kentron_app/**`, `packages/core_l10n/lib/l10n/*.arb`
 - **Status**: em andamento · **PRs**: —
 
+### cline/1dce1 — Trilha 1: o compasso no leitor (mostrar/perguntar/gravar)
+- **Início**: 2026-11-26 21:09 (UTC) · **Última atualização**: 2026-11-26 21:09 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `9faf8e2`) · **Branches**: `cline/1dce1` · **Worktrees**: `~/.cline/worktrees/1dce1/app-music`
+- **Demanda**: continuidade da sessão do compasso — o campo `{time: ...}` já sobrevive ao round-trip no núcleo (teste `o_compasso_escolhido_sobrevive_ao_round_trip`) e o `SongReaderPage` já **mostra** o `time` quando ele vem (`b6a9864`). Falta **perguntar quando ele não vem decidido** e **gravar** a escolha, com o teste de Flutter que prova a pergunta.
+- **Paths sob edição**: nenhum ainda — **colide** com a frente `agenda-no-app` em `apps/kentron_app/**` (`song_reader_page.dart` é dela); combinar antes de editar.
+- **Status**: aguardando decisão do dono · **PRs**: —
+
 ## 📌 Notas entre agentes
 
 - **Partição de paths feita para não haver colisão** (decidida em 2026-11-26, ao abrir as três frentes): `notation_bundle` é da `gates-verdes`; `mir_engine` é da `letra-ordem-cantada`; `kentron_ffi` + `apps/kentron_app` + `core_l10n` são da `agenda-no-app`. **Nenhum arquivo é compartilhado** — o `fmt` da `main` é pago em três pedaços, um por dono do crate.
 - **`docs/PENDING.md`, `docs/CONCLUSION.md` e `CHANGELOG.md` ficam com o integrador**: o `CHANGELOG` é reescrito por todas as sessões e o merge já apagou seções duas vezes (gate `.githooks/check_changelog.py`, 2026-11-26). Cada frente entrega o texto pronto no relatório; o integrador escreve nos três arquivos, uma frente por vez.
 - **Ninguém integra na `main` sozinho**: cada frente entrega a branch + a prova; a integração (`--ff-only`) e o fechamento documental são do integrador, para a `main` andar uma vez por frente.
+- **`[quadro].canonico` está vazio e o `pre-commit` não trata isso** (medido em 2026-11-26 por `cline/1dce1`): com `canonico = ""`, o `quadro.sh` cai no fallback (a cópia do worktree, não o checkout principal) e o hook compara `toplevel != CANONICO` com `CANONICO=""` — **bloqueia todo commit do quadro**, inclusive do checkout principal. O comentário do `.harness.toml` promete "Vazio desliga a regra quadro-copia"; o hook não implementa isso. Conserto a decidir: preencher `canonico` (caminho absoluto — específico da máquina) **ou** ensinar o hook a pular quando vazio. Enquanto isso, o commit do quadro sai por `HARNESS_SKIP=quadro`.
+- **A `main` está vermelha em `apps/kentron_app/lib/src/stage/song_reader_page.dart`**: erro de sintaxe (dois `),` órfãos) introduzido por `b6a9864` — `dart format` reprova em `linha 324`. A frente `agenda-no-app` já corrigiu na branch (`a17b5c4`, "a main nao compila"); falta integrar.
 
 ## 🟡 Interrompido / órfão
 
 Nenhum.
 
 ## 🟢 Concluído recentemente
+
+### cline/1dce1 — Limpeza: worktree `57a70` e branch `cline/1bf9c` encerrados
+- **Início**: 2026-11-26 21:09 (UTC) · **Última atualização**: 2026-11-26 21:09 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `9faf8e2`) · **Branches**: `cline/1dce1` · **Worktrees**: `~/.cline/worktrees/1dce1/app-music`
+- **Demanda**: encerrar o worktree e as branches deixados pelas sessões anteriores, com prova.
+- **Paths sob edição**: nenhum (concluído)
+- **Status**: concluído · **PRs**: —
+
+**Feito:** removido o worktree `~/.cline/worktrees/57a70/app-music` (HEAD destacado em `1dd7e5c`, árvore limpa — inclusive sem arquivos ignorados) e apagada a branch `cline/1bf9c` (`0` commits fora da `main`) com `git branch -d`; o diretório órfão `57a70/` (vazio) foi removido. **Prova:** `git worktree list` deixa de listar `57a70` e `git branch --no-merged main` não lista nenhuma branch `cline/`.
+
+**Registro preservado:** o único commit exclusivo do worktree (`1dd7e5c`, *"docs(quadro): cleanup — worktrees e branches cline encerrados"*) **nunca chegou à `main`** — foi commitado em HEAD destacado, e a `main` andou por outro caminho (`9faf8e2`). A limpeza que ele descrevia — worktrees `0d661`, `29ca4`, `b56a9`, `f5ba4` e branches `cline/0d661`, `cline/1c826`, `cline/29ca4`, `cline/57a70`, `cline/b56a9`, `cline/f5ba4` — fica registrada aqui para não se perder.
 
 ### opencode/asr-timestamp — ASR, alinhamento, gates da main e o 0.7.3 do harness
 - **Início**: 2026-11-25 20:57 (UTC) · **Última atualização**: 2026-11-26 15:53 (UTC)
