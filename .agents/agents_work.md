@@ -35,21 +35,21 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
-### opencode/asr-timestamp — Spike do timestamp de palavra do ASR (transcrição local)
-- **Início**: 2026-11-25 20:57 (UTC) · **Última atualização**: 2026-11-25 21:17 (UTC)
-- **Repositórios**: `kentron-music` · **Branches**: `spike/asr-timestamp-de-palavra` e `fix/gates-vermelhos-main` (**integradas na `main` e removidas**) · **Worktrees**: `~/Develop/Projects/app-music-wt/asr-timestamp`
-- **Demanda**: o dono propôs transcrição local (whisper, sem API) para o acorde cair "na sílaba exata"; medir o timestamp de palavra é o que decide, antes de qualquer ADR de transcritor. Depois pediu en/es, a ideia do dicionário e integrar/pushar.
-- **Paths sob edição**: nenhum (concluído e publicado em `origin/main` `2ec7537`).
+### opencode/asr-timestamp — ASR: timestamp, áudio real, alinhamento e gates da main
+- **Início**: 2026-11-25 20:57 (UTC) · **Última atualização**: 2026-11-26 13:16 (UTC)
+- **Repositórios**: `kentron-music` · **Branches**: `spike/asr-timestamp-de-palavra`, `fix/gates-vermelhos-main`, `docs/audio-real-cantado`, `docs/video-karaoke-testado`, `fix/alinhamento-de-linha`, `spike/alinhamento-escala` — **todas integradas na `main` e removidas** · **Worktrees**: `~/Develop/Projects/app-music-wt/asr-timestamp`
+- **Demanda**: o dono propôs transcrição local (whisper) para o acorde cair "na sílaba exata"; a sessão mediu o que a proposta exige, usou dois vídeos que ele mandou como fonte de letra/cifra, corrigiu o alinhamento de linha contra um gabarito humano dele e destravou a `main` (que estava impushável).
+- **Paths sob edição**: nenhum (concluído e publicado em `origin/main` `f0cd92c`).
 - **Status**: concluído.
-- **PRs**: nenhum (push direto na `main` com a bateria verde: `226a5be..2ec7537`).
+- **PRs**: nenhum (push direto na `main`, sempre com a bateria verde).
 
-**Feito:** `scripts/medir-timestamp-asr.py` (verdade sintética conferida por energia + prova negativa; `--lingua` pt/en/es); medições en/es e do dicionário; **conserto de dois gates que deixavam a `main` impushável** (o `tr` do gate `test` montava crates como lixo; o `types` rodava clippy no workspace inteiro) e a exceção documentada do `semgrep`; Demucs/torch instalados e o `htdemucs_6s` exercido.
+**Feito (7 pushes):**
+- **Instrumentos** versionados: `scripts/medir-timestamp-asr.py` (verdade sintética conferida por energia + prova negativa, pt/en/es), `scripts/medir-alinhamento.py` (gabarito humano por caminho, fora do repo) e `scripts/medir-frases-lote.py` (plausibilidade em lote).
+- **Medições:** timestamp de palavra do whisper (DTW mediana **230–386 ms**, viés tardio sistemático, `medium` pior que `small` nos três idiomas; `t_dtw` é centésimos; `-dtw` desliga em silêncio sob flash-attn); **WER em voz cantada real** (recall 91,4%, 3,1% fora do vocabulário, sem loop — e o WER 0,50 do sintético era artefato da construção); **cifra × cifra humana** (tonalidade `G` bate; raiz certa em 93,4%; rótulo exato 29,2%); **dicionário × `--prompt`** (0,50→0,08 contra 0,42 — o erro dominante é fusão de palavras); **stem de voz NÃO conserta** o instrumento de acoplamento; **vídeo karaokê** não dá tempo de palavra.
+- **Correções:** alinhamento de linha **9,7 s → 1,0 s** (piso por proeminência global + frase curta sem linha), com teste no repo provado no negativo; **gates da `main`** (o `tr` do gate `test` montava crates como lixo; o `types` rodava no workspace inteiro; a exceção documentada do `semgrep`) e **11 lints** de clippy em `mir_engine`.
+- **GAPs registrados:** `exportar_onnx.py` quebrado (bag vs state_dict); letra precisa vir na ordem cantada; quatro caminhos de alinhamento medidos e rejeitados.
 
-**Provado:** push `226a5be..2ec7537` com **todos os gates verdes**; o fallback do `test` roda 119 testes; `cargo clippy -p mir_engine` continua reprovando (a mordida do gate escopado segue); `semgrep` rc=0 no arquivo; sha256 dos pesos == `MANIFEST`; `documentation.py check` sem link quebrado; `ruff` limpo.
-
-**Achados:** DTW mediana **230–386 ms** com **viés tardio sistemático**, determinístico, replicado em en/es; **o `medium` erra mais que o `small`** nos três idiomas; **"a sílaba exata" não se sustenta** (soma-se ao jitter de ±0,25 s da fronteira de acorde); `--prompt` com o vocabulário da música derruba o WER **0,50→0,08** e o dicionário pós-hoc não (0,42) — o erro dominante é **fusão de palavras**.
-
-**Aberto:** (1) erro absoluto em **voz cantada** — o **stem de voz foi testado e NÃO resolve** (métrica satura); exige **referência anotada à mão** (decisão do dono); (2) **`scripts/exportar_onnx.py` está quebrado** (bag vs state_dict) — caminho ONNX/`ort` não roda; é de `cline/f5ba4`; (3) dívida de lint/format em `crates/` (3 clippy lints + 2 arquivos não-formatados) tocados por `cline/0d661` e `cline/f5ba4`; (4) **ADR-0019** do transcritor, depois de (1).
+**Aberto (no PENDING):** erro absoluto do timestamp em voz cantada (exige referência anotada à mão — decisão do dono); **frases de 20–133 s são a norma (21 de 24 músicas)** e cortá-las por sinal de voz não funcionou — o próximo mecanismo é usar as **seções** como camada intermediária; dívida de lint em `notation_bundle` (1 lint).
 
 ### cline/0caf3 — ADR-0014 bloco 3: terça pela melodia
 - **Início:** 2026-11-22 15:40 (UTC) · **Última atualização:** 2026-11-22 16:32 (UTC)
