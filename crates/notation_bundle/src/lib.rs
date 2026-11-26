@@ -9,11 +9,11 @@
 //! This crate is domain only: no FFI, and `unsafe_code = "forbid"` holds. The
 //! Rust ↔ Flutter boundary lives in the `kentron_ffi` crate (ADR-0007).
 
+pub mod atex;
 pub mod bundle;
 pub mod bundle_store;
 pub mod chord_naming;
 pub mod chordpro;
 pub mod harmony;
 pub mod musicxml;
-pub mod atex;
 pub mod openlyrics;
