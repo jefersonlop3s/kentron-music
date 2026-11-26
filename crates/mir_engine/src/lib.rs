@@ -156,20 +156,31 @@ pub fn analyze_com_com_audio(
     // contaminação do baixo na banda do bumbo). Usamos o stem para
     // reconciliar o compasso, não o mix (medido 2026-11-24: período do
     // mix 0.76s vs stem 3.08s — diferença de 4x que muda a dobra).
+    //
+    // O motor funciona sem o stem (ADR-0017, escopo 1) — o relatório DSP sai
+    // igual —, mas **não em silêncio**: aqui havia um `.unwrap_or_else(|_| …)`
+    // que sumia com o erro. Foi ele que escondeu, até 2026-11-26, um WAV
+    // escrito inválido pelo próprio motor: o `com_stems` voltava `null` sem
+    // ninguém saber por quê. Agora o motivo sai no stderr.
     let bumbo_caixa = percussao::medir(spectro, audio.taxa, &cortes_harmonicos);
-    let stems = stems::analisar_com_stems(
+    let stems = match stems::analisar_com_stems(
         spectro,
         audio.taxa,
         &cortes_harmonicos,
         drums_path,
         audio_path,
-    )
-    .unwrap_or_else(|_| stems::ComparativoStems {
-        mix: bumbo_caixa.clone(),
-        com_stems: None,
-        pecas: None,
-        caminho_stems: drums_path.map(|p| p.to_path_buf()),
-    });
+    ) {
+        Ok(stems) => stems,
+        Err(erro) => {
+            eprintln!("⚠ aviso: comparação com stems indisponível ({erro})");
+            stems::ComparativoStems {
+                mix: bumbo_caixa.clone(),
+                com_stems: None,
+                pecas: None,
+                caminho_stems: drums_path.map(|p| p.to_path_buf()),
+            }
+        }
+    };
     // Reconciliação: usa o stem de bateria quando disponível (período e
     // caixa limpos), senão usa o mix. O `ComparativoStems` guarda ambos
     // para o relatório — o mix continua visível para comparação.
