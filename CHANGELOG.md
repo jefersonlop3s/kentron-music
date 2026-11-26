@@ -1,4 +1,13 @@
 # Changelog
+## [upstream] `guarda-de-transacao-de-ref` publicada no `sovereign-harness` 0.7.3 (2026-11-26)
+
+O conserto do falso positivo do `pack-refs` **não era só nosso**: ao clonar o kit, o template `templates/git/reference-transaction` apareceu com o **mesmo bug** — a checagem anterior tinha olhado o `.harness/` instalado, que não traz hooks, e não os `templates/`. Veredito corrigido, e o trabalho feito no padrão do kit:
+
+- **PR #23** (`fix/pack-refs-nao-e-delecao`): o discriminador no template, os casos **A11** no `test_ref_main.sh` (os dois lados + ponta a ponta), a skill nova `guarda-de-transacao-de-ref` na fonte e nas duas cópias de plugin (`sincronizar.py`), `README` (15 → 16 skills) e a entrada em `## [Não lançado]`. **CI verde** em `ubuntu-latest` e `macos-latest` + tipos do plugin do OpenCode. Squash merge.
+- **PR #24** (`release/0.7.3`): `[Não lançado]` → `[0.7.3]`, `VERSAO` e os **quatro manifestos** em 0.7.3 com as duas cópias sincronizadas (o `test_kit` amarra as sete), CI verde, squash merge.
+- **Tag `v0.7.3`** anotada no formato do kit e **Release** publicada (Latest), com o corpo em prosa no padrão das anteriores.
+- Verificação local antes de cada PR: `sincronizar.py --verificar` (47 cópias idênticas), **99 testes OK**, os três testes herméticos verdes e `shellcheck` limpo.
+
 ## [docs] Skill `guarda-de-transacao-de-ref`: o valor da transação não é a ação (2026-11-26)
 
 O falso positivo do `pack-refs` **virou skill**, porque a lição atravessa o caso: uma guarda de `reference-transaction` infere a **ação** pelo **valor** (`new` zerado = deleção) — e **outro comando produz o mesmo valor para outra ação**. É por isso que a falha era um alarme de "APAGARIA a branch main" sem nada apagado.
