@@ -132,6 +132,35 @@ pub fn intro_quieta_e_canto() -> mir_engine::wav::Audio {
     }
 }
 
+/// Introdução instrumental quieta + estrutura cantada **com repetição**.
+///
+/// Refrão e verso cantados **duas vezes cada** (A B A B) — o caso do GAP das
+/// repetições: a cifra/letra de qualquer fonte traz as linhas **distintas** e a
+/// gravação repete. Com duas linhas distintas para quatro ocorrências, metade do
+/// canto fica sem letra e não existe linha nenhuma onde o refrão volta. Devolve
+/// o áudio e os inícios **conhecidos** de cada ocorrência (4 · 6,8 · 9,6 · 12,4 s).
+pub fn intro_e_canto_repetido() -> (mir_engine::wav::Audio, Vec<f32>) {
+    let mut amostras: Vec<f32> = Vec::new();
+    for _ in 0..2 {
+        senoides(&mut amostras, INTRO_S / 2.0, 0.03); // introdução: 1/25 da energia do canto
+    }
+    let mut inicios = Vec::new();
+    for _ in 0..4 {
+        silencio(&mut amostras, 0.8);
+        inicios.push(amostras.len() as f32 / TAXA as f32);
+        senoides(&mut amostras, LINHA_S, 0.15);
+    }
+    (
+        mir_engine::wav::Audio {
+            metadados: HashMap::new(),
+            taxa: TAXA,
+            canais: 1,
+            amostras,
+        },
+        inicios,
+    )
+}
+
 /// Senoides PURAS dentro da banda da voz (300/600/900 Hz).
 ///
 /// A intensidade da banda passa a ser o quadrado da amplitude — sem o ruído de

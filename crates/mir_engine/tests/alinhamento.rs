@@ -16,7 +16,7 @@ use mir_engine::{Opts, analyze_com_letra};
 mod common;
 use common::{
     INTRO_S, cantar_quatro_frases, canto_com_repeticao, canto_com_silabas, canto_continuo_desigual,
-    canto_sem_pausa, intro_quieta_e_canto,
+    canto_sem_pausa, intro_e_canto_repetido, intro_quieta_e_canto,
 };
 
 struct Caso {
@@ -43,7 +43,8 @@ fn mede(caso: &Caso) -> (usize, Option<(f32, f32)>) {
     let letra = mir_engine::lyrics::do_usuario(
         &"linha de teste cantada\n".repeat(caso.inicios.len()),
         None,
-    );
+    )
+    .expect("letra de teste sem diretiva de repetição");
     let opts = Opts {
         trecho_minimo_s: 4.0,
         ..Opts::default()
@@ -60,6 +61,7 @@ fn casos() -> Vec<Caso> {
     let com_intro: Vec<f32> = (0..3).map(|i| INTRO_S + 0.8 + i as f32 * 4.8).collect();
     let (audio_sem_pausa, inicios_sem_pausa) = canto_sem_pausa(4);
     let (audio_repeticao, inicios_repeticao) = canto_com_repeticao();
+    let (audio_intro_repeticao, inicios_intro_repeticao) = intro_e_canto_repetido();
     let (audio_desigual, inicios_desigual) = canto_continuo_desigual();
     let (audio_silabas, inicios_silabas) = canto_com_silabas();
     vec![
@@ -72,6 +74,14 @@ fn casos() -> Vec<Caso> {
             nome: "com_introducao",
             audio: intro_quieta_e_canto(),
             inicios: com_intro,
+        },
+        // Introdução instrumental **e** repetição na mesma fixture: é o desenho
+        // do áudio real (a gravação repete, o texto traz as linhas distintas), e
+        // o que separa o alinhamento com ordem cantada do alinhamento sem ela.
+        Caso {
+            nome: "intro_repeticao",
+            audio: audio_intro_repeticao,
+            inicios: inicios_intro_repeticao,
         },
         Caso {
             nome: "sem_pausa",
@@ -129,7 +139,8 @@ fn alinhamento_sintetico_por_caso() {
             let frases = mir_engine::lyrics::frases_vocais(&spectro, caso.audio.taxa);
             let onsets =
                 mir_engine::onset::detectar_banda(&spectro, caso.audio.taxa, 200.0, 3500.0);
-            let letra = mir_engine::lyrics::do_usuario(&"linha de teste cantada\n".repeat(n), None);
+            let letra = mir_engine::lyrics::do_usuario(&"linha de teste cantada\n".repeat(n), None)
+                .expect("letra de teste sem diretiva de repetição");
             let (_, al) = analyze_com_letra(&caso.audio, &opts, Some(&letra), None, None);
             eprintln!("### {}", caso.nome);
             eprintln!("  verdade  {:?}", caso.inicios);

@@ -11,6 +11,13 @@
 //! achadas por energia na banda da voz, as linhas são distribuídas por elas pela
 //! ordem e pelo tamanho, e cada linha volta com **confiança** — alinhamento por
 //! frase é aproximado, não é fonema a fonema.
+//!
+//! **Ordem cantada (o GAP das repetições).** A cifra/letra de qualquer fonte traz
+//! as linhas **distintas**, e a gravação **repete seções**: com as linhas
+//! distintas e sem repetição, o motor alinha o refrão a um trecho onde ele não é
+//! cantado (medido em 2026-11-25: refrão na introdução instrumental, 0–27,6 s).
+//! O texto da letra pode declarar a repetição, e o motor **expande** as linhas
+//! para a ordem cantada antes de alinhar — vocabulário em [`do_usuario`].
 
 use serde::Serialize;
 
@@ -242,42 +249,89 @@ impl Origem {
 #[derive(Debug, Clone, Serialize)]
 pub struct Letra {
     pub origem: Origem,
-    /// Linhas de letra, na ordem. Linha vazia não entra.
+    /// Linhas de letra **na ordem cantada** (repetições já expandidas), uma por
+    /// vez que a linha é cantada. Linha vazia não entra.
     pub linhas: Vec<String>,
 }
 
 /// Lê letra de texto livre ou de ChordPro, com licença declarada opcional.
 ///
 /// Em ChordPro, o que está entre colchetes é acorde: sai. Metadados (`{...}`),
-/// comentários (`#`) e linhas vazias também saem — sobra o texto cantado.
-#[must_use]
-pub fn do_usuario(texto: &str, licenca: Option<String>) -> Letra {
-    let mut linhas = Vec::new();
-    for linha in texto.lines() {
-        let limpa = linha.trim();
-        if limpa.is_empty() || limpa.starts_with('#') {
-            continue;
-        }
-        if limpa.starts_with('{') && limpa.ends_with('}') {
-            continue;
-        }
-        // Se for só um bloco entre colchetes (nome de seção), não é letra.
-        let sem_acordes = sem_colchetes(limpa);
-        if sem_acordes.trim().is_empty() {
-            continue;
-        }
-        linhas.push(sem_acordes.trim_end().to_owned());
-    }
-    Letra {
+/// comentários (`#`) e linhas vazias também saem — sobra o texto cantado. As
+/// diretivas de **ordem cantada** expandem a letra, na ordem em que aparecem:
+///
+/// ```text
+/// {bloco refrao}        # abre um bloco nomeado (não aninha)
+/// Todo ser que vive
+/// Louve ao nome do Senhor
+/// {fim}                 # fecha, e o bloco é cantado AQUI (uma vez)
+/// {bloco verso}
+/// E mesmo sendo pó
+/// {fim}
+/// {canta refrao}        # o refrão outra vez, uma vez
+/// {canta refrao 3x}     # o refrão três vezes seguidas (1x–99x)
+/// Teu santo nome (2x)   # sufixo na linha: esta linha, duas vezes
+/// ```
+///
+/// O bloco é cantado **onde é definido** (como o `{soc}` do ChordPro) e cantado
+/// de novo em cada `{canta nome}`. O vocabulário é do motor: qualquer outra
+/// diretiva `{...}` continua sendo metadado (`{title: …}`, `{time: 4/4}`,
+/// `{soc}`) e é ignorada.
+///
+/// Fail-loud: `{canta}` de bloco antes de ele ser definido, `{fim}` sem
+/// `{bloco …}` aberto, nome de bloco repetido, `{bloco}` sem nome, bloco sem
+/// linha, `{canta …}` dentro de um bloco e repetição fora de `1x–99x`
+/// **reprovam** — ignorar em silêncio devolveria a letra com menos linhas que o
+/// canto, que é exatamente o defeito que este vocabulário conserta.
+///
+/// # Errors
+///
+/// [`ErroDeLetra`] com a linha exata do texto e o motivo.
+pub fn do_usuario(texto: &str, licenca: Option<String>) -> Result<Letra, ErroDeLetra> {
+    Ok(Letra {
         origem: Origem::DoUsuario { licenca },
-        linhas,
-    }
+        linhas: ordem_cantada(texto)?,
+    })
 }
 
 /// Lê letra do usuário sem declarar licença.
-#[must_use]
-pub fn ler_do_usuario(texto: &str) -> Letra {
+///
+/// # Errors
+///
+/// Como [`do_usuario`].
+pub fn ler_do_usuario(texto: &str) -> Result<Letra, ErroDeLetra> {
     do_usuario(texto, None)
+}
+
+/// Erro de leitura da letra: diretiva de ordem cantada malformada.
+///
+/// Existe para o erro ser **nomeado no arquivo e na linha**: a letra vem do
+/// usuário e uma repetição mal escrita é erro dele, não do motor — o motor não
+/// adivinha onde o refrão volta.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ErroDeLetra {
+    /// Linha do texto (1-based) onde o problema está.
+    pub linha: usize,
+    /// O que está errado, em texto para o usuário.
+    pub motivo: String,
+}
+
+impl std::fmt::Display for ErroDeLetra {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "linha {}: {}", self.linha, self.motivo)
+    }
+}
+
+impl std::error::Error for ErroDeLetra {}
+
+/// Diretiva de ordem cantada que o motor entende.
+enum Diretiva {
+    /// `{bloco nome}` — abre um bloco nomeado.
+    AbreBloco(String),
+    /// `{fim}` — fecha o bloco aberto.
+    FechaBloco,
+    /// `{canta nome [Nx]}` — canta um bloco já definido.
+    Canta { nome: String, vezes: usize },
 }
 
 /// Remove trechos entre colchetes (acordes e nomes de seção).
@@ -293,6 +347,193 @@ fn sem_colchetes(linha: &str) -> String {
         }
     }
     saida
+}
+
+/// Lê uma diretiva `{...}`. `Ok(None)` = não é deste vocabulário (metadado de
+/// ChordPro, que continua sendo ignorado).
+fn ler_diretiva(conteudo: &str) -> Result<Option<Diretiva>, String> {
+    let conteudo = conteudo.trim();
+    let (palavra, resto) = conteudo
+        .split_once(char::is_whitespace)
+        .map_or((conteudo, ""), |(primeira, resto)| (primeira, resto.trim()));
+    match palavra {
+        "bloco" => {
+            if resto.is_empty() {
+                return Err("`{bloco}` sem nome — escreva `{bloco nome}`".to_owned());
+            }
+            if resto.split_whitespace().count() > 1 {
+                return Err(format!(
+                    "`{{bloco …}}` com nome composto ({resto:?}): o nome é uma palavra só"
+                ));
+            }
+            Ok(Some(Diretiva::AbreBloco(resto.to_owned())))
+        }
+        "fim" => {
+            if resto.is_empty() {
+                Ok(Some(Diretiva::FechaBloco))
+            } else {
+                Err(format!("`{{fim}}` com sobra ({resto:?})"))
+            }
+        }
+        "canta" => {
+            let mut partes = resto.split_whitespace();
+            let Some(nome) = partes.next() else {
+                return Err(
+                    "`{canta}` sem nome — escreva `{canta nome}` ou `{canta nome 3x}`".to_owned(),
+                );
+            };
+            let vezes = match partes.next() {
+                None => 1,
+                Some(bruto) => vezes_marcadas(bruto)
+                    .map_err(|motivo| format!("`{{canta {nome} {bruto}}}`: {motivo}"))?,
+            };
+            if let Some(sobra) = partes.next() {
+                return Err(format!("`{{canta …}}` com sobra ({sobra:?})"));
+            }
+            Ok(Some(Diretiva::Canta {
+                nome: nome.to_owned(),
+                vezes,
+            }))
+        }
+        _ => Ok(None),
+    }
+}
+
+/// Lê `Nx` (ex.: `3x`) e devolve N. Fora do formato ou fora de `1x–99x`: erro.
+fn vezes_marcadas(bruto: &str) -> Result<usize, String> {
+    let Some(numero) = bruto.strip_suffix('x') else {
+        return Err(format!("repetição fora do formato `Nx` ({bruto:?})"));
+    };
+    let vezes: usize = numero
+        .parse()
+        .map_err(|_| format!("repetição não numérica ({bruto:?})"))?;
+    if vezes == 0 || vezes > 99 {
+        return Err(format!("repetição {bruto} fora da faixa 1x–99x"));
+    }
+    Ok(vezes)
+}
+
+/// Separa o sufixo `(Nx)` do fim da linha: a linha é cantada `N` vezes seguidas.
+///
+/// Só o formato exato `(Nx)` é marcador — `(Aleluia)` e `(x)` ficam no texto,
+/// porque parêntese é coisa que a letra tem de verdade.
+fn separar_sufixo_de_repeticao(linha: &str) -> Result<(String, usize), String> {
+    let limpa = linha.trim_end();
+    if !limpa.ends_with(')') {
+        return Ok((limpa.to_owned(), 1));
+    }
+    let Some(abre) = limpa.rfind('(') else {
+        return Ok((limpa.to_owned(), 1));
+    };
+    let dentro = &limpa[abre + 1..limpa.len() - 1];
+    // Sem `x` no fim, ou com o número vazio, não é marcador: é parêntese de letra.
+    let Some(digitos) = dentro.strip_suffix('x') else {
+        return Ok((limpa.to_owned(), 1));
+    };
+    if digitos.is_empty() || !digitos.chars().all(|c| c.is_ascii_digit()) {
+        return Ok((limpa.to_owned(), 1));
+    }
+    let vezes = vezes_marcadas(dentro)?;
+    let texto = limpa[..abre].trim_end().to_owned();
+    if texto.is_empty() {
+        return Err(format!("`({dentro})` sem linha para repetir"));
+    }
+    Ok((texto, vezes))
+}
+
+/// Expande a letra para a **ordem cantada**, resolvendo as diretivas de
+/// repetição. Sem diretiva nenhuma, devolve as linhas como estão — o texto que
+/// já vinha na ordem cantada continua valendo.
+fn ordem_cantada(texto: &str) -> Result<Vec<String>, ErroDeLetra> {
+    let mut blocos: Vec<(String, Vec<String>)> = Vec::new();
+    let mut aberto: Option<(String, Vec<String>)> = None;
+    let mut saida: Vec<String> = Vec::new();
+    for (i, bruta) in texto.lines().enumerate() {
+        let numero_da_linha = i + 1;
+        let limpa = bruta.trim();
+        if limpa.is_empty() || limpa.starts_with('#') {
+            continue;
+        }
+        let erro = |motivo: String| ErroDeLetra {
+            linha: numero_da_linha,
+            motivo,
+        };
+        if limpa.starts_with('{') && limpa.ends_with('}') {
+            let diretiva = match ler_diretiva(&limpa[1..limpa.len() - 1]) {
+                Ok(diretiva) => diretiva,
+                Err(motivo) => return Err(erro(motivo)),
+            };
+            match diretiva {
+                None => continue, // metadado de ChordPro
+                Some(Diretiva::AbreBloco(nome)) => {
+                    if let Some((nome_aberto, _)) = &aberto {
+                        return Err(erro(format!(
+                            "`{{bloco {nome}}}` dentro do bloco {nome_aberto:?}: blocos não aninham"
+                        )));
+                    }
+                    if blocos.iter().any(|(existente, _)| existente == &nome) {
+                        return Err(erro(format!(
+                            "bloco {nome:?} definido duas vezes — `{{canta {nome}}}` ficaria ambíguo"
+                        )));
+                    }
+                    aberto = Some((nome, Vec::new()));
+                }
+                Some(Diretiva::FechaBloco) => {
+                    let Some((nome, linhas)) = aberto.take() else {
+                        return Err(erro("`{fim}` sem `{bloco …}` aberto".to_owned()));
+                    };
+                    if linhas.is_empty() {
+                        return Err(erro(format!(
+                            "bloco {nome:?} sem linha — `{{canta {nome}}}` não teria o que cantar"
+                        )));
+                    }
+                    // O bloco é cantado onde é DEFINIDO, e de novo em cada
+                    // `{canta …}`: a definição é posição na música, não só nome.
+                    saida.extend(linhas.iter().cloned());
+                    blocos.push((nome, linhas));
+                }
+                Some(Diretiva::Canta { nome, vezes }) => {
+                    if aberto.is_some() {
+                        return Err(erro(format!(
+                            "`{{canta {nome}}}` dentro de um bloco: feche com `{{fim}}` primeiro"
+                        )));
+                    }
+                    let Some((_, linhas)) = blocos.iter().find(|(existente, _)| existente == &nome)
+                    else {
+                        return Err(erro(format!(
+                            "bloco {nome:?} cantado antes de ser definido — defina com `{{bloco {nome}}}`"
+                        )));
+                    };
+                    for _ in 0..vezes {
+                        saida.extend(linhas.iter().cloned());
+                    }
+                }
+            }
+            continue;
+        }
+        // Se for só um bloco entre colchetes (nome de seção), não é letra.
+        let sem_acordes = sem_colchetes(limpa);
+        if sem_acordes.trim().is_empty() {
+            continue;
+        }
+        let (linha_de_letra, vezes) = separar_sufixo_de_repeticao(&sem_acordes).map_err(&erro)?;
+        if let Some((_, linhas)) = aberto.as_mut() {
+            for _ in 0..vezes {
+                linhas.push(linha_de_letra.clone());
+            }
+        } else {
+            for _ in 0..vezes {
+                saida.push(linha_de_letra.clone());
+            }
+        }
+    }
+    if let Some((nome, _)) = aberto {
+        return Err(ErroDeLetra {
+            linha: texto.lines().count(),
+            motivo: format!("`{{bloco {nome}}}` sem `{{fim}}`"),
+        });
+    }
+    Ok(saida)
 }
 
 /// Busca no corpus de domínio público embutido, pelo título.

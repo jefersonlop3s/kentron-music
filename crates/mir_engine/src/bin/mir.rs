@@ -11,6 +11,13 @@
 //! cargo run -p mir_engine -- musica.wav --chordpro --letra letra.txt    # letra do usuário
 //!   [--licenca "<o que o usuário informar>"] [--gravacao "<descrição>|<ano>|<titular>"]
 //! cargo run -p mir_engine -- musica.wav --chordpro --letra l.txt --extraida-por "José"
+//!
+//! A letra do usuário pode declarar a **ordem cantada**: `{bloco refrao}` …
+//! `{fim}` define um bloco (cantado onde é definido), `{canta refrao 3x}` canta
+//! o bloco de novo e o sufixo `(2x)` repete a linha. A cifra/letra de qualquer
+//! fonte traz as linhas **distintas** e a gravação **repete** — sem isso o
+//! refrão é alinhado a um trecho onde ele não é cantado. Repetição malformada
+//! **reprova** com a linha do arquivo, em vez de sumir em silêncio.
 //! cargo run -p mir_engine -- --listar-hinos                             # fichas do corpus
 //! cargo run -p mir_engine -- --auditar-corpus                            # confere as fichas
 //! cargo run -p mir_engine -- --listar-fichas                             # fichas do hinário + resposta
@@ -257,17 +264,29 @@ fn main() -> ExitCode {
     let licenca = valor_de("--licenca");
     let letra: Option<Letra> = if let Some(caminho_letra) = valor_de("--letra") {
         match std::fs::read_to_string(&caminho_letra) {
-            Ok(texto) => {
-                let mut letra = lyrics::do_usuario(&texto, licenca.clone());
-                if let Some(responsavel) = &extraida_por {
-                    // Ato do usuário: a cifra nasce privada no grupo (ADR-0012).
-                    letra.origem = Origem::ExtraidaPeloUsuario {
-                        responsavel: responsavel.clone(),
-                        obra: None,
-                    };
+            Ok(texto) => match lyrics::do_usuario(&texto, licenca.clone()) {
+                Ok(mut letra) => {
+                    if let Some(responsavel) = &extraida_por {
+                        // Ato do usuário: a cifra nasce privada no grupo (ADR-0012).
+                        letra.origem = Origem::ExtraidaPeloUsuario {
+                            responsavel: responsavel.clone(),
+                            obra: None,
+                        };
+                    }
+                    // O que o motor entendeu da ordem cantada, dito em voz alta:
+                    // sem isto, um marcador que não expande passa por acerto.
+                    eprintln!(
+                        "letra: {} linha(s) na ordem cantada ({} no texto)",
+                        letra.linhas.len(),
+                        texto.lines().count()
+                    );
+                    Some(letra)
                 }
-                Some(letra)
-            }
+                Err(erro) => {
+                    eprintln!("erro na letra {caminho_letra:?}: {erro}");
+                    return ExitCode::FAILURE;
+                }
+            },
             Err(erro) => {
                 eprintln!("erro ao ler a letra {caminho_letra:?}: {erro}");
                 return ExitCode::FAILURE;
