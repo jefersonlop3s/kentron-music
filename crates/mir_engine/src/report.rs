@@ -137,7 +137,11 @@ impl Report {
         // A razão vem junto: correlação alta com margem baixa é decisão frágil,
         // e quem lê precisa saber disso para não tratar como certeza.
         let segundo = self.tonalidade.segunda_nome.as_deref().unwrap_or("?");
-        let fragil = if self.tonalidade.margem < 0.10 { " · DECISÃO FRÁGIL" } else { "" };
+        let fragil = if self.tonalidade.margem < 0.10 {
+            " · DECISÃO FRÁGIL"
+        } else {
+            ""
+        };
         texto.push_str(&format!(
             "tonalidade {} · correlação {:.2} · margem {:.2} · segunda {} ({:.2}){fragil}\n",
             self.tonalidade.rotulo(),

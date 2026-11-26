@@ -83,7 +83,11 @@ pub fn analisar_com_stems(
         let spectro_stem = Spectrogram::new(&audio, 4096, 1024);
         let resultado = percussao::medir(&spectro_stem, taxa, cortes);
         let pecas_map = pecas::identificar(&spectro_stem, taxa);
-        (Some(resultado), Some(pecas_map), Some(caminho.to_path_buf()))
+        (
+            Some(resultado),
+            Some(pecas_map),
+            Some(caminho.to_path_buf()),
+        )
     } else {
         (None, None, None)
     };
@@ -131,9 +135,7 @@ fn separar_stems(audio_path: &Path, output_dir: &Path) -> Result<(), String> {
         .map(|s| s.to_string_lossy().to_string())
         .unwrap_or_else(|| "output".to_owned());
 
-    eprintln!(
-        "🧠 separando bateria com Demucs (pode levar alguns segundos)..."
-    );
+    eprintln!("🧠 separando bateria com Demucs (pode levar alguns segundos)...");
 
     let status = Command::new(python)
         .arg("-m")
@@ -158,8 +160,14 @@ fn separar_stems(audio_path: &Path, output_dir: &Path) -> Result<(), String> {
     // A estrutura de diretórios varia: algumas versões do Demucs usam
     // `htdemucs` (sem `_6s`) e outras `htdemucs_6s`. Testamos ambas.
     let candidatos = [
-        output_dir.join("htdemucs_6s").join(&stem_name).join("drums.wav"),
-        output_dir.join("htdemucs").join(&stem_name).join("drums.wav"),
+        output_dir
+            .join("htdemucs_6s")
+            .join(&stem_name)
+            .join("drums.wav"),
+        output_dir
+            .join("htdemucs")
+            .join(&stem_name)
+            .join("drums.wav"),
     ];
     let mut encontrado = None;
     for cand in &candidatos {
@@ -170,9 +178,8 @@ fn separar_stems(audio_path: &Path, output_dir: &Path) -> Result<(), String> {
     }
     if let Some(origem) = encontrado {
         let destino = output_dir.join("drums.wav");
-        std::fs::rename(&origem, &destino).map_err(|e| {
-            format!("falha ao mover {origem:?} para {destino:?}: {e}")
-        })?;
+        std::fs::rename(&origem, &destino)
+            .map_err(|e| format!("falha ao mover {origem:?} para {destino:?}: {e}"))?;
         // Remove diretório temporário do Demucs
         let _ = std::fs::remove_dir_all(output_dir.join("htdemucs_6s"));
         let _ = std::fs::remove_dir_all(output_dir.join("htdemucs"));
@@ -213,8 +220,8 @@ mod tests {
     fn sem_caminho_devolve_so_o_mix() {
         let audio = audio_sintetico(22_050, 4.0);
         let spectro = Spectrogram::new(&audio, 4096, 1024);
-        let resultado =
-            analisar_com_stems(&spectro, 22_050, &[], None, None).expect("análise sem stems falhou");
+        let resultado = analisar_com_stems(&spectro, 22_050, &[], None, None)
+            .expect("análise sem stems falhou");
 
         assert!(
             resultado.com_stems.is_none(),

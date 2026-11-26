@@ -163,7 +163,8 @@ pub fn analyze_com_com_audio(
         &cortes_harmonicos,
         drums_path,
         audio_path,
-    ).unwrap_or_else(|_| stems::ComparativoStems {
+    )
+    .unwrap_or_else(|_| stems::ComparativoStems {
         mix: bumbo_caixa.clone(),
         com_stems: None,
         pecas: None,

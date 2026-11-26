@@ -12,7 +12,7 @@ use mir_engine::{Opts, analyze_com_letra};
 use notation_bundle::chordpro::{ChordProParser, write};
 
 mod common;
-use common::{INTRO_S, cantar_quatro_frases, intro_quieta_e_canto};
+use common::{INTRO_S, cantar_quatro_frases, intro_e_canto_repetido, intro_quieta_e_canto};
 
 #[test]
 fn corpus_de_dominio_publico_tem_procedencia_e_recusa_o_que_nao_pode() {
@@ -212,7 +212,8 @@ fn silaba_recua_so_o_ataque_que_existe() {
 #[test]
 fn letra_do_usuario_perde_acorde_e_metadado() {
     let letra =
-        lyrics::ler_do_usuario("{title: X}\n[C]Santo, [G]santo\n# comentário\n\n[Verse]\nDeus\n");
+        lyrics::ler_do_usuario("{title: X}\n[C]Santo, [G]santo\n# comentário\n\n[Verse]\nDeus\n")
+            .expect("sem diretiva de repetição, nada pode reprovar");
     assert_eq!(letra.linhas, vec!["Santo, santo", "Deus"]);
     assert_eq!(letra.origem, Origem::DoUsuario { licenca: None });
 }
@@ -356,13 +357,210 @@ fn alinha_a_letra_as_frases_e_poe_o_acorde_na_silaba() {
 /// da própria introdução. O piso passou a ser a **mediana** da faixa vocal na
 /// música, e frase curta demais para caber uma linha (menos de 1,5 s) deixou de
 /// receber uma. Este teste critica o observável: **onde a primeira linha cai**.
+/// O texto declara a repetição; o motor expande para a **ordem cantada**.
+///
+/// É o insumo que faltava: a cifra/letra de qualquer fonte traz as linhas
+/// **distintas**, e a gravação repete seções.
+#[test]
+fn ordem_cantada_expande_o_bloco_repetido() {
+    let letra = lyrics::do_usuario(
+        "{title: prova}\n\
+         {bloco refrao}\n\
+         primeira linha do refrao\n\
+         segunda linha do refrao\n\
+         {fim}\n\
+         {bloco verso}\n\
+         linha do verso\n\
+         {fim}\n\
+         {canta refrao}\n\
+         {canta verso 2x}\n",
+        None,
+    )
+    .expect("diretivas bem formadas");
+    assert_eq!(
+        letra.linhas,
+        vec![
+            "primeira linha do refrao",
+            "segunda linha do refrao",
+            "linha do verso",
+            "primeira linha do refrao",
+            "segunda linha do refrao",
+            "linha do verso",
+            "linha do verso",
+        ],
+        "o bloco é cantado onde é definido e de novo em cada `{{canta}}`"
+    );
+    // O sufixo `(Nx)` é o mesmo mecanismo, no nível da linha — e o que não é o
+    // marcador exato fica no texto (parêntese é coisa que a letra tem de verdade).
+    let sufixo = lyrics::ler_do_usuario("Teu santo nome (2x)\nGlória (Aleluia)\nDeus (x)\n")
+        .expect("sufixo bem formado");
+    assert_eq!(
+        sufixo.linhas,
+        vec![
+            "Teu santo nome",
+            "Teu santo nome",
+            "Glória (Aleluia)",
+            "Deus (x)"
+        ]
+    );
+    // Sem diretiva, nada muda: o texto que já vem na ordem cantada continua valendo.
+    let sem_marcador = lyrics::ler_do_usuario("Deus\né bom\n").expect("sem diretiva");
+    assert_eq!(sem_marcador.linhas, vec!["Deus", "é bom"]);
+}
+
+/// Diretiva malformada **reprova** — não some.
+///
+/// Cada defeito abaixo, ignorado em silêncio, devolveria a letra com menos
+/// linhas que o canto: é exatamente o defeito que o vocabulário conserta, e um
+/// conserto que falha calado é pior que nenhum.
+#[test]
+fn diretiva_de_repeticao_malformada_reprova_em_vez_de_sumir() {
+    let casos = [
+        ("{bloco}\nDeus\n{fim}\n", "sem nome"),
+        ("{bloco refrao}\nDeus\n", "sem `{fim}`"),
+        ("{bloco refrao}\n{fim}\n", "sem linha"),
+        ("Deus\n{fim}\n", "sem `{bloco"),
+        ("{canta refrao}\n", "antes de ser definido"),
+        (
+            "{bloco r}\nDeus\n{fim}\n{bloco r}\nDeus\n{fim}\n",
+            "duas vezes",
+        ),
+        ("{bloco r}\n{bloco s}\nDeus\n{fim}\n", "aninham"),
+        ("{bloco r}\n{canta r}\nDeus\n{fim}\n", "dentro de um bloco"),
+        (
+            "{bloco r}\nDeus\n{fim}\n{canta s}\n",
+            "antes de ser definido",
+        ),
+        ("{canta}\n", "sem nome"),
+        ("{bloco r}\nDeus\n{fim}\n{canta r 0x}\n", "faixa"),
+        ("{bloco r}\nDeus\n{fim}\n{canta r 2}\n", "formato"),
+        ("{bloco r}\nDeus\n{fim}\n{canta r x}\n", "não numérica"),
+        ("Deus (0x)\n", "faixa"),
+        ("(2x)\n", "sem linha para repetir"),
+    ];
+    for (texto, esperado) in casos {
+        let erro =
+            lyrics::do_usuario(texto, None).expect_err(&format!("deveria reprovar: {texto:?}"));
+        assert!(
+            erro.motivo.contains(esperado),
+            "motivo {:?} não fala de {esperado:?}",
+            erro.motivo
+        );
+        assert!(erro.linha >= 1, "o erro tem de apontar a linha do texto");
+    }
+    // A linha do erro é a da diretiva, não a primeira do arquivo.
+    let erro = lyrics::do_usuario("{bloco r}\nDeus\n{fim}\n{canta s}\n", None)
+        .expect_err("bloco inexistente");
+    assert_eq!(erro.linha, 4);
+    assert_eq!(
+        erro.to_string(),
+        "linha 4: bloco \"s\" cantado antes de ser definido — defina com `{bloco s}`"
+    );
+}
+
+/// O GAP das repetições, medido no caso sintético: a fonte traz as linhas
+/// **distintas** e a gravação repete (A B A B, depois de uma introdução
+/// instrumental sem canto).
+///
+/// Sem a ordem cantada, o motor tem duas linhas para **quatro** ocorrências: o
+/// refrão não existe onde ele volta. Com a ordem cantada, cada ocorrência cai na
+/// sua frase — e a segunda do refrão **não** cai na introdução.
+#[test]
+fn refrao_repetido_cai_na_segunda_ocorrencia_e_nao_na_introducao() {
+    let (audio, inicios) = intro_e_canto_repetido();
+    let letra = lyrics::do_usuario(
+        "{bloco refrao}\nprimeira linha do refrao\n{fim}\n\
+         {bloco verso}\nlinha do verso\n{fim}\n\
+         {canta refrao}\n{canta verso}\n",
+        None,
+    )
+    .expect("diretivas bem formadas");
+    assert_eq!(
+        letra.linhas.len(),
+        4,
+        "o texto distinto (2 linhas) virou ordem cantada (4 ocorrências)"
+    );
+
+    let opts = Opts {
+        trecho_minimo_s: 4.0,
+        ..Opts::default()
+    };
+    // O ANTES, medido no mesmo regime: com as linhas distintas e sem a ordem
+    // cantada, quantas ocorrências o motor alinha? É o insumo que a fonte entrega
+    // — e é ele que o mecanismo novo tem de substituir, não só superar.
+    let distintas = lyrics::do_usuario("primeira linha do refrao\nlinha do verso\n", None)
+        .expect("letra distinta, sem diretiva");
+    let (_, so_distintas) = analyze_com_letra(&audio, &opts, Some(&distintas), None, None);
+    eprintln!(
+        "sem ordem cantada: {} ocorrência(s) alinhada(s) em {:?}; são 4 cantadas, \
+         a última em {:.1}s",
+        so_distintas.len(),
+        so_distintas.iter().map(|l| l.inicio_s).collect::<Vec<_>>(),
+        inicios[inicios.len() - 1]
+    );
+
+    let (_, alinhadas) = analyze_com_letra(&audio, &opts, Some(&letra), None, None);
+    eprintln!(
+        "com ordem cantada: {} ocorrência(s) em {:?} (verdade {inicios:?})",
+        alinhadas.len(),
+        alinhadas.iter().map(|l| l.inicio_s).collect::<Vec<_>>()
+    );
+    assert_eq!(
+        alinhadas.len(),
+        4,
+        "ocorrências alinhadas: {:?}",
+        alinhadas
+            .iter()
+            .map(|l| (l.inicio_s, l.texto.as_str()))
+            .collect::<Vec<_>>()
+    );
+    for (linha, &verdade) in alinhadas.iter().zip(&inicios) {
+        assert!(
+            (linha.inicio_s - verdade).abs() <= 0.6,
+            "{:?} caiu em {:.1}s e é cantada em {verdade:.1}s",
+            linha.texto,
+            linha.inicio_s
+        );
+    }
+
+    // A verdade do teste, explícita: a **segunda** ocorrência do refrão está
+    // depois da primeira e fora da introdução (que vai até INTRO_S).
+    let segunda = &alinhadas[2];
+    assert_eq!(segunda.texto, "primeira linha do refrao");
+    assert!(
+        segunda.inicio_s > INTRO_S,
+        "a segunda ocorrência do refrão caiu dentro da introdução instrumental \
+         ({:.1}s < {INTRO_S:.1}s)",
+        segunda.inicio_s
+    );
+    assert!(
+        segunda.inicio_s > alinhadas[0].inicio_s + 4.0,
+        "a segunda ocorrência colou na primeira: {:.1}s e {:.1}s",
+        segunda.inicio_s,
+        alinhadas[0].inicio_s
+    );
+    assert!(
+        segunda.repetida,
+        "a segunda ocorrência é repetição de fato, e o motor tem de dizer isso"
+    );
+}
+
+/// A introdução instrumental quieta **não** pode receber linha da letra.
+///
+/// Falha de 2026-11-25, medida com gabarito humano numa música real (mediana de
+/// 9,7 s, com o refrão caindo dentro da introdução): o detector de frase vocal
+/// abria frase na introdução porque o piso era 2% do pico — **abaixo** do nível
+/// da própria introdução. O piso passou a ser a **mediana** da faixa vocal na
+/// música, e frase curta demais para caber uma linha (menos de 1,5 s) deixou de
+/// receber uma. Este teste critica o observável: **onde a primeira linha cai**.
 #[test]
 fn introducao_instrumental_quieta_nao_recebe_linha() {
     let audio = intro_quieta_e_canto();
     let letra = lyrics::do_usuario(
         "primeira linha cantada\nsegunda linha cantada\nterceira linha cantada\n",
         None,
-    );
+    )
+    .expect("letra sem diretiva de repetição");
     let opts = Opts {
         trecho_minimo_s: 4.0,
         ..Opts::default()
