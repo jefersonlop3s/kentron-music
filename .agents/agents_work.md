@@ -27,7 +27,32 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
-Nenhum.
+### cline/gates-verdes — `main` de volta ao verde (fmt + clippy, partição por crate)
+- **Início**: 2026-11-26 21:04 (UTC) · **Última atualização**: 2026-11-26 21:04 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `c9489d8`) · **Branches**: `chore/gates-verdes` · **Worktrees**: `~/.cline/worktrees/1bf9c/app-music`
+- **Demanda**: `./scripts/ci-local.sh` (portão principal da ADR-0004) **não passa na `main`**: `cargo fmt --all -- --check` → exit=1 em **14 arquivos** e `cargo clippy -p notation_bundle --all-targets -- -D warnings` → exit=101 (1 lint, `musicxml.rs:882`). O `pre-push` escopado ao que o push toca mascarava a dívida.
+- **Paths sob edição**: `crates/notation_bundle/src/musicxml.rs`, `crates/notation_bundle/src/atex.rs`, `crates/notation_bundle/src/lib.rs` (fmt + o lint)
+- **Status**: em andamento · **PRs**: —
+
+### cline-mir/letra-ordem-cantada — GAP das repetições: `--letra` na ordem cantada
+- **Início**: 2026-11-26 21:04 (UTC) · **Última atualização**: 2026-11-26 21:04 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `c9489d8`) · **Branches**: `feat/letra-ordem-cantada` · **Worktrees**: `~/Develop/Projects/app-music-wt/letra-repeticao`
+- **Demanda**: a cifra/letra de qualquer fonte traz as linhas **distintas** e a gravação **repete**; sem a ordem cantada, o refrão é alinhado à introdução instrumental (0–27,6 s, sem canto) e "acorde sobre a sílaba" **não é medível por construção**. Aceitar a ordem cantada com repetições **ou** detectar a repetição. Fecha também a dívida de `cargo fmt`/`clippy` **do próprio crate**.
+- **Paths sob edição**: `crates/mir_engine/**` (inclui `src/lyrics.rs`, `src/sheet.rs`, `src/bin/mir.rs`, `tests/letra.rs`, `tests/alinhamento.rs`, `tests/common/mod.rs`)
+- **Status**: em andamento · **PRs**: —
+
+### cline-app/agenda-no-app — agenda do culto na interface (leitura) + ponte
+- **Início**: 2026-11-26 21:04 (UTC) · **Última atualização**: 2026-11-26 21:04 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `c9489d8`) · **Branches**: `feat/agenda-no-app` · **Worktrees**: `~/Develop/Projects/app-music-wt/agenda-palco`
+- **Demanda**: o modelo de agenda é provado no núcleo (`bundle_store::load_setlists`, `Setlist`/`Execucao`, `schema_version` 2 com migração), mas **a ponte não expõe nada de agenda** — medido: `bridge.rs` tem só cifra/biblioteca. Primeiro incremento: expor a leitura da agenda (`listar_agenda`) na ponte, regerar os bindings (frb 2.13.0) e criar a tela que lista os eventos e abre o setlist no Modo Palco. "Repetir a agenda anterior com versões novas" fica para o incremento seguinte.
+- **Paths sob edição**: `crates/kentron_ffi/**` (inclui `src/bridge.rs` e o `frb_generated.rs` regerado), `apps/kentron_app/**`, `packages/core_l10n/lib/l10n/*.arb`
+- **Status**: em andamento · **PRs**: —
+
+## 📌 Notas entre agentes
+
+- **Partição de paths feita para não haver colisão** (decidida em 2026-11-26, ao abrir as três frentes): `notation_bundle` é da `gates-verdes`; `mir_engine` é da `letra-ordem-cantada`; `kentron_ffi` + `apps/kentron_app` + `core_l10n` são da `agenda-no-app`. **Nenhum arquivo é compartilhado** — o `fmt` da `main` é pago em três pedaços, um por dono do crate.
+- **`docs/PENDING.md`, `docs/CONCLUSION.md` e `CHANGELOG.md` ficam com o integrador**: o `CHANGELOG` é reescrito por todas as sessões e o merge já apagou seções duas vezes (gate `.githooks/check_changelog.py`, 2026-11-26). Cada frente entrega o texto pronto no relatório; o integrador escreve nos três arquivos, uma frente por vez.
+- **Ninguém integra na `main` sozinho**: cada frente entrega a branch + a prova; a integração (`--ff-only`) e o fechamento documental são do integrador, para a `main` andar uma vez por frente.
 
 ## 🟡 Interrompido / órfão
 
