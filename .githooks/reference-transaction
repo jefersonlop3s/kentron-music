@@ -89,8 +89,7 @@ fi
 
 # Here-string, nunca `printf | grep -q`: com pipefail e dado grande o grep -q
 # fecha o pipe cedo e o pipeline "falha" (medido 200/200) — o gate seria pulado.
-if [ -f "$AQUI/check_skills.py" ] && grep -qE 'SKILL\.md$' <<<"$mudou"; then
-    if ! saida=$(python3 "$AQUI/check_skills.py" --rev "$novo" ${atual:+--base-rev "$atual"} 2>&1); then
+if [ -f "$AQUI/check_skills.py" ] && grep -qE 'SKILL\.md$' <<<"$mudou"; then    if ! saida=$(python3 "$AQUI/check_skills.py" --rev "$novo" ${atual:+--base-rev "$atual"} 2>&1); then
         bloqueia "Gate skills reprovou a árvore nova:\n$saida"
     fi
 fi
@@ -126,6 +125,30 @@ if [ -n "$mudou_md" ] && [ ${#verificador[@]} -gt 0 ]; then
     if ! saida=$(cd "$tmp" && env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE python3 "${verificador[@]}" 2>&1); then
         bloqueia "Gate docrefs reprovou a árvore nova:\n$saida"
     fi
+fi
+
+# =========================================================================
+# Gate changelog — o movimento da main NÃO pode APAGAR seção do CHANGELOG
+# =========================================================================
+# Caso de origem (2026-11-26): o merge `71a0b1b` apagou duas seções e uma
+# subseção minhas do `CHANGELOG.md`, e o `origin/main` ficou sem elas. O `git`
+# não acusa — deleção de um lado, sem mudança do outro, é aplicada — e
+# `git log A..B` continua dizendo que está tudo lá, porque o que se perde é
+# conteúdo dentro de arquivo. A guarda da ref é o único ponto por onde TODO
+# movimento da main passa (merge, update-ref, reset), e por isso o gate vive
+# aqui; o pre-commit cobre o mesmo para o commit na branch.
+# Exceção consciente, no padrão do arquivo: HARNESS_SKIP=changelog
+if [ -n "$atual" ] && grep -qx 'CHANGELOG\.md' <<<"$mudou" && [ -f "$AQUI/check_changelog.py" ]; then
+    case ",${HARNESS_SKIP:-}," in
+        *,changelog,*|*,all,*)
+            echo "main-ref: changelog pulado (HARNESS_SKIP)" >&2
+            ;;
+        *)
+            if ! saida=$(python3 "$AQUI/check_changelog.py" --base "$atual" --novo "$novo" 2>&1); then
+                bloqueia "Gate changelog: este movimento da main APAGA seção do CHANGELOG.\n$saida"
+            fi
+            ;;
+    esac
 fi
 
 exit 0

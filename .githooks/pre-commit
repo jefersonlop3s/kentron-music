@@ -83,6 +83,30 @@ if grep -qE '\.md$|check_doc_refs\.py' <<<"$staged"; then
 fi
 
 # =========================================================================
+# Gate changelog — o commit não pode APAGAR seção do CHANGELOG
+# =========================================================================
+# Caso de origem (2026-11-26): um merge apagou seções do `CHANGELOG.md` e o
+# `git log A..B` continuou dizendo que estava tudo lá — o que se perde é
+# conteúdo dentro de arquivo. A guarda da ref cobre a `main`; aqui se cobre o
+# commit, inclusive numa branch. Regra: título `## ` que existe no HEAD tem de
+# existir no index (mover e acrescentar preservam; renomear/consolidar exige a
+# exceção consciente).
+# Exceção consciente, no padrão do arquivo: HARNESS_SKIP=changelog
+if grep -qx 'CHANGELOG\.md' <<<"$staged" && [ -f "$AQUI/check_changelog.py" ]; then
+	if git rev-parse -q --verify HEAD >/dev/null 2>&1; then
+		if case ",${HARNESS_SKIP:-}," in *,changelog,*|*,all,*) true ;; *) false ;; esac; then
+			echo 'changelog: verificacao pulada (HARNESS_SKIP)'
+		elif ! python3 "$AQUI/check_changelog.py" --base HEAD --novo INDEX; then
+			echo ""
+			echo -e "${RED}❌ COMMIT BLOQUEADO — o commit APAGA seção do CHANGELOG${NC}"
+			echo -e "${YELLOW}Se a exceção for consciente:  HARNESS_SKIP=changelog git commit ...${NC}"
+			echo ""
+			exit 1
+		fi
+	fi
+fi
+
+# =========================================================================
 # Gate main — no repositório de coordenação, commit direto na `main` é só o do quadro
 # =========================================================================
 # Branch por agente vale também aqui: o trabalho vai numa branch e entra na main

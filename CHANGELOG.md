@@ -1,4 +1,13 @@
 # Changelog
+## [fix] O merge não pode mais apagar seção do `CHANGELOG` (2026-11-26)
+
+Caso de origem, medido: o merge `71a0b1b` apagou **duas seções e uma subseção** minhas do `CHANGELOG.md`, e o `origin/main` ficou sem elas até a conferência de hoje. O `git` **não acusa** — a deleção de um lado, sem mudança do outro, é aplicada — e `git log A..B` continua dizendo que está tudo lá, porque o que se perde é **conteúdo dentro de arquivo**, não commit.
+
+- **`.githooks/check_changelog.py`** recusa quando um título `## ` da base não existe no novo. Compara **conjunto**, não contagem: no caso de origem o total de títulos **aumentou** (o merge trouxe oito de outra sessão) enquanto três entradas minhas sumiam — uma regra por contagem teria deixado passar, e foi o que a primeira versão fazia.
+- **Duas portas:** a **guarda da ref** (`reference-transaction`), por onde passa **todo** movimento da `main` — merge, `update-ref`, reset —, e o **`pre-commit`**, para o commit (inclusive em branch). Escape consciente: `HARNESS_SKIP=changelog`.
+- **Provado no negativo, com o incidente real:** `check_changelog.py --base 54d218a --novo 71a0b1b` → **rc=1**, nomeando as seções perdidas. E as provas das portas: o `pre-commit` **reprovou** um commit com o título removido (rc=1) e **passou** com ele no lugar (rc=0); `git update-ref refs/heads/main <commit-com-perda>` foi **recusado pela guarda da ref**, com a `main` **intacta** (`d013579` antes e depois).
+- **Limite declarado:** o gate cobre títulos `## ` (seções). Subseções `### ` **não** entram — são renomeadas e reorganizadas com frequência, e a subseção perdida no incidente teve o conteúdo preservado no `CONCLUSION`/`PENDING`.
+
 ## [spike] Benchmark sintético do alinhamento (verdade conhecida) e mais três mecanismos refutados (2026-11-26)
 
 O alinhamento tinha **um** gabarito — 40 linhas marcadas à mão numa música real — e ele vive **fora** do repositório. Sem gabarito, qualquer tentativa vira ajuste no escuro. Faltava instrumento, então o instrumento foi construído:
