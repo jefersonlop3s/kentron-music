@@ -35,21 +35,18 @@ Nenhum.
 
 ## 🟢 Concluído recentemente
 
-### opencode/asr-timestamp — ASR: timestamp, áudio real, alinhamento e gates da main
-- **Início**: 2026-11-25 20:57 (UTC) · **Última atualização**: 2026-11-26 13:16 (UTC)
-- **Repositórios**: `kentron-music` · **Branches**: `spike/asr-timestamp-de-palavra`, `fix/gates-vermelhos-main`, `docs/audio-real-cantado`, `docs/video-karaoke-testado`, `fix/alinhamento-de-linha`, `spike/alinhamento-escala` — **todas integradas na `main` e removidas** · **Worktrees**: `~/Develop/Projects/app-music-wt/asr-timestamp`
-- **Demanda**: o dono propôs transcrição local (whisper) para o acorde cair "na sílaba exata"; a sessão mediu o que a proposta exige, usou dois vídeos que ele mandou como fonte de letra/cifra, corrigiu o alinhamento de linha contra um gabarito humano dele e destravou a `main` (que estava impushável).
-- **Paths sob edição**: nenhum (concluído e publicado em `origin/main` `f0cd92c`).
+### opencode/asr-timestamp — ASR, alinhamento, gates da main e o 0.7.3 do harness
+- **Início**: 2026-11-25 20:57 (UTC) · **Última atualização**: 2026-11-26 15:53 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `f801daf`) · `sovereign-harness` (`main` = `ce6bbb7`, **tag e Release `v0.7.3`**)
+- **Branches**: todas as minhas integradas e apagadas nos dois repos, local e remoto. Worktree `~/Develop/Projects/app-music-wt/asr-timestamp` (em `main`).
 - **Status**: concluído.
-- **PRs**: nenhum (push direto na `main`, sempre com a bateria verde).
+- **PRs**: `sovereign-harness` **#23** (fix do `pack-refs`) e **#24** (Release 0.7.3) — ambos *squash*, CI verde em ubuntu+macOS+tipos do OpenCode.
 
-**Feito (7 pushes):**
-- **Instrumentos** versionados: `scripts/medir-timestamp-asr.py` (verdade sintética conferida por energia + prova negativa, pt/en/es), `scripts/medir-alinhamento.py` (gabarito humano por caminho, fora do repo) e `scripts/medir-frases-lote.py` (plausibilidade em lote).
-- **Medições:** timestamp de palavra do whisper (DTW mediana **230–386 ms**, viés tardio sistemático, `medium` pior que `small` nos três idiomas; `t_dtw` é centésimos; `-dtw` desliga em silêncio sob flash-attn); **WER em voz cantada real** (recall 91,4%, 3,1% fora do vocabulário, sem loop — e o WER 0,50 do sintético era artefato da construção); **cifra × cifra humana** (tonalidade `G` bate; raiz certa em 93,4%; rótulo exato 29,2%); **dicionário × `--prompt`** (0,50→0,08 contra 0,42 — o erro dominante é fusão de palavras); **stem de voz NÃO conserta** o instrumento de acoplamento; **vídeo karaokê** não dá tempo de palavra.
-- **Correções:** alinhamento de linha **9,7 s → 1,0 s** (piso por proeminência global + frase curta sem linha), com teste no repo provado no negativo; **gates da `main`** (o `tr` do gate `test` montava crates como lixo; o `types` rodava no workspace inteiro; a exceção documentada do `semgrep`) e **11 lints** de clippy em `mir_engine`.
-- **GAPs registrados:** `exportar_onnx.py` quebrado (bag vs state_dict); letra precisa vir na ordem cantada; quatro caminhos de alinhamento medidos e rejeitados.
+**Feito (Kentron):** medições de ASR (timestamp de palavra; WER em voz cantada real; cifra × cifra humana; dicionário × `--prompt`); **alinhamento de linha 9,7 s → 1,0 s** (gabarito humano do dono) com benchmark sintético de verdade conhecida; **quatro gates consertados** (o `test` com `tr` errado, o `types` escopado, a exceção documentada do `semgrep`, o `CHANGELOG` que o merge apagava) e **o falso positivo do `pack-refs`**, reproduzido com 61 transações.
 
-**Aberto (no PENDING):** erro absoluto do timestamp em voz cantada (exige referência anotada à mão — decisão do dono); **frases de 20–133 s são a norma (21 de 24 músicas)** e cortá-las por sinal de voz não funcionou — o próximo mecanismo é usar as **seções** como camada intermediária; dívida de lint em `notation_bundle` (1 lint).
+**Feito (upstream):** o kit **distribuía** o hook com o mesmo bug (a checagem anterior tinha olhado o `.harness/` instalado, não os `templates/` — veredito corrigido com dado). Publicados o conserto, os casos **A11**, a skill **`guarda-de-transacao-de-ref`** e o bump para **0.7.3**.
+
+**Aberto (no `PENDING` do Kentron):** erro absoluto do timestamp em voz cantada (exige referência anotada à mão — decisão do dono); frases de 20–133 s são a norma (21 de 24) e cortá-las por sinal de voz não funcionou — o próximo mecanismo são as **seções**; dívida de `musicxml.rs` (44 linhas + 1 lint, de quem tocar `notation_bundle`).
 
 ### cline/0caf3 — ADR-0014 bloco 3: terça pela melodia
 - **Início:** 2026-11-22 15:40 (UTC) · **Última atualização:** 2026-11-22 16:32 (UTC)
