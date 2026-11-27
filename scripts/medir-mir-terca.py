@@ -53,7 +53,12 @@ def roda(binario: str, audio: str, cache: str | None) -> dict:
     caminho = None
     if cache:
         os.makedirs(cache, exist_ok=True)
-        chave = hashlib.sha1(audio.encode()).hexdigest()[:16]
+        # SHA-256, não SHA-1: o gate `semgrep` do pre-push bloqueia SHA-1
+        # (python.lang.security.insecure-hash-algorithms) e a troca é grátis —
+        # aqui o hash é só chave de cache do medidor, não assinatura. Efeito
+        # colateral declarado: as chaves antigas do cache deixam de casar e a
+        # medição roda de novo uma vez.
+        chave = hashlib.sha256(audio.encode()).hexdigest()[:16]
         caminho = os.path.join(cache, f"{chave}.json")
         if os.path.exists(caminho):
             with open(caminho) as fh:
