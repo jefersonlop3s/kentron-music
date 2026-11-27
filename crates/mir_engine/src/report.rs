@@ -35,6 +35,14 @@ pub struct MelodiaSegment {
     pub fracao_dominante: f32,
     /// Histograma por classe de altura (`0` = C).
     pub contagem: [usize; 12],
+    /// A melodia **confirma** a terça que o croma acrescentou?
+    ///
+    /// `None` quando não há o que confirmar (o croma não acrescentou terça).
+    /// `Some(false)` é o caso que importa: o croma devolveu o acorde inteiro e a
+    /// melodia, que é a outra testemunha, não mostra a terça — candidato a
+    /// "terça que não existe". É o risco do limiar, medido com um instrumento
+    /// independente do croma.
+    pub terca_confirmada: Option<bool>,
 }
 
 /// O baixo estimado num trecho de acorde.
@@ -177,6 +185,47 @@ impl Report {
         }
         // Stems: quando o stem de bateria está disponível, mostra a comparação
         // lado a lado, destacando as diferenças que interessam.
+        if !self.stems.dinamica.is_empty() {
+            // A dinâmica **por instrumento**: quem carrega o loudness da música e
+            // quem só preenche. Sai em ordem do mais forte para o mais fraco —
+            // ordenado por LUFS, que é a leitura útil, e não por nome de arquivo.
+            let mut ordenada = self.stems.dinamica.clone();
+            ordenada.sort_by(|a, b| {
+                b.lufs_integrado
+                    .partial_cmp(&a.lufs_integrado)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
+            let por_instrumento: Vec<String> = ordenada
+                .iter()
+                .map(|s| {
+                    if s.tem_conteudo() {
+                        format!("{} {:.1}", s.nome, s.lufs_integrado)
+                    } else {
+                        // Sem conteúdo: dizer o número como se fosse dinâmica de
+                        // instrumento seria apresentar silêncio como música.
+                        format!("{} sem conteúdo", s.nome)
+                    }
+                })
+                .collect();
+            texto.push_str(&format!(
+                "stems LUFS por instrumento (mono do leitor): {}\n",
+                por_instrumento.join(" · ")
+            ));
+            // O "mais fraco" ignora stem sem conteúdo: −61 LUFS não é o instrumento
+            // mais fraco da música, é um instrumento que não toca nela.
+            let com_conteudo: Vec<&crate::stems::StemDinamica> =
+                ordenada.iter().filter(|s| s.tem_conteudo()).collect();
+            if let (Some(forte), Some(fraco)) = (com_conteudo.first(), com_conteudo.last()) {
+                texto.push_str(&format!(
+                    "           mais forte {} ({:.1} LUFS) · mais fraco {} ({:.1} LUFS) · mix {:.1}\n",
+                    forte.nome,
+                    forte.lufs_integrado,
+                    fraco.nome,
+                    fraco.lufs_integrado,
+                    self.dynamics.lufs_integrado
+                ));
+            }
+        }
         if let Some(ref stem) = self.stems.com_stems {
             let diff_periodo = (self.stems.mix.periodo_bumbo_s - stem.periodo_bumbo_s).abs();
             let diff_68 = (self.stems.mix.escore_68 - stem.escore_68).abs();
@@ -213,6 +262,54 @@ impl Report {
             if !diffs.is_empty() {
                 texto.push_str(&format!("           diferenças: {}\n", diffs.join(" · ")));
             }
+        }
+        // A terça é a decisão que o croma mais erra, e até aqui ela era invisível
+        // no resumo. Sai com o número que decidiu (a razão medida) e com a
+        // testemunha independente: quantos trechos a melodia NÃO confirma.
+        let por_croma: Vec<&ChordSegment> = self
+            .chords
+            .iter()
+            .filter(|t| t.origem_terca == crate::chords::OrigemDaTerca::Croma)
+            .collect();
+        if !por_croma.is_empty() {
+            let mut razoes: Vec<f32> = por_croma.iter().map(|t| t.terca_razao).collect();
+            razoes.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            // A testemunha não é uma: o croma devolveu o acorde inteiro e a melodia
+            // (a) mostra outra classe — **contradiz** —, ou (b) não tem quadros com
+            // F0 suficientes para dizer nada — **não confirma por falta de dado**.
+            // Somar as duas num número só transformaria falta de dado em erro.
+            let mut contradita = 0;
+            let mut sem_dados = 0;
+            for (i, trecho) in self.chords.iter().enumerate() {
+                if trecho.origem_terca != crate::chords::OrigemDaTerca::Croma {
+                    continue;
+                }
+                let Some(m) = self.melodia.get(i) else {
+                    continue;
+                };
+                if (m.inicio_s - trecho.inicio_s).abs() >= 0.01 || m.terca_confirmada != Some(false)
+                {
+                    continue;
+                }
+                if m.quadros_com_f0 < crate::chords::MINIMO_DE_QUADROS {
+                    sem_dados += 1;
+                } else {
+                    contradita += 1;
+                }
+            }
+            texto.push_str(&format!(
+                "terça     {} trecho(s) pelo croma (razão mediana {:.2}) · {} contradito(s) pela \
+                 melodia · {} sem F0 para confirmar{}\n",
+                por_croma.len(),
+                razoes[razoes.len() / 2],
+                contradita,
+                sem_dados,
+                if contradita > 0 {
+                    " · DECISÃO DO CROMA SEM TESTEMUNHA"
+                } else {
+                    ""
+                }
+            ));
         }
         texto.push_str("\nestrutura (rótulo é repetição; papel é inferência):\n");
         for secao in &self.sections {

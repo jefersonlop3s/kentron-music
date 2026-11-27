@@ -121,17 +121,35 @@ pub fn analyze_com_com_audio(
         .iter()
         .map(|trecho| {
             let contagem = melodia.contagem(trecho.inicio_s, trecho.fim_s);
+            let com_f0 = melodia.quadros_com_f0(trecho.inicio_s, trecho.fim_s);
             let dominante = melodia.dominante(trecho.inicio_s, trecho.fim_s);
             report::MelodiaSegment {
                 inicio_s: trecho.inicio_s,
                 fim_s: trecho.fim_s,
-                quadros_com_f0: melodia.quadros_com_f0(trecho.inicio_s, trecho.fim_s),
+                quadros_com_f0: com_f0,
                 dominante: dominante
                     .map(|(classe, _, _)| chords::nome(classe, chords::Qualidade::Maior)),
                 fracao_dominante: dominante.map_or(0.0, |(_, vezes, total_f0)| {
                     vezes as f32 / total_f0.max(1) as f32
                 }),
                 contagem,
+                // A testemunha independente da terça do croma: se o croma devolveu
+                // o acorde inteiro (`Croma`), a melodia mostra a mesma terça? O
+                // critério é o mesmo que `com_a_melodia` usa para promover — não
+                // há dois limiares para a mesma pergunta.
+                terca_confirmada: (trecho.origem_terca == chords::OrigemDaTerca::Croma).then(
+                    || {
+                        if com_f0 < chords::MINIMO_DE_QUADROS {
+                            return false;
+                        }
+                        let terca = if trecho.qualidade == chords::Qualidade::Menor {
+                            contagem[(trecho.tonica + 3) % 12]
+                        } else {
+                            contagem[(trecho.tonica + 4) % 12]
+                        };
+                        terca as f32 >= chords::FRACAO_DA_TERCA * com_f0 as f32
+                    },
+                ),
             }
         })
         .collect();
@@ -177,6 +195,7 @@ pub fn analyze_com_com_audio(
                 mix: bumbo_caixa.clone(),
                 com_stems: None,
                 pecas: None,
+                dinamica: Vec::new(),
                 caminho_stems: drums_path.map(|p| p.to_path_buf()),
             }
         }
