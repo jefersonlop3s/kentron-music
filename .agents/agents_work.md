@@ -27,41 +27,6 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
-### cline/plano-destrave — Plano de destrave registrado + folha de decisão da ADR-0018 e Política de Privacidade
-- **Início**: 2026-11-27 23:00 (UTC) · **Última atualização**: 2026-11-27 23:00 (UTC)
-- **Repositórios**: `kentron-music` (`main` = `4ecf1e5`) · **Branches**: `docs/plano-destrave` · **Worktrees**: `~/.cline/worktrees/1bf9c/app-music`
-- **Demanda**: registrar o **plano de destrave** em `docs/plans/` e entregar as folhas que **reduzem decisão do dono a uma linha**: recomendação por item da ADR-0018, minuta da **Política de Privacidade** (hoje só o termo de uso existe), mapeamento coluna-a-coluna do export do app atual e o mecanismo do gabarito humano (conteúdo de terceiro fora do repo).
-- **Paths sob edição**: `docs/plans/**`, `docs/legal/**`
-- **Status**: em andamento · **PRs**: —
-
-### cline/gates-infra — `verificar_refs.py`, licenças Dart no pipeline e o `exportar_onnx` como registro
-- **Início**: 2026-11-27 23:00 (UTC) · **Última atualização**: 2026-11-27 23:00 (UTC)
-- **Repositórios**: `kentron-music` (`main` = `4ecf1e5`) · **Branches**: `chore/gates-infra` · **Worktrees**: `~/.cline/worktrees/1bf9c/app-music`
-- **Demanda**: (a) `verificar_refs.py` reprova a `main` hoje porque resolve `` `AGENTS.md` `` (citado em prosa) **relativo a `docs/`**, e o arquivo mora na **raiz** — aceitar alvo que só existe na raiz, ou corrigir os dois textos, **com prova negativa** (alvo realmente ausente continua reprovando); (b) **licenças Dart/Flutter** no pipeline local (`cargo-deny` só cobre Rust); (c) marcar `scripts/exportar_onnx.py` como **registro** (o caminho do motor é o ONNX de terceiro).
-- **Paths sob edição**: `.harness/**`, `tools/**`, `scripts/ci-local.sh`, `scripts/exportar_onnx.py`
-- **Status**: em andamento · **PRs**: —
-
-### asr/medicoes — ASR: viés calibrado, `--grammar` e o custo do `medium` no desktop
-- **Início**: 2026-11-27 23:00 (UTC) · **Última atualização**: 2026-11-27 23:00 (UTC)
-- **Repositórios**: `kentron-music` (`main` = `4ecf1e5`) · **Branches**: `feat/asr-medicoes` · **Worktrees**: `~/Develop/Projects/app-music-wt/asr-medicoes`
-- **Demanda**: transformar três decisões do dono em **números**: (1) **calibrar o viés** de timestamp por modelo (é estável: +227 ms `small`, +328/+373 ms `medium`) e revalidar com o instrumento existente; (2) testar **`--grammar`** (GBNF do whisper.cpp) como versão dura do léxico — restringe em vez de corrigir depois; (3) medir **`medium` no desktop** (tempo e pico) para a escolha "onde roda" virar comparação entre dois números medidos, não estimativa.
-- **Paths sob edição**: `scripts/medir-timestamp-asr.py` e scripts novos de medição em `scripts/`
-- **Status**: em andamento · **PRs**: —
-
-### mir/repertorio — MIR reconferido no repertório: terça, alinhamento, F0 e repetição sem declaração
-- **Início**: 2026-11-27 23:00 (UTC) · **Última atualização**: 2026-11-27 23:00 (UTC)
-- **Repositórios**: `kentron-music` (`main` = `4ecf1e5`) · **Branches**: `feat/mir-repertorio` · **Worktrees**: `~/Develop/Projects/app-music-wt/mir-repertorio`
-- **Demanda**: o que foi medido em **UMA** música precisa valer no repertório: **terça** (limiar 0,4), **alinhamento de linha** e **F0 em mixagem real**; mais **detectar a repetição sem a declaração** (hoje o insumo declara a ordem cantada) e a **dinâmica por instrumento**, que deixou de ser risco agora que os stems ONNX estão provados. Corpus no disco (`~/Music/{MP3,Repertorio,EstudoMetro,GabaritoBennett}`).
-- **Paths sob edição**: `crates/mir_engine/**`
-- **Status**: em andamento · **PRs**: —
-
-### app/agenda-2 — Agenda incremento 2: montar/editar o evento e repetir a agenda anterior
-- **Início**: 2026-11-27 23:00 (UTC) · **Última atualização**: 2026-11-27 23:00 (UTC)
-- **Repositórios**: `kentron-music` (`main` = `4ecf1e5`) · **Branches**: `feat/agenda-2` · **Worktrees**: `~/Develop/Projects/app-music-wt/agenda-2`
-- **Demanda**: o caminho de **leitura** da agenda foi entregue em 26/11; falta **escrever**: montar/editar o evento (data, tipo, execuções) na interface, o atalho de **"repetir a agenda anterior com versões novas"** e o `--relatorio-uso` do motor visível na tela.
-- **Paths sob edição**: `apps/kentron_app/**`, `crates/kentron_ffi/**`, `packages/core_l10n/**`
-- **Status**: em andamento · **PRs**: —
-
 ### cline/1dce1 — Trilha 1: o compasso no leitor (mostrar/perguntar/gravar)
 - **Início**: 2026-11-26 21:09 (UTC) · **Última atualização**: 2026-11-26 21:09 (UTC)
 - **Repositórios**: `kentron-music` (`main` = `9faf8e2`) · **Branches**: `cline/1dce1` · **Worktrees**: `~/.cline/worktrees/1dce1/app-music`
@@ -92,11 +57,55 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 - **`cline/1dce1` continua parada** (nenhum commit, nenhuma alteração desde 21:09) e a Trilha 1 dela segue "aguardando decisão do dono". O path que ela temia colidir (`song_reader_page.dart`) está **livre** desde que a `agenda-no-app` fechou — já anotado aqui na rodada anterior.
 - **Próximo passo sugerido (frentes 1/4/5 do plano original ficaram assim):** a **5 (web, dupla carga do `wasm_bindgen`)** é a única que resta do trio, e mexe em arquivo **gerado** do frb — precisa de confirmação antes; a **ASR** (calibrar o viés do timestamp por modelo, reproduzir `medium` pior que `small`, testar `--grammar`) é a maior frente de medição ainda intacta e não depende de decisão do dono; e a **frente 2 do produto** (escrever a agenda no app — montar/editar e "repetir a agenda anterior com versões novas") é o próximo incremento natural da `agenda-no-app`.
 
+- **Rodada 3 fechada (2026-11-27 23:5x):** cinco frentes (quatro de trabalho + o plano), integradas em `76a4c9a` (plano/refs), `0067e20` (MIR + agenda) e `5f4f25a` (ASR), com os registros em `d2249a4`/`579a7e3`. **Bateria completa verde no integrado** (`BATERIA_EXIT=0`), já com o `verificar_refs.py` e a prova dele dentro do pipeline. **Pendente de escrita:** os números de **terça, repetição e dinâmica no corpus** (estão no relatório da frente de MIR e não foram transcritos) — a próxima sessão roda os três medidores e registra.
+- **A folha de 14 decisões segue com o dono** (`docs/plans/plano-de-destrave-2026-11-27.md` §3 + Anexo A): limpeza de branches/worktrees (devolve ≥6 GB, disco em 94%), frente 5 (web), importador do export, gabarito humano, `exportar_onnx`, onde o `medium` roda (agora com **números**), léxico do ASR (agora com o `--grammar` medido), onionboarding, R128, os seis itens da ADR-0018, o que a `cline/1dce1` aguarda, proteção da branch no GitHub e uso do Holyrics.
+- **Ainda sem push:** `main` = `579a7e3`, **18 commits à frente de `origin/main`** (`4ecf1e5`). As **13 branches** da sessão estão mergeadas (0 commits fora da `main`) e **nada foi apagado** — remoção de branch é autoridade do dono.
+
 ## 🟡 Interrompido / órfão
 
 Nenhum.
 
 ## 🟢 Concluído recentemente
+
+### cline/gates-infra — `verificar_refs.py`, licenças Dart no pipeline e o `exportar_onnx` como registro
+- **Início**: 2026-11-27 23:00 (UTC) · **Última atualização**: 2026-11-27 23:45 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `579a7e3`, merge `--no-ff`) · **Branches**: `chore/gates-infra` (integrada; não apagada) · **Worktrees**: `~/.cline/worktrees/1bf9c/app-music`
+- **Status**: concluído (**parcial, declarado**). · **PRs**: nenhum (merge local `--no-ff`).
+
+**Feito:** (a) `verificar_refs.py` **deixou de reprovar a árvore boa** — resolvia o nome do `AGENTS.md` citado em prosa **relativo a `docs/`** e o arquivo mora na raiz; agora aceita o `.md` que existe na raiz, **entrou no `ci-local.sh`** (medido: **nenhum gate o chamava** antes) e ganhou `.agents/test_verificar_refs.sh` com **5 casos** provando os dois lados; de carona `ruff format` no arquivo (dívida pré-existente).
+**Não feito (declarado, não esquecido):** (b) **licenças Dart/Flutter no pipeline** e (c) marcar o `exportar_onnx.py` como registro formal — (c) virou desnecessário (o docstring da frente dos instrumentos já diz que o export não sai e por quê) e (b) ficou aberto como item do `PENDING`.
+
+### asr/medicoes — ASR: viés calibrado, `--grammar` e o custo do `medium` no desktop
+- **Início**: 2026-11-27 23:00 (UTC) · **Última atualização**: 2026-11-27 23:50 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `5f4f25a`, merge `--no-ff`) · **Branches**: `feat/asr-medicoes` (integrada) · **Worktrees**: `~/Develop/Projects/app-music-wt/asr-medicoes`
+- **Status**: concluído. · **PRs**: nenhum.
+
+**Feito — 3 commits** (`c2157f8`, `92d9691`, `b89de73`): o **viés virou constante medida** (calibrada numa voz, aplicada em **outra**): DTW **230 → 56 ms** (`small`) e **379 → 54 ms** (`medium`), com prova negativa (sinal trocado piora); **`--grammar` medido em 8 braços** (baseline, `--prompt`, pós-hoc, GBNF, variante suave, GBNF sem `--grammar-rule` e controle de vocabulário disjunto), com **WER + abstenção + invenção** separados; **custo do `medium` no desktop**: **23,89 s / 1256 MB** contra **5,81 s / 605 MB** do `small` (**4,1× / 2,1×**).
+**Nota de execução:** o run **morreu por erro de transporte** (`ECONNRESET`) no meio; retomado com o contexto intacto, entregou os três itens. `ruff format --check` = 0 nos 3 scripts.
+
+### mir/repertorio — MIR reconferido no repertório: terça, alinhamento, F0 e repetição sem declaração
+- **Início**: 2026-11-27 23:00 (UTC) · **Última atualização**: 2026-11-27 23:51 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `0067e20`, merge `--no-ff`) · **Branches**: `feat/mir-repertorio` (integrada) · **Worktrees**: `~/Develop/Projects/app-music-wt/mir-repertorio`
+- **Status**: concluído. · **PRs**: nenhum.
+
+**Feito — 2 commits** (`cb7aeb8`, `9aa333d`): o motor passou a **publicar o que decide** — `origem_terca` (Template/Croma/Melodia/Ausente), `terca_razao`, `potencia_no_croma`, `terca_confirmada` como testemunha independente, e o resumo separando **contradição** de **falta de F0**; `LIMIAR_DA_TERCA` nomeado; `ComparativoStems.dinamica` (LUFS/LRA/pico por stem) com stem vazio = "sem conteúdo". **Três medidores novos** com contagem de classes antes dos acertos, taxa-base explícita e conjunto balanceado. Números do alinhamento em **25 músicas**: frases de **7 a 194** (mediana 23), **21/25** acima de 20 s, cobertura mediana **76%**, **zero fallback**, **287 frases** na banda de decisão do corte.
+**Aberto:** os números de **terça**, **repetição** e **dinâmica** no corpus estão no relatório da frente e **não** foram transcritos para o `PENDING` (o integrador recebeu só o começo do relatório) — a **próxima sessão** deve rodar os três medidores e registrar.
+
+### app/agenda-2 — Agenda incremento 2: montar/editar o evento e repetir a agenda anterior
+- **Início**: 2026-11-27 23:00 (UTC) · **Última atualização**: 2026-11-27 23:44 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `0067e20`, merge `--no-ff`) · **Branches**: `feat/agenda-2` (integrada) · **Worktrees**: `~/Develop/Projects/app-music-wt/agenda-2`
+- **Status**: concluído. · **PRs**: nenhum.
+
+**Feito — 3 commits** (`af6c448`, `9ef4d43`, `8b2c260`): a agenda **escreve** (criar/editar evento com data, tipo e execuções = obra + versão + tom), o atalho de **"repetir a agenda anterior com versões novas"** e o **relatório de uso** (`mir_engine::uso`) em tela; ponte `bridge.rs` +863 e bindings regerados; ARBs com **paridade 69/69/69** conferida pelo próprio `check_arb`.
+**Provado:** `cargo build/fmt/clippy/test -p kentron_ffi` = 0, `flutter analyze` limpo, `flutter test` verde, `check_arb` = 0, e a bateria completa verde no integrado.
+
+### cline/plano-destrave — Plano de destrave registrado + folha de decisão da ADR-0018 e Política de Privacidade
+- **Início**: 2026-11-27 23:00 (UTC) · **Última atualização**: 2026-11-27 23:40 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `5f4f25a`, merge `--no-ff`) · **Branches**: `docs/plano-destrave` (o conteúdo foi para a `chore/gates-infra`; a branch não chegou a ter commit) · **Worktrees**: `~/.cline/worktrees/1bf9c/app-music`
+- **Status**: concluído (**parcial, declarado**). · **PRs**: nenhum.
+
+**Feito:** `docs/plans/plano-de-destrave-2026-11-27.md` — bloqueio classificado **pelo remédio** (decisão · ação humana · terceiro · só falta medir), a **folha de 14 decisões** com recomendação e consequência, e o **Anexo A** com os **seis itens "Em aberto" da ADR-0018**, cada um com recomendação, para o dono responder uma linha.
+**Não feito (declarado):** a **minuta da Política de Privacidade**, o **mapeamento coluna-a-coluna do export** e o **mecanismo do gabarito humano** — os três continuam na folha (itens 4, 5 e §4) e são trabalho de agente barato na próxima rodada.
 
 ### cline-nb/bundle-formatos — Song Bundle: `score.musicxml` e `tabs/*.atex` dentro do bundle (ADR-0006)
 - **Início**: 2026-11-26 21:38 (UTC) · **Última atualização**: 2026-11-26 21:56 (UTC)
