@@ -1,4 +1,21 @@
 # Changelog
+## [docs] ADR-0018 aceita: presença web do produto — e a implementação **não** iniciada (2026-11-26)
+
+O dono **aceitou** a ADR-0018 (landing page, domínio e hospedagem) e decidiu **não iniciar** a implementação. O aceite registra direção e mecanismo; a fila é outra coisa e ficou dita — a prioridade segue sendo fechar a R1.
+
+**O que a ADR fixa**, com as fontes primárias verificadas em 24/25-11:
+
+- **Host gratuito com cabeçalhos HTTP customizados** — Cloudflare Pages ou Netlify. **GitHub Pages não serve para o app web**: sem `_headers`, o wasm não sobe em contexto seguro. É uma restrição **medida no próprio projeto**: `scripts/servir-web.py` já configura **COOP/COEP**, e é o que o piloto do OBS contorna por túnel reverso. Para documentação estática, o Pages serve.
+- **Endereço inicial: subdomínio do host** (zero custo, zero registro); domínio próprio depois, se houver. Freenom (`.tk`/`.cf`/`.gq`) está **suspenso desde 2023** e não entra.
+- **Três papéis na mesma página:** institucional, destino do link neutro do app (conformidade de loja) e vitrine do apoio.
+- **Conformidade medida nas diretrizes das duas lojas:** gorjeta por **IAP é permitida** (Apple 3.1.1, textualmente *"tip the developer"*); link externo de compra **não** pode ficar atrás do link do app fora das regiões com *entitlement* (Apple 3.1.1(a)); e **só nonprofit aprovado** arrecada dentro do app (3.2.1(vi)) — por isso a seção de apoio **não** pode morar no app.
+
+**Custos, nomeados na ADR:** taxa de **15–30%** no IAP e dependência de loja (tensão declarada com "livre e descentralizado"); endereço inicial menos "próprio"; conversão limitada pela regra do link externo; e quadro regulatório em movimento (DMA na EEA, decisão judicial nos EUA).
+
+**Pressuposto de produto (declarado, como o `AGENTS.md` exige):** *um mantenedor, sem nonprofit aprovado, app gratuito, sem venda de bem digital.* Se qualquer um mudar, a ADR precisa ser revista.
+
+**Continua decisão do dono, antes de qualquer trabalho** (seção "Em aberto" da ADR): host final · endereço canônico · onde a landing mora no repositório (`site/`? `docs/` publicada? repositório próprio?) · lista de canais de apoio fora do app · IAP agora ou depois · PF × PJ.
+
 ## [fix] O motor escrevia WAV inválido, o CLI mentia "escrito em" — e o P1 da ADR-0017, agora provado (2026-11-26)
 
 O **P1 da ADR-0017** (`397ff22`, o pipeline de stems por ONNX) estava na `main` desde 25/11 **sem nunca ter rodado**: `models/weights/` não existia no clone e nenhuma prova o tinha exercido. Ao ser provado ponta a ponta, o caminho tinha **três defeitos reais**, todos medidos:

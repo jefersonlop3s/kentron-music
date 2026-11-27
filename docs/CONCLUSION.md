@@ -2091,3 +2091,17 @@ O P1 (pipeline de stems por ONNX) estava na `main` desde 25/11 e **nunca tinha r
 **A lição de método que mais vale:** o helper `como_wav` de `tests/analise.rs` era uma **cópia local do cabeçalho WAV que acertava o que a produção errava** — o teste `le_de_volta_o_wav_que_escreveu` media a cópia, não o motor. É a `validacao-real-sem-mock` na forma mais pura: um teste que passa porque mede outra coisa. E o defeito só apareceu porque a ferramenta foi **exercida de verdade** (`ffprobe` no arquivo), não porque um teste novo olhou para ele.
 
 **E o `exportar_onnx.py`, agora honesto:** os pesos carregam (`bag["state"]`, 525 chaves, `strict` OK) e o artefato passa a ser validado com `onnxruntime` antes de ser anunciado, mas o export do modelo inteiro **reprova** com `SymbolicValueError: STFT does not currently support complex types` — e é exatamente por isso que o `sevagh/demucs.onnx` tira o STFT/iSTFT da rede. O script **não** foi apagado nem consertado com um conserto que não exporta: segue sem exportar, com o erro real e o motivo no docstring.
+
+## Docs · ADR-0018 aceita — e a implementação deliberadamente não iniciada (2026-11-26)
+
+O dono **aceitou** a ADR-0018 (presença web: landing page, domínio e hospedagem) e decidiu **não iniciar** a implementação. O registro ficou nos três lugares: status da ADR, linha do `ADR-INDEX` e item novo no `PENDING` — com a fila dita em voz alta, para o aceite não virar expectativa de execução.
+
+**O que o aceite fecha:** o **mecanismo**. Host gratuito **com cabeçalhos customizados** (Cloudflare Pages ou Netlify) porque o app web exige **COOP/COEP** — e isso é medido no próprio projeto (`scripts/servir-web.py` configura os cabeçalhos; o piloto do OBS só funciona por túnel reverso, que põe o servidor em `127.0.0.1`). **GitHub Pages não serve para o app**, só para documentação estática. Endereço inicial como subdomínio do host; e a vitrine do apoio **fora do app**, porque as diretrizes das duas lojas permitem gorjeta por IAP mas **não** permitem link externo de compra atrás do link do app, e arrecadação dentro do app é só para *nonprofit* aprovado.
+
+**O que o aceite nomeia e não esconde:** taxa de IAP de **15–30%** e dependência de loja (tensão explícita com o ethos "sem empresa por trás"), endereço inicial menos "próprio", conversão limitada pela regra do link externo, e quadro regulatório em movimento (DMA/EEA, decisão judicial nos EUA). O **pressuposto de produto** está declarado na própria ADR — *um mantenedor, sem nonprofit, app gratuito, sem venda de bem digital* — e, se ele mudar, a ADR tem de ser revista.
+
+**O que continua aberto, e é decisão do dono:** host final, endereço canônico, onde a landing mora no repositório, canais de apoio, IAP agora ou depois, e PF × PJ.
+
+### Publicação da `main`
+
+No mesmo dia, a `main` foi **publicada no `origin`**, levando as **duas rodadas paralelas** desta sessão (gates `fmt`/`clippy` + o gate `dart` na guarda da ref; a agenda do culto na leitura; a letra na ordem cantada; o bundle com MusicXML/tabs; e o P1 da ADR-0017 provado com os três defeitos corrigidos) mais os commits da sessão `cline/1dce1`. O `origin/main` estava em `c9489d8` desde 25/11 — a publicação passa pelo `pre-push` completo (gitleaks, trivy, semgrep, clippy/test escopados, ruff, shellcheck, deny, ARBs, fichas e flutter), que é o único ponto em que a bateria inteira é aplicada de uma vez.

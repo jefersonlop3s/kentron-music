@@ -22,6 +22,6 @@ Status: Proposto → Aceito | Rejeitado | Descontinuado | Substituído. **O acei
 | ADR-0015 | Alvos desktop (Windows, macOS, Linux) e a tela de palco por URL | **Aceito** | 2026-11-22 | kentron-music |
 | ADR-0016 | Decodificação de áudio: o motor lê o arquivo do usuário, sem ffmpeg | **Aceito** | 2026-11-22 | kentron-music |
 | ADR-0017 | Separação de bateria: o primeiro modelo no motor | **Aceito** — prova conceitual executada; 3 ressalvas em `PENDING` | 2026-11-24 | kentron-music |
-| ADR-0018 | Presença web do produto: landing page, domínio e hospedagem | **Proposto** | 2026-11-25 | kentron-music |
+| ADR-0018 | Presença web do produto: landing page, domínio e hospedagem | **Aceito** — implementação **não iniciada** por decisão do dono | 2026-11-25 | kentron-music |
 
 **Próximo número livre**: ADR-0019.
