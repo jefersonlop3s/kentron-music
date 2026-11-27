@@ -27,6 +27,41 @@ Timestamp sempre de `date -u '+%F %H:%M'`. **Paths sob edição** é o campo mai
 
 ## 🔴 Em andamento
 
+### cline/plano-destrave — Plano de destrave registrado + folha de decisão da ADR-0018 e Política de Privacidade
+- **Início**: 2026-11-27 23:00 (UTC) · **Última atualização**: 2026-11-27 23:00 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `4ecf1e5`) · **Branches**: `docs/plano-destrave` · **Worktrees**: `~/.cline/worktrees/1bf9c/app-music`
+- **Demanda**: registrar o **plano de destrave** em `docs/plans/` e entregar as folhas que **reduzem decisão do dono a uma linha**: recomendação por item da ADR-0018, minuta da **Política de Privacidade** (hoje só o termo de uso existe), mapeamento coluna-a-coluna do export do app atual e o mecanismo do gabarito humano (conteúdo de terceiro fora do repo).
+- **Paths sob edição**: `docs/plans/**`, `docs/legal/**`
+- **Status**: em andamento · **PRs**: —
+
+### cline/gates-infra — `verificar_refs.py`, licenças Dart no pipeline e o `exportar_onnx` como registro
+- **Início**: 2026-11-27 23:00 (UTC) · **Última atualização**: 2026-11-27 23:00 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `4ecf1e5`) · **Branches**: `chore/gates-infra` · **Worktrees**: `~/.cline/worktrees/1bf9c/app-music`
+- **Demanda**: (a) `verificar_refs.py` reprova a `main` hoje porque resolve `` `AGENTS.md` `` (citado em prosa) **relativo a `docs/`**, e o arquivo mora na **raiz** — aceitar alvo que só existe na raiz, ou corrigir os dois textos, **com prova negativa** (alvo realmente ausente continua reprovando); (b) **licenças Dart/Flutter** no pipeline local (`cargo-deny` só cobre Rust); (c) marcar `scripts/exportar_onnx.py` como **registro** (o caminho do motor é o ONNX de terceiro).
+- **Paths sob edição**: `.harness/**`, `tools/**`, `scripts/ci-local.sh`, `scripts/exportar_onnx.py`
+- **Status**: em andamento · **PRs**: —
+
+### asr/medicoes — ASR: viés calibrado, `--grammar` e o custo do `medium` no desktop
+- **Início**: 2026-11-27 23:00 (UTC) · **Última atualização**: 2026-11-27 23:00 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `4ecf1e5`) · **Branches**: `feat/asr-medicoes` · **Worktrees**: `~/Develop/Projects/app-music-wt/asr-medicoes`
+- **Demanda**: transformar três decisões do dono em **números**: (1) **calibrar o viés** de timestamp por modelo (é estável: +227 ms `small`, +328/+373 ms `medium`) e revalidar com o instrumento existente; (2) testar **`--grammar`** (GBNF do whisper.cpp) como versão dura do léxico — restringe em vez de corrigir depois; (3) medir **`medium` no desktop** (tempo e pico) para a escolha "onde roda" virar comparação entre dois números medidos, não estimativa.
+- **Paths sob edição**: `scripts/medir-timestamp-asr.py` e scripts novos de medição em `scripts/`
+- **Status**: em andamento · **PRs**: —
+
+### mir/repertorio — MIR reconferido no repertório: terça, alinhamento, F0 e repetição sem declaração
+- **Início**: 2026-11-27 23:00 (UTC) · **Última atualização**: 2026-11-27 23:00 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `4ecf1e5`) · **Branches**: `feat/mir-repertorio` · **Worktrees**: `~/Develop/Projects/app-music-wt/mir-repertorio`
+- **Demanda**: o que foi medido em **UMA** música precisa valer no repertório: **terça** (limiar 0,4), **alinhamento de linha** e **F0 em mixagem real**; mais **detectar a repetição sem a declaração** (hoje o insumo declara a ordem cantada) e a **dinâmica por instrumento**, que deixou de ser risco agora que os stems ONNX estão provados. Corpus no disco (`~/Music/{MP3,Repertorio,EstudoMetro,GabaritoBennett}`).
+- **Paths sob edição**: `crates/mir_engine/**`
+- **Status**: em andamento · **PRs**: —
+
+### app/agenda-2 — Agenda incremento 2: montar/editar o evento e repetir a agenda anterior
+- **Início**: 2026-11-27 23:00 (UTC) · **Última atualização**: 2026-11-27 23:00 (UTC)
+- **Repositórios**: `kentron-music` (`main` = `4ecf1e5`) · **Branches**: `feat/agenda-2` · **Worktrees**: `~/Develop/Projects/app-music-wt/agenda-2`
+- **Demanda**: o caminho de **leitura** da agenda foi entregue em 26/11; falta **escrever**: montar/editar o evento (data, tipo, execuções) na interface, o atalho de **"repetir a agenda anterior com versões novas"** e o `--relatorio-uso` do motor visível na tela.
+- **Paths sob edição**: `apps/kentron_app/**`, `crates/kentron_ffi/**`, `packages/core_l10n/**`
+- **Status**: em andamento · **PRs**: —
+
 ### cline/1dce1 — Trilha 1: o compasso no leitor (mostrar/perguntar/gravar)
 - **Início**: 2026-11-26 21:09 (UTC) · **Última atualização**: 2026-11-26 21:09 (UTC)
 - **Repositórios**: `kentron-music` (`main` = `9faf8e2`) · **Branches**: `cline/1dce1` · **Worktrees**: `~/.cline/worktrees/1dce1/app-music`
