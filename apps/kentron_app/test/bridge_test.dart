@@ -237,4 +237,197 @@ void main() {
     // A obra e o evento continuam legíveis.
     expect(await listarAgenda(baseDir: dir.path), hasLength(1));
   });
+
+  // ── Escrever a agenda pela ponte ────────────────────────────────────────
+  //
+  // O caminho inteiro: a função da ponte grava pelo `notation_bundle` no sistema
+  // de arquivos real, e a leitura seguinte é a mesma que a tela usa.
+
+  test('listar biblioteca carrega o id da obra, não só o título', () async {
+    final dir = diretorioDeTeste();
+    // O id NÃO é o slug do título: é o que a agenda grava.
+    await salvarNaBiblioteca(baseDir: dir.path, id: 'hino-3', chordpro: cifraCurta);
+
+    final musicas = await listarBiblioteca(baseDir: dir.path);
+    expect(musicas.single.id, 'hino-3');
+    expect(musicas.single.title, 'Santo');
+  });
+
+  test('a agenda que o app grava é a agenda que ele lê', () async {
+    final dir = diretorioDeTeste();
+    await salvarNaBiblioteca(baseDir: dir.path, id: 'santo', chordpro: cifraCurta);
+    await salvarNaBiblioteca(
+      baseDir: dir.path,
+      id: 'hino-3',
+      chordpro: '{title: Hino 3}\n{key: G}\n\n[Verse]\n[G]texto\n',
+    );
+
+    final gravado = await salvarEventoAgenda(
+      baseDir: dir.path,
+      id: 'culto-1',
+      nome: 'Culto da manhã',
+      data: '2026-11-22',
+      tipo: 'culto',
+      execucoes: const <EntradaAgenda>[
+        EntradaAgenda(songId: 'santo', versao: 'versão do coral', tom: 'D'),
+        EntradaAgenda(songId: 'hino-3'),
+      ],
+    );
+
+    expect(gravado.id, 'culto-1');
+    expect(gravado.core, startsWith('kentron_ffi '));
+    expect(gravado.execucoes, hasLength(2));
+
+    final eventos = await listarAgenda(baseDir: dir.path);
+    expect(eventos, hasLength(1));
+    final culto = eventos.single;
+    expect(culto.nome, 'Culto da manhã');
+    expect(culto.data, '2026-11-22');
+    expect(culto.tipo, 'culto');
+    expect(culto.execucoes.map((ExecucaoAgenda e) => e.songId), <String>[
+      'santo',
+      'hino-3',
+    ]);
+    expect(culto.execucoes.first.titulo, 'Santo', reason: 'o título vem do bundle');
+    expect(culto.execucoes.first.versao, 'versão do coral');
+    expect(culto.execucoes.first.tom, 'D');
+    expect(
+      culto.execucoes.last.versao,
+      isNull,
+      reason: 'versão não declarada não é inventada',
+    );
+  });
+
+  test('gravar evento com obra fora da biblioteca vira exceção', () async {
+    final dir = diretorioDeTeste();
+    await salvarNaBiblioteca(baseDir: dir.path, id: 'santo', chordpro: cifraCurta);
+
+    await expectLater(
+      salvarEventoAgenda(
+        baseDir: dir.path,
+        id: 'culto-1',
+        nome: 'Culto da manhã',
+        execucoes: const <EntradaAgenda>[EntradaAgenda(songId: 'fantasma')],
+      ),
+      throwsA(predicate((Object erro) => '$erro'.contains('fantasma'))),
+    );
+    // Nada foi gravado: a leitura seguinte continua sendo "sem agenda".
+    expect(await listarAgenda(baseDir: dir.path), isEmpty);
+  });
+
+  // ── Repetir a agenda anterior ───────────────────────────────────────────
+
+  test('repetir a agenda anterior traz o tom atual da biblioteca', () async {
+    final dir = diretorioDeTeste();
+    // A cifra está em `E` hoje; o evento anterior declarou `D`.
+    await salvarNaBiblioteca(
+      baseDir: dir.path,
+      id: 'santo',
+      chordpro: '{title: Santo}\n{key: E}\n\n[Verse]\n[E]texto\n',
+    );
+    await salvarEventoAgenda(
+      baseDir: dir.path,
+      id: 'culto-1',
+      nome: 'Culto da manhã',
+      data: '2026-11-22',
+      tipo: 'culto',
+      execucoes: const <EntradaAgenda>[
+        EntradaAgenda(songId: 'santo', versao: 'versão do coral', tom: 'D'),
+      ],
+    );
+
+    final novo = await repetirUltimoEvento(
+      baseDir: dir.path,
+      novoId: 'culto-2',
+      nome: 'Culto da noite',
+      data: '2026-11-29',
+    );
+
+    expect(novo.id, 'culto-2');
+    expect(novo.tipo, 'culto', reason: 'o tipo vem do evento anterior');
+    expect(novo.execucoes.single.songId, 'santo');
+    expect(novo.execucoes.single.tom, 'E', reason: 'o tom é o da biblioteca agora');
+    expect(novo.execucoes.single.versao, 'versão do coral');
+
+    // Os dois eventos estão no disco, e o anterior segue com o tom dele.
+    final eventos = await listarAgenda(baseDir: dir.path);
+    expect(eventos.map((EventoAgenda e) => e.id), <String>['culto-1', 'culto-2']);
+    expect(eventos.first.execucoes.single.tom, 'D');
+  });
+
+  test('repetir sem evento anterior vira exceção, não evento vazio', () async {
+    final dir = diretorioDeTeste();
+    await salvarNaBiblioteca(baseDir: dir.path, id: 'santo', chordpro: cifraCurta);
+
+    await expectLater(
+      repetirUltimoEvento(
+        baseDir: dir.path,
+        novoId: 'culto-2',
+        nome: 'Culto da noite',
+      ),
+      throwsA(predicate((Object erro) => '$erro'.contains('não há evento anterior'))),
+    );
+    expect(await listarAgenda(baseDir: dir.path), isEmpty);
+  });
+
+  // ── O relatório de uso na ponte ─────────────────────────────────────────
+
+  test('o relatório de uso chega com o uso e com as obras sem ficha', () async {
+    final dir = diretorioDeTeste();
+    await salvarNaBiblioteca(baseDir: dir.path, id: 'santo', chordpro: cifraCurta);
+    await salvarNaBiblioteca(
+      baseDir: dir.path,
+      id: 'hino-3',
+      chordpro: '{title: Hino 3}\n{key: G}\n\n[Verse]\n[G]texto\n',
+    );
+    await salvarEventoAgenda(
+      baseDir: dir.path,
+      id: 'culto-1',
+      nome: 'Culto da manhã',
+      data: '2026-11-22',
+      tipo: 'culto',
+      execucoes: const <EntradaAgenda>[
+        EntradaAgenda(songId: 'santo'),
+        EntradaAgenda(songId: 'hino-3'),
+      ],
+    );
+    await salvarEventoAgenda(
+      baseDir: dir.path,
+      id: 'culto-2',
+      nome: 'Culto da noite',
+      data: '2026-11-29',
+      tipo: 'culto',
+      execucoes: const <EntradaAgenda>[
+        EntradaAgenda(songId: 'santo', versao: 'versão do coral'),
+      ],
+    );
+
+    final relatorio = await relatorioDeUso(baseDir: dir.path, anoCorrente: 2026);
+
+    expect(relatorio.eventos, 2);
+    expect(relatorio.execucoes, 3);
+    expect(relatorio.obrasDistintas, 2);
+    expect(relatorio.core, startsWith('kentron_ffi '));
+    expect(
+      relatorio.obras.map((ObraDoRelatorio o) => o.titulo),
+      <String>['Santo', 'Hino 3'],
+      reason: 'mais cantada primeiro',
+    );
+    final santo = relatorio.obras.first;
+    expect(santo.execucoes, 2);
+    expect(santo.publica, isTrue, reason: 'ficha do Cantor Cristão 09');
+    expect(santo.veredito, contains('domínio público'));
+    expect(relatorio.publicas, 1);
+    expect(relatorio.semFicha, 1);
+    expect(relatorio.obras.last.veredito, isNull, reason: 'sem ficha é sem ficha');
+  });
+
+  test('relatório de uso sem biblioteca vira exceção, não relatório vazio', () async {
+    final dir = diretorioDeTeste();
+
+    await expectLater(
+      relatorioDeUso(baseDir: dir.path, anoCorrente: 2026),
+      throwsA(predicate((Object erro) => '$erro'.contains('library.json'))),
+    );
+  });
 }

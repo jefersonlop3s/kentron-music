@@ -4,10 +4,11 @@
 // ignore_for_file: invalid_use_of_internal_member, unused_import, unnecessary_import
 
 import 'frb_generated.dart';
+
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `detail`, `evento`, `indice_atual`, `key_note`, `song_key`, `summary`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These functions are ignored because they are not marked as `pub`: `biblioteca_atual`, `detail`, `evento`, `execucao_da_entrada`, `gravar_agenda`, `id_de_arquivo`, `indice_atual`, `key_note`, `ler_agendas`, `song_key`, `summary_da_obra`, `summary`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Lê uma cifra ChordPro e devolve o resumo que a interface usa.
 ///
@@ -119,7 +120,8 @@ Future<String> carregarDaBiblioteca({
 
 /// Lista os IDs das músicas na biblioteca local.
 ///
-/// Lê o arquivo `library.json` no diretório base.
+/// Lê o arquivo `library.json` no diretório base. Cada resumo traz o `id` da
+/// obra, que é o identificador que a agenda grava — o título não o substitui.
 ///
 /// # Errors
 ///
@@ -163,6 +165,97 @@ Future<void> removerDaBiblioteca({
 Future<List<EventoAgenda>> listarAgenda({required String baseDir}) =>
     RustLib.instance.api.crateBridgeListarAgenda(baseDir: baseDir);
 
+/// Grava um evento da agenda: cria, ou **atualiza** o evento que já usa o mesmo
+/// `id` (é o arquivo `<base_dir>/setlists/<id>.json` — o mesmo lugar e o mesmo
+/// formato que [`listar_agenda`] lê).
+///
+/// A obra de cada execução é conferida contra a biblioteca **antes** de gravar:
+/// execução pendurada é recusada aqui, em vez de virar uma agenda que a leitura
+/// seguinte recusaria inteira.
+///
+/// # Errors
+///
+/// Recusa quando o `id` não serve de um único nome de arquivo, quando o nome do
+/// evento é vazio, quando a biblioteca não pode ser lida, quando uma execução
+/// aponta para obra fora da biblioteca ou repete obra já no evento, e quando o
+/// arquivo não pode ser escrito.
+Future<EventoAgenda> salvarEventoAgenda({
+  required String baseDir,
+  required String id,
+  required String nome,
+  String? data,
+  String? tipo,
+  required List<EntradaAgenda> execucoes,
+}) => RustLib.instance.api.crateBridgeSalvarEventoAgenda(
+  baseDir: baseDir,
+  id: id,
+  nome: nome,
+  data: data,
+  tipo: tipo,
+  execucoes: execucoes,
+);
+
+/// Repete a agenda anterior: duplica **o último evento** com as versões e tons
+/// atuais da biblioteca.
+///
+/// "O último" é o último na ordem do núcleo (nome do arquivo da agenda) — a mesma
+/// ordem em que [`listar_agenda`] devolve os eventos e a tela os desenha.
+///
+/// Obra por obra, o que a cópia leva:
+///
+/// * a **obra**, na mesma ordem;
+/// * o **tom atual da biblioteca** (o `{key: ...}` da cifra), quando ela declara
+///   um — é o que "com versões novas" significa do lado do que a biblioteca sabe:
+///   a obra que entra na agenda nova é a de agora, não a do culto passado;
+/// * o **tom do evento anterior** quando a cifra não declara tom nenhum: não se
+///   apaga um tom declarado só porque a biblioteca ficou muda;
+/// * a **versão declarada no evento anterior**, e nada além dela — a biblioteca
+///   **não guarda versão** (o bundle do núcleo não tem esse campo), então a ponte
+///   não inventa uma: quem repete confere e ajusta o que mudou.
+///
+/// O evento novo nasce com o `id`, o `nome` e a `data` do chamador e o **tipo do
+/// anterior** (é o mesmo tipo de evento que se está repetindo). O evento de
+/// origem **não é tocado**.
+///
+/// # Errors
+///
+/// Recusa quando a agenda está vazia (não há anterior para repetir), quando já
+/// existe evento com o `novo_id` (repetir **não** sobrescreve: use outro id),
+/// quando o `id` não serve de nome de arquivo, quando o nome é vazio e quando a
+/// biblioteca ou alguma agenda não pode ser lida.
+Future<EventoAgenda> repetirUltimoEvento({
+  required String baseDir,
+  required String novoId,
+  required String nome,
+  String? data,
+}) => RustLib.instance.api.crateBridgeRepetirUltimoEvento(
+  baseDir: baseDir,
+  novoId: novoId,
+  nome: nome,
+  data: data,
+);
+
+/// Monta o relatório de uso a partir das agendas da biblioteca.
+///
+/// É o `--relatorio-uso` do motor (`mir_engine::uso`) exposto à tela: a
+/// classificação por ficha (ADR-0012) fica no motor — a ponte não copia a regra
+/// nem decide licença. `ano_corrente` vem de quem chama porque o núcleo não tem
+/// relógio: o prazo de domínio público (vida + 70) é contado a partir dele.
+///
+/// # Errors
+///
+/// Falha — em vez de devolver relatório vazio — quando o diretório não tem
+/// biblioteca (índice ausente ou ilegível), quando uma agenda não pode ser lida
+/// ou aponta para obra fora da biblioteca. **Relatório sem obra significa, e só
+/// significa, agenda sem execução.**
+Future<RelatorioDeUso> relatorioDeUso({
+  required String baseDir,
+  required int anoCorrente,
+}) => RustLib.instance.api.crateBridgeRelatorioDeUso(
+  baseDir: baseDir,
+  anoCorrente: anoCorrente,
+);
+
 /// Onde um acorde cai sobre a letra: a coluna e o acorde.
 class ChordMark {
   /// Coluna da letra onde o acorde começa (0 = primeiro caractere).
@@ -183,6 +276,35 @@ class ChordMark {
           runtimeType == other.runtimeType &&
           position == other.position &&
           chord == other.chord;
+}
+
+/// O que a tela declara para uma execução: a obra e a versão/tom daquele evento.
+///
+/// O título **não** entra: ele é do bundle, e um título vindo da tela poderia
+/// divergir da obra que o `song_id` identifica.
+class EntradaAgenda {
+  /// Identificador da obra na biblioteca.
+  final String songId;
+
+  /// Versão declarada para o evento (arranjo, gravação), quando existe.
+  final String? versao;
+
+  /// Tom declarado para o evento, quando existe.
+  final String? tom;
+
+  const EntradaAgenda({required this.songId, this.versao, this.tom});
+
+  @override
+  int get hashCode => songId.hashCode ^ versao.hashCode ^ tom.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is EntradaAgenda &&
+          runtimeType == other.runtimeType &&
+          songId == other.songId &&
+          versao == other.versao &&
+          tom == other.tom;
 }
 
 /// Um evento da agenda: a playlist do culto, do ensaio ou do evento.
@@ -277,6 +399,110 @@ class ExecucaoAgenda {
           titulo == other.titulo &&
           versao == other.versao &&
           tom == other.tom;
+}
+
+/// Uma obra do repertório no relatório: o uso medido e o veredito da ficha.
+class ObraDoRelatorio {
+  /// Título da obra, como está na biblioteca.
+  final String titulo;
+
+  /// Total de execuções da obra no período.
+  final int execucoes;
+
+  /// As versões em que ela foi tocada, na ordem da primeira aparição.
+  final List<VersaoDaObra> versoes;
+
+  /// Veredito da ficha (ADR-0012), já em texto. **`None` = sem ficha**: o motor
+  /// não afirma domínio público nem protegido — e isso é resposta, não falha.
+  final String? veredito;
+
+  /// A ficha resolve domínio público.
+  final bool publica;
+
+  const ObraDoRelatorio({
+    required this.titulo,
+    required this.execucoes,
+    required this.versoes,
+    this.veredito,
+    required this.publica,
+  });
+
+  @override
+  int get hashCode =>
+      titulo.hashCode ^
+      execucoes.hashCode ^
+      versoes.hashCode ^
+      veredito.hashCode ^
+      publica.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ObraDoRelatorio &&
+          runtimeType == other.runtimeType &&
+          titulo == other.titulo &&
+          execucoes == other.execucoes &&
+          versoes == other.versoes &&
+          veredito == other.veredito &&
+          publica == other.publica;
+}
+
+/// O relatório de uso classificado: o que a equipe cantou e o que falta fichar.
+class RelatorioDeUso {
+  /// Eventos considerados.
+  final int eventos;
+
+  /// Execuções somadas.
+  final int execucoes;
+
+  /// Obras distintas cantadas.
+  final int obrasDistintas;
+
+  /// Obras de domínio público por ficha.
+  final int publicas;
+
+  /// Obras **sem ficha** — a lista de trabalho.
+  final int semFicha;
+
+  /// As obras, ordenadas por uso (mais cantada primeiro) e depois por título:
+  /// a mesma ordem do `--relatorio-uso` do motor.
+  final List<ObraDoRelatorio> obras;
+
+  /// Qual núcleo respondeu, no formato `kentron_ffi <versão>`.
+  final String core;
+
+  const RelatorioDeUso({
+    required this.eventos,
+    required this.execucoes,
+    required this.obrasDistintas,
+    required this.publicas,
+    required this.semFicha,
+    required this.obras,
+    required this.core,
+  });
+
+  @override
+  int get hashCode =>
+      eventos.hashCode ^
+      execucoes.hashCode ^
+      obrasDistintas.hashCode ^
+      publicas.hashCode ^
+      semFicha.hashCode ^
+      obras.hashCode ^
+      core.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RelatorioDeUso &&
+          runtimeType == other.runtimeType &&
+          eventos == other.eventos &&
+          execucoes == other.execucoes &&
+          obrasDistintas == other.obrasDistintas &&
+          publicas == other.publicas &&
+          semFicha == other.semFicha &&
+          obras == other.obras &&
+          core == other.core;
 }
 
 /// A cifra inteira, pronta para o Modo Palco desenhar.
@@ -376,6 +602,12 @@ class SongSection {
 
 /// O resumo de uma cifra: o que a tela precisa para listar e abrir a música.
 class SongSummary {
+  /// Identificador da obra na biblioteca. **Vazio** quando o resumo não vem de
+  /// um bundle ([`parse_song`], [`parse_musicxml`]): aí não há id a declarar.
+  /// A tela que monta a agenda o usa para gravar a execução — adivinhar o id
+  /// pelo título erraria toda obra cujo id não é o slug do título.
+  final String id;
+
   /// Título vindo de `{title: ...}`; vazio quando a cifra não declara um.
   final String title;
 
@@ -399,6 +631,7 @@ class SongSummary {
   final String core;
 
   const SongSummary({
+    required this.id,
     required this.title,
     this.key,
     this.artist,
@@ -410,6 +643,7 @@ class SongSummary {
 
   @override
   int get hashCode =>
+      id.hashCode ^
       title.hashCode ^
       key.hashCode ^
       artist.hashCode ^
@@ -423,6 +657,7 @@ class SongSummary {
       identical(this, other) ||
       other is SongSummary &&
           runtimeType == other.runtimeType &&
+          id == other.id &&
           title == other.title &&
           key == other.key &&
           artist == other.artist &&
@@ -430,4 +665,26 @@ class SongSummary {
           sections == other.sections &&
           chords == other.chords &&
           core == other.core;
+}
+
+/// Uma versão usada no período e quantas vezes.
+class VersaoDaObra {
+  /// Texto da versão declarada, ou o rótulo de "não declarada" do núcleo.
+  final String versao;
+
+  /// Quantas execuções usaram essa versão.
+  final int vezes;
+
+  const VersaoDaObra({required this.versao, required this.vezes});
+
+  @override
+  int get hashCode => versao.hashCode ^ vezes.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is VersaoDaObra &&
+          runtimeType == other.runtimeType &&
+          versao == other.versao &&
+          vezes == other.vezes;
 }

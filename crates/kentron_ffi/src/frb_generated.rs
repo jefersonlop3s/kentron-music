@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1738090199;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -775641163;
 
 // Section: executor
 
@@ -344,6 +344,41 @@ fn wire__crate__bridge__read_song_impl(
         },
     )
 }
+fn wire__crate__bridge__relatorio_de_uso_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "relatorio_de_uso",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_base_dir = <String>::sse_decode(&mut deserializer);
+            let api_ano_corrente = <u16>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok =
+                        crate::bridge::relatorio_de_uso(api_base_dir, api_ano_corrente)?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__bridge__remover_da_biblioteca_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -372,6 +407,92 @@ fn wire__crate__bridge__remover_da_biblioteca_impl(
             move |context| {
                 transform_result_sse::<_, String>((move || {
                     let output_ok = crate::bridge::remover_da_biblioteca(api_base_dir, api_id)?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__bridge__repetir_ultimo_evento_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "repetir_ultimo_evento",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_base_dir = <String>::sse_decode(&mut deserializer);
+            let api_novo_id = <String>::sse_decode(&mut deserializer);
+            let api_nome = <String>::sse_decode(&mut deserializer);
+            let api_data = <Option<String>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok = crate::bridge::repetir_ultimo_evento(
+                        api_base_dir,
+                        api_novo_id,
+                        api_nome,
+                        api_data,
+                    )?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__bridge__salvar_evento_agenda_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "salvar_evento_agenda",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_base_dir = <String>::sse_decode(&mut deserializer);
+            let api_id = <String>::sse_decode(&mut deserializer);
+            let api_nome = <String>::sse_decode(&mut deserializer);
+            let api_data = <Option<String>>::sse_decode(&mut deserializer);
+            let api_tipo = <Option<String>>::sse_decode(&mut deserializer);
+            let api_execucoes = <Vec<crate::bridge::EntradaAgenda>>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok = crate::bridge::salvar_evento_agenda(
+                        api_base_dir,
+                        api_id,
+                        api_nome,
+                        api_data,
+                        api_tipo,
+                        api_execucoes,
+                    )?;
                     std::result::Result::Ok(output_ok)
                 })())
             }
@@ -459,6 +580,13 @@ impl SseDecode for String {
     }
 }
 
+impl SseDecode for bool {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_u8().unwrap() != 0
+    }
+}
+
 impl SseDecode for crate::bridge::ChordMark {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -467,6 +595,20 @@ impl SseDecode for crate::bridge::ChordMark {
         return crate::bridge::ChordMark {
             position: var_position,
             chord: var_chord,
+        };
+    }
+}
+
+impl SseDecode for crate::bridge::EntradaAgenda {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_songId = <String>::sse_decode(deserializer);
+        let mut var_versao = <Option<String>>::sse_decode(deserializer);
+        let mut var_tom = <Option<String>>::sse_decode(deserializer);
+        return crate::bridge::EntradaAgenda {
+            song_id: var_songId,
+            versao: var_versao,
+            tom: var_tom,
         };
     }
 }
@@ -531,6 +673,18 @@ impl SseDecode for Vec<crate::bridge::ChordMark> {
     }
 }
 
+impl SseDecode for Vec<crate::bridge::EntradaAgenda> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::bridge::EntradaAgenda>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
 impl SseDecode for Vec<crate::bridge::EventoAgenda> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -550,6 +704,18 @@ impl SseDecode for Vec<crate::bridge::ExecucaoAgenda> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<crate::bridge::ExecucaoAgenda>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::bridge::ObraDoRelatorio> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::bridge::ObraDoRelatorio>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -603,6 +769,36 @@ impl SseDecode for Vec<crate::bridge::SongSummary> {
     }
 }
 
+impl SseDecode for Vec<crate::bridge::VersaoDaObra> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::bridge::VersaoDaObra>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for crate::bridge::ObraDoRelatorio {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_titulo = <String>::sse_decode(deserializer);
+        let mut var_execucoes = <u32>::sse_decode(deserializer);
+        let mut var_versoes = <Vec<crate::bridge::VersaoDaObra>>::sse_decode(deserializer);
+        let mut var_veredito = <Option<String>>::sse_decode(deserializer);
+        let mut var_publica = <bool>::sse_decode(deserializer);
+        return crate::bridge::ObraDoRelatorio {
+            titulo: var_titulo,
+            execucoes: var_execucoes,
+            versoes: var_versoes,
+            veredito: var_veredito,
+            publica: var_publica,
+        };
+    }
+}
+
 impl SseDecode for Option<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -611,6 +807,28 @@ impl SseDecode for Option<String> {
         } else {
             return None;
         }
+    }
+}
+
+impl SseDecode for crate::bridge::RelatorioDeUso {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_eventos = <u32>::sse_decode(deserializer);
+        let mut var_execucoes = <u32>::sse_decode(deserializer);
+        let mut var_obrasDistintas = <u32>::sse_decode(deserializer);
+        let mut var_publicas = <u32>::sse_decode(deserializer);
+        let mut var_semFicha = <u32>::sse_decode(deserializer);
+        let mut var_obras = <Vec<crate::bridge::ObraDoRelatorio>>::sse_decode(deserializer);
+        let mut var_core = <String>::sse_decode(deserializer);
+        return crate::bridge::RelatorioDeUso {
+            eventos: var_eventos,
+            execucoes: var_execucoes,
+            obras_distintas: var_obrasDistintas,
+            publicas: var_publicas,
+            sem_ficha: var_semFicha,
+            obras: var_obras,
+            core: var_core,
+        };
     }
 }
 
@@ -661,6 +879,7 @@ impl SseDecode for crate::bridge::SongSection {
 impl SseDecode for crate::bridge::SongSummary {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_id = <String>::sse_decode(deserializer);
         let mut var_title = <String>::sse_decode(deserializer);
         let mut var_key = <Option<String>>::sse_decode(deserializer);
         let mut var_artist = <Option<String>>::sse_decode(deserializer);
@@ -669,6 +888,7 @@ impl SseDecode for crate::bridge::SongSummary {
         let mut var_chords = <Vec<String>>::sse_decode(deserializer);
         let mut var_core = <String>::sse_decode(deserializer);
         return crate::bridge::SongSummary {
+            id: var_id,
             title: var_title,
             key: var_key,
             artist: var_artist,
@@ -677,6 +897,13 @@ impl SseDecode for crate::bridge::SongSummary {
             chords: var_chords,
             core: var_core,
         };
+    }
+}
+
+impl SseDecode for u16 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_u16::<NativeEndian>().unwrap()
     }
 }
 
@@ -699,17 +926,22 @@ impl SseDecode for () {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {}
 }
 
+impl SseDecode for crate::bridge::VersaoDaObra {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_versao = <String>::sse_decode(deserializer);
+        let mut var_vezes = <u32>::sse_decode(deserializer);
+        return crate::bridge::VersaoDaObra {
+            versao: var_versao,
+            vezes: var_vezes,
+        };
+    }
+}
+
 impl SseDecode for i32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_i32::<NativeEndian>().unwrap()
-    }
-}
-
-impl SseDecode for bool {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_u8().unwrap() != 0
     }
 }
 
@@ -731,9 +963,12 @@ fn pde_ffi_dispatcher_primary_impl(
         7 => wire__crate__bridge__pode_publicar_impl(port, ptr, rust_vec_len, data_len),
         8 => wire__crate__bridge__read_musicxml_impl(port, ptr, rust_vec_len, data_len),
         9 => wire__crate__bridge__read_song_impl(port, ptr, rust_vec_len, data_len),
-        10 => wire__crate__bridge__remover_da_biblioteca_impl(port, ptr, rust_vec_len, data_len),
-        11 => wire__crate__bridge__salvar_na_biblioteca_impl(port, ptr, rust_vec_len, data_len),
-        12 => wire__crate__bridge__transpose_song_impl(port, ptr, rust_vec_len, data_len),
+        10 => wire__crate__bridge__relatorio_de_uso_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__bridge__remover_da_biblioteca_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crate__bridge__repetir_ultimo_evento_impl(port, ptr, rust_vec_len, data_len),
+        13 => wire__crate__bridge__salvar_evento_agenda_impl(port, ptr, rust_vec_len, data_len),
+        14 => wire__crate__bridge__salvar_na_biblioteca_impl(port, ptr, rust_vec_len, data_len),
+        15 => wire__crate__bridge__transpose_song_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -765,6 +1000,25 @@ impl flutter_rust_bridge::IntoDart for crate::bridge::ChordMark {
 impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::bridge::ChordMark {}
 impl flutter_rust_bridge::IntoIntoDart<crate::bridge::ChordMark> for crate::bridge::ChordMark {
     fn into_into_dart(self) -> crate::bridge::ChordMark {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::EntradaAgenda {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.song_id.into_into_dart().into_dart(),
+            self.versao.into_into_dart().into_dart(),
+            self.tom.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::bridge::EntradaAgenda {}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::EntradaAgenda>
+    for crate::bridge::EntradaAgenda
+{
+    fn into_into_dart(self) -> crate::bridge::EntradaAgenda {
         self
     }
 }
@@ -807,6 +1061,53 @@ impl flutter_rust_bridge::IntoIntoDart<crate::bridge::ExecucaoAgenda>
     for crate::bridge::ExecucaoAgenda
 {
     fn into_into_dart(self) -> crate::bridge::ExecucaoAgenda {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::ObraDoRelatorio {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.titulo.into_into_dart().into_dart(),
+            self.execucoes.into_into_dart().into_dart(),
+            self.versoes.into_into_dart().into_dart(),
+            self.veredito.into_into_dart().into_dart(),
+            self.publica.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::bridge::ObraDoRelatorio
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::ObraDoRelatorio>
+    for crate::bridge::ObraDoRelatorio
+{
+    fn into_into_dart(self) -> crate::bridge::ObraDoRelatorio {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::RelatorioDeUso {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.eventos.into_into_dart().into_dart(),
+            self.execucoes.into_into_dart().into_dart(),
+            self.obras_distintas.into_into_dart().into_dart(),
+            self.publicas.into_into_dart().into_dart(),
+            self.sem_ficha.into_into_dart().into_dart(),
+            self.obras.into_into_dart().into_dart(),
+            self.core.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::bridge::RelatorioDeUso {}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::RelatorioDeUso>
+    for crate::bridge::RelatorioDeUso
+{
+    fn into_into_dart(self) -> crate::bridge::RelatorioDeUso {
         self
     }
 }
@@ -866,6 +1167,7 @@ impl flutter_rust_bridge::IntoIntoDart<crate::bridge::SongSection> for crate::br
 impl flutter_rust_bridge::IntoDart for crate::bridge::SongSummary {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
+            self.id.into_into_dart().into_dart(),
             self.title.into_into_dart().into_dart(),
             self.key.into_into_dart().into_dart(),
             self.artist.into_into_dart().into_dart(),
@@ -883,6 +1185,24 @@ impl flutter_rust_bridge::IntoIntoDart<crate::bridge::SongSummary> for crate::br
         self
     }
 }
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::bridge::VersaoDaObra {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.versao.into_into_dart().into_dart(),
+            self.vezes.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::bridge::VersaoDaObra {}
+impl flutter_rust_bridge::IntoIntoDart<crate::bridge::VersaoDaObra>
+    for crate::bridge::VersaoDaObra
+{
+    fn into_into_dart(self) -> crate::bridge::VersaoDaObra {
+        self
+    }
+}
 
 impl SseEncode for String {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -891,11 +1211,27 @@ impl SseEncode for String {
     }
 }
 
+impl SseEncode for bool {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_u8(self as _).unwrap();
+    }
+}
+
 impl SseEncode for crate::bridge::ChordMark {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u32>::sse_encode(self.position, serializer);
         <String>::sse_encode(self.chord, serializer);
+    }
+}
+
+impl SseEncode for crate::bridge::EntradaAgenda {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.song_id, serializer);
+        <Option<String>>::sse_encode(self.versao, serializer);
+        <Option<String>>::sse_encode(self.tom, serializer);
     }
 }
 
@@ -941,6 +1277,16 @@ impl SseEncode for Vec<crate::bridge::ChordMark> {
     }
 }
 
+impl SseEncode for Vec<crate::bridge::EntradaAgenda> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::bridge::EntradaAgenda>::sse_encode(item, serializer);
+        }
+    }
+}
+
 impl SseEncode for Vec<crate::bridge::EventoAgenda> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -957,6 +1303,16 @@ impl SseEncode for Vec<crate::bridge::ExecucaoAgenda> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::bridge::ExecucaoAgenda>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::bridge::ObraDoRelatorio> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::bridge::ObraDoRelatorio>::sse_encode(item, serializer);
         }
     }
 }
@@ -1001,6 +1357,27 @@ impl SseEncode for Vec<crate::bridge::SongSummary> {
     }
 }
 
+impl SseEncode for Vec<crate::bridge::VersaoDaObra> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::bridge::VersaoDaObra>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for crate::bridge::ObraDoRelatorio {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.titulo, serializer);
+        <u32>::sse_encode(self.execucoes, serializer);
+        <Vec<crate::bridge::VersaoDaObra>>::sse_encode(self.versoes, serializer);
+        <Option<String>>::sse_encode(self.veredito, serializer);
+        <bool>::sse_encode(self.publica, serializer);
+    }
+}
+
 impl SseEncode for Option<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1008,6 +1385,19 @@ impl SseEncode for Option<String> {
         if let Some(value) = self {
             <String>::sse_encode(value, serializer);
         }
+    }
+}
+
+impl SseEncode for crate::bridge::RelatorioDeUso {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <u32>::sse_encode(self.eventos, serializer);
+        <u32>::sse_encode(self.execucoes, serializer);
+        <u32>::sse_encode(self.obras_distintas, serializer);
+        <u32>::sse_encode(self.publicas, serializer);
+        <u32>::sse_encode(self.sem_ficha, serializer);
+        <Vec<crate::bridge::ObraDoRelatorio>>::sse_encode(self.obras, serializer);
+        <String>::sse_encode(self.core, serializer);
     }
 }
 
@@ -1042,6 +1432,7 @@ impl SseEncode for crate::bridge::SongSection {
 impl SseEncode for crate::bridge::SongSummary {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.id, serializer);
         <String>::sse_encode(self.title, serializer);
         <Option<String>>::sse_encode(self.key, serializer);
         <Option<String>>::sse_encode(self.artist, serializer);
@@ -1049,6 +1440,13 @@ impl SseEncode for crate::bridge::SongSummary {
         <u32>::sse_encode(self.sections, serializer);
         <Vec<String>>::sse_encode(self.chords, serializer);
         <String>::sse_encode(self.core, serializer);
+    }
+}
+
+impl SseEncode for u16 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_u16::<NativeEndian>(self).unwrap();
     }
 }
 
@@ -1071,17 +1469,18 @@ impl SseEncode for () {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
 }
 
+impl SseEncode for crate::bridge::VersaoDaObra {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.versao, serializer);
+        <u32>::sse_encode(self.vezes, serializer);
+    }
+}
+
 impl SseEncode for i32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_i32::<NativeEndian>(self).unwrap();
-    }
-}
-
-impl SseEncode for bool {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_u8(self as _).unwrap();
     }
 }
 

@@ -159,9 +159,11 @@ class _SongReaderPageState extends State<SongReaderPage> {
 
   /// O identificador da obra na posição [indice].
   ///
-  /// A agenda informa os ids; sem eles, o id é o slug do título — o mesmo que a
-  /// `LibraryPage` gera ao salvar a cifra. `null` significa que não há id, e a
-  /// tela diz isso em vez de abrir outra música.
+  /// A agenda informa os ids; sem eles, o id é o que a biblioteca declarou no
+  /// resumo (`SongSummary.id`) — e só quando esse id não veio (resumo montado à
+  /// mão) o slug do título serve de último recurso, o mesmo que a `LibraryPage`
+  /// gera ao salvar a cifra. `null` significa que não há id, e a tela diz isso em
+  /// vez de abrir outra música.
   String? _idDaObra(int indice) {
     final ids = widget.idsBiblioteca;
     if (ids != null) {
@@ -170,6 +172,8 @@ class _SongReaderPageState extends State<SongReaderPage> {
     }
     final lista = widget.biblioteca;
     if (lista == null || indice < 0 || indice >= lista.length) return null;
+    final declarado = lista[indice].id;
+    if (declarado.isNotEmpty) return declarado;
     return _slugDoTitulo(lista[indice].title);
   }
 
