@@ -175,6 +175,32 @@ pub struct ChordSegment {
     pub tonica: usize,
     #[serde(skip)]
     pub qualidade: Qualidade,
+    /// De onde veio a terça que o nome carrega. Publicado porque **a terça é a
+    /// decisão de que o croma mais erra**: sem isto, um `C` que veio do croma
+    /// (razão 0,45 da fundamental) e um `C` que veio da melodia são o mesmo
+    /// texto na tela, e nenhum dos dois é conferível.
+    pub origem_terca: OrigemDaTerca,
+    /// Razão terça/fundamental medida no croma. É o número que a regra usa
+    /// (`LIMIAR_DA_TERCA`); `0,0` quando o template já tinha terça.
+    pub terca_razao: f32,
+    /// A maioria dos quadros do trecho **cru** era potência: só aí a regra pôde
+    /// agir. É o denominador honesto de "quantos trechos ganharam terça".
+    pub potencia_no_croma: bool,
+}
+
+/// De onde veio a terça (ou a ausência dela) no nome do trecho.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub enum OrigemDaTerca {
+    /// O template já tinha terça: nada foi acrescentado.
+    Template,
+    /// O croma tinha terça acima do limiar e a regra devolveu o acorde inteiro.
+    Croma,
+    /// O croma perdeu a terça e a **melodia** a trouxe (`com_a_melodia`).
+    Melodia,
+    /// O nome final **não tem terça** — ficou em potência (ou `sus`). É a leitura
+    /// honesta quando a terça não está no áudio, e é o denominador do risco:
+    /// "ganhou terça" só significa alguma coisa contra quantos ficaram sem ela.
+    Ausente,
 }
 
 /// Vetor do template: 1.0 nas classes do acorde, 0.0 no resto (normalizado).
@@ -207,11 +233,17 @@ pub fn nome_da_classe(classe: usize) -> &'static str {
     TONICAS[classe % 12]
 }
 
-/// Melhor acorde para um croma, com a margem sobre o segundo colocado.
-fn melhor(croma: &[f32; 12]) -> (usize, Qualidade, f32) {
+/// Melhor acorde para um croma, com a margem sobre o segundo colocado — e o que
+/// a terça mediu: a razão terça/fundamental, a qualidade **crua** do template e a
+/// margem.
+///
+/// A razão sai junto porque a decisão da terça era invisível: o nome final não
+/// diz se veio do template, do croma ou da melodia, nem com que número. Sem isso
+/// não há como medir "quantos trechos ganharam terça que não têm".
+fn melhor(croma: &[f32; 12]) -> (usize, Qualidade, f32, Qualidade, f32) {
     let norma = (croma.iter().map(|v| v * v).sum::<f32>()).sqrt();
     if norma <= f32::EPSILON {
-        return (0, Qualidade::Maior, 0.0);
+        return (0, Qualidade::Maior, 0.0, Qualidade::Maior, 0.0);
     }
     let normalizado: [f32; 12] = std::array::from_fn(|i| croma[i] / norma);
     let mut pontuacoes: Vec<(usize, Qualidade, f32)> = Vec::new();
@@ -225,35 +257,50 @@ fn melhor(croma: &[f32; 12]) -> (usize, Qualidade, f32) {
     pontuacoes.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
     let (tonica, qualidade, primeira) = pontuacoes[0];
     let segunda = pontuacoes[1].2;
+    let (final_q, razao) = com_terca(croma, tonica, qualidade);
     (
         tonica,
-        com_terca(croma, tonica, qualidade),
+        final_q,
+        razao,
+        qualidade,
         (primeira - segunda).max(0.0),
     )
 }
 
+/// Terça mínima (fração da fundamental) para o croma devolver o acorde inteiro.
+///
+/// **0,40 é medido, não escolhido** (2026-11-22): nos 91 trechos rotulados `5`
+/// da primeira música real, a razão terça/fundamental tem mediana **0,28** e fica
+/// abaixo de 0,4 em **80%** deles — ali a terça não está audível e `5` é a
+/// leitura honesta. Nos 20% restantes o template de duas notas ganhava por
+/// diluição do croma, e o motor volta a dizer o acorde completo. **Limite
+/// declarado:** medido em uma música; o número de cada trecho passou a sair em
+/// `ChordSegment::terca_razao` para a decisão ser conferível no repertório.
+const LIMIAR_DA_TERCA: f32 = 0.4;
+
 /// Diz o acorde inteiro quando a terça **está** no áudio; senão, fica em potência.
 ///
-/// Medido na primeira música real (91 trechos rotulados `5`): em **80%** deles a
-/// terça não passa de 40% da fundamental — razão mediana 0,28. Inventar
-/// maior/menor ali seria mentira; `5` é o que se pode defender. Nos 20% em que a
-/// terça existe, o template de duas notas ganhava por diluição do croma, e aí o
-/// motor volta a dizer o acorde completo.
-fn com_terca(croma: &[f32; 12], tonica: usize, qualidade: Qualidade) -> Qualidade {
+/// Devolve também **a razão medida**: um número ao lado da decisão é o que
+/// permite ver se o limiar corta perto da fronteira (risco de inventar terça) ou
+/// no vazio (decisão folgada). `(qualidade, razao)`, com `razao = 0,0` quando o
+/// template já tinha terça.
+fn com_terca(croma: &[f32; 12], tonica: usize, qualidade: Qualidade) -> (Qualidade, f32) {
     if qualidade != Qualidade::Potencia {
-        return qualidade;
+        return (qualidade, 0.0);
     }
     let fundamental = croma[tonica].max(1e-6);
     let terca_maior = croma[(tonica + 4) % 12];
     let terca_menor = croma[(tonica + 3) % 12];
-    if terca_maior.max(terca_menor) > 0.4 * fundamental {
-        if terca_maior >= terca_menor {
+    let razao = terca_maior.max(terca_menor) / fundamental;
+    if razao > LIMIAR_DA_TERCA {
+        let decidida = if terca_maior >= terca_menor {
             Qualidade::Maior
         } else {
             Qualidade::Menor
-        }
+        };
+        (decidida, razao)
     } else {
-        Qualidade::Potencia
+        (Qualidade::Potencia, razao)
     }
 }
 
@@ -272,8 +319,9 @@ pub fn detect_com_melodia(chroma: &Chroma, melodia: Option<&Melodia>) -> Vec<Cho
     if chroma.quadros.is_empty() || chroma.fps <= 0.0 {
         return Vec::new();
     }
-    // 1. Voto por quadro.
-    let votos: Vec<(usize, Qualidade, f32)> = chroma.quadros.iter().map(melhor).collect();
+    // 1. Voto por quadro. Cada voto carrega o **cru** (qualidade do template) e a
+    //    razão da terça: a agregação precisa deles para dizer de onde veio a terça.
+    let votos: Vec<Voto> = chroma.quadros.iter().map(melhor).collect();
     // 2. Suavização: moda do rótulo numa janela de ~0,5 s.
     let meia = ((0.25 * chroma.fps) as usize).max(1);
     let mut suave = votos.clone();
@@ -292,7 +340,7 @@ pub fn detect_com_melodia(chroma: &Chroma, melodia: Option<&Melodia>) -> Vec<Cho
         }
         contagem.sort_by_key(|&(_, _, n)| std::cmp::Reverse(n));
         let (t, q, _) = contagem[0];
-        suave[i] = (t, q, votos[i].2);
+        suave[i] = (t, q, votos[i].2, votos[i].3, votos[i].4);
     }
     // 3. Agrupa quadros iguais em trechos, guardando a **estrutura** — tônica e
     //    qualidade — até o fim. O nome é a última coisa montada, porque o
@@ -307,13 +355,28 @@ pub fn detect_com_melodia(chroma: &Chroma, melodia: Option<&Melodia>) -> Vec<Cho
         {
             fim += 1;
         }
-        let confianca = suave[inicio..fim].iter().map(|v| v.2).sum::<f32>() / (fim - inicio) as f32;
+        let confianca = suave[inicio..fim].iter().map(|v| v.4).sum::<f32>() / (fim - inicio) as f32;
+        let potencia_no_croma = fatia_potencia(&votos[inicio..fim]);
+        let crua = qualidade_mais_frequente(&votos[inicio..fim]);
+        let razoes: Vec<f32> = votos[inicio..fim]
+            .iter()
+            .filter(|v| v.3 == Qualidade::Potencia)
+            .map(|v| v.2)
+            .collect();
+        let terca_razao = if razoes.is_empty() {
+            0.0
+        } else {
+            razoes.iter().sum::<f32>() / razoes.len() as f32
+        };
         trechos.push(Bruto {
             inicio_s: inicio as f32 / chroma.fps,
             fim_s: fim as f32 / chroma.fps,
             tonica: suave[inicio].0,
             qualidade: suave[inicio].1,
             confianca,
+            potencia_no_croma,
+            crua,
+            terca_razao,
         });
         inicio = fim;
     }
@@ -341,6 +404,18 @@ pub fn detect_com_melodia(chroma: &Chroma, melodia: Option<&Melodia>) -> Vec<Cho
                     melodia,
                 )
             });
+            // Quem acrescentou a terça: ninguém (o template já a tinha), o croma
+            // (razão acima do limiar) ou a melodia. Sem isto, os três casos
+            // chegam à tela com o mesmo nome.
+            let origem_terca = if qualidade != trecho.qualidade {
+                OrigemDaTerca::Melodia
+            } else if trecho.qualidade != trecho.crua {
+                OrigemDaTerca::Croma
+            } else if trecho.crua.tem_terca() {
+                OrigemDaTerca::Template
+            } else {
+                OrigemDaTerca::Ausente
+            };
             ChordSegment {
                 inicio_s: trecho.inicio_s,
                 fim_s: trecho.fim_s,
@@ -348,6 +423,9 @@ pub fn detect_com_melodia(chroma: &Chroma, melodia: Option<&Melodia>) -> Vec<Cho
                 confianca: trecho.confianca,
                 tonica: trecho.tonica,
                 qualidade,
+                origem_terca,
+                terca_razao: trecho.terca_razao,
+                potencia_no_croma: trecho.potencia_no_croma,
             }
         })
         .collect()
@@ -360,10 +438,44 @@ struct Bruto {
     tonica: usize,
     qualidade: Qualidade,
     confianca: f32,
+    /// A maioria dos quadros tinha qualidade **crua** de potência: só aí a regra
+    /// da terça pôde agir. É o denominador de "quantos trechos ganharam terça".
+    potencia_no_croma: bool,
+    /// Qualidade mais frequente **no template**, antes da regra da terça.
+    crua: Qualidade,
+    /// Razão terça/fundamental média dos quadros de potência do trecho.
+    terca_razao: f32,
+}
+
+/// Voto de um quadro: tônica, qualidade final, razão da terça, qualidade **crua**
+/// do template e margem sobre o segundo colocado.
+type Voto = (usize, Qualidade, f32, Qualidade, f32);
+
+/// A maioria dos quadros da fatia era potência no template.
+fn fatia_potencia(fatia: &[Voto]) -> bool {
+    if fatia.is_empty() {
+        return false;
+    }
+    fatia.iter().filter(|v| v.3 == Qualidade::Potencia).count() * 2 > fatia.len()
+}
+
+/// Qualidade crua mais frequente da fatia: o que o template escolheu, sem regra.
+fn qualidade_mais_frequente(fatia: &[Voto]) -> Qualidade {
+    let mut contagem: Vec<(Qualidade, usize)> = Vec::new();
+    for voto in fatia {
+        match contagem.iter_mut().find(|(q, _)| *q == voto.3) {
+            Some((_, n)) => *n += 1,
+            None => contagem.push((voto.3, 1)),
+        }
+    }
+    contagem
+        .iter()
+        .max_by_key(|(_, n)| *n)
+        .map_or(Qualidade::Maior, |&(q, _)| q)
 }
 
 /// Quantos quadros com F0 a melodia precisa ter no trecho para opinar.
-const MINIMO_DE_QUADROS: usize = 3;
+pub const MINIMO_DE_QUADROS: usize = 3;
 
 /// Fração dos quadros com F0 que a terça precisa somar para decidir.
 ///
@@ -373,8 +485,9 @@ const MINIMO_DE_QUADROS: usize = 3;
 /// O 0,40 anterior só servia para melodia parada — **melodia de verdade se move**,
 /// e toca a fundamental, a quinta, a nona e a terça no mesmo trecho. **Limite
 /// declarado:** calibrado em três acordes de uma música; o piso precisa de casos
-/// negativos para não disparar terça onde não há.
-const FRACAO_DA_TERCA: f32 = 0.2;
+/// negativos para não disparar terça onde não há. É o mesmo critério que
+/// `Report.melodia[].terca_confirmada` usa para confirmar a terça do croma.
+pub const FRACAO_DA_TERCA: f32 = 0.2;
 
 /// Promove `5` para maior/menor quando a melodia canta a terça.
 ///
@@ -523,43 +636,108 @@ mod tests {
         // potência (é o caso que a medição na música real mostrou), e a regra da
         // terça devolve o acorde inteiro.
         let valor = croma(&[(0, 1.0), (4, 0.45), (7, 1.5)]);
+        let (qualidade, razao) = com_terca(&valor, 0, Qualidade::Potencia);
         assert_eq!(
-            com_terca(&valor, 0, Qualidade::Potencia),
+            qualidade,
             Qualidade::Maior,
             "terça acima de 0,4 da fundamental tem de virar acorde completo"
+        );
+        // A razão medida sai junto da decisão: é ela que diz o quanto a decisão
+        // está perto do limiar.
+        assert!(
+            (razao - 0.45).abs() < 1e-5,
+            "a razão medida tem de acompanhar a decisão: {razao}"
         );
         assert_eq!(melhor(&valor).1, Qualidade::Maior);
     }
 
     #[test]
     fn terca_ausente_ou_fraca_fica_potencia_e_nao_inventa() {
-        // Sem terça nenhuma: potência é o que se pode defender.
+        // Sem terça nenhuma: potência é o que se pode defender — e a razão zero é
+        // o que prova que não havia nada para promover.
         assert_eq!(
             com_terca(&croma(&[(0, 1.0), (7, 0.9)]), 0, Qualidade::Potencia),
-            Qualidade::Potencia
+            (Qualidade::Potencia, 0.0)
         );
-        // 0,3 da fundamental fica abaixo do limiar medido (0,4): não vira menor.
-        assert_eq!(
-            com_terca(
-                &croma(&[(0, 1.0), (3, 0.3), (7, 0.9)]),
-                0,
-                Qualidade::Potencia
-            ),
-            Qualidade::Potencia
+        // 0,3 da fundamental fica abaixo do limiar medido (0,4): não vira menor —
+        // e a razão 0,3 é o que mostra que a decisão ali estava perto da borda.
+        let (q, r) = com_terca(
+            &croma(&[(0, 1.0), (3, 0.3), (7, 0.9)]),
+            0,
+            Qualidade::Potencia,
         );
+        assert_eq!(q, Qualidade::Potencia, "0,3 fica abaixo do limiar de 0,4");
+        assert!((r - 0.3).abs() < 1e-5, "razão medida 0,3: {r}");
         // Terça menor presente: escolhe menor, não maior.
         assert_eq!(
             com_terca(
                 &croma(&[(0, 1.0), (3, 0.6), (7, 0.9)]),
                 0,
                 Qualidade::Potencia
-            ),
+            )
+            .0,
             Qualidade::Menor
         );
-        // Qualidade já decidida não é mexida.
+        // Qualidade já decidida não é mexida — e a razão sai 0, porque a regra não
+        // foi consultada.
         assert_eq!(
             com_terca(&croma(&[(0, 1.0)]), 0, Qualidade::MaiorSete),
-            Qualidade::MaiorSete
+            (Qualidade::MaiorSete, 0.0)
         );
+    }
+
+    /// Croma sintético de potência pura: fundamental e quinta, sem terça nenhuma.
+    fn chroma_de_potencia() -> Chroma {
+        Chroma {
+            quadros: (0..40).map(|_| croma(&[(0, 1.0), (7, 1.2)])).collect(),
+            fps: 10.0,
+        }
+    }
+
+    #[test]
+    fn o_trecho_publica_de_onde_veio_a_terca() {
+        // Potência pura: o nome tem de sair sem terça e o trecho tem de DIZER
+        // isso (`Ausente`), com a razão medida perto de zero. Sem este campo, o
+        // relatório mostrava o mesmo `C5` sem dizer que a terça foi procurada.
+        let trechos = detect(&chroma_de_potencia());
+        assert!(!trechos.is_empty(), "croma de potência não gerou trecho");
+        for trecho in &trechos {
+            assert_eq!(trecho.qualidade, Qualidade::Potencia, "{}", trecho.acorde);
+            assert_eq!(trecho.origem_terca, OrigemDaTerca::Ausente);
+            assert!(trecho.potencia_no_croma, "{}", trecho.acorde);
+            assert!(
+                trecho.terca_razao < LIMIAR_DA_TERCA,
+                "razão acima do limiar sem terça no croma: {}",
+                trecho.terca_razao
+            );
+        }
+
+        // Com a terça no croma — fraca o bastante para o template de potência
+        // ainda ganhar no cru, que é o caso medido na música real —, o MESMO
+        // caminho tem de dizer `Croma` e publicar a razão: é a prova de que o
+        // campo mede a decisão, e não repete uma constante.
+        let mut com_terca_no_croma = chroma_de_potencia();
+        for quadro in &mut com_terca_no_croma.quadros {
+            *quadro = croma(&[(0, 1.0), (4, 0.45), (7, 1.5)]);
+        }
+        let trechos = detect(&com_terca_no_croma);
+        assert!(!trechos.is_empty());
+        for trecho in &trechos {
+            assert_eq!(
+                trecho.origem_terca,
+                OrigemDaTerca::Croma,
+                "{}",
+                trecho.acorde
+            );
+            assert_eq!(
+                trecho.acorde, "C",
+                "a terça presente devolve o acorde inteiro"
+            );
+            assert!(
+                trecho.terca_razao > LIMIAR_DA_TERCA,
+                "a razão publicada tem de estar acima do limiar: {}",
+                trecho.terca_razao
+            );
+        }
     }
 }
