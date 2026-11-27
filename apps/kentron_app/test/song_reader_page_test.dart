@@ -316,7 +316,7 @@ void main() {
           transpor: _transpor,
           tons: _tons,
           biblioteca: const <SongSummary>[
-            SongSummary(title: 'Santo', sections: 1, chords: <String>[], core: 'falso'),
+            SongSummary(id: 'santo', title: 'Santo', sections: 1, chords: <String>[], core: 'falso'),
           ],
           diretorioBase: '/tmp/biblioteca',
           carregarCifra: carregarEspiao,
@@ -325,9 +325,45 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(pedido, '/tmp/biblioteca|santo', reason: 'o id vem do título');
+    expect(pedido, '/tmp/biblioteca|santo', reason: 'o id vem do resumo da biblioteca');
     expect(find.text('Santo'), findsOneWidget);
     expect(find.textContaining('Could not load'), findsNothing);
+  });
+
+  testWidgets('usa o id do resumo em vez do slug do título', (tester) async {
+    // O título NÃO é o id: `Santo (arranjo do coral)` é a obra `arranjo-coral`.
+    // Pedir o slug do título abriria `santo-arranjo-do-coral-`, que não existe.
+    String? pedido;
+    Future<String> carregarEspiao(String baseDir, String id) async {
+      pedido = id;
+      return chordproDoDisco;
+    }
+
+    await tester.pumpWidget(
+      _montar(
+        SongReaderPage(
+          input: '',
+          ler: lerComoONucleo,
+          transpor: _transpor,
+          tons: _tons,
+          biblioteca: const <SongSummary>[
+            SongSummary(
+              id: 'arranjo-coral',
+              title: 'Santo (arranjo do coral)',
+              sections: 1,
+              chords: <String>[],
+              core: 'falso',
+            ),
+          ],
+          diretorioBase: '/tmp/biblioteca',
+          carregarCifra: carregarEspiao,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(pedido, 'arranjo-coral');
+    expect(pedido, isNot('santo-arranjo-do-coral-'), reason: 'o slug erraria a obra');
   });
 
   testWidgets('usa o id informado pela agenda em vez do slug do título', (
@@ -349,6 +385,7 @@ void main() {
           // O título não é o id: só a agenda sabe que esta obra é `arranjo-coral`.
           biblioteca: const <SongSummary>[
             SongSummary(
+              id: '',
               title: 'Santo (arranjo do coral)',
               sections: 1,
               chords: <String>[],

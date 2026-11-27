@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kentron_app/src/rust/bridge.dart';
 import 'package:kentron_app/src/stage/agenda_page.dart';
 import 'package:kentron_app/src/stage/library_page.dart';
+import 'package:kentron_app/src/stage/uso_page.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Eventos de mentira: o teste não toca em FFI, só na lógica de tela. A prova
@@ -236,5 +237,233 @@ void main() {
 
     expect(find.text('Não foi possível carregar a agenda'), findsOneWidget);
     expect(find.textContaining('sem library.json'), findsOneWidget);
+  });
+
+  // ── Montar a agenda: o editor e o atalho de repetir ─────────────────────
+
+  /// O evento que o atalho de repetir cria, como o núcleo o devolveria.
+  const repetido = EventoAgenda(
+    id: 'ensaio-de-quinta-20261129-200000',
+    nome: 'Ensaio de quinta',
+    data: '2026-11-29',
+    tipo: 'ensaio',
+    execucoes: <ExecucaoAgenda>[
+      ExecucaoAgenda(songId: 'hino-3', titulo: 'Hino 3'),
+    ],
+    core: 'falso 0.0.0',
+  );
+
+  testWidgets('o botão de novo evento abre o editor e a lista recarrega', (
+    tester,
+  ) async {
+    var carregamentos = 0;
+    EventoAgenda? pedidoAoEditor;
+    await tester.pumpWidget(
+      _montar(
+        AgendaPage(
+          diretorioBase: '/tmp/biblioteca',
+          carregarAgenda: (String _) async {
+            carregamentos++;
+            return carregamentos == 1
+                ? const <EventoAgenda>[]
+                : const <EventoAgenda>[_culto];
+          },
+          abrirEditor: (EventoAgenda? evento, String _) {
+            pedidoAoEditor = evento;
+            return Scaffold(
+              body: Builder(
+                builder: (BuildContext contexto) => Center(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(contexto).pop(_culto),
+                    child: const Text('gravar o evento'),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('No events in the agenda yet.'), findsOneWidget);
+
+    await tester.tap(find.text('New event'));
+    await tester.pumpAndSettle();
+    expect(pedidoAoEditor, isNull, reason: 'evento novo: nada a pré-preencher');
+
+    await tester.tap(find.text('gravar o evento'));
+    await tester.pumpAndSettle();
+
+    // A agenda recarrega do núcleo e mostra o que foi salvo.
+    expect(carregamentos, 2);
+    expect(find.text('Event saved'), findsOneWidget);
+    expect(find.text('Culto da manhã'), findsOneWidget);
+  });
+
+  testWidgets('a lápide do evento abre o editor com ele preenchido', (
+    tester,
+  ) async {
+    EventoAgenda? pedidoAoEditor;
+    await tester.pumpWidget(
+      _montar(
+        AgendaPage(
+          diretorioBase: '/tmp/biblioteca',
+          carregarAgenda: (String _) => _agenda(const <EventoAgenda>[_culto]),
+          abrirEditor: (EventoAgenda? evento, String _) {
+            pedidoAoEditor = evento;
+            return const Scaffold(body: Text('editor do evento'));
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Edit event'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('editor do evento'), findsOneWidget);
+    expect(pedidoAoEditor?.id, 'culto-1');
+    expect(
+      pedidoAoEditor?.execucoes.map((ExecucaoAgenda e) => e.songId),
+      <String>['santo', 'arranjo-coral'],
+      reason: 'o editor recebe as execuções na ordem da agenda',
+    );
+  });
+
+  testWidgets('o relatório de uso abre pela agenda', (tester) async {
+    await tester.pumpWidget(
+      _montar(
+        AgendaPage(
+          diretorioBase: '/tmp/biblioteca',
+          carregarAgenda: (String _) => _agenda(const <EventoAgenda>[_culto]),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Usage report'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(UsoPage), findsOneWidget);
+  });
+
+  testWidgets('repetir a agenda anterior manda o id do nome e do relógio', (
+    tester,
+  ) async {
+    var carregamentos = 0;
+    String? basePedida;
+    String? idPedido;
+    String? nomePedido;
+    await tester.pumpWidget(
+      _montar(
+        AgendaPage(
+          diretorioBase: '/tmp/biblioteca',
+          carregarAgenda: (String _) async {
+            carregamentos++;
+            return carregamentos == 1
+                ? const <EventoAgenda>[_culto, _ensaio]
+                : const <EventoAgenda>[_culto, _ensaio, repetido];
+          },
+          repetir:
+              ({
+                required String baseDir,
+                required String novoId,
+                required String nome,
+                String? data,
+              }) async {
+                basePedida = baseDir;
+                idPedido = novoId;
+                nomePedido = nome;
+                return repetido;
+              },
+          relogio: () => DateTime.utc(2026, 11, 29, 20, 0, 0),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Repeat the previous event'));
+    await tester.pumpAndSettle();
+
+    // O anterior é o último evento da lista — a mesma ordem do núcleo.
+    expect(nomePedido, 'Ensaio de quinta');
+    expect(idPedido, 'ensaio-de-quinta-20261129-200000');
+    expect(basePedida, '/tmp/biblioteca');
+    expect(carregamentos, 2, reason: 'a lista recarrega depois de repetir');
+    expect(
+      find.text('Event copied from the previous one: check the versions.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('repetir sem evento anterior avisa em vez de chamar o núcleo', (
+    tester,
+  ) async {
+    var chamou = false;
+    await tester.pumpWidget(
+      _montar(
+        AgendaPage(
+          diretorioBase: '/tmp/biblioteca',
+          carregarAgenda: (String _) => _agenda(const <EventoAgenda>[]),
+          repetir:
+              ({
+                required String baseDir,
+                required String novoId,
+                required String nome,
+                String? data,
+              }) async {
+                chamou = true;
+                return repetido;
+              },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Repeat the previous event'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('There is no previous event to repeat.'), findsOneWidget);
+    expect(chamou, isFalse, reason: 'sem anterior não há o que repetir');
+  });
+
+  testWidgets('a recusa do núcleo ao repetir aparece sem esvaziar a lista', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _montar(
+        AgendaPage(
+          diretorioBase: '/tmp/biblioteca',
+          carregarAgenda: (String _) => _agenda(const <EventoAgenda>[_culto]),
+          repetir:
+              ({
+                required String baseDir,
+                required String novoId,
+                required String nome,
+                String? data,
+              }) async => throw StateError(
+                'já existe um evento com o id culto-da-manha-20261129: repetir não sobrescreve',
+              ),
+          relogio: () => DateTime.utc(2026, 11, 29),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Repeat the previous event'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Could not repeat the previous event'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('já existe um evento com o id'),
+      findsOneWidget,
+      reason: 'a mensagem do núcleo vem inteira',
+    );
+    // Falha de ação não é agenda vazia: a lista continua na tela.
+    expect(find.text('Culto da manhã'), findsOneWidget);
+    expect(find.text('No events in the agenda yet.'), findsNothing);
   });
 }

@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 /// Carregador de mentira: mantém estes testes **herméticos**, sem FFI.
 /// A prova com o núcleo Rust de verdade vive em `bridge_test.dart`.
 Future<SongSummary> _carregarFalso(String _) async => const SongSummary(
+  id: '',
   title: 'Exemplo',
   key: 'C',
   artist: 'Teste',

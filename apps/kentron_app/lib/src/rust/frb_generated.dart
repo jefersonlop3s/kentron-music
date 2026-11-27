@@ -4,11 +4,14 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'bridge.dart';
+
 import 'dart:async';
 import 'dart:convert';
+
 import 'frb_generated.dart';
 import 'frb_generated.io.dart'
     if (dart.library.js_interop) 'frb_generated.web.dart';
+
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
@@ -64,7 +67,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -1738090199;
+  int get rustContentHash => -775641163;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -99,9 +102,30 @@ abstract class RustLibApi extends BaseApi {
 
   Future<SongDetail> crateBridgeReadSong({required String input});
 
+  Future<RelatorioDeUso> crateBridgeRelatorioDeUso({
+    required String baseDir,
+    required int anoCorrente,
+  });
+
   Future<void> crateBridgeRemoverDaBiblioteca({
     required String baseDir,
     required String id,
+  });
+
+  Future<EventoAgenda> crateBridgeRepetirUltimoEvento({
+    required String baseDir,
+    required String novoId,
+    required String nome,
+    String? data,
+  });
+
+  Future<EventoAgenda> crateBridgeSalvarEventoAgenda({
+    required String baseDir,
+    required String id,
+    required String nome,
+    String? data,
+    String? tipo,
+    required List<EntradaAgenda> execucoes,
   });
 
   Future<void> crateBridgeSalvarNaBiblioteca({
@@ -390,6 +414,40 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "read_song", argNames: ["input"]);
 
   @override
+  Future<RelatorioDeUso> crateBridgeRelatorioDeUso({
+    required String baseDir,
+    required int anoCorrente,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(baseDir, serializer);
+          sse_encode_u_16(anoCorrente, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 10,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_relatorio_de_uso,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateBridgeRelatorioDeUsoConstMeta,
+        argValues: [baseDir, anoCorrente],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeRelatorioDeUsoConstMeta => const TaskConstMeta(
+    debugName: "relatorio_de_uso",
+    argNames: ["baseDir", "anoCorrente"],
+  );
+
+  @override
   Future<void> crateBridgeRemoverDaBiblioteca({
     required String baseDir,
     required String id,
@@ -403,7 +461,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 11,
             port: port_,
           );
         },
@@ -425,6 +483,88 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<EventoAgenda> crateBridgeRepetirUltimoEvento({
+    required String baseDir,
+    required String novoId,
+    required String nome,
+    String? data,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(baseDir, serializer);
+          sse_encode_String(novoId, serializer);
+          sse_encode_String(nome, serializer);
+          sse_encode_opt_String(data, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 12,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_evento_agenda,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateBridgeRepetirUltimoEventoConstMeta,
+        argValues: [baseDir, novoId, nome, data],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeRepetirUltimoEventoConstMeta =>
+      const TaskConstMeta(
+        debugName: "repetir_ultimo_evento",
+        argNames: ["baseDir", "novoId", "nome", "data"],
+      );
+
+  @override
+  Future<EventoAgenda> crateBridgeSalvarEventoAgenda({
+    required String baseDir,
+    required String id,
+    required String nome,
+    String? data,
+    String? tipo,
+    required List<EntradaAgenda> execucoes,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(baseDir, serializer);
+          sse_encode_String(id, serializer);
+          sse_encode_String(nome, serializer);
+          sse_encode_opt_String(data, serializer);
+          sse_encode_opt_String(tipo, serializer);
+          sse_encode_list_entrada_agenda(execucoes, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 13,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_evento_agenda,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateBridgeSalvarEventoAgendaConstMeta,
+        argValues: [baseDir, id, nome, data, tipo, execucoes],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateBridgeSalvarEventoAgendaConstMeta =>
+      const TaskConstMeta(
+        debugName: "salvar_evento_agenda",
+        argNames: ["baseDir", "id", "nome", "data", "tipo", "execucoes"],
+      );
+
+  @override
   Future<void> crateBridgeSalvarNaBiblioteca({
     required String baseDir,
     required String id,
@@ -440,7 +580,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 14,
             port: port_,
           );
         },
@@ -475,7 +615,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 15,
             port: port_,
           );
         },
@@ -502,6 +642,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  bool dco_decode_bool(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as bool;
+  }
+
+  @protected
   ChordMark dco_decode_chord_mark(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -510,6 +656,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return ChordMark(
       position: dco_decode_u_32(arr[0]),
       chord: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  EntradaAgenda dco_decode_entrada_agenda(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return EntradaAgenda(
+      songId: dco_decode_String(arr[0]),
+      versao: dco_decode_opt_String(arr[1]),
+      tom: dco_decode_opt_String(arr[2]),
     );
   }
 
@@ -556,6 +715,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<EntradaAgenda> dco_decode_list_entrada_agenda(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_entrada_agenda).toList();
+  }
+
+  @protected
   List<EventoAgenda> dco_decode_list_evento_agenda(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_evento_agenda).toList();
@@ -565,6 +730,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<ExecucaoAgenda> dco_decode_list_execucao_agenda(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_execucao_agenda).toList();
+  }
+
+  @protected
+  List<ObraDoRelatorio> dco_decode_list_obra_do_relatorio(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_obra_do_relatorio).toList();
   }
 
   @protected
@@ -592,9 +763,47 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<VersaoDaObra> dco_decode_list_versao_da_obra(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_versao_da_obra).toList();
+  }
+
+  @protected
+  ObraDoRelatorio dco_decode_obra_do_relatorio(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return ObraDoRelatorio(
+      titulo: dco_decode_String(arr[0]),
+      execucoes: dco_decode_u_32(arr[1]),
+      versoes: dco_decode_list_versao_da_obra(arr[2]),
+      veredito: dco_decode_opt_String(arr[3]),
+      publica: dco_decode_bool(arr[4]),
+    );
+  }
+
+  @protected
   String? dco_decode_opt_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_String(raw);
+  }
+
+  @protected
+  RelatorioDeUso dco_decode_relatorio_de_uso(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 7)
+      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    return RelatorioDeUso(
+      eventos: dco_decode_u_32(arr[0]),
+      execucoes: dco_decode_u_32(arr[1]),
+      obrasDistintas: dco_decode_u_32(arr[2]),
+      publicas: dco_decode_u_32(arr[3]),
+      semFicha: dco_decode_u_32(arr[4]),
+      obras: dco_decode_list_obra_do_relatorio(arr[5]),
+      core: dco_decode_String(arr[6]),
+    );
   }
 
   @protected
@@ -641,17 +850,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   SongSummary dco_decode_song_summary(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 7)
-      throw Exception('unexpected arr length: expect 7 but see ${arr.length}');
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
     return SongSummary(
-      title: dco_decode_String(arr[0]),
-      key: dco_decode_opt_String(arr[1]),
-      artist: dco_decode_opt_String(arr[2]),
-      time: dco_decode_opt_String(arr[3]),
-      sections: dco_decode_u_32(arr[4]),
-      chords: dco_decode_list_String(arr[5]),
-      core: dco_decode_String(arr[6]),
+      id: dco_decode_String(arr[0]),
+      title: dco_decode_String(arr[1]),
+      key: dco_decode_opt_String(arr[2]),
+      artist: dco_decode_opt_String(arr[3]),
+      time: dco_decode_opt_String(arr[4]),
+      sections: dco_decode_u_32(arr[5]),
+      chords: dco_decode_list_String(arr[6]),
+      core: dco_decode_String(arr[7]),
     );
+  }
+
+  @protected
+  int dco_decode_u_16(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as int;
   }
 
   @protected
@@ -673,10 +889,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  VersaoDaObra dco_decode_versao_da_obra(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return VersaoDaObra(
+      versao: dco_decode_String(arr[0]),
+      vezes: dco_decode_u_32(arr[1]),
+    );
+  }
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_list_prim_u_8_strict(deserializer);
     return utf8.decoder.convert(inner);
+  }
+
+  @protected
+  bool sse_decode_bool(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint8() != 0;
   }
 
   @protected
@@ -685,6 +919,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_position = sse_decode_u_32(deserializer);
     var var_chord = sse_decode_String(deserializer);
     return ChordMark(position: var_position, chord: var_chord);
+  }
+
+  @protected
+  EntradaAgenda sse_decode_entrada_agenda(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_songId = sse_decode_String(deserializer);
+    var var_versao = sse_decode_opt_String(deserializer);
+    var var_tom = sse_decode_opt_String(deserializer);
+    return EntradaAgenda(songId: var_songId, versao: var_versao, tom: var_tom);
   }
 
   @protected
@@ -746,6 +989,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<EntradaAgenda> sse_decode_list_entrada_agenda(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <EntradaAgenda>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_entrada_agenda(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<EventoAgenda> sse_decode_list_evento_agenda(
     SseDeserializer deserializer,
   ) {
@@ -769,6 +1026,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <ExecucaoAgenda>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_execucao_agenda(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<ObraDoRelatorio> sse_decode_list_obra_do_relatorio(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <ObraDoRelatorio>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_obra_do_relatorio(deserializer));
     }
     return ans_;
   }
@@ -817,6 +1088,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<VersaoDaObra> sse_decode_list_versao_da_obra(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <VersaoDaObra>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_versao_da_obra(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  ObraDoRelatorio sse_decode_obra_do_relatorio(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_titulo = sse_decode_String(deserializer);
+    var var_execucoes = sse_decode_u_32(deserializer);
+    var var_versoes = sse_decode_list_versao_da_obra(deserializer);
+    var var_veredito = sse_decode_opt_String(deserializer);
+    var var_publica = sse_decode_bool(deserializer);
+    return ObraDoRelatorio(
+      titulo: var_titulo,
+      execucoes: var_execucoes,
+      versoes: var_versoes,
+      veredito: var_veredito,
+      publica: var_publica,
+    );
+  }
+
+  @protected
   String? sse_decode_opt_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -825,6 +1127,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     } else {
       return null;
     }
+  }
+
+  @protected
+  RelatorioDeUso sse_decode_relatorio_de_uso(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_eventos = sse_decode_u_32(deserializer);
+    var var_execucoes = sse_decode_u_32(deserializer);
+    var var_obrasDistintas = sse_decode_u_32(deserializer);
+    var var_publicas = sse_decode_u_32(deserializer);
+    var var_semFicha = sse_decode_u_32(deserializer);
+    var var_obras = sse_decode_list_obra_do_relatorio(deserializer);
+    var var_core = sse_decode_String(deserializer);
+    return RelatorioDeUso(
+      eventos: var_eventos,
+      execucoes: var_execucoes,
+      obrasDistintas: var_obrasDistintas,
+      publicas: var_publicas,
+      semFicha: var_semFicha,
+      obras: var_obras,
+      core: var_core,
+    );
   }
 
   @protected
@@ -865,6 +1188,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   SongSummary sse_decode_song_summary(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
     var var_title = sse_decode_String(deserializer);
     var var_key = sse_decode_opt_String(deserializer);
     var var_artist = sse_decode_opt_String(deserializer);
@@ -873,6 +1197,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_chords = sse_decode_list_String(deserializer);
     var var_core = sse_decode_String(deserializer);
     return SongSummary(
+      id: var_id,
       title: var_title,
       key: var_key,
       artist: var_artist,
@@ -881,6 +1206,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       chords: var_chords,
       core: var_core,
     );
+  }
+
+  @protected
+  int sse_decode_u_16(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getUint16();
   }
 
   @protected
@@ -901,15 +1232,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer) {
+  VersaoDaObra sse_decode_versao_da_obra(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getInt32();
+    var var_versao = sse_decode_String(deserializer);
+    var var_vezes = sse_decode_u_32(deserializer);
+    return VersaoDaObra(versao: var_versao, vezes: var_vezes);
   }
 
   @protected
-  bool sse_decode_bool(SseDeserializer deserializer) {
+  int sse_decode_i_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    return deserializer.buffer.getUint8() != 0;
+    return deserializer.buffer.getInt32();
   }
 
   @protected
@@ -919,10 +1252,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_bool(bool self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint8(self ? 1 : 0);
+  }
+
+  @protected
   void sse_encode_chord_mark(ChordMark self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.position, serializer);
     sse_encode_String(self.chord, serializer);
+  }
+
+  @protected
+  void sse_encode_entrada_agenda(EntradaAgenda self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.songId, serializer);
+    sse_encode_opt_String(self.versao, serializer);
+    sse_encode_opt_String(self.tom, serializer);
   }
 
   @protected
@@ -970,6 +1317,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_entrada_agenda(
+    List<EntradaAgenda> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_entrada_agenda(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_evento_agenda(
     List<EventoAgenda> self,
     SseSerializer serializer,
@@ -990,6 +1349,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_execucao_agenda(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_obra_do_relatorio(
+    List<ObraDoRelatorio> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_obra_do_relatorio(item, serializer);
     }
   }
 
@@ -1040,6 +1411,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_versao_da_obra(
+    List<VersaoDaObra> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_versao_da_obra(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_obra_do_relatorio(
+    ObraDoRelatorio self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.titulo, serializer);
+    sse_encode_u_32(self.execucoes, serializer);
+    sse_encode_list_versao_da_obra(self.versoes, serializer);
+    sse_encode_opt_String(self.veredito, serializer);
+    sse_encode_bool(self.publica, serializer);
+  }
+
+  @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -1047,6 +1443,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (self != null) {
       sse_encode_String(self, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_relatorio_de_uso(
+    RelatorioDeUso self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.eventos, serializer);
+    sse_encode_u_32(self.execucoes, serializer);
+    sse_encode_u_32(self.obrasDistintas, serializer);
+    sse_encode_u_32(self.publicas, serializer);
+    sse_encode_u_32(self.semFicha, serializer);
+    sse_encode_list_obra_do_relatorio(self.obras, serializer);
+    sse_encode_String(self.core, serializer);
   }
 
   @protected
@@ -1077,6 +1488,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_encode_song_summary(SongSummary self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
     sse_encode_String(self.title, serializer);
     sse_encode_opt_String(self.key, serializer);
     sse_encode_opt_String(self.artist, serializer);
@@ -1084,6 +1496,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_32(self.sections, serializer);
     sse_encode_list_String(self.chords, serializer);
     sse_encode_String(self.core, serializer);
+  }
+
+  @protected
+  void sse_encode_u_16(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putUint16(self);
   }
 
   @protected
@@ -1104,14 +1522,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_i_32(int self, SseSerializer serializer) {
+  void sse_encode_versao_da_obra(VersaoDaObra self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putInt32(self);
+    sse_encode_String(self.versao, serializer);
+    sse_encode_u_32(self.vezes, serializer);
   }
 
   @protected
-  void sse_encode_bool(bool self, SseSerializer serializer) {
+  void sse_encode_i_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    serializer.buffer.putUint8(self ? 1 : 0);
+    serializer.buffer.putInt32(self);
   }
 }

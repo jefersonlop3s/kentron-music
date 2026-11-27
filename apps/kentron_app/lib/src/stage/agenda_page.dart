@@ -1,13 +1,38 @@
 import 'package:core_l10n/core_l10n.dart';
 import 'package:kentron_app/src/rust/bridge.dart';
+import 'package:kentron_app/src/stage/agenda_editor_page.dart';
+import 'package:kentron_app/src/stage/erro_do_nucleo.dart';
 import 'package:kentron_app/src/stage/library_page.dart';
 import 'package:kentron_app/src/stage/song_reader_page.dart';
+import 'package:kentron_app/src/stage/uso_page.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Lê a agenda pelo núcleo. Função de topo porque a tela a recebe por injeção:
 /// dublê nos testes herméticos, ponte no app real (mesmo padrão do leitor).
 Future<List<EventoAgenda>> lerAgendaDoNucleo(String baseDir) =>
     listarAgenda(baseDir: baseDir);
+
+/// Repete a agenda anterior pelo núcleo (duplica o último evento).
+Future<EventoAgenda> repetirAgendaNoNucleo({
+  required String baseDir,
+  required String novoId,
+  required String nome,
+  String? data,
+}) => repetirUltimoEvento(
+  baseDir: baseDir,
+  novoId: novoId,
+  nome: nome,
+  data: data,
+);
+
+/// Assinatura de quem repete o evento anterior: ponte no app, dublê no teste.
+typedef RepetirEvento =
+    Future<EventoAgenda> Function({
+      required String baseDir,
+      required String novoId,
+      required String nome,
+      String? data,
+    });
 
 /// Abre um setlist no Modo Palco: o leitor carrega cada obra **pelo id** e o
 /// diretório base diz de onde; a ordem é a da agenda.
@@ -17,6 +42,11 @@ Widget abrirSetlistNoPalco(List<String> ids, String diretorio) =>
       idsBiblioteca: ids,
       diretorioBase: diretorio,
     );
+
+/// Abre o editor de evento de verdade (o que chama a ponte na montagem para os
+/// tons). Injetável para o teste de widget da agenda não depender de FFI.
+Widget abrirEditorDoNucleo(EventoAgenda? evento, String diretorio) =>
+    AgendaEditorPage(evento: evento, diretorioBase: diretorio);
 
 /// A agenda local: um evento por linha, com data, tipo e o setlist dele.
 ///
@@ -32,6 +62,9 @@ class AgendaPage extends StatefulWidget {
     this.carregarAgenda = lerAgendaDoNucleo,
     this.diretorioBase,
     this.abrirSetlist = abrirSetlistNoPalco,
+    this.abrirEditor = abrirEditorDoNucleo,
+    this.repetir = repetirAgendaNoNucleo,
+    this.relogio = agora,
   });
 
   /// De onde vem a agenda. Default: núcleo Rust.
@@ -44,6 +77,16 @@ class AgendaPage extends StatefulWidget {
   /// núcleo respondendo. Injetável porque o leitor chama a ponte já na montagem
   /// (tom, tons do seletor) — o teste de widget da agenda não deve depender de FFI.
   final Widget Function(List<String> ids, String diretorio) abrirSetlist;
+
+  /// Como o editor do evento é aberto. Default: a tela de edição de verdade.
+  /// Injetável pelo mesmo motivo do leitor (o editor pede os tons ao núcleo).
+  final Widget Function(EventoAgenda? evento, String diretorio) abrirEditor;
+
+  /// Como o evento anterior é repetido. Default: núcleo Rust.
+  final RepetirEvento repetir;
+
+  /// O relógio do id do evento repetido. Injetável para o teste ser determinístico.
+  final DateTime Function() relogio;
 
   @override
   State<AgendaPage> createState() => _AgendaPageState();
@@ -103,12 +146,91 @@ class _AgendaPageState extends State<AgendaPage> {
     );
   }
 
+  /// Abre o editor: sem evento, cria um; com evento, edita o que já existe.
+  ///
+  /// O evento salvo volta do editor e a agenda recarrega: a lista passa a mostrar
+  /// o que o núcleo gravou, não o que a tela supõe.
+  Future<void> _abrirEditor(EventoAgenda? evento) async {
+    final CoreL10n l10n = CoreL10n.of(context);
+    final EventoAgenda? salvo = await Navigator.of(context).push<EventoAgenda>(
+      MaterialPageRoute<EventoAgenda>(
+        builder: (_) => widget.abrirEditor(evento, _diretorio),
+      ),
+    );
+    if (salvo == null || !mounted) return;
+    await _recarregar();
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.agendaEventSaved)));
+  }
+
+  /// Repete a agenda anterior: duplica o **último evento da lista** com as
+  /// versões e tons de agora da biblioteca.
+  ///
+  /// Sem evento na lista não há anterior: a tela diz isso em vez de criar um
+  /// evento vazio. E a recusa do núcleo (id tomado, agenda ilegível) aparece na
+  /// tela com a mensagem dele — repetir nunca falha em silêncio.
+  Future<void> _repetirAnterior() async {
+    final CoreL10n l10n = CoreL10n.of(context);
+    if (_eventos.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.agendaNoPreviousEvent)));
+      return;
+    }
+    final EventoAgenda anterior = _eventos.last;
+    try {
+      await widget.repetir(
+        baseDir: _diretorio,
+        novoId: idDoEvento(anterior.nome, null, widget.relogio()),
+        nome: anterior.nome,
+      );
+      if (!mounted) return;
+      await _recarregar();
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.agendaRepeatDone)));
+    } on Object catch (erro) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${l10n.agendaRepeatFailed}: $erro')),
+      );
+    }
+  }
+
+  void _abrirRelatorio() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => UsoPage(diretorioBase: _diretorio)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = CoreL10n.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.agendaTitle)),
+      appBar: AppBar(
+        title: Text(l10n.agendaTitle),
+        actions: <Widget>[
+          IconButton(
+            tooltip: l10n.agendaRepeatPrevious,
+            onPressed: _repetirAnterior,
+            icon: const Icon(Icons.copy_all),
+          ),
+          IconButton(
+            tooltip: l10n.usoTitle,
+            onPressed: _abrirRelatorio,
+            icon: const Icon(Icons.insights),
+          ),
+        ],
+      ),
       body: _corpo(l10n),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _abrirEditor(null),
+        icon: const Icon(Icons.add),
+        label: Text(l10n.agendaNewEvent),
+      ),
     );
   }
 
@@ -117,30 +239,12 @@ class _AgendaPageState extends State<AgendaPage> {
 
     if (_erro != null) {
       return Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Icon(
-                Icons.error_outline,
-                size: 48,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: 12),
-              Text(l10n.agendaLoadFailed, textAlign: TextAlign.center),
-              const SizedBox(height: 8),
-              Text(
-                _erro!,
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: _recarregar,
-                child: Text(l10n.agendaRetry),
-              ),
-            ],
+          child: AreaDeErro(
+            mensagem: l10n.agendaLoadFailed,
+            erro: _erro!,
+            onTentarNovamente: _recarregar,
           ),
         ),
       );
@@ -170,6 +274,7 @@ class _AgendaPageState extends State<AgendaPage> {
           evento: _eventos[indice],
           l10n: l10n,
           onAbrir: _abrirNoPalco,
+          onEditar: () => _abrirEditor(_eventos[indice]),
         ),
       ),
     );
@@ -182,11 +287,13 @@ class _EventoDaAgenda extends StatelessWidget {
     required this.evento,
     required this.l10n,
     required this.onAbrir,
+    required this.onEditar,
   });
 
   final EventoAgenda evento;
   final CoreL10n l10n;
   final void Function(EventoAgenda) onAbrir;
+  final VoidCallback onEditar;
 
   @override
   Widget build(BuildContext context) {
@@ -200,9 +307,20 @@ class _EventoDaAgenda extends StatelessWidget {
       leading: Icon(_iconeDoTipo(evento.tipo)),
       title: Text(evento.nome),
       subtitle: Text(detalhe),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          IconButton(
+            tooltip: l10n.agendaEditEvent,
+            onPressed: onEditar,
+            icon: const Icon(Icons.edit_outlined),
+          ),
+          const Icon(Icons.chevron_right),
+        ],
+      ),
       // Sem música não há setlist a abrir: o toque fica inerte em vez de abrir
-      // um leitor sem cifra.
+      // um leitor sem cifra. Editar continua disponível — é como se acrescenta
+      // música a um evento que nasceu vazio.
       onTap: total == 0 ? null : () => onAbrir(evento),
     );
   }

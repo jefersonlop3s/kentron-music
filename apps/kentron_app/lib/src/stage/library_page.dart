@@ -191,12 +191,7 @@ class _LibraryPageState extends State<LibraryPage> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 IconButton(icon: const Icon(Icons.visibility), tooltip: 'Abrir no Modo Palco', onPressed: () => _abrirModoPalco(indice)),
-                IconButton(icon: const Icon(Icons.delete_outline), tooltip: 'Remover', onPressed: () {
-                  final id = musica.title.isNotEmpty
-                      ? musica.title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-                      : '';
-                  _removerCifra(id);
-                }),
+                IconButton(icon: const Icon(Icons.delete_outline), tooltip: 'Remover', onPressed: () => _removerCifra(musica.id)),
               ],
             ),
           );

@@ -4,7 +4,7 @@
 //! e o equivalente em Dart) é gerado por `flutter_rust_bridge_codegen` a partir
 //! deste módulo — não se escreve FFI à mão.
 
-use notation_bundle::bundle::{Library, Setlist};
+use notation_bundle::bundle::{Execucao, Library, Setlist, SetlistId, SongId};
 use notation_bundle::chord_naming::{Chord, Note};
 use notation_bundle::chordpro::{ChordProParser, Song};
 use notation_bundle::harmony::HarmonyEngine;
@@ -13,6 +13,11 @@ use notation_bundle::musicxml;
 /// O resumo de uma cifra: o que a tela precisa para listar e abrir a música.
 #[derive(Debug, Clone)]
 pub struct SongSummary {
+    /// Identificador da obra na biblioteca. **Vazio** quando o resumo não vem de
+    /// um bundle ([`parse_song`], [`parse_musicxml`]): aí não há id a declarar.
+    /// A tela que monta a agenda o usa para gravar a execução — adivinhar o id
+    /// pelo título erraria toda obra cujo id não é o slug do título.
+    pub id: String,
     /// Título vindo de `{title: ...}`; vazio quando a cifra não declara um.
     pub title: String,
     /// Tom original (`{key: ...}`), quando declarado.
@@ -245,7 +250,8 @@ pub fn carregar_da_biblioteca(base_dir: String, id: String) -> Result<String, St
 
 /// Lista os IDs das músicas na biblioteca local.
 ///
-/// Lê o arquivo `library.json` no diretório base.
+/// Lê o arquivo `library.json` no diretório base. Cada resumo traz o `id` da
+/// obra, que é o identificador que a agenda grava — o título não o substitui.
 ///
 /// # Errors
 ///
@@ -257,7 +263,7 @@ pub fn listar_biblioteca(base_dir: String) -> Result<Vec<SongSummary>, String> {
 
     Ok(library
         .iter()
-        .map(|bundle| summary(bundle.song()))
+        .map(|bundle| summary_da_obra(bundle.id().as_str(), bundle.song()))
         .collect())
 }
 
@@ -366,23 +372,43 @@ pub fn listar_agenda(base_dir: String) -> Result<Vec<EventoAgenda>, String> {
         ));
     }
 
-    let library = notation_bundle::bundle_store::load_library(path)
-        .map_err(|erro| format!("erro ao ler a biblioteca: {erro} ({})", erro.message_key()))?;
-    // `load_setlists` já recusa qualquer agenda ilegível ou pendurada; o `map_err`
-    // acrescenta onde a agenda foi procurada, o que o erro do núcleo não traz (o
-    // `StoreError::Bundle` de uma execução pendurada não carrega caminho).
-    let agendas = notation_bundle::bundle_store::load_setlists(path, &library).map_err(|erro| {
-        format!(
-            "erro ao ler a agenda em {}: {erro} ({})",
-            path.join("setlists").display(),
-            erro.message_key()
-        )
-    })?;
+    let library = biblioteca_atual(path)?;
+    let agendas = ler_agendas(path, &library)?;
 
     agendas
         .iter()
         .map(|agenda| evento(agenda, &library))
         .collect()
+}
+
+/// Lê a biblioteca e **exige** o índice.
+///
+/// Sem índice não há obra a que uma execução possa se referir; gravar a partir
+/// daí seria gravar uma agenda pendurada. Índice ilegível sobe como erro — tratá-lo
+/// como biblioteca vazia recriaria por cima o que ele lista.
+fn biblioteca_atual(dir: &std::path::Path) -> Result<Library, String> {
+    notation_bundle::bundle_store::load_library(dir).map_err(|erro| {
+        format!(
+            "erro ao ler a biblioteca em {}: {erro} ({})",
+            dir.display(),
+            erro.message_key()
+        )
+    })
+}
+
+/// Lê as agendas do diretório, acrescentando **onde** elas foram procuradas.
+///
+/// O `StoreError` de uma execução pendurada não carrega caminho; quem lê a tela
+/// precisa saber qual pasta procurar.
+fn ler_agendas(dir: &std::path::Path, library: &Library) -> Result<Vec<Setlist>, String> {
+    notation_bundle::bundle_store::load_setlists(dir, library).map_err(|erro| {
+        format!(
+            "erro ao ler a agenda em {}: {erro} ({})",
+            dir.join(notation_bundle::bundle_store::SETLISTS_DIR)
+                .display(),
+            erro.message_key()
+        )
+    })
 }
 
 fn evento(agenda: &Setlist, library: &Library) -> Result<EventoAgenda, String> {
@@ -414,7 +440,324 @@ fn evento(agenda: &Setlist, library: &Library) -> Result<EventoAgenda, String> {
     })
 }
 
+// ── Escrever a agenda ──────────────────────────────────────────────────────
+//
+// O modelo é o do núcleo (`Setlist` = evento, `Execucao` = obra + versão + tom):
+// aqui só se valida o que vem da tela e se grava pelo `bundle_store` — a ponte
+// não reconstrói o modelo nem inventa campo que o núcleo não tem.
+
+/// O que a tela declara para uma execução: a obra e a versão/tom daquele evento.
+///
+/// O título **não** entra: ele é do bundle, e um título vindo da tela poderia
+/// divergir da obra que o `song_id` identifica.
+#[derive(Debug, Clone)]
+pub struct EntradaAgenda {
+    /// Identificador da obra na biblioteca.
+    pub song_id: String,
+    /// Versão declarada para o evento (arranjo, gravação), quando existe.
+    pub versao: Option<String>,
+    /// Tom declarado para o evento, quando existe.
+    pub tom: Option<String>,
+}
+
+/// Grava um evento da agenda: cria, ou **atualiza** o evento que já usa o mesmo
+/// `id` (é o arquivo `<base_dir>/setlists/<id>.json` — o mesmo lugar e o mesmo
+/// formato que [`listar_agenda`] lê).
+///
+/// A obra de cada execução é conferida contra a biblioteca **antes** de gravar:
+/// execução pendurada é recusada aqui, em vez de virar uma agenda que a leitura
+/// seguinte recusaria inteira.
+///
+/// # Errors
+///
+/// Recusa quando o `id` não serve de um único nome de arquivo, quando o nome do
+/// evento é vazio, quando a biblioteca não pode ser lida, quando uma execução
+/// aponta para obra fora da biblioteca ou repete obra já no evento, e quando o
+/// arquivo não pode ser escrito.
+pub fn salvar_evento_agenda(
+    base_dir: String,
+    id: String,
+    nome: String,
+    data: Option<String>,
+    tipo: Option<String>,
+    execucoes: Vec<EntradaAgenda>,
+) -> Result<EventoAgenda, String> {
+    let path: &std::path::Path = base_dir.as_ref();
+    let id = id_de_arquivo(&id)?;
+    let library = biblioteca_atual(path)?;
+
+    let mut agenda = Setlist::new(
+        SetlistId::new(&id).map_err(|erro| format!("id inválido: {erro}"))?,
+        nome,
+    )
+    .map_err(|erro| format!("agenda inválida: {erro} ({})", erro.message_key()))?;
+    if let Some(data) = data {
+        agenda = agenda.com_data(data);
+    }
+    if let Some(tipo) = tipo {
+        agenda = agenda.com_tipo(tipo);
+    }
+    for (indice, entrada) in execucoes.iter().enumerate() {
+        agenda
+            .push_execucao(&library, execucao_da_entrada(entrada)?)
+            .map_err(|erro| {
+                format!(
+                    "execução {} (obra {}): {erro} ({})",
+                    indice + 1,
+                    entrada.song_id,
+                    erro.message_key()
+                )
+            })?;
+    }
+
+    gravar_agenda(path, &id, &agenda)?;
+    evento(&agenda, &library)
+}
+
+/// Repete a agenda anterior: duplica **o último evento** com as versões e tons
+/// atuais da biblioteca.
+///
+/// "O último" é o último na ordem do núcleo (nome do arquivo da agenda) — a mesma
+/// ordem em que [`listar_agenda`] devolve os eventos e a tela os desenha.
+///
+/// Obra por obra, o que a cópia leva:
+///
+/// * a **obra**, na mesma ordem;
+/// * o **tom atual da biblioteca** (o `{key: ...}` da cifra), quando ela declara
+///   um — é o que "com versões novas" significa do lado do que a biblioteca sabe:
+///   a obra que entra na agenda nova é a de agora, não a do culto passado;
+/// * o **tom do evento anterior** quando a cifra não declara tom nenhum: não se
+///   apaga um tom declarado só porque a biblioteca ficou muda;
+/// * a **versão declarada no evento anterior**, e nada além dela — a biblioteca
+///   **não guarda versão** (o bundle do núcleo não tem esse campo), então a ponte
+///   não inventa uma: quem repete confere e ajusta o que mudou.
+///
+/// O evento novo nasce com o `id`, o `nome` e a `data` do chamador e o **tipo do
+/// anterior** (é o mesmo tipo de evento que se está repetindo). O evento de
+/// origem **não é tocado**.
+///
+/// # Errors
+///
+/// Recusa quando a agenda está vazia (não há anterior para repetir), quando já
+/// existe evento com o `novo_id` (repetir **não** sobrescreve: use outro id),
+/// quando o `id` não serve de nome de arquivo, quando o nome é vazio e quando a
+/// biblioteca ou alguma agenda não pode ser lida.
+pub fn repetir_ultimo_evento(
+    base_dir: String,
+    novo_id: String,
+    nome: String,
+    data: Option<String>,
+) -> Result<EventoAgenda, String> {
+    let path: &std::path::Path = base_dir.as_ref();
+    let novo_id = id_de_arquivo(&novo_id)?;
+    let library = biblioteca_atual(path)?;
+    let agendas = ler_agendas(path, &library)?;
+    let anterior = agendas
+        .last()
+        .ok_or_else(|| "não há evento anterior para repetir: a agenda está vazia".to_owned())?;
+
+    // A checagem é dupla de propósito: o nome do arquivo é convenção nossa, e um
+    // arquivo escrito à mão pode declarar um id que não é o do próprio nome.
+    let arquivo = path
+        .join(notation_bundle::bundle_store::SETLISTS_DIR)
+        .join(format!("{novo_id}.json"));
+    if arquivo.exists() || agendas.iter().any(|agenda| agenda.id().as_str() == novo_id) {
+        return Err(format!(
+            "já existe um evento com o id {novo_id}: repetir não sobrescreve"
+        ));
+    }
+
+    let mut nova = Setlist::new(
+        SetlistId::new(&novo_id).map_err(|erro| format!("id inválido: {erro}"))?,
+        nome,
+    )
+    .map_err(|erro| format!("agenda inválida: {erro} ({})", erro.message_key()))?;
+    if let Some(tipo) = anterior.tipo() {
+        nova = nova.com_tipo(tipo);
+    }
+    if let Some(data) = data {
+        nova = nova.com_data(data);
+    }
+
+    for execucao in anterior.entries() {
+        // `load_setlist` já garantiu que a obra existe na biblioteca.
+        let tom = library
+            .get(execucao.song())
+            .and_then(|obra| obra.key())
+            .or_else(|| execucao.tom());
+        let mut nova_execucao = Execucao::new(execucao.song().clone());
+        if let Some(versao) = execucao.versao() {
+            nova_execucao = nova_execucao.com_versao(versao);
+        }
+        if let Some(tom) = tom {
+            nova_execucao = nova_execucao.com_tom(tom);
+        }
+        nova.push_execucao(&library, nova_execucao)
+            .map_err(|erro| format!("obra {}: {erro} ({})", execucao.song(), erro.message_key()))?;
+    }
+
+    gravar_agenda(path, &novo_id, &nova)?;
+    evento(&nova, &library)
+}
+
+/// Valida o id do evento, que vira **um nome de arquivo** em `setlists/`.
+///
+/// Não é preciosismo: um id com `/` ou `..` escreveria fora da pasta da agenda, e
+/// o `SetlistId` do núcleo só recusa id vazio.
+fn id_de_arquivo(id: &str) -> Result<String, String> {
+    let id = id.trim();
+    if id.is_empty() {
+        return Err("id do evento vazio".to_owned());
+    }
+    if id == "." || id == ".." || id.contains('/') || id.contains('\\') || id.contains(':') {
+        return Err(format!("id do evento não serve de nome de arquivo: {id:?}"));
+    }
+    Ok(id.to_owned())
+}
+
+/// Constrói a execução do núcleo a partir do que a tela declarou.
+fn execucao_da_entrada(entrada: &EntradaAgenda) -> Result<Execucao, String> {
+    let song = SongId::new(&entrada.song_id).map_err(|erro| {
+        format!(
+            "obra {:?}: {erro} ({})",
+            entrada.song_id,
+            erro.message_key()
+        )
+    })?;
+    let mut execucao = Execucao::new(song);
+    if let Some(versao) = &entrada.versao {
+        execucao = execucao.com_versao(versao);
+    }
+    if let Some(tom) = &entrada.tom {
+        execucao = execucao.com_tom(tom);
+    }
+    Ok(execucao)
+}
+
+/// Grava a agenda em `setlists/<id>.json`, criando a pasta quando ela ainda não
+/// existe (o primeiro evento de uma biblioteca nova).
+fn gravar_agenda(dir: &std::path::Path, id: &str, agenda: &Setlist) -> Result<(), String> {
+    let agenda_dir = dir.join(notation_bundle::bundle_store::SETLISTS_DIR);
+    std::fs::create_dir_all(&agenda_dir)
+        .map_err(|erro| format!("erro ao criar {}: {erro}", agenda_dir.display()))?;
+    let arquivo = agenda_dir.join(format!("{id}.json"));
+    notation_bundle::bundle_store::save_setlist(&arquivo, agenda).map_err(|erro| {
+        format!(
+            "erro ao salvar {}: {erro} ({})",
+            arquivo.display(),
+            erro.message_key()
+        )
+    })
+}
+
+// ── O relatório de uso na tela ─────────────────────────────────────────────
+
+/// Uma versão usada no período e quantas vezes.
+#[derive(Debug, Clone)]
+pub struct VersaoDaObra {
+    /// Texto da versão declarada, ou o rótulo de "não declarada" do núcleo.
+    pub versao: String,
+    /// Quantas execuções usaram essa versão.
+    pub vezes: u32,
+}
+
+/// Uma obra do repertório no relatório: o uso medido e o veredito da ficha.
+#[derive(Debug, Clone)]
+pub struct ObraDoRelatorio {
+    /// Título da obra, como está na biblioteca.
+    pub titulo: String,
+    /// Total de execuções da obra no período.
+    pub execucoes: u32,
+    /// As versões em que ela foi tocada, na ordem da primeira aparição.
+    pub versoes: Vec<VersaoDaObra>,
+    /// Veredito da ficha (ADR-0012), já em texto. **`None` = sem ficha**: o motor
+    /// não afirma domínio público nem protegido — e isso é resposta, não falha.
+    pub veredito: Option<String>,
+    /// A ficha resolve domínio público.
+    pub publica: bool,
+}
+
+/// O relatório de uso classificado: o que a equipe cantou e o que falta fichar.
+#[derive(Debug, Clone)]
+pub struct RelatorioDeUso {
+    /// Eventos considerados.
+    pub eventos: u32,
+    /// Execuções somadas.
+    pub execucoes: u32,
+    /// Obras distintas cantadas.
+    pub obras_distintas: u32,
+    /// Obras de domínio público por ficha.
+    pub publicas: u32,
+    /// Obras **sem ficha** — a lista de trabalho.
+    pub sem_ficha: u32,
+    /// As obras, ordenadas por uso (mais cantada primeiro) e depois por título:
+    /// a mesma ordem do `--relatorio-uso` do motor.
+    pub obras: Vec<ObraDoRelatorio>,
+    /// Qual núcleo respondeu, no formato `kentron_ffi <versão>`.
+    pub core: String,
+}
+
+/// Monta o relatório de uso a partir das agendas da biblioteca.
+///
+/// É o `--relatorio-uso` do motor (`mir_engine::uso`) exposto à tela: a
+/// classificação por ficha (ADR-0012) fica no motor — a ponte não copia a regra
+/// nem decide licença. `ano_corrente` vem de quem chama porque o núcleo não tem
+/// relógio: o prazo de domínio público (vida + 70) é contado a partir dele.
+///
+/// # Errors
+///
+/// Falha — em vez de devolver relatório vazio — quando o diretório não tem
+/// biblioteca (índice ausente ou ilegível), quando uma agenda não pode ser lida
+/// ou aponta para obra fora da biblioteca. **Relatório sem obra significa, e só
+/// significa, agenda sem execução.**
+pub fn relatorio_de_uso(base_dir: String, ano_corrente: u16) -> Result<RelatorioDeUso, String> {
+    let relatorio = mir_engine::uso::do_diretorio(base_dir.as_ref(), ano_corrente)?;
+
+    let mut obras: Vec<ObraDoRelatorio> = relatorio
+        .obras
+        .iter()
+        .map(|obra| ObraDoRelatorio {
+            titulo: obra.titulo.clone(),
+            execucoes: u32::try_from(obra.execucoes).unwrap_or(u32::MAX),
+            versoes: obra
+                .versoes
+                .iter()
+                .map(|(versao, vezes)| VersaoDaObra {
+                    versao: versao.clone(),
+                    vezes: u32::try_from(*vezes).unwrap_or(u32::MAX),
+                })
+                .collect(),
+            veredito: obra
+                .veredito
+                .as_ref()
+                .map(mir_engine::lyrics::Veredito::resumo),
+            publica: obra.eh_publica(),
+        })
+        .collect();
+    obras.sort_by(|a, b| {
+        b.execucoes
+            .cmp(&a.execucoes)
+            .then_with(|| a.titulo.cmp(&b.titulo))
+    });
+
+    Ok(RelatorioDeUso {
+        eventos: u32::try_from(relatorio.uso.eventos).unwrap_or(u32::MAX),
+        execucoes: u32::try_from(relatorio.uso.execucoes).unwrap_or(u32::MAX),
+        obras_distintas: u32::try_from(relatorio.uso.obras_distintas()).unwrap_or(u32::MAX),
+        publicas: u32::try_from(relatorio.publicas()).unwrap_or(u32::MAX),
+        sem_ficha: u32::try_from(relatorio.sem_ficha()).unwrap_or(u32::MAX),
+        obras,
+        core: format!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION")),
+    })
+}
+
 fn summary(song: &Song) -> SongSummary {
+    summary_da_obra("", song)
+}
+
+/// Resumo de uma obra **da biblioteca**: igual a [`summary`], com o id que a
+/// agenda usa para gravar a execução.
+fn summary_da_obra(id: &str, song: &Song) -> SongSummary {
     let mut chords: Vec<String> = Vec::new();
     for section in &song.sections {
         for line in &section.lines {
@@ -427,6 +770,7 @@ fn summary(song: &Song) -> SongSummary {
     }
 
     SongSummary {
+        id: id.to_owned(),
         title: song.metadata.get("title").cloned().unwrap_or_default(),
         key: song.metadata.get("key").cloned(),
         artist: song.metadata.get("artist").cloned(),
@@ -964,6 +1308,495 @@ mod tests {
         assert!(
             erro.contains("setlists"),
             "o erro diz onde a agenda foi procurada: {erro}"
+        );
+    }
+
+    // ── Escrever a agenda: a gravação passa pelo armazenamento de verdade ──
+    //
+    // Nada de dublê: cada teste grava num diretório único do temp e lê de volta
+    // com a função de leitura — o caminho `bridge → notation_bundle → disco`.
+
+    fn entrada(song_id: &str, versao: Option<&str>, tom: Option<&str>) -> EntradaAgenda {
+        EntradaAgenda {
+            song_id: song_id.to_owned(),
+            versao: versao.map(str::to_owned),
+            tom: tom.map(str::to_owned),
+        }
+    }
+
+    #[test]
+    fn saving_an_event_writes_exactly_what_the_reader_reads_back() {
+        let scratch = Scratch::new("agenda-gravada");
+        biblioteca(scratch.path());
+
+        let gravado = salvar_evento_agenda(
+            scratch.base_dir(),
+            "culto-2".to_owned(),
+            "Culto da noite".to_owned(),
+            Some("2026-11-29".to_owned()),
+            Some("culto".to_owned()),
+            vec![
+                entrada("santo", None, None),
+                entrada("arranjo-coral", Some("versão do coral"), Some("D")),
+            ],
+        )
+        .expect("gravar o evento");
+
+        assert_eq!(gravado.id, "culto-2");
+        assert_eq!(gravado.nome, "Culto da noite");
+        assert_eq!(gravado.data.as_deref(), Some("2026-11-29"));
+        assert_eq!(gravado.tipo.as_deref(), Some("culto"));
+        assert_eq!(gravado.execucoes.len(), 2);
+
+        // O arquivo está onde o núcleo procura, e a leitura devolve o mesmo evento.
+        assert!(
+            scratch
+                .path()
+                .join("setlists")
+                .join("culto-2.json")
+                .is_file(),
+            "o arquivo da agenda existe"
+        );
+        let eventos = listar_agenda(scratch.base_dir()).expect("ler de volta");
+        assert_eq!(eventos.len(), 1, "um evento, não dois");
+        let lido = &eventos[0];
+        assert_eq!(lido.nome, "Culto da noite");
+        assert_eq!(lido.data.as_deref(), Some("2026-11-29"));
+        assert_eq!(lido.execucoes.len(), 2);
+        assert_eq!(lido.execucoes[0].song_id, "santo");
+        assert_eq!(lido.execucoes[0].titulo, "Santo", "o título vem do bundle");
+        assert_eq!(
+            lido.execucoes[1].song_id, "arranjo-coral",
+            "a ordem é a gravada"
+        );
+        assert_eq!(lido.execucoes[1].versao.as_deref(), Some("versão do coral"));
+        assert_eq!(lido.execucoes[1].tom.as_deref(), Some("D"));
+    }
+
+    #[test]
+    fn saving_the_same_event_id_updates_it_instead_of_creating_a_second_one() {
+        let scratch = Scratch::new("agenda-atualizada");
+        biblioteca(scratch.path());
+        let base = scratch.base_dir();
+
+        salvar_evento_agenda(
+            base.clone(),
+            "culto-2".to_owned(),
+            "Culto da noite".to_owned(),
+            Some("2026-11-29".to_owned()),
+            Some("culto".to_owned()),
+            vec![entrada("santo", None, None)],
+        )
+        .expect("primeira gravação");
+        salvar_evento_agenda(
+            base.clone(),
+            "culto-2".to_owned(),
+            "Culto da noite".to_owned(),
+            Some("2026-11-30".to_owned()),
+            Some("culto".to_owned()),
+            vec![entrada("santo", None, None), entrada("hino-3", None, None)],
+        )
+        .expect("atualizar o mesmo id");
+
+        let eventos = listar_agenda(base).expect("ler de volta");
+        assert_eq!(eventos.len(), 1, "o mesmo id não vira dois eventos");
+        assert_eq!(eventos[0].data.as_deref(), Some("2026-11-30"));
+        assert_eq!(eventos[0].execucoes.len(), 2);
+    }
+
+    #[test]
+    fn saving_refuses_a_song_outside_the_library_and_writes_nothing() {
+        let scratch = Scratch::new("agenda-pendurada-gravando");
+        biblioteca(scratch.path());
+
+        let erro = salvar_evento_agenda(
+            scratch.base_dir(),
+            "culto-2".to_owned(),
+            "Culto da noite".to_owned(),
+            None,
+            None,
+            vec![entrada("fantasma", None, None)],
+        )
+        .expect_err("obra fora da biblioteca não pode ser gravada");
+        assert!(erro.contains("fantasma"), "o erro nomeia a obra: {erro}");
+        assert!(
+            erro.contains("setlist.song.missing"),
+            "o erro traz a chave estável: {erro}"
+        );
+        assert!(
+            !scratch
+                .path()
+                .join("setlists")
+                .join("culto-2.json")
+                .exists(),
+            "nada foi gravado: a agenda ficaria ilegível para a leitura seguinte"
+        );
+    }
+
+    #[test]
+    fn saving_refuses_the_same_song_twice_in_one_event() {
+        let scratch = Scratch::new("agenda-repetida");
+        biblioteca(scratch.path());
+
+        let erro = salvar_evento_agenda(
+            scratch.base_dir(),
+            "culto-2".to_owned(),
+            "Culto da noite".to_owned(),
+            None,
+            None,
+            vec![entrada("santo", None, None), entrada("santo", None, None)],
+        )
+        .expect_err("obra repetida no mesmo evento deve reprovar");
+        assert!(erro.contains("setlist.entry.duplicate"), "{erro}");
+        assert!(erro.contains("execução 2"), "o erro diz qual: {erro}");
+    }
+
+    #[test]
+    fn saving_refuses_an_empty_event_name() {
+        let scratch = Scratch::new("agenda-sem-nome");
+        biblioteca(scratch.path());
+
+        let erro = salvar_evento_agenda(
+            scratch.base_dir(),
+            "culto-2".to_owned(),
+            "   ".to_owned(),
+            None,
+            None,
+            Vec::new(),
+        )
+        .expect_err("evento sem nome deve reprovar");
+        assert!(erro.contains("setlist.name.empty"), "{erro}");
+    }
+
+    #[test]
+    fn saving_refuses_an_id_that_is_not_a_file_name() {
+        let scratch = Scratch::new("agenda-id-torto");
+        biblioteca(scratch.path());
+
+        for id in ["../fuga", "culto/2", "culto:2", "   "] {
+            let erro = salvar_evento_agenda(
+                scratch.base_dir(),
+                id.to_owned(),
+                "Culto da noite".to_owned(),
+                None,
+                None,
+                Vec::new(),
+            )
+            .expect_err("id que não é nome de arquivo deve reprovar");
+            assert!(
+                erro.contains("id do evento"),
+                "o erro diz que o problema é o id: {erro}"
+            );
+        }
+        // E nada escapou da pasta da agenda.
+        assert!(
+            !scratch.path().join("fuga.json").exists()
+                && !scratch.path().parent().unwrap().join("fuga.json").exists(),
+            "nada foi escrito fora de setlists/"
+        );
+    }
+
+    #[test]
+    fn saving_requires_the_library_index() {
+        let scratch = Scratch::new("agenda-gravando-sem-indice");
+
+        let erro = salvar_evento_agenda(
+            scratch.base_dir(),
+            "culto-2".to_owned(),
+            "Culto da noite".to_owned(),
+            None,
+            None,
+            Vec::new(),
+        )
+        .expect_err("sem índice não há biblioteca onde pendurar a agenda");
+        assert!(erro.contains("biblioteca"), "{erro}");
+        assert!(
+            erro.contains("library.json"),
+            "o erro nomeia o arquivo: {erro}"
+        );
+    }
+
+    #[test]
+    fn listing_the_library_carries_the_id_the_agenda_writes() {
+        let scratch = Scratch::new("biblioteca-com-id");
+        biblioteca(scratch.path());
+
+        let musicas = listar_biblioteca(scratch.base_dir()).expect("listar");
+        let ids: Vec<&str> = musicas.iter().map(|musica| musica.id.as_str()).collect();
+        assert_eq!(
+            ids,
+            ["arranjo-coral", "hino-3", "santo"],
+            "a ordem é por id, como no núcleo"
+        );
+        // O título NÃO é o id: `hino-3` tem título `Hino 3`, e uma agenda gravada
+        // pelo slug do título apontaria para obra que não existe.
+        let hino = musicas
+            .iter()
+            .find(|musica| musica.id == "hino-3")
+            .expect("hino-3 está na lista");
+        assert_eq!(hino.title, "Hino 3");
+    }
+
+    // ── Repetir a agenda anterior ────────────────────────────────────────────
+
+    /// Grava uma obra com o tom que o teste quiser, pelo caminho do app.
+    fn obra_com_tom(dir: &Path, id: &str, titulo: &str, tom: Option<&str>) {
+        let tom = tom.map_or_else(String::new, |tom| format!("{{key: {tom}}}\n"));
+        salvar_na_biblioteca(
+            dir.to_string_lossy().into_owned(),
+            id.to_owned(),
+            format!("{{title: {titulo}}}\n{tom}\n[Verse]\n[C]texto\n"),
+        )
+        .expect("salvar a obra");
+    }
+
+    #[test]
+    fn repeating_the_previous_event_brings_the_current_key_from_the_library() {
+        let scratch = Scratch::new("repetir-agenda");
+        let base = scratch.base_dir();
+        obra_com_tom(scratch.path(), "santo", "Santo", Some("E"));
+        obra_com_tom(scratch.path(), "sem-tom", "Sem Tom", None);
+
+        // O evento anterior declara tons que a biblioteca não confirma: `D` para a
+        // obra que hoje está em `E`, e `G` para a obra que não declara tom nenhum.
+        salvar_evento_agenda(
+            base.clone(),
+            "culto-1".to_owned(),
+            "Culto da manhã".to_owned(),
+            Some("2026-11-22".to_owned()),
+            Some("culto".to_owned()),
+            vec![
+                entrada("santo", Some("versão do coral"), Some("D")),
+                entrada("sem-tom", None, Some("G")),
+            ],
+        )
+        .expect("evento anterior");
+        let antes = std::fs::read_to_string(scratch.path().join("setlists/culto-1.json"))
+            .expect("o evento de origem está no disco");
+
+        let novo = repetir_ultimo_evento(
+            base.clone(),
+            "culto-2".to_owned(),
+            "Culto da noite".to_owned(),
+            Some("2026-11-29".to_owned()),
+        )
+        .expect("repetir");
+
+        assert_eq!(novo.id, "culto-2");
+        assert_eq!(novo.nome, "Culto da noite");
+        assert_eq!(novo.data.as_deref(), Some("2026-11-29"));
+        assert_eq!(
+            novo.tipo.as_deref(),
+            Some("culto"),
+            "o tipo vem do anterior"
+        );
+        assert_eq!(novo.execucoes.len(), 2, "a lista vem inteira e na ordem");
+        assert_eq!(novo.execucoes[0].song_id, "santo");
+        assert_eq!(
+            novo.execucoes[0].tom.as_deref(),
+            Some("E"),
+            "o tom é o de agora, não o do culto passado"
+        );
+        assert_eq!(
+            novo.execucoes[0].versao.as_deref(),
+            Some("versão do coral"),
+            "a versão declarada é preservada"
+        );
+        assert_eq!(novo.execucoes[1].song_id, "sem-tom");
+        assert_eq!(
+            novo.execucoes[1].tom.as_deref(),
+            Some("G"),
+            "cifra sem tom não apaga o tom declarado no evento"
+        );
+
+        // Os dois eventos estão no disco e o de origem ficou **byte a byte** como
+        // estava: repetir não reescreve o evento anterior.
+        let eventos = listar_agenda(base).expect("os dois eventos");
+        assert_eq!(eventos.len(), 2);
+        assert_eq!(eventos[0].id, "culto-1");
+        assert_eq!(eventos[0].execucoes[0].tom.as_deref(), Some("D"));
+        assert_eq!(eventos[1].id, "culto-2");
+        assert_eq!(
+            std::fs::read_to_string(scratch.path().join("setlists/culto-1.json"))
+                .expect("reler o evento de origem"),
+            antes
+        );
+    }
+
+    #[test]
+    fn repeating_without_a_previous_event_fails_instead_of_creating_an_empty_one() {
+        let scratch = Scratch::new("repetir-sem-anterior");
+        biblioteca(scratch.path());
+
+        let erro = repetir_ultimo_evento(
+            scratch.base_dir(),
+            "culto-2".to_owned(),
+            "Culto da noite".to_owned(),
+            None,
+        )
+        .expect_err("sem evento anterior não há o que repetir");
+        assert!(erro.contains("não há evento anterior"), "{erro}");
+        assert!(
+            !scratch
+                .path()
+                .join("setlists")
+                .join("culto-2.json")
+                .exists(),
+            "nada foi criado: repetir o vazio seria inventar agenda"
+        );
+    }
+
+    #[test]
+    fn repeating_refuses_an_id_that_is_already_taken() {
+        let scratch = Scratch::new("repetir-id-tomado");
+        biblioteca(scratch.path());
+        let base = scratch.base_dir();
+        salvar_evento_agenda(
+            base.clone(),
+            "culto-1".to_owned(),
+            "Culto da manhã".to_owned(),
+            Some("2026-11-22".to_owned()),
+            Some("culto".to_owned()),
+            vec![entrada("santo", None, None)],
+        )
+        .expect("evento anterior");
+
+        let erro =
+            repetir_ultimo_evento(base.clone(), "culto-1".to_owned(), "Cópia".to_owned(), None)
+                .expect_err("repetir não sobrescreve um evento existente");
+        assert!(
+            erro.contains("já existe um evento com o id culto-1"),
+            "{erro}"
+        );
+
+        // O evento original segue como estava: nada de cópia por cima dele.
+        let eventos = listar_agenda(base).expect("ler");
+        assert_eq!(eventos.len(), 1);
+        assert_eq!(eventos[0].nome, "Culto da manhã");
+        assert_eq!(eventos[0].data.as_deref(), Some("2026-11-22"));
+    }
+
+    // ── O relatório de uso na tela ───────────────────────────────────────────
+
+    #[test]
+    fn the_report_counts_what_was_sung_and_flags_the_works_without_a_record() {
+        let scratch = Scratch::new("relatorio-uso");
+        let base = scratch.base_dir();
+        biblioteca(scratch.path());
+        // Uma terceira obra, sem ficha: com 1 pública e 1 sem ficha os dois
+        // números coincidiriam e o teste não separaria um do outro.
+        obra_com_tom(scratch.path(), "sem-ficha", "Obra Sem Ficha", Some("G"));
+
+        salvar_evento_agenda(
+            base.clone(),
+            "culto-1".to_owned(),
+            "Culto da manhã".to_owned(),
+            Some("2026-11-22".to_owned()),
+            Some("culto".to_owned()),
+            vec![entrada("santo", None, None), entrada("hino-3", None, None)],
+        )
+        .expect("primeiro evento");
+        salvar_evento_agenda(
+            base.clone(),
+            "culto-2".to_owned(),
+            "Culto da noite".to_owned(),
+            Some("2026-11-29".to_owned()),
+            Some("culto".to_owned()),
+            vec![
+                entrada("santo", Some("versão do coral"), None),
+                entrada("sem-ficha", None, None),
+            ],
+        )
+        .expect("segundo evento");
+
+        let relatorio = relatorio_de_uso(base, 2026).expect("relatório");
+
+        assert_eq!(relatorio.eventos, 2);
+        assert_eq!(relatorio.execucoes, 4);
+        assert_eq!(relatorio.obras_distintas, 3);
+        assert!(
+            relatorio.core.starts_with("kentron_ffi "),
+            "{}",
+            relatorio.core
+        );
+
+        // Ordem por uso: mais cantada primeiro, depois por título.
+        assert_eq!(relatorio.obras[0].titulo, "Santo");
+        assert_eq!(relatorio.obras[0].execucoes, 2);
+        assert_eq!(relatorio.obras[1].titulo, "Hino 3");
+        assert_eq!(relatorio.obras[2].titulo, "Obra Sem Ficha");
+
+        // `Santo` tem ficha (Cantor Cristão 09, tradução em domínio público desde
+        // 2018): o veredito existe e a obra conta como pública. As outras duas
+        // não têm ficha nenhuma: veredito `None` — que é resposta, não falha.
+        assert!(
+            relatorio.obras[0].publica,
+            "{:?}",
+            relatorio.obras[0].veredito
+        );
+        assert!(
+            relatorio.obras[0]
+                .veredito
+                .as_deref()
+                .is_some_and(|veredito| veredito.contains("domínio público")),
+            "{:?}",
+            relatorio.obras[0].veredito
+        );
+        for sem_ficha in &relatorio.obras[1..] {
+            assert_eq!(sem_ficha.veredito, None, "sem ficha é sem ficha");
+            assert!(!sem_ficha.publica);
+        }
+        assert_eq!(relatorio.publicas, 1);
+        assert_eq!(relatorio.sem_ficha, 2);
+
+        // As versões vêm com a contagem, e a não declarada é **dita**, não inventada.
+        let versoes: Vec<(String, u32)> = relatorio.obras[0]
+            .versoes
+            .iter()
+            .map(|versao| (versao.versao.clone(), versao.vezes))
+            .collect();
+        assert_eq!(
+            versoes,
+            [
+                ("(versão não declarada)".to_owned(), 1),
+                ("versão do coral".to_owned(), 1)
+            ]
+        );
+    }
+
+    #[test]
+    fn a_library_with_an_empty_event_gives_an_empty_report_and_not_an_error() {
+        let scratch = Scratch::new("relatorio-vazio");
+        let base = scratch.base_dir();
+        biblioteca(scratch.path());
+        salvar_evento_agenda(
+            base.clone(),
+            "culto-1".to_owned(),
+            "Culto sem música".to_owned(),
+            Some("2026-11-22".to_owned()),
+            Some("culto".to_owned()),
+            Vec::new(),
+        )
+        .expect("evento sem execução");
+
+        let relatorio = relatorio_de_uso(base, 2026).expect("relatório");
+        assert_eq!(relatorio.eventos, 1);
+        assert_eq!(relatorio.execucoes, 0);
+        assert_eq!(relatorio.obras_distintas, 0);
+        assert!(relatorio.obras.is_empty(), "vazio é agenda sem execução");
+    }
+
+    #[test]
+    fn the_report_fails_loudly_without_a_library_instead_of_being_empty() {
+        let scratch = Scratch::new("relatorio-sem-biblioteca");
+
+        // Sem índice não existe "nenhuma obra cantada": existe erro. Tratar os
+        // dois como o mesmo estado esconderia a biblioteca que não abriu.
+        let erro =
+            relatorio_de_uso(scratch.base_dir(), 2026).expect_err("biblioteca ausente deve falhar");
+        assert!(
+            erro.contains("library.json"),
+            "o erro nomeia o arquivo: {erro}"
         );
     }
 }

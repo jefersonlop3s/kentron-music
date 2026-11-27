@@ -7,9 +7,12 @@
 // ignore_for_file: argument_type_not_assignable
 
 import 'bridge.dart';
+
 import 'dart:async';
 import 'dart:convert';
+
 import 'frb_generated.dart';
+
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
@@ -24,7 +27,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  bool dco_decode_bool(dynamic raw);
+
+  @protected
   ChordMark dco_decode_chord_mark(dynamic raw);
+
+  @protected
+  EntradaAgenda dco_decode_entrada_agenda(dynamic raw);
 
   @protected
   EventoAgenda dco_decode_evento_agenda(dynamic raw);
@@ -39,10 +48,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<ChordMark> dco_decode_list_chord_mark(dynamic raw);
 
   @protected
+  List<EntradaAgenda> dco_decode_list_entrada_agenda(dynamic raw);
+
+  @protected
   List<EventoAgenda> dco_decode_list_evento_agenda(dynamic raw);
 
   @protected
   List<ExecucaoAgenda> dco_decode_list_execucao_agenda(dynamic raw);
+
+  @protected
+  List<ObraDoRelatorio> dco_decode_list_obra_do_relatorio(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
@@ -57,7 +72,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<SongSummary> dco_decode_list_song_summary(dynamic raw);
 
   @protected
+  List<VersaoDaObra> dco_decode_list_versao_da_obra(dynamic raw);
+
+  @protected
+  ObraDoRelatorio dco_decode_obra_do_relatorio(dynamic raw);
+
+  @protected
   String? dco_decode_opt_String(dynamic raw);
+
+  @protected
+  RelatorioDeUso dco_decode_relatorio_de_uso(dynamic raw);
 
   @protected
   SongDetail dco_decode_song_detail(dynamic raw);
@@ -72,6 +96,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SongSummary dco_decode_song_summary(dynamic raw);
 
   @protected
+  int dco_decode_u_16(dynamic raw);
+
+  @protected
   int dco_decode_u_32(dynamic raw);
 
   @protected
@@ -81,10 +108,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void dco_decode_unit(dynamic raw);
 
   @protected
+  VersaoDaObra dco_decode_versao_da_obra(dynamic raw);
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer);
 
   @protected
+  bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
   ChordMark sse_decode_chord_mark(SseDeserializer deserializer);
+
+  @protected
+  EntradaAgenda sse_decode_entrada_agenda(SseDeserializer deserializer);
 
   @protected
   EventoAgenda sse_decode_evento_agenda(SseDeserializer deserializer);
@@ -99,12 +135,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<ChordMark> sse_decode_list_chord_mark(SseDeserializer deserializer);
 
   @protected
+  List<EntradaAgenda> sse_decode_list_entrada_agenda(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<EventoAgenda> sse_decode_list_evento_agenda(
     SseDeserializer deserializer,
   );
 
   @protected
   List<ExecucaoAgenda> sse_decode_list_execucao_agenda(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<ObraDoRelatorio> sse_decode_list_obra_do_relatorio(
     SseDeserializer deserializer,
   );
 
@@ -121,7 +167,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<SongSummary> sse_decode_list_song_summary(SseDeserializer deserializer);
 
   @protected
+  List<VersaoDaObra> sse_decode_list_versao_da_obra(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ObraDoRelatorio sse_decode_obra_do_relatorio(SseDeserializer deserializer);
+
+  @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
+
+  @protected
+  RelatorioDeUso sse_decode_relatorio_de_uso(SseDeserializer deserializer);
 
   @protected
   SongDetail sse_decode_song_detail(SseDeserializer deserializer);
@@ -136,6 +193,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   SongSummary sse_decode_song_summary(SseDeserializer deserializer);
 
   @protected
+  int sse_decode_u_16(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_u_32(SseDeserializer deserializer);
 
   @protected
@@ -145,16 +205,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_decode_unit(SseDeserializer deserializer);
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
+  VersaoDaObra sse_decode_versao_da_obra(SseDeserializer deserializer);
 
   @protected
-  bool sse_decode_bool(SseDeserializer deserializer);
+  int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
 
   @protected
+  void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
   void sse_encode_chord_mark(ChordMark self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_entrada_agenda(EntradaAgenda self, SseSerializer serializer);
 
   @protected
   void sse_encode_evento_agenda(EventoAgenda self, SseSerializer serializer);
@@ -175,6 +241,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_entrada_agenda(
+    List<EntradaAgenda> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_evento_agenda(
     List<EventoAgenda> self,
     SseSerializer serializer,
@@ -183,6 +255,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_list_execucao_agenda(
     List<ExecucaoAgenda> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_obra_do_relatorio(
+    List<ObraDoRelatorio> self,
     SseSerializer serializer,
   );
 
@@ -208,7 +286,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_versao_da_obra(
+    List<VersaoDaObra> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_obra_do_relatorio(
+    ObraDoRelatorio self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_relatorio_de_uso(
+    RelatorioDeUso self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_song_detail(SongDetail self, SseSerializer serializer);
@@ -223,6 +319,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_song_summary(SongSummary self, SseSerializer serializer);
 
   @protected
+  void sse_encode_u_16(int self, SseSerializer serializer);
+
+  @protected
   void sse_encode_u_32(int self, SseSerializer serializer);
 
   @protected
@@ -232,10 +331,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_unit(void self, SseSerializer serializer);
 
   @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
+  void sse_encode_versao_da_obra(VersaoDaObra self, SseSerializer serializer);
 
   @protected
-  void sse_encode_bool(bool self, SseSerializer serializer);
+  void sse_encode_i_32(int self, SseSerializer serializer);
 }
 
 // Section: wire_class
