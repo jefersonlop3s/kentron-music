@@ -15,6 +15,7 @@ qualquer topologia de `docs/`.
 Exit 0: todas as referências resolvem. Exit 1: há alvo ausente (lista
 `arquivo:linha: alvo`). Fail-loud, sem exceção silenciosa.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -26,15 +27,30 @@ LINK_MD = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 CODE_SPAN_MD = re.compile(r"`([^`\s]+\.md(?:#[^`\s]*)?)`", re.IGNORECASE)
 ESQUEMA_EXTERNO = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*:")
 
-EXCLUIDOS = {".git", "node_modules", "target", "dist", "build",
-             ".venv", "venv", "__pycache__", ".idea", ".vscode"}
+EXCLUIDOS = {
+    ".git",
+    "node_modules",
+    "target",
+    "dist",
+    "build",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".idea",
+    ".vscode",
+}
 
 
 def eh_referencia_resolvivel(alvo: str) -> bool:
     """Só o que dá para conferir: sem esquema externo e sem placeholder `<...>`.
     Placeholder (ex.: `.agents/skills/<nome>/SKILL.md`) é instrução de
     preenchimento, não caminho — verificar quebraria todo template."""
-    return bool(alvo) and not ESQUEMA_EXTERNO.match(alvo) and "<" not in alvo and ">" not in alvo
+    return (
+        bool(alvo)
+        and not ESQUEMA_EXTERNO.match(alvo)
+        and "<" not in alvo
+        and ">" not in alvo
+    )
 
 
 def alvos_de(texto: str) -> list[tuple[int, str]]:
@@ -61,15 +77,44 @@ def alvos_de(texto: str) -> list[tuple[int, str]]:
 
 
 def resolver(alvo: str, origem: Path, raiz: Path) -> Path:
+    """Onde o alvo deveria estar, na leitura preferencial.
+
+    Caminho com `/` inicial resolve na raiz do repositório; qualquer outro
+    resolve relativo ao **arquivo de origem**, que é o certo para link relativo
+    de verdade (`../adr/0018-....md`).
+    """
     if alvo.startswith("/"):
         return (raiz / alvo.lstrip("/")).resolve()
     return (origem.parent / alvo).resolve()
 
 
+def candidatos(alvo: str, origem: Path, raiz: Path) -> list[Path]:
+    """Todos os lugares em que o alvo pode legitimamente estar.
+
+    O segundo candidato é a **raiz do repositório**, e existe por um falso
+    positivo **medido** (2026-11-26): `docs/CONCLUSION.md` cita `` `AGENTS.md` ``
+    em prosa, o arquivo mora na raiz, e resolver o nome relativo a `docs/` dava
+    `docs/AGENTS.md` — o verificador **reprovava a `main`** por isso. Verificador
+    que reprova sem defeito é bug do verificador, e um deles fica caro: quem o
+    vê vermelho na árvore boa aprende a ignorá-lo.
+
+    Um alvo que não exista **em lugar nenhum** continua reprovando — é o que a
+    prova negativa do verificador exige (`NAOEXISTE.md` segue quebrando).
+    """
+    principal = resolver(alvo, origem, raiz)
+    if alvo.startswith("/"):
+        return [principal]
+    na_raiz = (raiz / alvo).resolve()
+    return [principal] if na_raiz == principal else [principal, na_raiz]
+
+
 def verificar(docs: Path, raiz: Path) -> list[str]:
     erros: list[str] = []
-    arquivos = sorted(p for p in docs.rglob("*.md")
-                      if not any(parte in EXCLUIDOS for parte in p.parts))
+    arquivos = sorted(
+        p
+        for p in docs.rglob("*.md")
+        if not any(parte in EXCLUIDOS for parte in p.parts)
+    )
     for arq in arquivos:
         try:
             texto = arq.read_text(encoding="utf-8")
@@ -77,22 +122,28 @@ def verificar(docs: Path, raiz: Path) -> list[str]:
             erros.append(f"{arq}:0: não consegui ler ({e})")
             continue
         for nro, alvo in alvos_de(texto):
-            destino = resolver(alvo, arq, raiz)
-            if not destino.is_file():
-                try:
-                    rel = destino.relative_to(Path.cwd())
-                except ValueError:
-                    rel = destino
-                erros.append(f"{arq}:{nro}: alvo ausente `{alvo}` (resolve para {rel})")
+            tentativas = candidatos(alvo, arq, raiz)
+            if any(t.is_file() for t in tentativas):
+                continue
+            destino = tentativas[0]
+            try:
+                rel = destino.relative_to(Path.cwd())
+            except ValueError:
+                rel = destino
+            erros.append(f"{arq}:{nro}: alvo ausente `{alvo}` (resolve para {rel})")
     return erros
 
 
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description="Confere referências locais entre .md.")
-    ap.add_argument("--docs", default="docs",
-                    help="diretório de docs a varrer (default: docs)")
-    ap.add_argument("--raiz", default=".",
-                    help="base para alvos com / inicial (default: diretório atual)")
+    ap.add_argument(
+        "--docs", default="docs", help="diretório de docs a varrer (default: docs)"
+    )
+    ap.add_argument(
+        "--raiz",
+        default=".",
+        help="base para alvos com / inicial (default: diretório atual)",
+    )
     args = ap.parse_args(argv)
     docs = Path(args.docs)
     if not docs.is_dir():

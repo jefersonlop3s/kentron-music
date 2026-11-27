@@ -72,3 +72,19 @@ Método (o mesmo das rodadas 1 e 2): **um dono por caminho**, entrada no quadro 
 4. Fechamento nos dois registros centrais + quadro, e push.
 
 **Nota de infraestrutura (paga no mesmo dia):** o `pre-push` estava **reprovando todo push de 2+ crates** — `gate_types`/`gate_test` deduplicavam a lista de crates **com os `-p` dentro**, e o `sort -u` apagava os flags. Corrigido e provado nos dois sentidos; foi o que destravou a publicação da `main`.
+
+## Anexo A · Folha da ADR-0018 (os 6 itens de "Em aberto")
+
+Cada linha é uma decisão com **recomendação** — o dono responde `ok` ou corrige. Nada aqui foi implementado.
+
+| # | item | recomendação | por quê (o que a pesquisa da ADR mostra) |
+|---|---|---|---|
+| 1 | **Host final** | **Cloudflare Pages** | gratuito (500 deploys/mês), aceita `_headers` — que é o que o app web exige (COOP/COEP) — e dá subdomínio pronto. Netlify fica como alternativa se o fluxo de conta incomodar; **GitHub Pages está fora** para o app (não expõe cabeçalhos). |
+| 2 | **Endereço canônico** | **subdomínio do host agora** (`kentron.pages.dev`), domínio próprio só quando houver razão | zero custo e zero registro; Freenom (`.tk`/`.cf`/`.gq`) está **suspenso desde 2023** e não entra; um TLD próprio custa e não destrava nada hoje. |
+| 3 | **Onde a landing mora** | **`site/` no próprio repositório** | um histórico, um guard, um pipeline e os mesmos tokens do `DESIGN.md`; repositório próprio exigiria harness/CI próprios (custo hoje > benefício). Publicar em `docs/` **não serve**: sem `_headers`, o wasm não sobe. |
+| 4 | **Canais de apoio fora do app** | **PIX + GitHub Sponsors** | PIX é o padrão brasileiro (zero taxa de plataforma); Sponsors não tem taxa de plataforma e é o canal natural de projeto em GitHub. Ko-fi/BuyMeACoffee/Padrim ficam como "se um dia". **A landing só linka** — dentro do app a regra das duas lojas proíbe. |
+| 5 | **IAP agora ou depois** | **depois** | a ADR fixa o **mecanismo** (gorjeta por IAP é permitida na Apple 3.1.1); implementar exige conta de loja, produto cadastrado e revisão — nada disso é preciso para o alpha da R1, e a taxa (15–30%) só passa a existir quando houver receita. |
+| 6 | **PF × PJ** | **PF agora** | não existe PJ; o mecanismo escolhido (link externo + doação) não exige CNPJ. Revisitar se a receita aparecer ou se entrar *nonprofit* aprovado, o que mudaria o pressuposto de produto declarado na ADR. |
+
+**Pressuposto de produto (da ADR, repetido aqui para não se perder):** *um mantenedor, sem nonprofit aprovado, app gratuito, sem venda de bem digital.* Se qualquer um mudar, a ADR precisa ser revista **antes** de implementar.
+
