@@ -1,4 +1,23 @@
 # Changelog
+## [fix] O gate `types`/`test` do `pre-push` reprovava todo push de 2+ crates (2026-11-26)
+
+Achado ao empurrar as duas rodadas: o push foi **bloqueado** com `❌ types (0s)` e `❌ test (0s)`. Zero segundo é assinatura de falha imediata — e era: `cargo clippy --offline mir_engine notation_bundle --all-targets` → `error: unexpected argument 'mir_engine' found`.
+
+**Causa:** os dois gates montavam a lista de crates **já com os `-p`** (`-p A -p B`) e deduplicavam com `tr ' ' '\n' | sort -u` — e o `sort -u` **apaga os próprios `-p`** (o flag aparece duas vezes e sobra um). O segundo nome virava **posicional**. Com **um** crate só, `-p X` sobrevivia por sorte, e é por isso que o defeito passou despercebido desde a entrada da dedup. O caminho **padrão** do `gate_test` — quando o push não toca crate nenhum, `notation_bundle` + `kentron_ffi` — estava quebrado do mesmo jeito.
+
+**Correção:** deduplicar os **nomes** e montar os `-p` depois (`sort -u | sed 's/^/-p /'`), com um nome por linha.
+
+**Provado nos dois sentidos, com `cargo` de verdade:**
+
+| expressão | resultado |
+|---|---|
+| ANTES: ` -p mir_engine notation_bundle ` | `error: unexpected argument 'notation_bundle' found` |
+| DEPOIS: `-p mir_engine -p notation_bundle ` | ok |
+| padrão ANTES: ` -p kentron_ffi notation_bundle ` | quebrado |
+| padrão DEPOIS: `-p kentron_ffi -p notation_bundle ` | `cargo test --offline -p notation_bundle -p kentron_ffi` → **TEST_RC=0** |
+
+**Lição:** deduplicar uma lista que carrega **flags** destrói as flags. É a segunda encarnação da mesma classe neste gate — a primeira foi o `tr ' ' '\n'` que montava `-p otatio _bu dle` (corrigido em 25/11). O escopo do gate só vale se o comando que ele monta for válido.
+
 ## [docs] ADR-0018 aceita: presença web do produto — e a implementação **não** iniciada (2026-11-26)
 
 O dono **aceitou** a ADR-0018 (landing page, domínio e hospedagem) e decidiu **não iniciar** a implementação. O aceite registra direção e mecanismo; a fila é outra coisa e ficou dita — a prioridade segue sendo fechar a R1.
