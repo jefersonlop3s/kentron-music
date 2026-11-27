@@ -129,5 +129,186 @@
   "agendaOpenInStage": "Open in Stage Mode",
   "@agendaOpenInStage": {
     "description": "Opens an event's setlist in Stage Mode, song by song, in the order of the agenda."
+  },
+  "agendaNewEvent": "New event",
+  "@agendaNewEvent": {
+    "description": "Opens the editor that creates an event in the agenda (service, rehearsal, event)."
+  },
+  "agendaEditEvent": "Edit event",
+  "@agendaEditEvent": {
+    "description": "Opens the editor for the event that is already in the agenda."
+  },
+  "agendaEventName": "Event name",
+  "@agendaEventName": {
+    "description": "Label of the name field in the event editor."
+  },
+  "agendaEventDate": "Date",
+  "@agendaEventDate": {
+    "description": "Label of the date field in the event editor."
+  },
+  "agendaDateHint": "YYYY-MM-DD",
+  "@agendaDateHint": {
+    "description": "Format the date field expects. Not prose: the same token shape in every locale, with the year/month/day letters of the language."
+  },
+  "agendaEventType": "Type",
+  "@agendaEventType": {
+    "description": "Label of the event kind selector (service, rehearsal, event)."
+  },
+  "agendaTypeService": "Service",
+  "@agendaTypeService": {
+    "description": "Event kind: the worship service."
+  },
+  "agendaTypeRehearsal": "Rehearsal",
+  "@agendaTypeRehearsal": {
+    "description": "Event kind: a rehearsal."
+  },
+  "agendaTypeEvent": "Event",
+  "@agendaTypeEvent": {
+    "description": "Event kind: anything that is neither a service nor a rehearsal."
+  },
+  "agendaExecutions": "Songs",
+  "@agendaExecutions": {
+    "description": "Heading of the list of executions inside the event editor."
+  },
+  "agendaNoExecutions": "No song in this event yet.",
+  "@agendaNoExecutions": {
+    "description": "Empty state of the executions list in the event editor."
+  },
+  "agendaAddExecution": "Add song",
+  "@agendaAddExecution": {
+    "description": "Opens the picker that adds a song from the library to the event."
+  },
+  "agendaExecutionVersion": "Version",
+  "@agendaExecutionVersion": {
+    "description": "Field of one execution: which arrangement or recording of the work was played in this event."
+  },
+  "agendaExecutionKey": "Key in this event",
+  "@agendaExecutionKey": {
+    "description": "Field of one execution: the key the band plays in this event, which may differ from the key written in the chord chart."
+  },
+  "agendaExecutionRemove": "Remove song",
+  "@agendaExecutionRemove": {
+    "description": "Removes one execution from the event being edited. The event on disk only changes on save."
+  },
+  "agendaPickSong": "Pick the song",
+  "@agendaPickSong": {
+    "description": "Title of the picker dialog that lists the library."
+  },
+  "agendaFilterSongs": "Filter by title",
+  "@agendaFilterSongs": {
+    "description": "Filter field of the song picker."
+  },
+  "agendaPickerEmpty": "The library has no chord chart yet.",
+  "@agendaPickerEmpty": {
+    "description": "Empty state of the song picker: there is nothing in the library to add."
+  },
+  "agendaPickerNoMatch": "No song with this title.",
+  "@agendaPickerNoMatch": {
+    "description": "Shown when the filter hides every song: the library is not empty, the filter is."
+  },
+  "agendaPickerFailed": "Could not list the library",
+  "@agendaPickerFailed": {
+    "description": "Shown when the core fails to list the library inside the picker. The core's message appears next to it."
+  },
+  "agendaCancel": "Cancel",
+  "@agendaCancel": {
+    "description": "Closes the picker without adding anything."
+  },
+  "agendaSaveEvent": "Save event",
+  "@agendaSaveEvent": {
+    "description": "Writes the event into the library through the core."
+  },
+  "agendaSaveFailed": "Could not save the event",
+  "@agendaSaveFailed": {
+    "description": "Shown when the core refuses or fails to write the event. The core's message appears next to it."
+  },
+  "agendaNameRequired": "Name the event before saving.",
+  "@agendaNameRequired": {
+    "description": "Validation message of the event editor: the core refuses an event without a name."
+  },
+  "agendaDateInvalid": "The date must be written as YYYY-MM-DD.",
+  "@agendaDateInvalid": {
+    "description": "Validation message of the event editor. YYYY-MM-DD is the format the field expects."
+  },
+  "agendaEventSaved": "Event saved",
+  "@agendaEventSaved": {
+    "description": "Confirmation shown after the core wrote the event."
+  },
+  "agendaRepeatPrevious": "Repeat the previous event",
+  "@agendaRepeatPrevious": {
+    "description": "Shortcut that duplicates the last event of the agenda, bringing the current versions and keys from the library."
+  },
+  "agendaNoPreviousEvent": "There is no previous event to repeat.",
+  "@agendaNoPreviousEvent": {
+    "description": "Shown when the shortcut is used on an agenda that has no event yet."
+  },
+  "agendaRepeatDone": "Event copied from the previous one: check the versions.",
+  "@agendaRepeatDone": {
+    "description": "Confirmation after the copy. The copy keeps the version declared in the previous event, so the person still has to check what changed."
+  },
+  "agendaRepeatFailed": "Could not repeat the previous event",
+  "@agendaRepeatFailed": {
+    "description": "Shown when the core refuses or fails to copy the previous event. The core's message appears next to it."
+  },
+  "usoTitle": "Usage report",
+  "@usoTitle": {
+    "description": "Title of the usage report screen: what the team sang and which works still have no record."
+  },
+  "usoLoadFailed": "Could not load the usage report",
+  "@usoLoadFailed": {
+    "description": "Shown when the core fails to build the report. The core's message appears next to it; a failure never becomes an empty report."
+  },
+  "usoEmpty": "No song was sung yet: the agenda has no execution.",
+  "@usoEmpty": {
+    "description": "Empty state of the usage report. This is the only meaning of 'nothing here' — a failure is shown as a failure."
+  },
+  "usoEvents": "{count, plural, =0{no event} =1{1 event} other{{count} events}}",
+  "@usoEvents": {
+    "description": "Number of events the usage report considered.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usoExecutions": "{count, plural, =0{no execution} =1{1 execution} other{{count} executions}}",
+  "@usoExecutions": {
+    "description": "Number of executions summed by the usage report.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usoWorks": "{count, plural, =0{no work} =1{1 work} other{{count} works}}",
+  "@usoWorks": {
+    "description": "Number of distinct works sung in the period.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usoPublicWorks": "{count, plural, =0{no work in public domain} =1{1 work in public domain} other{{count} works in public domain}}",
+  "@usoPublicWorks": {
+    "description": "Works whose record (ADR-0012) resolves public domain.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usoWorksWithoutRecord": "{count, plural, =0{no work without a record} =1{1 work without a record} other{{count} works without a record}}",
+  "@usoWorksWithoutRecord": {
+    "description": "Works the engine cannot classify because no record exists: the work list of the report.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "usoSemFicha": "no record",
+  "@usoSemFicha": {
+    "description": "Badge of one work in the report: the engine has no record for it, so it affirms neither public domain nor protected."
   }
 }
