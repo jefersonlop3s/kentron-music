@@ -1,4 +1,34 @@
 # Changelog
+## [feat] Rodada 3: a agenda escreve, o ASR ganha número, o motor publica o que decide — e o verificador de refs deixa de mentir (2026-11-27)
+
+Quatro frentes em paralelo (paths disjuntos, como nas rodadas 1 e 2) mais o **plano de destrave** que o dono pediu, e a `main` publicada no fim.
+
+### Agenda do culto: montar/editar, repetir o anterior e o relatório de uso na tela
+
+A leitura tinha sido entregue em 26/11; agora a agenda **escreve**: criar/editar o evento (data, tipo, execuções = obra + versão + tom), o atalho de **"repetir a agenda anterior com versões novas"** e o **relatório de uso** do motor (`mir_engine::uso`) numa tela própria, com carregando/vazio/erro. A ponte ganhou ~863 linhas e os bindings foram regerados; os ARBs ficaram com **paridade conferida nos três idiomas-base** — **69 chaves em `en`, `pt` e `es`**, medido com o próprio `check_arb` (o integrador desconfiou de assimetria por contagem de `grep` e **estava errado**: o `grep` contava também as descrições do bloco `@chave`).
+
+### ASR: o viés vira constante **medida**, a GBNF é medida, e o `medium` no desktop ganha dois números
+
+Os três números que faltavam para decidir:
+
+- **Viés calibrado por modelo.** A constante é **medida pelo instrumento** (não digitada), calibrada numa voz e aplicada em **outra** — material que não calibrou. Modo DTW: mediana do erro **230 → 56 ms** (`small-q5_1`) e **379 → 54 ms** (`medium-q5_0`). Prova negativa: com o sinal trocado, o erro **sobe**.
+- **`--grammar` (GBNF).** Oito braços no mesmo material e com o mesmo placar: baseline, `--prompt`, correção pós-hoc, GBNF, a variante suave (`--grammar-penalty 1`), GBNF **sem** `--grammar-rule` (a prova de que a flag **não é no-op**) e um controle com vocabulário **disjunto** do áudio. O placar separa **WER**, **abstenção** e **invenção** — a ideia do dono muda o modo de falha, e modo de falha se mede.
+- **Custo do `medium` no desktop**, no mesmo áudio e no mesmo recorte do tier do aparelho: `small-q5_1` **5,81 s** de parede e **605 MB** de pico; `medium-q5_0` **23,89 s** e **1256 MB** — **4,1× o tempo** e **2,1× a memória**. O medidor planta custos conhecidos como prova negativa (alocação de 200 MB e `sleep` de 1,5 s) e **declara o que não é comparável** (Android × macOS).
+
+### MIR: o motor publica o que decidiu — terça e dinâmica por instrumento ficam conferíveis
+
+Duas decisões eram **invisíveis** no relatório: o nome do acorde não dizia se a terça veio do template, da regra do croma (`chords::com_terca`) ou da melodia, e não havia **LUFS por instrumento**. Agora cada trecho publica `origem_terca` (Template/Croma/Melodia/Ausente), `terca_razao` e `potencia_no_croma`; a melodia publica `terca_confirmada` como **testemunha independente**; e o resumo separa **contradição** de **falta de F0** — somar as duas seria transformar ausência de prova em prova. O limiar 0,40 virou `LIMIAR_DA_TERCA`, nomeado no mesmo lugar da medição que o justifica. `ComparativoStems` passa a carregar `dinamica` (LUFS, LRA e pico por stem), e stem vazio (o modelo devolve −60/−61 LUFS) sai como **"sem conteúdo"**.
+
+**Três medidores novos** (`medir-mir-alinhamento-lote.py`, `medir-mir-terca.py`, `medir-mir-repeticao.py`) com contagem de classes **antes** dos acertos, juízes independentes, taxa-base explícita e conjunto balanceado por semente fixa. Primeiros números no corpus (**25 músicas**): frases por música de **7 a 194** (mediana 23), **21/25** com frase acima de 20 s, cobertura mediana **76%**, **zero fallback** e **287 frases na banda de decisão** do corte de 1,5 s.
+
+### `verificar_refs.py`: deixa de reprovar a árvore boa — e entra na bateria
+
+O verificador **reprovava a `main`** porque `docs/CONCLUSION.md` cita o nome do `AGENTS.md` em prosa e ele resolvia o nome relativo a `docs/`, onde o arquivo não está. Pior: **nenhum gate o chamava** (medido: zero referências em `ci-local.sh`, hooks ou harness) — o vermelho falso só aparecia para quem o rodasse à mão. Agora aceita `.md` que existe na **raiz**, roda no `ci-local.sh` e tem teste próprio com 5 casos, provando **os dois lados**: nome da raiz passa, alvo que não existe **continua** reprovando. De carona, `ruff format` no arquivo — dívida pré-existente da mesma classe da de `cargo fmt`.
+
+### Plano de destrave registrado
+
+`docs/plans/plano-de-destrave-2026-11-27.md`: bloqueio classificado **pelo remédio** (decisão · ação humana · terceiro · só falta medir), a **folha de 14 decisões** com recomendação e consequência, e o **Anexo A** com os seis itens "Em aberto" da ADR-0018 — cada um com recomendação, para o dono responder uma linha.
+
 ## [fix] O gate `types`/`test` do `pre-push` reprovava todo push de 2+ crates (2026-11-26)
 
 Achado ao empurrar as duas rodadas: o push foi **bloqueado** com `❌ types (0s)` e `❌ test (0s)`. Zero segundo é assinatura de falha imediata — e era: `cargo clippy --offline mir_engine notation_bundle --all-targets` → `error: unexpected argument 'mir_engine' found`.
