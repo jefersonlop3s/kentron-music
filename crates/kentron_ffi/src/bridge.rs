@@ -1683,6 +1683,9 @@ mod tests {
         let scratch = Scratch::new("relatorio-uso");
         let base = scratch.base_dir();
         biblioteca(scratch.path());
+        // Uma terceira obra, sem ficha: com 1 pública e 1 sem ficha os dois
+        // números coincidiriam e o teste não separaria um do outro.
+        obra_com_tom(scratch.path(), "sem-ficha", "Obra Sem Ficha", Some("G"));
 
         salvar_evento_agenda(
             base.clone(),
@@ -1699,15 +1702,18 @@ mod tests {
             "Culto da noite".to_owned(),
             Some("2026-11-29".to_owned()),
             Some("culto".to_owned()),
-            vec![entrada("santo", Some("versão do coral"), None)],
+            vec![
+                entrada("santo", Some("versão do coral"), None),
+                entrada("sem-ficha", None, None),
+            ],
         )
         .expect("segundo evento");
 
         let relatorio = relatorio_de_uso(base, 2026).expect("relatório");
 
         assert_eq!(relatorio.eventos, 2);
-        assert_eq!(relatorio.execucoes, 3);
-        assert_eq!(relatorio.obras_distintas, 2);
+        assert_eq!(relatorio.execucoes, 4);
+        assert_eq!(relatorio.obras_distintas, 3);
         assert!(
             relatorio.core.starts_with("kentron_ffi "),
             "{}",
@@ -1718,10 +1724,11 @@ mod tests {
         assert_eq!(relatorio.obras[0].titulo, "Santo");
         assert_eq!(relatorio.obras[0].execucoes, 2);
         assert_eq!(relatorio.obras[1].titulo, "Hino 3");
+        assert_eq!(relatorio.obras[2].titulo, "Obra Sem Ficha");
 
         // `Santo` tem ficha (Cantor Cristão 09, tradução em domínio público desde
-        // 2018): o veredito existe e a obra conta como pública. `Hino 3` não tem
-        // ficha nenhuma: veredito `None` — que é resposta, não falha.
+        // 2018): o veredito existe e a obra conta como pública. As outras duas
+        // não têm ficha nenhuma: veredito `None` — que é resposta, não falha.
         assert!(
             relatorio.obras[0].publica,
             "{:?}",
@@ -1735,10 +1742,12 @@ mod tests {
             "{:?}",
             relatorio.obras[0].veredito
         );
-        assert_eq!(relatorio.obras[1].veredito, None, "sem ficha é sem ficha");
-        assert!(!relatorio.obras[1].publica);
+        for sem_ficha in &relatorio.obras[1..] {
+            assert_eq!(sem_ficha.veredito, None, "sem ficha é sem ficha");
+            assert!(!sem_ficha.publica);
+        }
         assert_eq!(relatorio.publicas, 1);
-        assert_eq!(relatorio.sem_ficha, 1);
+        assert_eq!(relatorio.sem_ficha, 2);
 
         // As versões vêm com a contagem, e a não declarada é **dita**, não inventada.
         let versoes: Vec<(String, u32)> = relatorio.obras[0]

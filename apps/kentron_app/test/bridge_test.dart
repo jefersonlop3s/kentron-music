@@ -380,6 +380,13 @@ void main() {
       id: 'hino-3',
       chordpro: '{title: Hino 3}\n{key: G}\n\n[Verse]\n[G]texto\n',
     );
+    // Terceira obra, sem ficha: com 1 pública e 1 sem ficha os dois números
+    // coincidiriam e o teste não separaria um do outro.
+    await salvarNaBiblioteca(
+      baseDir: dir.path,
+      id: 'sem-ficha',
+      chordpro: '{title: Obra Sem Ficha}\n{key: G}\n\n[Verse]\n[G]texto\n',
+    );
     await salvarEventoAgenda(
       baseDir: dir.path,
       id: 'culto-1',
@@ -399,27 +406,31 @@ void main() {
       tipo: 'culto',
       execucoes: const <EntradaAgenda>[
         EntradaAgenda(songId: 'santo', versao: 'versão do coral'),
+        EntradaAgenda(songId: 'sem-ficha'),
       ],
     );
 
     final relatorio = await relatorioDeUso(baseDir: dir.path, anoCorrente: 2026);
 
     expect(relatorio.eventos, 2);
-    expect(relatorio.execucoes, 3);
-    expect(relatorio.obrasDistintas, 2);
+    expect(relatorio.execucoes, 4);
+    expect(relatorio.obrasDistintas, 3);
     expect(relatorio.core, startsWith('kentron_ffi '));
     expect(
       relatorio.obras.map((ObraDoRelatorio o) => o.titulo),
-      <String>['Santo', 'Hino 3'],
-      reason: 'mais cantada primeiro',
+      <String>['Santo', 'Hino 3', 'Obra Sem Ficha'],
+      reason: 'mais cantada primeiro, depois por título',
     );
     final santo = relatorio.obras.first;
     expect(santo.execucoes, 2);
     expect(santo.publica, isTrue, reason: 'ficha do Cantor Cristão 09');
     expect(santo.veredito, contains('domínio público'));
     expect(relatorio.publicas, 1);
-    expect(relatorio.semFicha, 1);
-    expect(relatorio.obras.last.veredito, isNull, reason: 'sem ficha é sem ficha');
+    expect(relatorio.semFicha, 2);
+    for (final ObraDoRelatorio obra in relatorio.obras.skip(1)) {
+      expect(obra.veredito, isNull, reason: 'sem ficha é sem ficha');
+      expect(obra.publica, isFalse);
+    }
   });
 
   test('relatório de uso sem biblioteca vira exceção, não relatório vazio', () async {
