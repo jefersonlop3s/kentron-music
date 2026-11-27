@@ -1,6 +1,6 @@
 # ADR-0018 · Presença web do produto: landing page, domínio e hospedagem
 
-- **Status:** Proposto (2026-11-25)
+- **Status:** aceito (2026-11-26) — decisão do dono; **implementação não iniciada** a pedido dele (os itens de "Em aberto", mais abaixo, seguem sendo decisão do dono antes de qualquer trabalho)
 - **Autoridade de aceite:** dono do projeto
 - **Repositórios/contratos afetados:** novo diretório de site (a definir, ex.: `site/`), `apps/kentron_app` (tela "Sobre o projeto", quando existir), `docs/legal/` (política de apoio, futura), [`README.md`](../../README.md), e o processo de submissão às lojas (teste fechado da Google Play no R1 — ADR-0002; publicação na R5).
 
