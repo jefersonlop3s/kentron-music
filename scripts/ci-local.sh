@@ -88,6 +88,21 @@ cargo deny check
 step "i18n: paridade de ARBs"
 python3 tools/check_arb.py
 
+step "Docs: referências entre .md (verificar_refs.py)"
+# Estava FORA de toda a bateria até 2026-11-26 (medido: nenhuma referência ao
+# script em `ci-local.sh`, nos hooks ou no harness) — e é justamente ele que
+# estava reprovando a `main`, por resolver `AGENTS.md` relativo a `docs/` (o
+# arquivo mora na raiz). Verificador que ninguém roda não protege nada, e um que
+# reprova a árvore boa ensina a ser ignorado: aqui ele passa a valer, com o
+# falso positivo corrigido e a prova negativa no teste do próprio verificador.
+python3 .harness/verificar_refs.py
+
+step "Docs: prova do verificador de referências (sentido negativo)"
+# O verificador foi consertado hoje (aceita `.md` da raiz); o conserto só vale
+# se o teste provar os DOIS lados — nome da raiz passa, alvo que não existe
+# continua reprovando. Sem isso, o conserto poderia virar "nunca reprova".
+bash .agents/test_verificar_refs.sh
+
 step "Fichas do hinário: asset + prova no sentido negativo"
 # O hook de push roda os dois quando o push toca asset/verificador/prova. Aqui é
 # a bateria inteira: o asset de fatos nunca tem letra nem cifra (limite legal da
