@@ -345,18 +345,25 @@ if [ -f "Cargo.toml" ]; then
             echo "   clippy ausente — instale com: rustup component add clippy"
             return 127
         fi
-        local crates=''
+        local nomes=''
         while IFS= read -r f; do
             [ -n "$f" ] || continue
             local crate
             crate=$(echo "$f" | grep -oE '^crates/[^/]+' | head -1)
-            [ -n "$crate" ] && crates="$crates -p $(basename "$crate")"
+            [ -n "$crate" ] && nomes="$nomes$(basename "$crate")"$'\n'
         done <<< "$CHANGED_FILES"
-        [ -z "$crates" ] && { echo "nenhum crate no push"; return 0; }
-        local uniq
-        uniq=$(echo "$crates" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+        [ -z "$nomes" ] && { echo "nenhum crate no push"; return 0; }
+        # Deduplica os NOMES e monta os `-p` depois. Não é preciosismo: a versão
+        # anterior deduplicava a lista com os `-p` dentro (`tr ' ' '\n' | sort -u`)
+        # e o `sort -u` **apagava os próprios `-p`** — com DOIS crates o comando
+        # virava `cargo clippy --offline mir_engine notation_bundle`, e o segundo
+        # nome virava posicional. Medido em 2026-11-26, no push das duas rodadas:
+        # `error: unexpected argument 'mir_engine' found`. O gate reprovava todo
+        # push que tocasse 2+ crates; com um só, `-p X` sobrevivia por sorte.
+        local flags
+        flags=$(printf '%s' "$nomes" | sort -u | sed 's/^/-p /' | tr '\n' ' ')
         # shellcheck disable=SC2086
-        cargo clippy --offline $uniq --all-targets -- -D warnings
+        cargo clippy --offline $flags --all-targets -- -D warnings
     }
     run_gate types gate_types
 
@@ -366,23 +373,27 @@ if [ -f "Cargo.toml" ]; then
         # `scripts/ci-local.sh` e no CI. Medido (2026-11-24): workspace
         # completo ~26s, crate único ~2s — sem este recorte o hook estourava
         # o timeout de 30s do runner e o push falhava antes de começar.
-        local crates=''
+        local nomes=''
         while IFS= read -r f; do
             [ -n "$f" ] || continue
             local crate
             crate=$(echo "$f" | grep -oE '^crates/[^/]+' | head -1)
-            [ -n "$crate" ] && crates="$crates -p $(basename "$crate")"
+            [ -n "$crate" ] && nomes="$nomes$(basename "$crate")"$'\n'
         done <<< "$CHANGED_FILES"
-        if [ -z "$crates" ]; then
+        if [ -z "$nomes" ]; then
             # Nenhum crate tocado: testa só notation_bundle (dependência
             # universal) e kentron_ffi (ponte, sempre relevante).
-            crates="-p notation_bundle -p kentron_ffi"
+            nomes=$'notation_bundle\nkentron_ffi\n'
         fi
-        # `sort -u` remove duplicatas de crate que apareceu em vários arquivos
-        local uniq
-        uniq=$(echo "$crates" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+        # Deduplica os NOMES e monta os `-p` depois — aqui o defeito era o mesmo,
+        # e batia **no caminho padrão**, que lista dois crates: a dedup antiga
+        # deixava `cargo test --offline notation_bundle` (posicional) e o gate
+        # reprovava qualquer push que não tocasse crate nenhum (medido no repo de
+        # teste, 2026-11-26). Ver o comentário do gate `types` acima.
+        local flags
+        flags=$(printf '%s' "$nomes" | sort -u | sed 's/^/-p /' | tr '\n' ' ')
         # shellcheck disable=SC2086
-        cargo test --offline $uniq
+        cargo test --offline $flags
     }
     run_gate test gate_test
 
