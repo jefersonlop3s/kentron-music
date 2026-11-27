@@ -15,6 +15,19 @@ sempre se passa `-nfa` no modo DTW.
 Unidade do campo `t_dtw` do JSON: CENTESIMOS de segundo (validado contra a
 verdade conhecida; usar como ms erra por um fator de 10).
 
+Calibracao do vies (viés tardio e estavel => calibravel):
+  --calibrar-vies ARQ   mede o vies (media do erro com sinal) por modelo no
+                        material desta execucao e grava em ARQ, junto do nome e
+                        do sha256 de cada modelo. A constante e MEDIDA, nao
+                        digitada a mao.
+  --vies ARQ            aplica as constantes de ARQ e imprime ANTES e DEPOIS
+                        (mediana e p90) na mesma tabela e no mesmo material.
+  --vies-invertido      aplica a constante com o sinal trocado -- prova
+                        negativa: se a calibracao vale algo, o erro PIORA.
+
+Regra de metodo: calibrar num material e reportar em OUTRO (a voz que nao
+calibrou). Constante medida no mesmo material que ela reporta mede a si mesma.
+
 Precondicoes (todas fail-loud): binario do whisper.cpp, modelos ggml, `say` com
 voz pt-BR e `ffmpeg`.
 
@@ -245,6 +258,25 @@ def parse(jpath: str) -> list[dict]:
     return [w for w in out if any(c.isalnum() for c in w["palavra"])]
 
 
+CABECALHO_SIMPLES = (
+    "voz\tmodelo\tmodo\tn\tmediana_ms\tp90_ms\tmax_ms\tvies_ms\tdeterministico"
+)
+CABECALHO_CALIBRADO = (
+    "voz\tmodelo\tmodo\tn\tantes_mediana\tantes_p90\tdepois_mediana\tdepois_p90\t"
+    "vies_residual\tdeterministico"
+)
+
+
+def sha256(caminho: str) -> str:
+    import hashlib
+
+    h = hashlib.sha256()
+    with open(caminho, "rb") as fh:
+        for bloco in iter(lambda: fh.read(1 << 20), b""):
+            h.update(bloco)
+    return h.hexdigest()
+
+
 def estat(erros: list[float]) -> dict:
     a = sorted(abs(e) for e in erros)
     return {
@@ -271,7 +303,31 @@ def main() -> int:
     ap.add_argument("--vozes", default=None, help="padrao depende da lingua")
     ap.add_argument("--frase", default=None, help="palavras separadas por virgula")
     ap.add_argument("--prova-negativa", action="store_true")
+    ap.add_argument(
+        "--calibrar-vies",
+        metavar="ARQ",
+        default=None,
+        help="mede o vies por modelo (modo DTW) no material desta execucao e grava em ARQ",
+    )
+    ap.add_argument(
+        "--vies",
+        metavar="ARQ",
+        default=None,
+        help="aplica as constantes de ARQ: imprime antes/depois na mesma tabela",
+    )
+    ap.add_argument(
+        "--vies-invertido",
+        action="store_true",
+        help="aplica a calibracao com o sinal trocado (prova negativa)",
+    )
     args = ap.parse_args()
+
+    if args.vies and args.calibrar_vies:
+        raise SystemExit(
+            "--vies e --calibrar-vies sao exclusivos: calibre num material, aplique noutro"
+        )
+    if args.vies_invertido and not args.vies:
+        raise SystemExit("--vies-invertido exige --vies (nao ha o que inverter)")
 
     exige("say", "vozes do macOS")
     exige("ffmpeg", "conversao para 16 kHz")
@@ -289,13 +345,31 @@ def main() -> int:
     if not modelos:
         raise SystemExit(f"nenhum modelo ggml-* em {args.modelo_dir}")
 
+    vies = None
+    if args.vies:
+        with open(args.vies) as fh:
+            vies = json.load(fh)
+        for _, preset, _ in modelos:
+            if preset not in vies.get("modelos", {}):
+                raise SystemExit(
+                    f"{args.vies}: sem constante medida para o modelo {preset}"
+                )
+
     pasta = tempfile.mkdtemp(prefix="spike-asr-")
+    sinal = " (SINAL INVERTIDO -- prova negativa)" if args.vies_invertido else ""
     print(
         f"# lingua={args.lingua} instrumento em {pasta} | "
         f"modelos: {', '.join(m[0] for m in modelos)}"
     )
-    print("voz\tmodelo\tmodo\tn\tmediana_ms\tp90_ms\tmax_ms\tvies_ms\tdeterministico")
+    if vies:
+        orig = ", ".join(
+            f"{p}={vies['modelos'][p]['vies_ms']:+.1f}ms"
+            for p in sorted(vies["modelos"])
+        )
+        print(f"# calibracao aplicada de {args.vies} ({orig}){sinal}")
+    print(CABECALHO_CALIBRADO if vies else CABECALHO_SIMPLES)
 
+    acumulado: dict[str, list[float]] = {}
     for voz in vozes:
         voz = voz.strip()
         wav, verdade = constroi(voz, frase, pasta, GAP_MS_PADRAO)
@@ -324,12 +398,29 @@ def main() -> int:
                 idem = [round(w["onset_ms"]) for w in p1] == [
                     round(w["onset_ms"]) for w in p2
                 ]
-                st = estat(erro(verdade, p1))
+                erros = erro(verdade, p1)
+                st = estat(erros)
                 extra = len(p1) - len(verdade)
-                print(
-                    f"{voz}\t{nome}\t{rot}\t{st['n']}({extra:+d})\t{st['mediana']:.0f}\t"
-                    f"{st['p90']:.0f}\t{st['max']:.0f}\t{st['vies']:+.0f}\t{'sim' if idem else 'NAO'}"
-                )
+                if vies:
+                    c = float(vies["modelos"][preset]["vies_ms"])
+                    if args.vies_invertido:
+                        c = -c
+                    stc = estat([e - c for e in erros])
+                    print(
+                        f"{voz}\t{nome}\t{rot}\t{st['n']}({extra:+d})\t"
+                        f"{st['mediana']:.0f}\t{st['p90']:.0f}\t{stc['mediana']:.0f}\t"
+                        f"{stc['p90']:.0f}\t{stc['vies']:+.0f}\t{'sim' if idem else 'NAO'}"
+                    )
+                else:
+                    print(
+                        f"{voz}\t{nome}\t{rot}\t{st['n']}({extra:+d})\t{st['mediana']:.0f}\t"
+                        f"{st['p90']:.0f}\t{st['max']:.0f}\t{st['vies']:+.0f}\t"
+                        f"{'sim' if idem else 'NAO'}"
+                    )
+                # So o modo DTW calibra e so ele e calibrado: o heuristico tem
+                # outra escala de erro e outra distribuicao.
+                if args.calibrar_vies and rot == "dtw":
+                    acumulado.setdefault(preset, []).extend(erros)
 
         if args.prova_negativa:
             # Prova negativa do VERIFICADOR: verdade corrompida tem de reprovar.
@@ -353,6 +444,48 @@ def main() -> int:
                     "-> instrumento morto"
                 )
                 return 1
+    if args.calibrar_vies:
+        faltando = [p for _, p, _ in modelos if not acumulado.get(p)]
+        if faltando:
+            raise SystemExit(
+                f"sem erro DTW medido para {faltando}: nada a gravar (instrumento morto?)"
+            )
+        dados = {
+            "unidade": "ms",
+            "significado": (
+                "vies_ms = media(onset_reportado - onset_verdadeiro) no modo DTW; "
+                "aplicar SUBTRAINDO do onsets reportados"
+            ),
+            "material": {
+                "vozes": [v.strip() for v in vozes],
+                "lingua": args.lingua,
+                "frase": frase,
+                "gap_ms": GAP_MS_PADRAO,
+                "escopo": "fala sintetizada (TTS), modo DTW com -nfa",
+            },
+            "modelos": {},
+        }
+        for nome, preset, caminho in modelos:
+            erros = acumulado[preset]
+            dados["modelos"][preset] = {
+                "vies_ms": round(statistics.mean(erros), 1),
+                "n": len(erros),
+                "arquivo": os.path.basename(caminho),
+                "sha256": sha256(caminho),
+                "desvio_padrao_ms": round(statistics.pstdev(erros), 1),
+            }
+        with open(args.calibrar_vies, "w") as fh:
+            json.dump(dados, fh, indent=2, ensure_ascii=False)
+            fh.write("\n")
+        for preset in sorted(dados["modelos"]):
+            m = dados["modelos"][preset]
+            print(
+                f"# vies medido {preset}: {m['vies_ms']:+.1f} ms (n={m['n']}, "
+                f"desvio {m['desvio_padrao_ms']:.0f}, {m['arquivo']}, "
+                f"sha256 {m['sha256'][:12]})"
+            )
+        print(f"# constantes gravadas em {args.calibrar_vies}")
+
     print(f"# resíduo em {pasta} (apagar quando não servir mais)")
     return 0
 
