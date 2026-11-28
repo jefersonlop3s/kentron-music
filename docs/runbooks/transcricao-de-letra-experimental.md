@@ -9,7 +9,7 @@
 | Item | Valor medido |
 |---|---|
 | `whisper-cli` (whisper.cpp) | `/tmp/whisper.cpp/build/bin/whisper-cli` — build local |
-| Modelo | `ggml-medium-q5_0.bin` (~1,5 GB) |
+| Modelo | **`ggml-large-v3-turbo.bin`** (~1,62 GB) — o de **melhor erro medido** (ver §9); `ggml-medium-q5_0.bin` (~1,5 GB) como alternativa mais leve |
 | Separador de voz | Demucs 4.1.0, modelo `htdemucs_6s`, `--two-stems=vocals` |
 | `ffmpeg` | conversão para 16 kHz mono |
 | Verdade | a letra do dono, **fora do repositório** |
@@ -19,7 +19,7 @@
 1. **Separar a voz** — é o passo que mais custa e o que muda o resultado.
    `python3 -m demucs --two-stems=vocals -n htdemucs_6s -o <saida> <audio>`
 2. **Normalizar para o ASR** — `ffmpeg -i <vocals.wav> -ar 16000 -ac 1 <voz16k.wav>`
-3. **Transcrever** — `whisper-cli -m ggml-medium-q5_0.bin -f <voz16k.wav> -l pt -np -nt -sns`
+3. **Transcrever** — `whisper-cli -m ggml-large-v3-turbo.bin -f <audio16k.wav> -l pt -np -nt -sns`
 4. **Reexecutar com léxico** (opcional, ver §4) — acrescentar `--prompt "<vocabulário>"`.
 5. **Conferir à mão.** A saída é **ponto de partida**, nunca letra final.
 
@@ -94,6 +94,35 @@ O dono aceitou o custo da separação **como caminho condicional**: roda no **mi
 **Consequência:** a média do mix era **1,136** e é **0,943**; e a "prova" de que a separação resgatava a alucinação (*Vinho e Pão* "0,995 → 0,648") era **artefato do arquivo truncado** — na entrada correta, mix **0,658** contra voz **0,633**: ganho desprezível. Quem resgata aquela música é o **`--prompt`** (0,151).
 
 **Lição de método:** (1) instrumento que reusa intermediário **precisa provar a origem** do que reusa — aqui, duração/tamanho contra o original; (2) repetir a decodificação na **mesma entrada** (md5 idêntico) foi o que apontou a **entrada**, e não o modelo, como causa; (3) **agregado não substitui conferir por música**.
+
+## 9. Modelo e decodificação: medidos (2026-11-28, 17 músicas)
+
+Cinco braços no mesmo material e no mesmo placar (`-sns`, verdade = a letra do dono):
+
+| braço | média | mediana | usáveis (< 0,5) |
+|---|---|---|---|
+| `medium` no mix (baseline anterior) | 0,943 | 0,899 | 4 |
+| `medium --no-fallback -bo 1` | **0,970** | 0,986 | 3 |
+| **`large-v3-turbo` no mix** | **0,847** ⭐ | **0,702** | **5** |
+| `large-v3-turbo` na voz separada | 0,885 | 0,706 | 5 |
+| `medium` na voz separada | 1,065 | 1,120 | 3 |
+
+**Três conclusões, todas medidas:**
+
+1. **O melhor modelo é o `large-v3-turbo`**, no **mix** (sem separação de voz): melhor média **e** melhor mediana (**−22%**), sem os 1,7 GB de stems e sem os 63 s/música do Demucs — **11 s/música** no total. O ganho é de **erro**, não de tempo.
+2. **A separação de voz não paga** (turbo: mix 0,847 × voz 0,885); ela só transforma a *Juntos como família* (1,465 → **0,324**). O caminho padrão é o áudio como veio.
+3. **A hipótese de que os laços de invenção eram artefato do fallback de temperatura está REFUTADA:** desligá-lo (`--no-fallback -bo 1`) **piora** a média e a mediana. Os laços são do material cantado.
+
+**E o `--prompt` não é alavanca portável** — ele **ajuda o `medium` e atrapalha o `turbo`** (mesma construção de léxico, mesmas 17 músicas):
+
+| par | sem prompt → com prompt | efeito |
+|---|---|---|
+| `medium` na voz | 1,065 → 0,957 | **ajuda** (−0,108) |
+| `turbo` na voz | 0,885 → 0,925 | atrapalha (+0,040) |
+| `turbo` no mix | 0,847 → 1,043 | **atrapalha muito** (+0,196) |
+
+No turbo o prompt piora **12 de 17** no mix e **12 de 17** na voz (usáveis caem de 5 para 1 e para 2). Ele ainda salva casos isolados (*Raridade* 1,160 → **0,364**; *Desde os confins* 2,208 → 1,333; *Dom de Amar* 0,856 → 0,670): é **efeito por música**, não alavanca de produto. **O desenho que fica: `large-v3-turbo` no mix, sem prompt e sem separação de voz.**
+
 
 ## 6. Falhas conhecidas e recuperação
 

@@ -1,4 +1,28 @@
 # Changelog
+## [docs] ASR: o `large-v3-turbo` medido, a hipótese dos laços refutada e o prompt que não é portável (2026-11-28)
+
+Rodada de medição fechada em **17 músicas** (a letra do dono como verdade, `-sns`, mesmo placar), herdando o modelo do STT do Sovereign Pair — **os mesmos pesos, com sha256 conferido** contra o que aquele produto fixou.
+
+### O placar, em cinco braços
+
+| braço | média | mediana | usáveis (< 0,5) |
+|---|---|---|---|
+| `medium` no mix (baseline) | 0,943 | 0,899 | 4 |
+| `medium --no-fallback -bo 1` | 0,970 | 0,986 | 3 |
+| **`large-v3-turbo` no mix** | **0,847** | **0,702** | **5** |
+| `large-v3-turbo` na voz | 0,885 | 0,706 | 5 |
+| `medium` na voz | 1,065 | 1,120 | 3 |
+
+### Três hipóteses, três vereditos
+
+- **Hipótese dos laços: REFUTADA.** Desligar o fallback de temperatura (`--no-fallback -bo 1`) **piora** a média (0,943 → 0,970) e a mediana (0,899 → 0,986). Os laços (`Criando Criando…`) são do **material cantado**, não do nosso parâmetro — a hipótese era boa e morreu com dado.
+- **O `large-v3-turbo` é ganho real:** melhor média **e** mediana **−22%**, 5 usáveis em vez de 4. *Dom de Amar* 1,320 → 0,856; *Marca da Promessa* 1,216 → 0,632; *Graças te Damos* 1,224 → 0,710; *Aos Pés da Cruz* 0,426 → **0,255**. Perde em *Desde os confins* (1,750 → 2,292) e *Tudo Posso* (0,450 → 0,636).
+- **O `--prompt` não é alavanca portável:** ele **ajuda o `medium`** (voz: 1,065 → 0,957) e **atrapalha o `turbo`** (voz 0,885 → 0,925; **mix 0,847 → 1,043**, com usáveis caindo de 5 para 1). No turbo ele piora 12 de 17 nas duas entradas. Há casos em que transforma (*Raridade* 1,160 → **0,364**), mas é efeito por música.
+
+### A separação de voz sai do desenho, e o custo cai
+
+Com o turbo, **mix 0,847 × voz 0,885**: a separação de voz **não paga**. Ela existia no desenho por causa da demonstração que a rodada anterior provou ser **artefato de áudio truncado**. O caminho que fica é o **áudio como veio** — **11 s/música**, sem os 1,7 GB de stems nem os 63 s de Demucs. Isso fecha a re-decisão que estava aberta com o dono: não é "todos" nem "os sinalizados" — por ora é **nenhum**, salvo validação fora da amostra.
+
 ## [docs] ASR: a voz separada e o prompt medidos, a fronteira das letras, e como os concorrentes fazem (2026-11-27)
 
 O comparativo que o dono pediu **fechou 17/17**, a combinação **voz + `--prompt`** foi medida, e o dono tomou 4 decisões. Duas coisas de produto nasceram disso: uma **nota técnica** e uma **cláusula no termo**.
