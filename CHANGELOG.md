@@ -1,4 +1,24 @@
 # Changelog
+## [docs] ASR: a voz separada e o prompt medidos, a fronteira das letras, e como os concorrentes fazem (2026-11-27)
+
+O comparativo que o dono pediu **fechou 17/17**, a combinação **voz + `--prompt`** foi medida, e o dono tomou 4 decisões. Duas coisas de produto nasceram disso: uma **nota técnica** e uma **cláusula no termo**.
+
+### O comparativo, medido contra a letra do dono (17 músicas, WER)
+
+Quatro braços no mesmo material e no mesmo placar (`medium-q5_0`, **`-sns` obrigatório**, verdade = a letra fornecida pelo dono): **mix 1,136** · **voz 1,065** · **voz+léxico de domínio 0,957** · **voz+letra própria 0,931** (média); usáveis (WER < 0,5): **4 de 17** no mix, 2–4 nos demais. O melhor caso é **0,151** (*Vinho e Pão*, que no mix dava 0,995 com a saída `Criando Criando Criando… Amém!`). **Nenhum braço domina:** cada um piora músicas específicas. E o teto prova o gargalo: com o **vocabulário exato da música** o WER médio ainda é **0,99** — **o erro é acústico, não lexical**.
+
+### Nota técnica, termo de uso e a decisão de produto
+
+`docs/runbooks/transcricao-de-letra-experimental.md` descreve **como é feito** (separar voz → 16 kHz → whisper `-sns` → léxico opcional → conferência humana), com **custo medido** (**63 s/música**, 37–101 s; ~100 MB de stems por música) e a tabela por música. A decisão do dono virou **§7.6** do termo de uso: *"melhor erro que silêncio"*, **experimental, sem garantia de sucesso, sujeito a revisão**, com o tempo declarado e **conferência humana obrigatória**.
+
+### Como os concorrentes fazem — e o que isso muda
+
+`docs/insights/2026-11-27-como-os-servicos-de-transcricao-fazem.md`: o **Lynote** não divulga método e anuncia "99,9%", admitindo que só vale para *"faixas vocais nítidas"*; o **Musely** nomeia **Seed-ASR 2.0**, anuncia **97,3% em 51 idiomas** e resolve a entrega vocal com **dica de gênero** — **nenhum dos dois separa a voz**, e **nenhum declara conjunto de teste**. A diferença entre os números deles e os nossos é, com alta probabilidade, **o material medido**. Nossa vantagem não é o número: é **publicar o número**.
+
+### Fronteira de material: as 2 letras novas
+
+As duas letras que o dono adicionou estavam **dentro do repositório** (`docs/`, com a URL do `letras.com.br` no corpo). Conferido por conteúdo que as duplicatas exatas já existiam fora do repo, foram **removidas** dali — ADR-0013 e ADR-0012 §126. Nada vazou por commit: o `quadro.sh` commita só o próprio quadro e as letras nunca foram adicionadas ao índice.
+
 ## [feat] Rodada 3: a agenda escreve, o ASR ganha número, o motor publica o que decide — e o verificador de refs deixa de mentir (2026-11-27)
 
 Quatro frentes em paralelo (paths disjuntos, como nas rodadas 1 e 2) mais o **plano de destrave** que o dono pediu, e a `main` publicada no fim.

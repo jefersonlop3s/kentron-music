@@ -73,6 +73,8 @@
 
 7.5. **Não é serviço de arquivamento.** <Definir por quanto tempo guardamos o que o usuário envia — decisão do dono.>
 
+7.6. **Transcrição de letra por áudio é recurso experimental — decisão do dono (2026-11-27).** Quando existir no produto, ela entra **declarada como experimental**: **não há garantia de sucesso**, o resultado **pode errar sem avisar**, e o **tempo de processamento varia por música** (medição de referência: ~63 s por faixa, com separação de voz; ver [nota técnica](../runbooks/transcricao-de-letra-experimental.md)). **O recurso pode ser revisto, alterado ou removido** em versão futura. A escolha de produto é **preferir erro a silêncio**: quando o motor não tem certeza, ele **tenta** em vez de devolver vazio — e por isso **a conferência humana é obrigatória** antes de qualquer uso público.
+
 ## 8. Isenção e indenidade
 
 8.1. **Não respondemos pelo conteúdo que o usuário fornece** (áudio, letra, versões) nem pelas consequências de fornecê-lo ou de usá-lo publicamente.
@@ -138,6 +140,7 @@ A **estrutura** foi aprendida observando o mercado; o **texto é nosso**. Cada c
 | §5 propriedade | Moises: o usuário *retém* direitos sobre o conteúdo **e sobre o Output**, com ressalva de que a lei varia para conteúdo assistido por IA — a nossa §5.2 põe a ressalva que importa: **obra de terceiro não é nossa para dar** |
 | §6 escopo privado e exibição pública | Vignoli/Letras: a assinatura é *"licença limitada, individual, intransferível e exclusivamente para uso pessoal e não comercial"* e **veda "exibição pública"** |
 | §7.2 sem garantia de exatidão | **Medido no spike de ASR (2026-11-21):** `tiny` e `base` marcaram trechos como "[música]", erraram palavras e **entraram em loop inventando a mesma linha por minutos** |
+| §7.6 transcrição experimental | **Decisão do dono (2026-11-27)**: *"melhor erro que silêncio"*, declarado experimental, sem garantia de sucesso e sujeito a revisão; tempo de referência **medido** (63 s/música com separação de voz, WER 0,957 na média de 17 músicas) |
 | §8 isenção e indenidade | Moises: *"disclaims any and all liability in connection with User Content"*; Cifra Club e Vignoli: isenção expressa por violação de direitos autorais de conteúdo de usuário |
 | §9 notificação e retirada | Cifra Club e Vignoli: retirada após ordem judicial (Marco Civil, art. 19), com remoção antecipada em *"violação grave de direitos"* e prova de titularidade exigida de quem notifica |
 | §10 registro do ato | Documentar quem fez o quê protege quem agiu de boa-fé; é o que o motor já registra (origem declarada, escopo, `pode_publicar`) |
