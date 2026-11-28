@@ -73,7 +73,7 @@
 
 7.5. **Não é serviço de arquivamento.** <Definir por quanto tempo guardamos o que o usuário envia — decisão do dono.>
 
-7.6. **Transcrição de letra por áudio é recurso experimental — decisão do dono (2026-11-27).** Quando existir no produto, ela entra **declarada como experimental**: **não há garantia de sucesso**, o resultado **pode errar sem avisar**, e o **tempo de processamento varia por música** (medição de referência: ~63 s por faixa, com separação de voz; ver [nota técnica](../runbooks/transcricao-de-letra-experimental.md)). **O recurso pode ser revisto, alterado ou removido** em versão futura. A escolha de produto é **preferir erro a silêncio**: quando o motor não tem certeza, ele **tenta** em vez de devolver vazio — e por isso **a conferência humana é obrigatória** antes de qualquer uso público.
+7.6. **Transcrição de letra por áudio é recurso experimental — decisão do dono (2026-11-27).** Quando existir no produto, ela entra **declarada como experimental**: **não há garantia de sucesso**, o resultado **pode errar sem avisar**, e o **tempo de processamento varia por música** (medição de referência: ~63 s por faixa com separação de voz; **erro medido entre 0,94 e 1,07 de WER** em 17 músicas do repertório — ver [nota técnica](../runbooks/transcricao-de-letra-experimental.md)). **O recurso pode ser revisto, alterado ou removido** em versão futura. A escolha de produto é **preferir erro a silêncio**: quando o motor não tem certeza, ele **tenta** em vez de devolver vazio — e por isso **a conferência humana é obrigatória** antes de qualquer uso público.
 
 ## 8. Isenção e indenidade
 

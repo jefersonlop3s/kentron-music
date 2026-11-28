@@ -40,9 +40,9 @@ Braços: **mix** (sem separação) · **voz** (separada) · **voz+domínio** (l�
 
 | música | mix | voz | +domínio | +própria |
 |---|---|---|---|---|
-| Vinho e Pão | 0,995 | 0,633 | **0,151** | 0,342 |
-| Meu Prazer | 1,265 | 0,993 | 0,901 | 0,828 |
-| Desde os confins | 4,312 | 1,792 | 0,896 | 1,521 |
+| Vinho e Pão | 0,658 ᶜ | 0,633 | **0,151** | 0,342 |
+| Meu Prazer | 0,874 ᶜ | 0,993 | 0,901 | 0,828 |
+| Desde os confins | 1,750 ᶜ | 1,792 | 0,896 | 1,521 |
 | Aos Pés da Cruz | 0,426 | 0,398 | 0,778 | 1,102 |
 | O Verbo | 1,233 | 1,452 | 1,740 | 2,151 |
 | Dom de Amar | 1,320 | 1,897 | 1,495 | 1,412 |
@@ -57,25 +57,43 @@ Braços: **mix** (sem separação) · **voz** (separada) · **voz+domínio** (l�
 | Graças te Damos | 1,224 | 1,120 | 1,062 | 0,502 |
 | Marca da Promessa | 1,216 | 1,646 | 0,959 | 1,357 |
 | Eu Te Quero | 0,652 | 1,220 | 0,684 | 1,071 |
-| **média** | **1,136** | **1,065** | **0,957** | **0,931** |
-| **mediana** | — | 1,120 | 0,921 | 0,828 |
+| **média** | **0,943** | 1,065 | 0,957 | **0,931** |
+| **mediana** | 0,899 | 1,120 | 0,921 | 0,828 |
 | **usáveis (WER < 0,5)** | **4 de 17** | 3 de 17 | 2 de 17 | 4 de 17 |
+
+**Vencedor por música:** **mix 7** · voz+domínio 4 · voz+própria 4 · voz 2. ᶜ = número corrigido — ver §8.
 
 **O que estes números afirmam:**
 
-1. **Nenhum braço domina.** A separação de voz e o `--prompt` melhoram a **média**, mas cada um **piora músicas específicas** (*O Verbo* 1,23 → voz 1,45; *Videira* 0,52 → +domínio 0,92).
-2. **O dicionário não conserta um modelo que não ouve.** Com o **vocabulário exato da música** o WER médio ainda é **0,99** — o gargalo é **acústico**, não lexical. Restrição dura (gramática GBNF) ainda **piora** o caso bom.
-3. **A separação de voz tira a alucinação do caminho.** *Vinho e Pão*: no mix a saída é `Criando Criando Criando… Amém!` (WER 0,995); na voz aparece a letra real (0,633 → **0,151** com léxico).
-4. **Não há "próximo da perfeição".** O melhor caso é 0,151 (85% das palavras certas); o resto fica entre 0,5 e 2,1. **Conferência humana é etapa, não opção.**
+1. **Nenhum braço domina — e o mix é o melhor ponto de partida.** Média: mix **0,943**, a menor; a separação de voz sozinha **piora** (1,065). Por música, o mix vence **7 de 17**.
+2. **O dicionário não conserta um modelo que não ouve.** Com o **vocabulário exato da música** (restrição dura, GBNF) o WER médio ainda é **~0,99** e ele **piora** o caso bom — re-medido em *Vinho e Pão* na entrada correta: mix 0,658, gramática **1,000**. O gargalo é **acústico**, não lexical.
+3. **O `--prompt` é a única alavanca de ganho real, e é condicional.** *Vinho e Pão*: 0,658 → **0,151**; *Desde os confins*: 1,750 → **0,896**. Mas **piora** *Aos Pés da Cruz* (0,426 → 0,778) e *O Verbo*.
+4. **Não há "próximo da perfeição".** O melhor caso é 0,151 (85% das palavras certas); 13 das 17 ficam acima de 0,5. **Conferência humana é etapa, não opção.**
 
-## 5. O interruptor entre os dois métodos (decisão do dono)
+## 5. O interruptor entre os dois métodos — e o proxy **medido** (2026-11-27)
 
-O dono aceitou o custo da separação **como caminho condicional**: roda no **mix** primeiro; o **sinal** decide se vale reprocessar na voz. Medido em 17:
+O dono aceitou o custo da separação **como caminho condicional**: roda no **mix** primeiro e um **sinal da própria saída** decide se vale reprocessar. Os três candidatos a sinal foram medidos como **preditor**, contra a verdade (média do WER resultante e quantas vezes a regra escolhe o melhor braço):
 
-- **mix já bom (WER < 0,5, 4 músicas):** manter o mix **nunca perdeu** (2 empates, 2 vitórias do mix).
-- **mix ruim (13 músicas):** a família "voz" venceu em **8 de 13**.
+| sinal (computável sem verdade) | regra | média do WER | acerta o melhor |
+|---|---|---|---|
+| — | **sempre mix** | 0,943 | 7/17 |
+| — | sempre voz+domínio | 0,957 | 4/17 |
+| `[música]`/`♪` | fração > 0 → voz+domínio | 0,942 | 6/17 |
+| repetição de 4-grama | ≥ 5 → voz+domínio | 0,944 | 3/17 |
+| **confiança do modelo** | **média de `p` por token < 0,85 → voz+domínio** | **0,898** | **8/17** |
+| tokens vs letra | > 1,5× → voz+domínio | 0,925 | 7/17 |
 
-**Limite honesto:** esse limiar foi medido **com a verdade em mãos** (pós-hoc). No produto **não existe WER** — o sinal tem de ser um **proxy da própria saída** (`[música]`, loop/repetição, proporção de tokens). **Esse proxy ainda não foi medido como preditor.** É a próxima medição, e sem ela o interruptor é hipótese.
+**Portanto: o sinal não é `[música]` nem repetição — é a confiança do próprio modelo** (média das probabilidades por token; sai de `-ojf` no `whisper-cli`). Ele disparia em **4 das 17** e baixa a média de 0,943 para **0,898**.
+
+**Limite honesto, e é sério:** o limiar 0,85 foi escolhido **olhando estes mesmos 17 resultados** — é sobreajuste. Valer como regra exige **conjunto separado** (as 2 letras novas ou as 13 restantes do plano). Antes disso, o interruptor é **hipótese com indício**, não recurso.
+
+## 8. Correção de medição (2026-11-27) — o erro que estava nos números
+
+**O que aconteceu:** o primeiro comparativo reusou wavs de uma sessão **anterior** em `/tmp/wav/` (o instrumento tinha `if not w.exists()`), e **nas 3 primeiras músicas da amostra** eles estavam **truncados** — 139 s contra **192 s reais** de *Vinho e Pão*, 173 contra 211, 192 contra 229. As outras 14 coincidiam.
+
+**Consequência:** a média do mix era **1,136** e é **0,943**; e a "prova" de que a separação resgatava a alucinação (*Vinho e Pão* "0,995 → 0,648") era **artefato do arquivo truncado** — na entrada correta, mix **0,658** contra voz **0,633**: ganho desprezível. Quem resgata aquela música é o **`--prompt`** (0,151).
+
+**Lição de método:** (1) instrumento que reusa intermediário **precisa provar a origem** do que reusa — aqui, duração/tamanho contra o original; (2) repetir a decodificação na **mesma entrada** (md5 idêntico) foi o que apontou a **entrada**, e não o modelo, como causa; (3) **agregado não substitui conferir por música**.
 
 ## 6. Falhas conhecidas e recuperação
 

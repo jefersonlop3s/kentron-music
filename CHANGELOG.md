@@ -5,7 +5,7 @@ O comparativo que o dono pediu **fechou 17/17**, a combinação **voz + `--promp
 
 ### O comparativo, medido contra a letra do dono (17 músicas, WER)
 
-Quatro braços no mesmo material e no mesmo placar (`medium-q5_0`, **`-sns` obrigatório**, verdade = a letra fornecida pelo dono): **mix 1,136** · **voz 1,065** · **voz+léxico de domínio 0,957** · **voz+letra própria 0,931** (média); usáveis (WER < 0,5): **4 de 17** no mix, 2–4 nos demais. O melhor caso é **0,151** (*Vinho e Pão*, que no mix dava 0,995 com a saída `Criando Criando Criando… Amém!`). **Nenhum braço domina:** cada um piora músicas específicas. E o teto prova o gargalo: com o **vocabulário exato da música** o WER médio ainda é **0,99** — **o erro é acústico, não lexical**.
+Quatro braços no mesmo material e no mesmo placar (`medium-q5_0`, **`-sns` obrigatório**, verdade = a letra fornecida pelo dono): **mix 0,943** · **voz 1,065** · **voz+léxico de domínio 0,957** · **voz+letra própria 0,931** (média); usáveis (WER < 0,5): **4 de 17**. Por música o **mix vence 7 de 17** — a separação de voz sozinha **não melhora** a média (a conclusão anterior, que dizia o contrário, saiu de **áudio truncado reusado de outra sessão** — ver a seção de correção abaixo). E o teto prova o gargalo: com o **vocabulário exato da música** o WER médio ainda é **0,99** — **o erro é acústico, não lexical**.
 
 ### Nota técnica, termo de uso e a decisão de produto
 
@@ -18,6 +18,16 @@ Quatro braços no mesmo material e no mesmo placar (`medium-q5_0`, **`-sns` obri
 ### Fronteira de material: as 2 letras novas
 
 As duas letras que o dono adicionou estavam **dentro do repositório** (`docs/`, com a URL do `letras.com.br` no corpo). Conferido por conteúdo que as duplicatas exatas já existiam fora do repo, foram **removidas** dali — ADR-0013 e ADR-0012 §126. Nada vazou por commit: o `quadro.sh` commita só o próprio quadro e as letras nunca foram adicionadas ao índice.
+
+### O interruptor, medido: o sinal é a confiança do modelo — e um erro meu, corrigido
+
+**O erro primeiro, porque ele invalidou números já publicados.** O comparativo reusou wavs de uma sessão anterior (`if not w.exists()` em `/tmp/wav/`) e **nas 3 primeiras músicas da amostra** eles estavam **truncados** (139 s contra 192 s reais). Consequências: a média do mix era **1,136** e é **0,943**; e a "prova" de que a separação de voz resgatava a alucinação (*Vinho e Pão* "0,995 → 0,648") era **artefato do arquivo truncado** — na entrada correta, mix **0,658** contra voz **0,633**. A decodificação foi provada **determinística** (md5 idêntico em duas passadas na mesma entrada), o que apontou a **entrada**, não o modelo, como causa. Registrado em §8 da nota técnica, com a lição de método.
+
+**E o interruptor tem sinal, com número.** Três candidatos computáveis **sem verdade**: fração de `[música]`/`♪` (média 0,942), repetição de 4-grama (0,944) e a **média das probabilidades por token** — esta última, com corte em **0,85**, baixa a média do WER de **0,943 para 0,898** e acerta o melhor braço em **8 de 17** (contra 7/17 de "sempre mix"). Dispara em **4 das 17**. **O corte foi escolhido olhando os mesmos 17 resultados** — é sobreajuste declarado, e valer como regra exige conjunto separado.
+
+### O `lfm3-audio:2b` local (Ollama) não serve para transcrever letra
+
+Nos **5 piores casos**, na mesma janela de 60 s do stem de voz, o modelo devolveu **prosa parafraseada com prefixo de comentário** (`The singer says, "…"`), **em idioma misturado**, com **palavras inventadas** (`ciambas`, `tular`) — em **1 a 2 s** para 60 s de áudio (não é ASR quadro a quadro). Medido: **fora-do-vocabulário 14%–76%** e cobertura das palavras da letra de **5% a 67%** (o `whisper` na mesma janela emite 22–53 palavras transcritas). **Controles:** com **silêncio** de entrada ele **inventou** `Um homem canta uma melodia simples e suave`; sem áudio, pediu o áudio; com outra música, descreveu o tema **certo** — ou seja, **ele ouve, mas descreve**. Veredito: **não valida nem substitui** o nosso caminho; serve, no máximo, como *resumo semântico* — feature diferente.
 
 ## [feat] Rodada 3: a agenda escreve, o ASR ganha número, o motor publica o que decide — e o verificador de refs deixa de mentir (2026-11-27)
 
