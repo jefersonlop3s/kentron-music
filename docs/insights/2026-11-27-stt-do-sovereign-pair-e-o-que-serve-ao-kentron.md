@@ -4,7 +4,7 @@
 
 ## Evidências e hipóteses
 
-**Fontes primárias (lidas em 2026-11-27):** `sp-service/src/speech/stt.rs` (508 linhas — o motor); `sp-service/Cargo.toml:183` e `:241`; `docs/adr/ADR-010-voz-e-visao-ocr-e29.md`; `sp-service/src/lib.rs:1804` (a rota); `sp-ui-chat/src/lib/components/ChatPanel.svelte` (`on:transcription`).
+**Fontes primárias (lidas em 2026-11-27, todas no repo `sovereign-pair` do CT `workspace`):** `sp-service/src/speech/stt.rs` (508 linhas — o motor); `sp-service/Cargo.toml:183` e `:241`; a ADR-010 daquele projeto (voz/visão, épico E29); `sp-service/src/lib.rs:1804` (a rota); `sp-ui-chat/src/lib/components/ChatPanel.svelte` (`on:transcription`).
 
 **O modelo.** `ggml-large-v3-turbo.bin` — revisão **pinada** `5359861c739e955e79d9a303bcbc70fb988958b1` do `ggerganov/whisper.cpp`, **sha256 conferido** (`1fc70f77…`), **1.624.555.275 bytes**, cacheado em `~/.sovereign/models/whisper`. Substituiu o `ggml-large-v3.bin` (~3 GB) porque *"os ~3GB do large-v3 falhavam consistentemente no meio do download em conexão doméstica"* — decisão do dono em 2026-08-22, com variantes quantizadas (q8_0 ~874 MB, q5_0 ~574 MB) mapeadas como plano B.
 
