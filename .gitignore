@@ -37,6 +37,12 @@ models/*.tflite
 models/*.bin
 models/weights/
 
+# Python — ferramentas e medidores
+# `__pycache__/` aparecia como untracked em dois worktrees e podia entrar num
+# `git add` distraído (medido em 2026-11-27, ao conferir a limpeza da sessão).
+__pycache__/
+*.pyc
+
 # Editor / SO
 .DS_Store
 .idea/
