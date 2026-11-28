@@ -123,6 +123,27 @@ Cinco braços no mesmo material e no mesmo placar (`-sns`, verdade = a letra do 
 
 No turbo o prompt piora **12 de 17** no mix e **12 de 17** na voz (usáveis caem de 5 para 1 e para 2). Ele ainda salva casos isolados (*Raridade* 1,160 → **0,364**; *Desde os confins* 2,208 → 1,333; *Dom de Amar* 0,856 → 0,670): é **efeito por música**, não alavanca de produto. **O desenho que fica: `large-v3-turbo` no mix, sem prompt e sem separação de voz.**
 
+### 9.1 Instrução, fusão e `-mc 0` (2026-11-28, mesma rodada de 17)
+
+| braço | média | mediana | usáveis (< 0,5) |
+|---|---|---|---|
+| **mix** (referência) | **0,847** | 0,702 | 5 |
+| voz | 0,885 | 0,706 | 5 |
+| **mix + instrução** (`--prompt "<instrução curta>" --carry-initial-prompt`) | **1,097** | 1,062 | 5 |
+| voz + instrução | 1,126 | 1,040 | 4 |
+| mix + instrução + `-mc 0` | 0,991 | 0,898 | 5 |
+| **fusão (mix + voz), por confiança** | 0,896 | **0,656** | 5 |
+| fusão com instrução | 1,107 | 1,078 | 6 |
+
+**Três achados, todos medidos:**
+
+1. **Instrução não é lista de palavras, mas também não é ganho.** `--prompt` no whisper é **texto prévio**, não ordem — e por padrão **só vale na primeira janela de 30 s**; sem `--carry-initial-prompt` a instrução nem chega às demais. Com o carry ligado, a instrução **piora a média** (0,847 → **1,097**).
+2. **O mecanismo do dano é verbosidade:** a instrução faz o decoder **gerar texto além do áudio**. Medido em palavras emitidas: *Marca da Promessa* **177 → 430**, *Eu Te Quero* 205 → 319, *Aos Pés da Cruz* 196 → 261. O começo costuma ficar melhor; o fim é invenção.
+3. **A fusão por confiança é estabilizadora, não média-melhoradora:** melhora a **mediana** (0,702 → **0,656**, a melhor de todas) mas não a média — corrige o caso em que um dos dois áudios falha (*Juntos* 1,465 → 1,028; *Raridade* 0,938 → 0,599; *Aos Pés* 0,255 → 0,227) sem estragar os outros.
+
+**Teto medido (oráculo):** escolhendo a melhor arma **por música**, a média é **0,656** (contra 0,847 do mix sozinho). Vitórias: voz 5 · mix 3 · mix+`-mc 0` 3 · mix+instrução 2 · fusão 2 · fusão+instrução 2. É esse o ganho máximo que um interruptor por música pode capturar — e os sinais para tentar capturá-lo (confiança `p` e **verbosidade** contra o esperado) já têm indício medido.
+
+
 
 ## 6. Falhas conhecidas e recuperação
 
